@@ -1,0 +1,28 @@
+---
+id: 0
+name: Testnet deployment
+network: testnet
+stacks-node: "https://api.testnet.hiro.so"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoind.testnet.stacks.co:18332"
+plan:
+  batches:
+    # - id: 0
+    #   transactions:
+    #     - contract-publish:
+    #         contract-name: send-rewards
+    #         expected-sender: ST13XJ4G348VGDRT5Z791J8GBTB9Z0ESPNCRAPN4E
+    #         cost: 1000000
+    #         path: contracts/send-rewards.clar
+    #         anchor-block-only: true
+    #         clarity-version: 3
+    #   epoch: "3.3"
+    # - id: 0
+    #   transactions:
+    #     - contract-publish:
+    #         contract-name: game-1_0_0
+    #         expected-sender: ST13XJ4G348VGDRT5Z791J8GBTB9Z0ESPNCRAPN4E
+    #         cost: 1000000
+    #         path: contracts/game.clar
+    #         anchor-block-only: true
+    #         clarity-version: 3
+    #   epoch: "3.3"
