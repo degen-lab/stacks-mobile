@@ -1,0 +1,54 @@
+import zxcvbn, { type ZXCVBNResult, type ZXCVBNScore } from "zxcvbn";
+
+function truncateCpuDemandingPassword(input: string): string {
+  return input.slice(0, 100);
+}
+
+export enum PasswordStrength {
+  NoScore,
+  PoorScore,
+  WeakScore,
+  AverageScore,
+  StrongScore,
+  MeetsAllRequirements,
+}
+
+const requiredStrengthScore: ZXCVBNScore = PasswordStrength.StrongScore;
+const requiredPasswordLength = 8;
+
+function hasHighestPasswordScore(score: ZXCVBNScore) {
+  return score >= requiredStrengthScore;
+}
+
+function hasSufficientLength(input: string) {
+  return input.length >= requiredPasswordLength;
+}
+
+export interface ValidatedPassword extends ZXCVBNResult {
+  score: ZXCVBNScore;
+  feedback: ZXCVBNResult["feedback"];
+  meetsLengthRequirement: boolean;
+  meetsScoreRequirement: boolean;
+  meetsAllStrengthRequirements: boolean;
+  password: string;
+}
+
+export function validatePassword(input: string): ValidatedPassword {
+  const password =
+    input.length > 100 ? truncateCpuDemandingPassword(input) : input;
+  const result = zxcvbn(password);
+  const meetsScoreRequirement = hasHighestPasswordScore(result.score);
+  const meetsLengthRequirement = hasSufficientLength(input);
+  const meetsAllStrengthRequirements =
+    meetsScoreRequirement && meetsLengthRequirement;
+
+  return Object.freeze({
+    ...result,
+    meetsScoreRequirement,
+    meetsLengthRequirement,
+    meetsAllStrengthRequirements,
+    password,
+  });
+}
+
+export const blankPasswordValidation = Object.freeze(validatePassword(""));
