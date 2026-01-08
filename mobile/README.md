@@ -1,50 +1,82 @@
-# Welcome to your Expo app 👋
+# Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Prerequisites
 
-## Get started
+- Node.js (v20+)
+- pnpm (package manager)
+- Android Studio (Android development)
+- Xcode (iOS development)
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Installation
 
 ```bash
-npm run reset-project
+pnpm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Environment Variables
 
-## Learn more
+Environment variables are loaded from `.env.${APP_ENV}`, which defaults to
+`development`. Create the file you need in the project root, for example `.env.development`:
 
-To learn more about developing your project with Expo, look at the following resources:
+```env
+# Optional (defaults to development)
+APP_ENV=development
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Optional (mainnet | testnet)
+NETWORK=testnet
 
-## Join the community
+# Required: Google Sign-In configuration
+GOOGLE_WEB_CLIENT_ID=
+GOOGLE_IOS_CLIENT_ID=
+GOOGLE_IOS_URL_SCHEME=
 
-Join our community of developers creating universal apps.
+# Required: Backend API URL
+API_URL=https://your-api-url.example
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Required: AdMob configuration
+ANDROID_ADMOB_APP_ID=
+IOS_ADMOB_APP_ID=  # Optional
+ANDROID_REWARDS_AD_MOBIN_KEY=
+```
+
+**Note:** All variables marked as "Required" must have non-empty values. The app will fail to start if any required variables are missing.
+
+To use a different environment file, set `APP_ENV` when running commands:
+
+```bash
+APP_ENV=staging pnpm start
+```
+
+## Running the App
+
+### Start Development Server
+
+```bash
+pnpm start
+```
+
+### Run on Device/Simulator
+
+For iOS:
+```bash
+pnpm ios
+```
+
+For Android:
+```bash
+pnpm android
+```
+
+### Expo Go vs Dev Client
+
+This app uses native modules (for example
+`@react-native-google-signin/google-signin`), so it cannot run in Expo Go.
+Use a development build (dev client) on a device or simulator to preview the
+app.
+
+## Linting & Formatting
+
+```bash
+pnpm lint
+pnpm format
+```
