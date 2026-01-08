@@ -1,8 +1,6 @@
-import { colors } from "@/components/ui";
+import { Card, colors, AnimatedStarSplash } from "@/components/ui";
 import { View } from "react-native";
 import GradientBorder from "../../../components/ui/gradient-border";
-import Card from "../components/Card";
-import AnimatedStarSplash from "./StarAnimated";
 
 type InviteFriendCardProps = {
   onPress?: () => void;

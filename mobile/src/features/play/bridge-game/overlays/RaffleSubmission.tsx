@@ -1,7 +1,6 @@
-import { Pressable, Text, View } from "@/components/ui";
+import { AnimatedStarSplash, Pressable, Text, View } from "@/components/ui";
 import colors from "@/components/ui/colors";
 import GradientBorder from "@/components/ui/gradient-border";
-import AnimatedStarSplash from "@/features/home/components/StarAnimated";
 import RaffleEntryIndicator from "./RaffleEntryIndicator";
 import type { ActionHandler } from "./types";
 

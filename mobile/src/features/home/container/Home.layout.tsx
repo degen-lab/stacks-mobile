@@ -1,7 +1,7 @@
 import { View } from "react-native";
-import Card from "../components/Card";
-import InviteFriendCard from "../components/InviteFriendCard";
-import PortfolioSummary from "../components/Portfolio";
+import { Card } from "@/components/ui";
+import InviteFriendCard from "../components/invite-friend";
+import PortfolioSummary from "../components/portfolio";
 
 type HomeScreenLayoutProps = {
   usdBalance: number;

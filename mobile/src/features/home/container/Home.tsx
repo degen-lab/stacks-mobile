@@ -9,7 +9,7 @@ export default function HomeScreen() {
   const { data: stxPriceUsd } = useStacksPrice();
 
   const navigateToPortfolio = () => {
-    router.push("/portfolio" as RelativePathString);
+    router.push("/(app)/Earn" as RelativePathString);
   };
 
   const navigateToPlay = () => {

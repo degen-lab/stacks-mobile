@@ -22,6 +22,8 @@ type CardProps = {
 };
 
 const DEFAULT_SIZE = { width: 64, height: 64 };
+const BASE_CARD_CLASSES =
+  "w-full rounded-lg border border-surface-secondary bg-sand-100 p-4";
 
 const Card = ({
   imageSource,
@@ -35,24 +37,46 @@ const Card = ({
   const renderImage = () => {
     if (!imageSource) return null;
 
-    const asset = Asset.fromModule(imageSource as number);
-    const isSvg = asset.type === "svg";
+    try {
+      const asset = Asset.fromModule(imageSource as number);
+      const isSvg = asset.type === "svg";
 
-    return (
-      <View
-        className={`items-center justify-center ${imageClassName}`}
-        style={{
-          width: imageSize.width,
-          height: imageSize.height,
-        }}
-      >
-        {isSvg ? (
-          <SvgUri
-            uri={asset.uri}
-            width={imageSize.width}
-            height={imageSize.height}
-          />
-        ) : (
+      return (
+        <View
+          className={`items-center justify-center ${imageClassName ?? ""}`}
+          style={{
+            width: imageSize.width,
+            height: imageSize.height,
+          }}
+        >
+          {isSvg ? (
+            <SvgUri
+              uri={asset.uri}
+              width={imageSize.width}
+              height={imageSize.height}
+            />
+          ) : (
+            <Image
+              source={imageSource}
+              style={{
+                width: imageSize.width,
+                height: imageSize.height,
+              }}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      );
+    } catch (error) {
+      console.error(error);
+      return (
+        <View
+          className={`items-center justify-center ${imageClassName ?? ""}`}
+          style={{
+            width: imageSize.width,
+            height: imageSize.height,
+          }}
+        >
           <Image
             source={imageSource}
             style={{
@@ -61,9 +85,9 @@ const Card = ({
             }}
             resizeMode="contain"
           />
-        )}
-      </View>
-    );
+        </View>
+      );
+    }
   };
 
   const content = (
@@ -78,10 +102,12 @@ const Card = ({
     </>
   );
 
+  const cardClassName = `${BASE_CARD_CLASSES} ${className ?? ""}`;
+
   if (onPress) {
     return (
       <Pressable
-        className={`w-full rounded-lg border border-surface-secondary bg-sand-100 p-4 ${className ?? ""}`}
+        className={cardClassName}
         onPress={onPress}
         accessibilityRole="button"
       >
@@ -90,13 +116,7 @@ const Card = ({
     );
   }
 
-  return (
-    <View
-      className={`w-full rounded-lg border border-surface-secondary bg-sand-100 p-4 ${className ?? ""}`}
-    >
-      {content}
-    </View>
-  );
+  return <View className={cardClassName}>{content}</View>;
 };
 
 export default Card;
