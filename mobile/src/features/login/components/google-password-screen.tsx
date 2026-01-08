@@ -101,6 +101,7 @@ export function GooglePasswordScreen({
             size="icon"
             onPress={onBack}
             className="mb-4 self-start"
+            testID="google-password-back"
           >
             <ChevronLeft size={20} className="text-secondary" />
           </Button>
@@ -121,6 +122,8 @@ export function GooglePasswordScreen({
                 onPasswordChange={onPasswordChange}
                 onToggleShowPassword={() => setShowPassword((prev) => !prev)}
                 error={error}
+                inputTestID="google-password-input"
+                toggleTestID="google-password-toggle"
               />
 
               {mode === "create" && (
@@ -138,6 +141,7 @@ export function GooglePasswordScreen({
                 className="mb-2"
                 size="sm"
                 textClassName="text-center"
+                testID="google-password-forgot"
               />
             )}
             {mode === "create" && (
@@ -150,6 +154,7 @@ export function GooglePasswordScreen({
               label={currentConfig.primaryButton}
               onPress={handleContinue}
               disabled={isDisabled}
+              testID="google-password-continue"
             />
           </View>
         </View>

@@ -1,21 +1,7 @@
 require("react-native-gesture-handler/jestSetup");
 require("@shopify/flash-list/jestSetup");
 
-jest.mock("expo-router", () => {
-  const React = require("react");
-  const mockRouter = {
-    replace: jest.fn(),
-    push: jest.fn(),
-    back: jest.fn(),
-  };
-
-  return {
-    useRouter: () => mockRouter,
-    useSearchParams: () => ({}),
-    Link: ({ children }) => React.createElement(React.Fragment, null, children),
-    __mockRouter: mockRouter,
-  };
-});
+jest.mock("expo-router");
 
 jest.mock("expo-web-browser", () => ({
   openBrowserAsync: jest.fn(),
@@ -45,36 +31,9 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const React = require("react");
-  return {
-    BottomSheetModalProvider: ({ children }) =>
-      React.createElement(React.Fragment, null, children),
-  };
-});
+jest.mock("moti");
 
-jest.mock("expo-image", () => {
-  const React = require("react");
-  const { Image } = require("react-native");
-  const MockImage = (props) => React.createElement(Image, props);
-
-  return {
-    Image: MockImage,
-    ImageBackground: MockImage,
-    default: MockImage,
-    prefetch: jest.fn(),
-  };
-});
-
-jest.mock("react-native-svg", () => {
-  const React = require("react");
-  const { View } = require("react-native");
-  const MockSvg = (props) => React.createElement(View, props);
-
-  return new Proxy(
-    { __esModule: true, default: MockSvg },
-    {
-      get: (target, prop) => (prop in target ? target[prop] : MockSvg),
-    },
-  );
-});
+jest.mock("@gorhom/bottom-sheet");
+jest.mock("expo-image");
+jest.mock("react-native-svg");
+jest.mock("lucide-react-native");

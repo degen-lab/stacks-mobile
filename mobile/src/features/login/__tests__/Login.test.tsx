@@ -1,5 +1,6 @@
 import { fireEvent, render, waitFor } from "@/lib/tests";
 import type { SignInResult } from "@/lib/store/auth";
+import { __mockRouter } from "expo-router";
 
 import LoginScreen from "../container/Login";
 
@@ -14,6 +15,7 @@ const mockMutateAsync = jest.fn();
 const mockFetchQuery = jest.fn();
 const mockShowError = jest.fn();
 const mockShowErrorMessage = jest.fn();
+const authMutationState = { isPending: false };
 
 const mockReferralModal = {
   ref: { current: null },
@@ -46,7 +48,7 @@ jest.mock("@/api", () => ({
 jest.mock("@/api/auth/use-user-auth", () => ({
   useAuthMutation: () => ({
     mutateAsync: (...args: unknown[]) => mockMutateAsync(...args),
-    isPending: false,
+    isPending: authMutationState.isPending,
   }),
 }));
 
@@ -101,13 +103,6 @@ const createInvalidGoogleResult = (): SignInResult => ({
   hasBackup: false,
 });
 
-const getMockRouter = () => {
-  const expoRouter = jest.requireMock("expo-router") as {
-    __mockRouter: { replace: jest.Mock; push: jest.Mock; back: jest.Mock };
-  };
-  return expoRouter.__mockRouter;
-};
-
 describe("LoginScreen", () => {
   beforeEach(() => {
     jest.spyOn(console, "error").mockImplementation(() => {});
@@ -118,8 +113,7 @@ describe("LoginScreen", () => {
     referralModal.onDismiss.mockClear();
     authState.isAuthenticating = false;
     authState.referralUsed = false;
-
-    getMockRouter().replace.mockClear();
+    authMutationState.isPending = false;
   });
 
   afterEach(() => {
@@ -147,7 +141,7 @@ describe("LoginScreen", () => {
       );
       expect(setBackendSession).toHaveBeenCalledTimes(1);
 
-      expect(getMockRouter().replace).toHaveBeenCalledWith("/wallet-new");
+      expect(__mockRouter.replace).toHaveBeenCalledWith("/wallet-new");
     });
   });
 
@@ -164,7 +158,29 @@ describe("LoginScreen", () => {
 
     await waitFor(() => {
       expect(mutateAsync).toHaveBeenCalledTimes(1);
-      expect(getMockRouter().replace).toHaveBeenCalledWith("/wallet-restore");
+      expect(__mockRouter.replace).toHaveBeenCalledWith("/wallet-restore");
+    });
+  });
+
+  it("blocks sign in when already authenticating", async () => {
+    authState.isAuthenticating = true;
+
+    const { getByTestId } = render(<LoginScreen />);
+    fireEvent.press(getByTestId("google-signin-button"));
+
+    await waitFor(() => {
+      expect(signInWithGoogle).not.toHaveBeenCalled();
+    });
+  });
+
+  it("blocks sign in when auth mutation is pending", async () => {
+    authMutationState.isPending = true;
+
+    const { getByTestId } = render(<LoginScreen />);
+    fireEvent.press(getByTestId("google-signin-button"));
+
+    await waitFor(() => {
+      expect(signInWithGoogle).not.toHaveBeenCalled();
     });
   });
 
@@ -209,7 +225,7 @@ describe("LoginScreen", () => {
         }),
       );
 
-      expect(getMockRouter().replace).toHaveBeenCalledWith("/wallet-restore");
+      expect(__mockRouter.replace).toHaveBeenCalledWith("/wallet-restore");
     });
   });
 
@@ -250,7 +266,7 @@ describe("LoginScreen", () => {
 
     await waitFor(() => {
       expect(mutateAsync).toHaveBeenCalledTimes(1);
-      expect(getMockRouter().replace).toHaveBeenCalledWith("/wallet-new");
+      expect(__mockRouter.replace).toHaveBeenCalledWith("/wallet-new");
     });
   });
 
@@ -268,7 +284,7 @@ describe("LoginScreen", () => {
     await waitFor(() => {
       // Should still try to login
       expect(mutateAsync).toHaveBeenCalledTimes(1);
-      expect(getMockRouter().replace).toHaveBeenCalledWith("/wallet-new");
+      expect(__mockRouter.replace).toHaveBeenCalledWith("/wallet-new");
     });
   });
   it("shows error when google user info is missing", async () => {

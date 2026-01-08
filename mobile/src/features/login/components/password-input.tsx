@@ -8,16 +8,21 @@ export function PasswordInput({
   onPasswordChange,
   onToggleShowPassword,
   error,
+  inputTestID,
+  toggleTestID,
 }: {
   password: string;
   showPassword: boolean;
   onPasswordChange: (password: string) => void;
   onToggleShowPassword: () => void;
   error?: string;
+  inputTestID?: string;
+  toggleTestID?: string;
 }) {
   return (
     <View className="relative">
       <Input
+        testID={inputTestID}
         value={password}
         onChangeText={onPasswordChange}
         placeholder="Password"
@@ -30,6 +35,7 @@ export function PasswordInput({
       />
       <TouchableOpacity
         onPress={onToggleShowPassword}
+        testID={toggleTestID}
         className="absolute right-4 top-5 items-center justify-center"
       >
         {showPassword ? (
