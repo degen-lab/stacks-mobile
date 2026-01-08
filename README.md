@@ -14,14 +14,14 @@ A mobile mini-game app built on the Stacks blockchain that rewards player engage
 ```
 stacks-mobile/
 ├── mobile-google-web3/     # Mobile frontend (Expo + React Native)
-├── stacks-app-backend/     # Backend server (Fastify + TypeScript)
+├── backend/     # Backend server (Fastify + TypeScript)
 └── smart-contracts/        # Stacks blockchain contracts (Clarity)
 ```
 
 | Project | Description |
 |---------|-------------|
 | [mobile-google-web3](./mobile-google-web3) | Cross-platform mobile app with wallet integration, game sessions, and referrals |
-| [stacks-app-backend](./stacks-app-backend) | REST API handling authentication, game validation, leaderboards, and transaction broadcasting |
+| [backend](./backend) | REST API handling authentication, game validation, leaderboards, and transaction broadcasting |
 | [smart-contracts](./smart-contracts) | Clarity contracts for game logic, rewards distribution, and signature verification |
 
 ## Architecture

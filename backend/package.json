@@ -1,5 +1,5 @@
 {
-  "name": "stacks-app-backend",
+  "name": "backend",
   "version": "1.0.0",
   "main": "dist/index.js",
   "type": "commonjs",
