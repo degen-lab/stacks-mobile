@@ -1,3 +1,2 @@
-import WalletRestore from "@/features/login/wallet/WalletRestore";
-
+import { WalletRestore } from "@/features/login/wallet";
 export default WalletRestore;

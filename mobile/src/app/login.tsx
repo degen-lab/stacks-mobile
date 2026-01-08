@@ -1,3 +1,2 @@
-import LoginScreen from "@/features/login/container/Login";
-
+import { LoginScreen } from "@/features/login/container";
 export default LoginScreen;

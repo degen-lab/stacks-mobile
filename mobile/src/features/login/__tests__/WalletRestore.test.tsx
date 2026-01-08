@@ -2,7 +2,7 @@ import { act, fireEvent, render, waitFor } from "@/lib/tests";
 import { __mockRouter } from "expo-router";
 import { InteractionManager } from "react-native";
 
-import RestoreWallet from "@/app/wallet-restore";
+import { WalletRestore } from "@/features/login/wallet";
 
 const mockRestoreWallet = jest.fn();
 const mockDeleteBackupWithoutPassword = jest.fn();
@@ -33,7 +33,6 @@ jest.mock("@/lib/store/auth", () => ({
     signOut: (...args: unknown[]) => mockSignOut(...args),
   }),
 }));
-
 
 jest.mock("@/components/warning-sheet", () => {
   const React = jest.requireActual("react");
@@ -70,7 +69,7 @@ const baseValidation = {
   meetsAllStrengthRequirements: true,
 };
 
-describe("RestoreWallet screen", () => {
+describe("WalletRestore screen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockValidatePassword.mockReturnValue(baseValidation);
@@ -85,7 +84,7 @@ describe("RestoreWallet screen", () => {
   it("restores wallet and routes home", async () => {
     mockRestoreWallet.mockResolvedValue(undefined);
 
-    const { getByTestId } = render(<RestoreWallet />);
+    const { getByTestId } = render(<WalletRestore />);
 
     fireEvent.changeText(
       getByTestId("google-password-input"),
@@ -107,7 +106,7 @@ describe("RestoreWallet screen", () => {
       .spyOn(console, "error")
       .mockImplementation(() => {});
 
-    const { getByTestId, getByText } = render(<RestoreWallet />);
+    const { getByTestId, getByText } = render(<WalletRestore />);
 
     fireEvent.changeText(getByTestId("google-password-input"), "Pass123!");
     fireEvent.press(getByTestId("google-password-continue"));
@@ -120,7 +119,7 @@ describe("RestoreWallet screen", () => {
   });
 
   it("signs out and returns to login on back", async () => {
-    const { getByTestId } = render(<RestoreWallet />);
+    const { getByTestId } = render(<WalletRestore />);
 
     fireEvent.press(getByTestId("google-password-back"));
 
@@ -133,7 +132,7 @@ describe("RestoreWallet screen", () => {
   it("shows loading state while restoring wallet", async () => {
     mockRestoreWallet.mockImplementation(() => new Promise(() => {}));
 
-    const { getByTestId, getByText } = render(<RestoreWallet />);
+    const { getByTestId, getByText } = render(<WalletRestore />);
 
     fireEvent.changeText(getByTestId("google-password-input"), "Pass123!");
     fireEvent.press(getByTestId("google-password-continue"));
@@ -161,7 +160,7 @@ describe("RestoreWallet screen", () => {
           };
         },
       );
-    const { getByTestId } = render(<RestoreWallet />);
+    const { getByTestId } = render(<WalletRestore />);
 
     fireEvent.press(getByTestId("google-password-forgot"));
 
@@ -189,7 +188,7 @@ describe("RestoreWallet screen", () => {
       .spyOn(console, "error")
       .mockImplementation(() => {});
 
-    const { getByTestId } = render(<RestoreWallet />);
+    const { getByTestId } = render(<WalletRestore />);
 
     fireEvent.press(getByTestId("google-password-forgot"));
 
