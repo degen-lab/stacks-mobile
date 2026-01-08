@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 
 import { FocusAwareStatusBar } from "@/components/ui";
-import { GooglePasswordScreen } from "@/features/login/google-password-screen";
+import { GooglePasswordScreen } from "@/features/login/components/google-password-screen";
 import { useCreateWallet } from "@/hooks/use-create-wallet";
 import { useAuth } from "@/lib/store/auth";
 

@@ -1,12 +1,13 @@
-import { ChevronLeft, Eye, EyeOff } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, TouchableOpacity } from "react-native";
+import { KeyboardAvoidingView, Platform } from "react-native";
 
-import { Button, Input, Text, View } from "@/components/ui";
+import { Button, LoadingView, Text, View } from "@/components/ui";
 import { validatePassword } from "@/lib/password-strength";
 
 import { WarningLabel } from "@/components/warning-label";
 import { PasswordStrengthIndicator } from "./password-strength-indicator";
+import { PasswordInput } from "./password-input";
 
 export type GooglePasswordMode = "create" | "recover";
 
@@ -43,81 +44,6 @@ const PASSWORD_CONFIG = {
   },
 } as const;
 
-function getPasswordConfig(
-  mode: GooglePasswordMode,
-  overrides: {
-    titleOverride?: string;
-    subtitleOverride?: string;
-    primaryButtonLabelOverride?: string;
-    loadingTitleOverride?: string;
-    loadingSubtitleOverride?: string;
-  },
-) {
-  const baseConfig = PASSWORD_CONFIG[mode];
-  return {
-    title: overrides.titleOverride ?? baseConfig.title,
-    subtitle: overrides.subtitleOverride ?? baseConfig.subtitle,
-    primaryButton:
-      overrides.primaryButtonLabelOverride ?? baseConfig.primaryButton,
-    loadingTitle: overrides.loadingTitleOverride ?? baseConfig.loadingTitle,
-    loadingSubtitle:
-      overrides.loadingSubtitleOverride ?? baseConfig.loadingSubtitle,
-  };
-}
-
-function LoadingView({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <View className="flex-1 items-center justify-center bg-white px-6 py-8 dark:bg-neutral-900">
-      <Text className="text-xl font-matter text-primary dark:text-white">
-        {title}
-      </Text>
-      <Text className="mt-2 text-sm font-instrument-sans text-secondary">
-        {subtitle}
-      </Text>
-    </View>
-  );
-}
-
-function PasswordInput({
-  password,
-  showPassword,
-  onPasswordChange,
-  onToggleShowPassword,
-  error,
-}: {
-  password: string;
-  showPassword: boolean;
-  onPasswordChange: (password: string) => void;
-  onToggleShowPassword: () => void;
-  error?: string;
-}) {
-  return (
-    <View className="relative">
-      <Input
-        value={password}
-        onChangeText={onPasswordChange}
-        placeholder="Password"
-        secureTextEntry={!showPassword}
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="off"
-        error={error}
-        className="pl-4 pr-12 bg-surface-tertiary text-primary border rounded-lg border-sand-300 dark:bg-neutral-800 dark:border-sand-800"
-      />
-      <TouchableOpacity
-        onPress={onToggleShowPassword}
-        className="absolute right-4 top-5 items-center justify-center"
-      >
-        {showPassword ? (
-          <EyeOff size={20} className="text-secondary" />
-        ) : (
-          <Eye size={20} className="text-secondary" />
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-}
-
 export function GooglePasswordScreen({
   mode,
   password,
@@ -134,13 +60,14 @@ export function GooglePasswordScreen({
   loadingSubtitleOverride,
 }: GooglePasswordScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const currentConfig = getPasswordConfig(mode, {
-    titleOverride,
-    subtitleOverride,
-    primaryButtonLabelOverride,
-    loadingTitleOverride,
-    loadingSubtitleOverride,
-  });
+  const baseConfig = PASSWORD_CONFIG[mode];
+  const currentConfig = {
+    title: titleOverride ?? baseConfig.title,
+    subtitle: subtitleOverride ?? baseConfig.subtitle,
+    primaryButton: primaryButtonLabelOverride ?? baseConfig.primaryButton,
+    loadingTitle: loadingTitleOverride ?? baseConfig.loadingTitle,
+    loadingSubtitle: loadingSubtitleOverride ?? baseConfig.loadingSubtitle,
+  };
 
   const validation = useMemo(() => validatePassword(password), [password]);
   const isDisabled =

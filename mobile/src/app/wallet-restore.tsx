@@ -5,7 +5,7 @@ import { InteractionManager } from "react-native";
 
 import { FocusAwareStatusBar } from "@/components/ui";
 import { WarningSheet } from "@/components/warning-sheet";
-import { GooglePasswordScreen } from "@/features/login/google-password-screen";
+import { GooglePasswordScreen } from "@/features/login/components/google-password-screen";
 import {
   useDeleteGoogleBackup,
   useRestoreWallet,
