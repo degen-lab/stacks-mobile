@@ -2,22 +2,25 @@ import { useStacksPrice } from "@/api/market/use-stacks-price";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { RelativePathString, useRouter } from "expo-router";
 import HomeScreenLayout from "./Home.layout";
+import { useModal } from "@/components/ui";
 
 export default function HomeScreen() {
   const { balance: stxBalance } = useStxBalance();
-  const router = useRouter();
   const { data: stxPriceUsd } = useStacksPrice();
+  const usdBalance = stxPriceUsd ? stxBalance * stxPriceUsd : 0;
+  const emptyWalletModal = useModal();
+  const router = useRouter();
 
   const navigateToPortfolio = () => {
-    router.push("/(app)/Earn" as RelativePathString);
+    if (stxBalance < 0) {
+      router.push("/(app)/Earn" as RelativePathString);
+      return;
+    }
+    emptyWalletModal.present();
   };
 
   const navigateToPlay = () => {
     router.push("/(app)/Play" as RelativePathString);
-  };
-
-  const navigateToEarn = () => {
-    router.push("/(app)/Earn" as RelativePathString);
   };
 
   const navigateToReferral = () => {
@@ -26,11 +29,13 @@ export default function HomeScreen() {
 
   return (
     <HomeScreenLayout
-      usdBalance={stxPriceUsd ? stxBalance * stxPriceUsd : 0}
+      usdBalance={usdBalance}
       navigateToPortfolio={navigateToPortfolio}
       navigateToPlay={navigateToPlay}
-      navigateToEarn={navigateToEarn}
       navigateToReferral={navigateToReferral}
+      emptyWalletModalRef={emptyWalletModal.ref}
+      onBuyCrypto={emptyWalletModal.dismiss}
+      onDepositCrypto={emptyWalletModal.dismiss}
     />
   );
 }
