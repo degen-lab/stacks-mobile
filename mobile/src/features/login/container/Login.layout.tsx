@@ -48,6 +48,7 @@ export default function LoginLayout({
             onPress={onGoogleSignIn}
             loading={isLoading}
             disabled={isDisabled}
+            testID="google-signin-button"
           >
             <View className="flex-row items-center justify-center gap-2">
               <GoogleIcon size={20} />
