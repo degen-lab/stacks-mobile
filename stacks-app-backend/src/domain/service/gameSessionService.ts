@@ -138,12 +138,9 @@ export class GameSessionService {
       seed: session.seed.substring(0, 16) + '...',
     });
 
-    // Verify seed signature
     if (!this.verifySeed(session.seed, session.signature, secret)) {
       throw new InvalidSeedError('Invalid seed signature');
     }
-    // Validate and consume items
-    // Count how many times each item type is used
     const itemUsageCount = new Map<ItemVariant, number>();
     for (const usedItem of session.usedItems) {
       const count = itemUsageCount.get(usedItem) || 0;
@@ -423,16 +420,10 @@ export class GameSessionService {
       // (stored in currentPlatformStoppedRight)
       const currentPlatformRight = currentPlatformStoppedRight;
 
-      // Calculate stick tip position (where hero's front will be after walking)
-      // Frontend uses: stickTip = pCurrent.right + this.bridge.length
       const stickTip = currentPlatformRight + bridgeLength;
-
-      // Check if bridge hits the next platform (using position at release time)
-      // Frontend checks: stickTip >= platform.x && stickTip <= platform.right
       const hit =
         stickTip >= platformXAtRelease && stickTip <= platformRightAtRelease;
 
-      // Debug logging for hit detection
       logger.debug({
         msg: 'Hit detection calculation',
         userId: user.id,
@@ -470,7 +461,6 @@ export class GameSessionService {
       }
 
       if (hit) {
-        // Frontend keeps walking on the platform after the stick tip, so any hit lands.
         const distToCenter = Math.abs(stickTip - platformCenterAtRelease);
         const isPerfect = distToCenter <= BRIDGE_CONFIG.PERFECT_TOLERANCE;
         const points = isPerfect ? 3 : 1;
@@ -506,9 +496,6 @@ export class GameSessionService {
         score += points;
         blocksPassed++;
         currentPlatformIndex++;
-
-        // Update current platform's stopped position for the next move
-        // The platform stopped at platformXAtRelease when the bridge was released
         currentPlatformStoppedRight = platformRightAtRelease;
 
         if (moveDebug) {
@@ -523,7 +510,6 @@ export class GameSessionService {
           moveDebug.pointsAwarded = points;
         }
       } else {
-        // Bridge didn't hit platform - this move failed, continue to next move
         logger.info({
           msg: 'Move missed platform',
           userId: user.id,
@@ -908,36 +894,23 @@ export class GameSessionService {
     // Release time is when the input is released (idleDurationMs + moveDuration)
     const releaseTime = (idleDurationMs + moveDuration) / 1000; // Convert to seconds
 
-    // Simulate platform movement with bouncing from game start (time 0) to release time
-    // Platform starts at initialX and moves according to velocity
-    let currentX = platform.initialX;
-    let currentVx = platform.vx;
-    const dt = 1 / 60; // Simulate at 60fps for accuracy
-    let elapsed = 0;
-
-    while (elapsed < releaseTime) {
-      const step = Math.min(dt, releaseTime - elapsed);
-      currentX += currentVx * step;
-
-      // Bounce at boundaries (platform reverses direction when hitting minX or maxX)
-      if (currentX < platform.minX) {
-        currentX = platform.minX;
-        currentVx *= -1;
-      } else if (currentX > platform.maxX) {
-        currentX = platform.maxX;
-        currentVx *= -1;
-      }
-
-      elapsed += step;
+    // Closed-form ping-pong motion between minX and maxX (no frame-step drift).
+    const range = platform.maxX - platform.minX;
+    if (range <= 0) {
+      return platform.initialX;
     }
 
-    // Platform stops when input is released (at releaseTime)
-    // Return the position at that exact moment
-    return currentX;
+    const period = 2 * range;
+    const travel =
+      platform.initialX - platform.minX + platform.vx * releaseTime;
+    const mod = ((travel % period) + period) % period;
+    if (mod <= range) {
+      return platform.minX + mod;
+    }
+    return platform.maxX - (mod - range);
   }
 
   private calculateBridgeLength(duration: number): number {
-    // Duration is in milliseconds, GROW_SPEED is pixels per second
     return (duration / 1000) * BRIDGE_CONFIG.GROW_SPEED;
   }
 }
