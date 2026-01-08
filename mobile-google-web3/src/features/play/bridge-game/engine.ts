@@ -40,6 +40,7 @@ class Platform {
   index: number;
   isMoving: boolean;
   vx: number;
+  initialVx: number;
   minX: number;
   maxX: number;
   initialX: number; // Store initial position for platform generation
@@ -56,6 +57,7 @@ class Platform {
     this.index = index;
     this.isMoving = false;
     this.vx = 0;
+    this.initialVx = 0;
     this.minX = x;
     this.maxX = x;
     this.initialX = x; // Store initial position
@@ -63,6 +65,7 @@ class Platform {
     if (canMove && rng() < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE) {
       this.isMoving = true;
       this.vx = BRIDGE_CONFIG.PLATFORM_MOVE_VELOCITY * (rng() > 0.5 ? 1 : -1);
+      this.initialVx = this.vx;
       const range = randomRange(
         rng,
         BRIDGE_CONFIG.PLATFORM_MOVE_MIN_RANGE,
@@ -95,6 +98,7 @@ class Platform {
 
   stop() {
     this.isMoving = false;
+    this.vx = 0;
   }
 
   snapshot(): PlatformSnapshot {
@@ -267,12 +271,33 @@ export class StacksBridgeEngine {
       if (platform.maxX <= platform.minX) {
         platform.isMoving = false;
         platform.vx = 0;
+        platform.initialVx = 0;
         platform.minX = platform.initialX;
         platform.maxX = platform.initialX;
       }
     }
 
     return platform;
+  }
+
+  private getPlatformXAtRelease(
+    platform: Platform | undefined,
+    idleDurationMs: number,
+    moveDurationMs: number,
+  ) {
+    if (!platform) return null;
+    if (!platform.isMoving) return platform.x;
+
+    const range = platform.maxX - platform.minX;
+    if (range <= 0) return platform.initialX;
+
+    const releaseTime = (idleDurationMs + moveDurationMs) / 1000;
+    const period = 2 * range;
+    const travel =
+      platform.initialX - platform.minX + platform.initialVx * releaseTime;
+    const mod = ((travel % period) + period) % period;
+    if (mod <= range) return platform.minX + mod;
+    return platform.maxX - (mod - range);
   }
 
   handleInputDown(isPlaying: boolean) {
@@ -301,6 +326,19 @@ export class StacksBridgeEngine {
       );
       const currentPlatform = this.platforms[0];
       const nextPlatform = this.platforms[1];
+      const platformXAtRelease = this.getPlatformXAtRelease(
+        nextPlatform,
+        idleDurationMs,
+        duration,
+      );
+      const platformRightAtRelease =
+        platformXAtRelease !== null && nextPlatform
+          ? platformXAtRelease + nextPlatform.w
+          : null;
+      const platformCenterAtRelease =
+        platformXAtRelease !== null && nextPlatform
+          ? platformXAtRelease + nextPlatform.w / 2
+          : null;
       this.bridge.length = bridgeLength;
       const stickTip = currentPlatform
         ? currentPlatform.right + bridgeLength
@@ -314,9 +352,9 @@ export class StacksBridgeEngine {
           bridgeLength,
           currentPlatformRight: currentPlatform?.right ?? null,
           nextPlatformIndex: nextPlatform?.index ?? null,
-          platformX: nextPlatform?.x ?? null,
-          platformRight: nextPlatform?.right ?? null,
-          platformCenter: nextPlatform?.center ?? null,
+          platformX: platformXAtRelease,
+          platformRight: platformRightAtRelease,
+          platformCenter: platformCenterAtRelease,
           platformIsMoving: nextPlatform?.isMoving ?? null,
         },
       });
@@ -325,7 +363,13 @@ export class StacksBridgeEngine {
     }
 
     const target = this.platforms[1];
-    if (target?.isMoving) target.stop();
+    if (target?.isMoving) {
+      const lastDebug = this.lastMoveDebug;
+      if (lastDebug?.platformX !== null && lastDebug?.platformX !== undefined) {
+        target.x = lastDebug.platformX;
+      }
+      target.stop();
+    }
   }
 
   step(isPlaying: boolean, dt: number): EngineEvent[] {
