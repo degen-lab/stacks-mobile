@@ -12,7 +12,7 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const navigateToPortfolio = () => {
-    if (stxBalance < 0) {
+    if (stxBalance > 0) {
       router.push("/(app)/Earn" as RelativePathString);
       return;
     }
