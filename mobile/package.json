@@ -1,5 +1,5 @@
 {
-  "name": "mobile-google-web3",
+  "name": "stacks-mobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
