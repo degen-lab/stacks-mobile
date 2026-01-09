@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { initializeAds } from "@/lib/ads";
+import { initializeAds } from "@/lib/ads/initialize-ads";
 import { hydrateAuth } from "@/lib/store/auth";
 import { useGameStore } from "@/lib/store/game";
 import { loadSettings } from "@/lib/store/settings";
