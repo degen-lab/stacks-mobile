@@ -1,5 +1,6 @@
 import { colors, Text, View } from "@/components/ui";
 import { StreakIcon } from "@/components/ui/icons/streak";
+import { isToday } from "@/lib/format/date";
 import { Check } from "lucide-react-native";
 import Svg, { Circle } from "react-native-svg";
 
@@ -11,22 +12,11 @@ type DailyStreakCardProps = {
 
 const CARD_BG = colors.neutral[100]; // light, consistent surface
 
-const isToday = (value?: Date | string | null) => {
-  if (!value) return false;
-  const date = value instanceof Date ? value : new Date(value);
-  const today = new Date();
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
-  );
-};
-
 export default function DailyStreakCard({
   challengeDescription,
   lastCompletionDate,
 }: DailyStreakCardProps) {
-  const completedToday = isToday(lastCompletionDate);
+  const completedToday = isToday(lastCompletionDate ?? undefined);
 
   return (
     <View

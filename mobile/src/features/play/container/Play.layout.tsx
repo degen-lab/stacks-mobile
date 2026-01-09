@@ -11,7 +11,7 @@ import { View } from "react-native";
 import DailyStreakCard from "../components/DailyStreakCard";
 import GameCard from "../components/GameCard";
 import MenuButton from "../components/MenuButton";
-import { PowerUpsModal } from "../components/PowerUpsModal";
+import { PowerUpsModal } from "../components/power-ups/power-ups-modal";
 import { SkinSelectorModal } from "../components/skins/skin-selector-modal";
 
 interface PlayLayoutProps {
