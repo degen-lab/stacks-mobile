@@ -11,7 +11,7 @@ import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
 import { Image, Pressable } from "react-native";
 import { SvgUri } from "react-native-svg";
-import { getSkinById } from "../types/skin";
+import { getSkinById } from "@/features/play/components/skins/types";
 
 type HeroIconComponent = ComponentType<{
   size?: number;

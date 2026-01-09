@@ -16,7 +16,7 @@ import {
 import { Pressable, View } from "@/components/ui";
 import { useGameStore } from "@/lib/store/game";
 
-import { getSkinById } from "../../types/skin";
+import { getSkinById } from "@/features/play/components/skins/types";
 import { BRIDGE_CONFIG, SCREEN_WIDTH } from "../constants";
 import type { Particle, RenderState } from "../types";
 import BlockBuilderStick from "./BlockBuilderStick";

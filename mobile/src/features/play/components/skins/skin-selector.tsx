@@ -71,7 +71,7 @@ export const buildAvailableSkins = (storeItems?: StoreItem[]): Skin[] => {
     if (!storeItem) return acc;
     acc.push({
       ...skin,
-      name: storeItem.name ?? skin.name,
+      name: storeItem.name || skin.name,
       cost: storeItem.price,
     });
     return acc;
@@ -211,18 +211,26 @@ export function SkinSelectorLayout({
         <Text className="text-lg font-matter text-primary">
           {activeSkin.name}
         </Text>
-        <Text className="text-xs text-secondary">
-          {isSelected
+        <Text className="text-xs text-secondary" testID="skin-selector-status">
+          {isSelected && isOwned
             ? "Selected"
             : isOwned
               ? "Owned"
               : `Tap to unlock for ${activeSkin.cost.toLocaleString()} points`}
         </Text>
         {purchaseError && (
-          <Text className="text-xs text-red-600 mt-1">{purchaseError}</Text>
+          <Text
+            className="text-xs text-red-600 mt-1"
+            testID="skin-selector-error"
+          >
+            {purchaseError}
+          </Text>
         )}
         {isPurchasing && (
-          <Text className="text-xs text-secondary mt-1">
+          <Text
+            className="text-xs text-secondary mt-1"
+            testID="skin-selector-purchasing"
+          >
             Processing purchase...
           </Text>
         )}

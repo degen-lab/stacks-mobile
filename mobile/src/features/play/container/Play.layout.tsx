@@ -12,7 +12,7 @@ import DailyStreakCard from "../components/DailyStreakCard";
 import GameCard from "../components/GameCard";
 import MenuButton from "../components/MenuButton";
 import { PowerUpsModal } from "../components/PowerUpsModal";
-import { SkinSelectorModal } from "../components/skins/SkinSelectorModal";
+import { SkinSelectorModal } from "../components/skins/skin-selector-modal";
 
 interface PlayLayoutProps {
   dailyStreakDescription: string;
