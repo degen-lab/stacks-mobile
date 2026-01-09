@@ -24,7 +24,7 @@ import { TestIds } from "react-native-google-mobile-ads";
 
 import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
 import { TournamentSubmissionSheet } from "@/components/tournament-submission-sheet";
-import useRewardedAd from "@/features/ads/hooks/useRewardedAd";
+import useRewardedAd from "@/lib/ads/use-rewarded-ad";
 import { useSignTransaction } from "@/hooks/use-sign-transaction";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { formatAddress } from "@/lib/addresses";
