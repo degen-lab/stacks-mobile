@@ -2,11 +2,14 @@ import type { ImageSource } from "expo-image";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Text, View } from "@/components/ui";
+import {
+  Text,
+  View,
+  CardGradientRight,
+  CardGradientLayers,
+} from "@/components/ui";
 import UserCard from "@/features/referral/components/user-card";
-import ReferralCodeCard from "@/features/referral/components/card-gradient-layers";
-import ReferralShareSection from "../components/referral-cta";
-import StatCard from "../components/card-gradient-right";
+import ReferralShareSection from "@/features/referral/components/referral-cta";
 
 export type InvitedPlayer = {
   id: number | string;
@@ -48,12 +51,12 @@ export default function ReferralLayout({
         {hasReferralCode && (
           <>
             <View className="flex-row gap-3 mb-6">
-              <StatCard
+              <CardGradientRight
                 value={stats.totalInvites}
                 label="Total Invites"
                 gradient="blood-orange"
               />
-              <StatCard
+              <CardGradientRight
                 value={stats.pointsEarned}
                 label="Points Earned"
                 gradient="bitcoin"
@@ -63,7 +66,7 @@ export default function ReferralLayout({
         )}
 
         <View className="mb-6">
-          <ReferralCodeCard
+          <CardGradientLayers
             referralCode={referralCode}
             hasReferralCode={hasReferralCode}
             borderRadius={18}

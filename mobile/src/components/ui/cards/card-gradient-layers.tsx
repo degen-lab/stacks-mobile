@@ -28,7 +28,7 @@ const BLOOD_ORANGE_LAYERS = [
     colors: ["rgba(255,186,140,0.60)", "rgba(255,220,195,0.20)"],
   },
 ] as const;
-export default function ReferralCodeCard({
+export function CardGradientLayers({
   referralCode = "",
   hasReferralCode,
   borderRadius = 0,

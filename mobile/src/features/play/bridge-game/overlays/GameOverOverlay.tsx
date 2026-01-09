@@ -1,13 +1,12 @@
 import { RotateCcw } from "lucide-react-native";
 
 import { useSponsoredSubmissionsLeft, useUserProfile } from "@/api/user";
-import { Button, Text, View } from "@/components/ui";
+import { Button, Text, View, CardGradientRight } from "@/components/ui";
 import colors from "@/components/ui/colors";
 import { TrophyIcon } from "@/components/ui/icons/trophy-icon";
 import { calculateStreakStats } from "@/lib/streak";
 import PanelWrapper from "./PanelWrapper";
 import RaffleSubmission from "./RaffleSubmission";
-import StatPill from "./StatPill";
 import type { ActionHandler, RunSummary } from "./types";
 
 type GameOverOverlayProps = {
@@ -103,11 +102,17 @@ export default function GameOverOverlay({
         ) : null}
 
         <View className="mb-4 w-full flex-row gap-3">
-          <StatPill label="Points" value={basePoints} gradient="bitcoin" />
-          <StatPill
-            label={`Streak Bonus`}
+          <CardGradientRight
+            label="Points"
+            value={basePoints}
+            gradient="bitcoin"
+            labelPosition="top"
+          />
+          <CardGradientRight
+            label="Streak Bonus"
             value={`+${streakBonus}`}
             gradient="blood-orange"
+            labelPosition="top"
           />
         </View>
 

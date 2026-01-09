@@ -1,11 +1,12 @@
 import { cssInterop } from "nativewind";
 import Svg from "react-native-svg";
+import colors from "./colors";
 
 export { default as AnimatedStarSplash } from "./animated-star";
 export * from "./button";
-export { default as Card } from "./card";
+export * from "./cards";
 export * from "./checkbox";
-export { default as colors } from "./colors";
+export { colors };
 export * from "./focus-aware-status-bar";
 export * from "./image";
 export * from "./input";

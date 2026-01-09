@@ -1,5 +1,4 @@
-import { Card, colors, AnimatedStarSplash } from "@/components/ui";
-import { View } from "react-native";
+import { View, Card, colors, AnimatedStarSplash } from "@/components/ui";
 import GradientBorder from "../../../components/ui/gradient-border";
 
 type InviteFriendCardProps = {

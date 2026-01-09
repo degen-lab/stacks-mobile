@@ -1,7 +1,6 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import type { Ref } from "react";
-import { View } from "react-native";
-import { Card } from "@/components/ui";
+import { View, Card } from "@/components/ui";
 import InviteFriendCard from "../components/invite-friend";
 import PortfolioSummary from "../components/portfolio";
 import { EmptyWalletModal } from "../components/empty-wallet-modal";

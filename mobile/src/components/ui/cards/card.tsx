@@ -25,7 +25,7 @@ const DEFAULT_SIZE = { width: 64, height: 64 };
 const BASE_CARD_CLASSES =
   "w-full rounded-lg border border-surface-secondary bg-sand-100 p-4";
 
-const Card = ({
+export function Card({
   imageSource,
   imageSize = DEFAULT_SIZE,
   title,
@@ -33,7 +33,7 @@ const Card = ({
   className,
   imageClassName,
   onPress,
-}: CardProps) => {
+}: CardProps) {
   const renderImage = () => {
     if (!imageSource) return null;
 
@@ -117,6 +117,4 @@ const Card = ({
   }
 
   return <View className={cardClassName}>{content}</View>;
-};
-
-export default Card;
+}
