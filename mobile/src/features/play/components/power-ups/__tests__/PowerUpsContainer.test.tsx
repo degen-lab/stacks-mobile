@@ -1,6 +1,6 @@
 import type { StoreItem, StorePurchaseResponse } from "@/api/store/types";
 import type { UserItem } from "@/api/user/types";
-import { ItemVariant, PurchaseType } from "@/lib/enums";
+import { ItemType, ItemVariant, PurchaseType } from "@/lib/enums";
 import { render, waitFor } from "@/lib/tests";
 import PowerUpsContainer from "../power-ups";
 
@@ -105,6 +105,8 @@ describe("PowerUpsContainer", () => {
   it("submits purchases and updates the cache", async () => {
     const mutateAsync = jest.fn(async () =>
       Promise.resolve({
+        success: true,
+        message: "Purchase successful",
         data: {
           points: 25,
           items: [
@@ -132,7 +134,7 @@ describe("PowerUpsContainer", () => {
     await mockLatestProps.onPurchase(ItemVariant.Revive);
 
     expect(mutateAsync).toHaveBeenCalledWith({
-      itemType: "PowerUp",
+      itemType: ItemType.PowerUp,
       quantity: 1,
       metadata: { variant: ItemVariant.Revive },
     });
@@ -192,6 +194,8 @@ describe("PowerUpsContainer", () => {
     });
 
     resolvePurchase!({
+      success: true,
+      message: "Purchase successful",
       data: {
         points: 50,
         items: [],

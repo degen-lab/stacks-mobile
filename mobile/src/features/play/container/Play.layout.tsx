@@ -5,14 +5,16 @@ import { StarIcon } from "@/components/ui/icons/star";
 import { LeaderboardList } from "@/features/leaderboard/components/LeaderboardList";
 import { Podium } from "@/features/leaderboard/components/Podium";
 import type { LeaderboardUser } from "@/features/leaderboard/types";
+import {
+  ChallengeCard,
+  GameCard,
+  MenuButton,
+  PowerUpsModal,
+  SkinSelectorModal,
+} from "@/features/play/components";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { RefObject } from "react";
 import { View } from "react-native";
-import DailyStreakCard from "../components/DailyStreakCard";
-import GameCard from "../components/GameCard";
-import MenuButton from "../components/MenuButton";
-import { PowerUpsModal } from "../components/power-ups/power-ups-modal";
-import { SkinSelectorModal } from "../components/skins/skin-selector-modal";
 
 interface PlayLayoutProps {
   dailyStreakDescription: string;
@@ -72,7 +74,7 @@ export function PlayLayout({
         </View>
       </View>
       <View className="mt-3">
-        <DailyStreakCard
+        <ChallengeCard
           challengeDescription={dailyStreakDescription}
           lastCompletionDate={userProfile?.lastStreakCompletionDate}
           currentStreak={userProfile?.streak}

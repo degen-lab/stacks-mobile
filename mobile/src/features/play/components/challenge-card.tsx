@@ -4,7 +4,7 @@ import { isToday } from "@/lib/format/date";
 import { Check } from "lucide-react-native";
 import Svg, { Circle } from "react-native-svg";
 
-type DailyStreakCardProps = {
+type ChallengeCardProps = {
   challengeDescription: string;
   lastCompletionDate?: Date | string | null;
   currentStreak?: number;
@@ -12,10 +12,10 @@ type DailyStreakCardProps = {
 
 const CARD_BG = colors.neutral[100]; // light, consistent surface
 
-export default function DailyStreakCard({
+export default function ChallengeCard({
   challengeDescription,
   lastCompletionDate,
-}: DailyStreakCardProps) {
+}: ChallengeCardProps) {
   const completedToday = isToday(lastCompletionDate ?? undefined);
 
   return (
