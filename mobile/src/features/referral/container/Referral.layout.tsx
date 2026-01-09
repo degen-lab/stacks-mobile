@@ -3,10 +3,10 @@ import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Text, View } from "@/components/ui";
-import InvitedPlayerCard from "@/features/referral/components/InvitedPlayerCard";
-import ReferralCodeCard from "@/features/referral/components/ReferralCard";
-import ReferralShareSection from "../components/ShareSection";
-import StatCard from "../components/StatCard";
+import UserCard from "@/features/referral/components/user-card";
+import ReferralCodeCard from "@/features/referral/components/card-gradient-layers";
+import ReferralShareSection from "../components/referral-cta";
+import StatCard from "../components/card-gradient-right";
 
 export type InvitedPlayer = {
   id: number | string;
@@ -91,7 +91,7 @@ export default function ReferralLayout({
 
             <View className="gap-2">
               {invitedPlayers.map((player) => (
-                <InvitedPlayerCard
+                <UserCard
                   key={player.id}
                   id={player.id}
                   nickname={player.nickname}

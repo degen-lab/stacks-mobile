@@ -63,7 +63,7 @@ jest.mock("@/components/ui/utils", () => ({
   showErrorMessage: (...args: unknown[]) => mockShowErrorMessage(...args),
 }));
 
-jest.mock("@/features/referral/components/LoginReferralModal", () => ({
+jest.mock("@/features/login/components/referral-modal", () => ({
   ReferralCodeModal: (props: Record<string, any>) => {
     mockLatestModalProps.current = props;
     return null;

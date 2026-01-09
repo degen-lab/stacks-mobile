@@ -3,7 +3,7 @@ import type { ImageSource } from "expo-image";
 import { Text, View } from "@/components/ui";
 import { Avatar } from "@/features/header/components/Avatar";
 
-export type InvitedPlayerCardProps = {
+export type UserCardProps = {
   id: number | string;
   nickname: string;
   joinedAt?: string;
@@ -12,13 +12,13 @@ export type InvitedPlayerCardProps = {
   imageUri?: ImageSource;
 };
 
-export default function InvitedPlayerCard({
+export default function UserCard({
   nickname,
   joinedAt,
   isActive,
   pointsEarned,
   imageUri,
-}: InvitedPlayerCardProps) {
+}: UserCardProps) {
   const fallbackAvatar = require("@/assets/images/splash-icon.png");
   const avatarSource = imageUri || fallbackAvatar;
 

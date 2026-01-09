@@ -12,7 +12,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { APIProvider } from "@/api";
-import { ReferralHeader } from "@/features/referral/components/ReferralHeader";
+import { ReferralHeader } from "@/features/referral/components/referral-header";
 import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
 import { fontConfig } from "@/lib/fonts";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";

@@ -67,7 +67,7 @@ describe("HomeScreen", () => {
     mockStxBalance = 1;
 
     render(<HomeScreen />);
-    
+
     expect(mockLayoutProps.current).not.toBeNull();
     expect(mockLayoutProps.current?.navigateToPortfolio).toBeDefined();
     mockLayoutProps.current?.navigateToPortfolio();

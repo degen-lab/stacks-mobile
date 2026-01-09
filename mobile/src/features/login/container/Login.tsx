@@ -9,7 +9,7 @@ import { showError, showErrorMessage } from "@/components/ui/utils";
 import {
   ReferralCodeModal,
   useReferralCodeModal,
-} from "@/features/referral/components/LoginReferralModal";
+} from "@/features/login/components/referral-modal";
 import { useAuth, type SignInResult } from "@/lib/store/auth";
 
 import LoginLayout from "./Login.layout";

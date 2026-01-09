@@ -23,6 +23,8 @@ export * from "./loading-view";
 export * from "./text";
 export * from "./weekly-check-in";
 export * from "./utils";
+export * from "./numbered-section";
+export * from "./how-it-works-modal";
 // export base components from react-native
 export {
   ActivityIndicator,
