@@ -1,23 +1,20 @@
 import { useStoreItems } from "@/api/store";
-import { colors, Text } from "@/components/ui";
-import { useGameStore } from "@/lib/store/game";
+import type { StoreItem } from "@/api/store/types";
+import { mapNumericTypeToItemType } from "@/api/store/types";
+import { Text } from "@/components/ui";
+import { ItemType } from "@/lib/enums";
 import { Asset } from "expo-asset";
-import { Lock } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
   Image,
   ImageSourcePropType,
-  Pressable,
   View,
 } from "react-native";
 import Animated, {
   clamp,
-  interpolate,
-  SharedValue,
   useAnimatedScrollHandler,
-  useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
 import { SvgUri } from "react-native-svg";
@@ -28,21 +25,57 @@ import {
   SKIN_ASSETS,
   SKIN_ID_TO_VARIANT,
   type Skin,
-} from "./skin-config";
+  type SkinId,
+} from "./types";
+import SkinItem from "./skin-item";
 
 const { width } = Dimensions.get("window");
-const ITEM_SIZE = width * 0.21;
-const SPACING = 12;
-const ITEM_TOTAL_SIZE = ITEM_SIZE + SPACING;
+export const SKIN_ITEM_SIZE = width * 0.21;
+export const SPACING = 12;
+export const ITEM_TOTAL_SIZE = SKIN_ITEM_SIZE + SPACING;
 
-type SkinSelectorProps = {
+type SkinSelectorViewProps = {
   availablePoints?: number;
   onSkinSelect?: (index: number) => void;
-  ownedSkins?: Set<string>;
-  isSkinOwned?: (skinId: string) => boolean;
-  onPurchaseSkin?: (skinId: string, cost: number) => Promise<void>;
+  selectedSkinId: SkinId;
+  onSelectSkinId: (skinId: SkinId) => void;
+  isSkinOwned: (skinId: SkinId) => boolean;
+  onPurchaseSkin: (skinId: SkinId, cost: number) => Promise<void>;
   purchaseError?: string | null;
   isPurchasing?: boolean;
+};
+
+export const buildAvailableSkins = (storeItems?: StoreItem[]): Skin[] => {
+  if (!storeItems?.length) {
+    return SKIN_ASSETS.filter((skin) => skin.id === DEFAULT_SKIN_ID).map(
+      (skin) => ({ ...skin, cost: 0 }),
+    );
+  }
+
+  const storeSkinItems = new Map<StoreItem["variant"], StoreItem>();
+  storeItems.forEach((item) => {
+    if (mapNumericTypeToItemType(item.itemType) !== ItemType.Skin) return;
+    storeSkinItems.set(item.variant, item);
+  });
+
+  return SKIN_ASSETS.reduce<Skin[]>((acc, skin) => {
+    if (skin.id === DEFAULT_SKIN_ID) {
+      acc.push({ ...skin, cost: 0 });
+      return acc;
+    }
+    const variant =
+      SKIN_ID_TO_VARIANT[
+        skin.id as Exclude<typeof skin.id, typeof DEFAULT_SKIN_ID>
+      ];
+    const storeItem = variant ? storeSkinItems.get(variant) : undefined;
+    if (!storeItem) return acc;
+    acc.push({
+      ...skin,
+      name: storeItem.name ?? skin.name,
+      cost: storeItem.price,
+    });
+    return acc;
+  }, []);
 };
 
 const renderSkinIcon = (icon: number) => {
@@ -61,56 +94,23 @@ const renderSkinIcon = (icon: number) => {
   );
 };
 
-export default function SkinSelector({
+export function SkinSelectorLayout({
   availablePoints = 0,
   onSkinSelect,
-  ownedSkins: ownedSkinsProp,
-  isSkinOwned: isSkinOwnedProp,
-  onPurchaseSkin: onPurchaseSkinProp,
-  purchaseError: purchaseErrorProp,
-  isPurchasing: isPurchasingProp,
-}: SkinSelectorProps) {
-  // Use hook if props not provided (for backward compatibility)
-  const hookData = useSkinSelector(availablePoints);
-  const isSkinOwned = isSkinOwnedProp ?? hookData.isSkinOwned;
-  const onPurchaseSkin = onPurchaseSkinProp ?? hookData.handlePurchaseSkin;
-  const purchaseError = purchaseErrorProp ?? hookData.error;
+  selectedSkinId,
+  onSelectSkinId,
+  isSkinOwned,
+  onPurchaseSkin,
+  purchaseError,
+  isPurchasing,
+}: SkinSelectorViewProps) {
   const { data: storeItems } = useStoreItems();
 
-  const availableSkins = useMemo(() => {
-    if (!storeItems?.length) {
-      return SKIN_ASSETS.filter((skin) => skin.id === DEFAULT_SKIN_ID).map(
-        (skin) => ({ ...skin, cost: 0 }),
-      );
-    }
+  const availableSkins = useMemo(
+    () => buildAvailableSkins(storeItems),
+    [storeItems],
+  );
 
-    const storeSkinItems = new Map(
-      storeItems
-        .filter((item) => item.itemType === 1)
-        .map((item) => [item.variant, item]),
-    );
-
-    return SKIN_ASSETS.reduce<Skin[]>((acc, skin) => {
-      if (skin.id === DEFAULT_SKIN_ID) {
-        acc.push({ ...skin, cost: 0 });
-        return acc;
-      }
-      const variant =
-        SKIN_ID_TO_VARIANT[
-          skin.id as Exclude<typeof skin.id, typeof DEFAULT_SKIN_ID>
-        ];
-      const storeItem = variant ? storeSkinItems.get(variant) : undefined;
-      if (!storeItem) return acc;
-      acc.push({
-        ...skin,
-        name: storeItem.name ?? skin.name,
-        cost: storeItem.price,
-      });
-      return acc;
-    }, []);
-  }, [storeItems]);
-
-  const { selectedSkinId, setSelectedSkinId } = useGameStore();
   const initialIndex = availableSkins.findIndex((s) => s.id === selectedSkinId);
   const calculatedInitialIndex = initialIndex >= 0 ? initialIndex : 0;
   const scrollX = useSharedValue(calculatedInitialIndex);
@@ -158,10 +158,11 @@ export default function SkinSelector({
   const isSelected = activeSkin.id === selectedSkinId;
 
   const handleUnlockPrompt = (skin: Skin) => {
+    if (isPurchasing) return;
     const skinOwned = isSkinOwned(skin.id);
     if (skinOwned) {
       // If already owned or free, just set it as active
-      setSelectedSkinId(skin.id);
+      onSelectSkinId(skin.id);
       return;
     }
 
@@ -220,17 +221,22 @@ export default function SkinSelector({
         {purchaseError && (
           <Text className="text-xs text-red-600 mt-1">{purchaseError}</Text>
         )}
+        {isPurchasing && (
+          <Text className="text-xs text-secondary mt-1">
+            Processing purchase...
+          </Text>
+        )}
       </View>
 
       <Animated.FlatList
         ref={flatListRef}
         style={{
-          height: ITEM_SIZE * 3,
+          height: SKIN_ITEM_SIZE * 3,
           flexGrow: 0,
         }}
         contentContainerStyle={{
           gap: SPACING,
-          paddingHorizontal: (width - ITEM_SIZE) / 2,
+          paddingHorizontal: (width - SKIN_ITEM_SIZE) / 2,
         }}
         data={availableSkins}
         initialScrollIndex={calculatedInitialIndex}
@@ -261,85 +267,34 @@ export default function SkinSelector({
   );
 }
 
-type SkinItemProps = {
-  skin: Skin;
-  index: number;
-  scrollX: SharedValue<number>;
-  onPress: () => void;
-  isOwned: boolean;
+type SkinSelectorContainerProps = {
+  availablePoints?: number;
+  onSkinSelect?: (index: number) => void;
 };
 
-const SkinItem = ({
-  skin,
-  index,
-  scrollX,
-  onPress,
-  isOwned,
-}: SkinItemProps) => {
-  const animatedStyle = useAnimatedStyle(() => {
-    const borderWidth = interpolate(
-      scrollX.value,
-      [index - 0.4, index - 0.15, index + 0.15, index + 0.4],
-      [0, 3, 3, 0],
-      "clamp",
-    );
-
-    return {
-      borderWidth,
-      borderColor: colors.white,
-      transform: [
-        {
-          translateY: interpolate(
-            scrollX.value,
-            [index - 1, index, index + 1],
-            [ITEM_SIZE / 3, 0, ITEM_SIZE / 3],
-          ),
-        },
-        {
-          scale: interpolate(
-            scrollX.value,
-            [index - 1, index, index + 1],
-            [0.9, 1, 0.9],
-          ),
-        },
-      ],
-    };
-  });
+export default function SkinSelectorContainer({
+  availablePoints = 0,
+  onSkinSelect,
+}: SkinSelectorContainerProps) {
+  const {
+    selectedSkinId,
+    isSkinOwned,
+    handlePurchaseSkin,
+    error,
+    isPurchasing,
+    setSelectedSkinId,
+  } = useSkinSelector(availablePoints);
 
   return (
-    <Pressable onPress={onPress} style={{ alignItems: "center" }}>
-      <Animated.View
-        style={[
-          animatedStyle,
-          {
-            width: ITEM_SIZE,
-            height: ITEM_SIZE,
-            borderRadius: ITEM_SIZE / 2,
-            backgroundColor: skin.accent,
-            justifyContent: "center",
-            alignItems: "center",
-            overflow: "hidden",
-          },
-        ]}
-      >
-        {!isOwned && skin.cost > 0 && (
-          <View
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.35)",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            pointerEvents="none"
-          >
-            <Lock size={22} color="#FFFFFF" />
-          </View>
-        )}
-      </Animated.View>
-    </Pressable>
+    <SkinSelectorLayout
+      availablePoints={availablePoints}
+      onSkinSelect={onSkinSelect}
+      selectedSkinId={selectedSkinId}
+      onSelectSkinId={setSelectedSkinId}
+      isSkinOwned={isSkinOwned}
+      onPurchaseSkin={handlePurchaseSkin}
+      purchaseError={error}
+      isPurchasing={isPurchasing}
+    />
   );
-};
+}

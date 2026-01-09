@@ -1,8 +1,8 @@
-import { Modal, useModal } from "@/components/ui/modal";
+import { Modal } from "@/components/ui/modal";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import React from "react";
 import { View } from "react-native";
-import SkinSelector from "./SkinSelectorView";
+import SkinSelectorContainer from "./skin-selector";
 
 type SkinSelectorModalProps = {
   availablePoints?: number;
@@ -22,14 +22,10 @@ export const SkinSelectorModal = React.forwardRef<
       backgroundStyle={{ backgroundColor: "#EAE8E6" }}
     >
       <View style={{ backgroundColor: "#EAE8E6", paddingHorizontal: 0 }}>
-        <SkinSelector availablePoints={availablePoints ?? 0} />
+        <SkinSelectorContainer availablePoints={availablePoints ?? 0} />
       </View>
     </Modal>
   );
 });
 
 SkinSelectorModal.displayName = "SkinSelectorModal";
-
-export const useSkinSelectorModal = () => {
-  return useModal();
-};
