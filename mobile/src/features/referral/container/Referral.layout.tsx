@@ -55,11 +55,13 @@ export default function ReferralLayout({
                 value={stats.totalInvites}
                 label="Total Invites"
                 gradient="blood-orange"
+                testID="referral-stat-total-invites"
               />
               <CardGradientRight
                 value={stats.pointsEarned}
                 label="Points Earned"
                 gradient="bitcoin"
+                testID="referral-stat-points-earned"
               />
             </View>
           </>
@@ -102,6 +104,7 @@ export default function ReferralLayout({
                   isActive={player.isActive}
                   pointsEarned={player.pointsEarned}
                   imageUri={player.imageUri}
+                  testID={`referral-user-${player.id}`}
                 />
               ))}
             </View>

@@ -9,7 +9,7 @@ import { useActiveReferrals } from "@/api/referrals/use-active-referrals";
 import {
   buildShareMessage,
   socialShareTargets,
-} from "@/features/referral/constants/social-share";
+} from "@/features/referral/utils/social-share";
 import { useI18nSettings } from "@/hooks/use-i18n-settings";
 import { formatFriendlyDate, isToday } from "@/lib/format/date";
 import { useAuth } from "@/lib/store/auth";

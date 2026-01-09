@@ -12,6 +12,7 @@ type CardGradientRightProps = {
   gradient?: Gradient;
   labelPosition?: LabelPosition;
   suffix?: string;
+  testID?: string;
 };
 
 const GRADIENT_MAP: Record<Gradient, readonly string[]> = {
@@ -25,14 +26,21 @@ export function CardGradientRight({
   gradient = "blood-orange",
   labelPosition = "bottom",
   suffix,
+  testID,
 }: CardGradientRightProps) {
   const labelClasses =
     labelPosition === "top"
       ? "mb-1.5 text-xs font-instrument-sans-medium uppercase text-secondary"
       : "mt-1 text-xs font-instrument-sans-medium uppercase text-secondary";
 
+  const labelTestID = testID ? `${testID}-label` : undefined;
+  const valueTestID = testID ? `${testID}-value` : undefined;
+
   return (
-    <View className="flex-1 rounded-xl p-4 border border-surface-secondary bg-sand-100 overflow-hidden">
+    <View
+      className="flex-1 rounded-xl p-4 border border-surface-secondary bg-sand-100 overflow-hidden"
+      testID={testID}
+    >
       <LinearGradient
         colors={
           GRADIENT_MAP[gradient] as readonly [
@@ -53,16 +61,20 @@ export function CardGradientRight({
         }}
       />
       {labelPosition === "top" ? (
-        <Text className={labelClasses}>{label}</Text>
+        <Text className={labelClasses} testID={labelTestID}>
+          {label}
+        </Text>
       ) : null}
-      <Text className="text-2xl font-matter text-primary">
+      <Text className="text-2xl font-matter text-primary" testID={valueTestID}>
         {value}
         {suffix ? (
           <Text className="text-sm font-normal text-secondary"> {suffix}</Text>
         ) : null}
       </Text>
       {labelPosition === "bottom" ? (
-        <Text className={labelClasses}>{label}</Text>
+        <Text className={labelClasses} testID={labelTestID}>
+          {label}
+        </Text>
       ) : null}
     </View>
   );
