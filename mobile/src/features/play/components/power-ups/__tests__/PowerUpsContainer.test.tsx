@@ -131,7 +131,11 @@ describe("PowerUpsContainer", () => {
 
     render(<PowerUpsContainer />);
 
-    await mockLatestProps.onPurchase(ItemVariant.Revive);
+    const purchasePromise = mockLatestProps.onPurchase(ItemVariant.Revive);
+
+    await waitFor(async () => {
+      await purchasePromise;
+    });
 
     expect(mutateAsync).toHaveBeenCalledWith({
       itemType: ItemType.PowerUp,
@@ -161,13 +165,17 @@ describe("PowerUpsContainer", () => {
 
     render(<PowerUpsContainer />);
 
-    await mockLatestProps.onPurchase(ItemVariant.DropPoint);
+    const purchasePromise = mockLatestProps.onPurchase(ItemVariant.DropPoint);
 
-    await waitFor(() => {
-      expect(mockLatestProps.purchaseError).toBe(
-        "Unable to complete purchase. Please try again.",
-      );
-    });
+    await waitFor(
+      async () => {
+        await purchasePromise;
+        expect(mockLatestProps.purchaseError).toBe(
+          "Unable to complete purchase. Please try again.",
+        );
+      },
+      { timeout: 3000 },
+    );
   });
 
   it("sets pending variant while purchase is in flight", async () => {
@@ -202,6 +210,9 @@ describe("PowerUpsContainer", () => {
       },
     } as StorePurchaseResponse);
 
-    await purchasePromise;
+    await waitFor(async () => {
+      await purchasePromise;
+      expect(mockLatestProps.pendingVariant).toBeNull();
+    });
   });
 });
