@@ -69,6 +69,7 @@ export default function PowerUpCard({
           className="h-11 px-6 rounded-full"
           disabled={!hasPoints}
           loading={isPending}
+          accessibilityState={{ disabled: !hasPoints || isPending }}
           onPress={() => onPurchase(variant)}
           testID={`power-up-action-${variant}`}
         />
