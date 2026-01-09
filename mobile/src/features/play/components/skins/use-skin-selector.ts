@@ -11,7 +11,7 @@ import {
   SKIN_ID_TO_VARIANT,
   SKIN_VARIANT_TO_ID,
   type SkinId,
-} from "../types/skin";
+} from "./skin-config";
 
 export function useSkinSelector(availablePoints: number = 0) {
   const {

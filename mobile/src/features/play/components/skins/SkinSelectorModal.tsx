@@ -2,7 +2,7 @@ import { Modal, useModal } from "@/components/ui/modal";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import React from "react";
 import { View } from "react-native";
-import SkinSelector from "./SkinCircularSlider";
+import SkinSelector from "./SkinSelectorView";
 
 type SkinSelectorModalProps = {
   availablePoints?: number;

@@ -1,4 +1,4 @@
-import type { SkinId } from "@/features/play/types/skin";
+import type { SkinId } from "@/features/play/components/skins/skin-config";
 import { getItem, setItem } from "@/lib/storage/storage";
 import { create } from "zustand";
 

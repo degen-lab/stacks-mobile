@@ -22,13 +22,13 @@ import Animated, {
 } from "react-native-reanimated";
 import { SvgUri } from "react-native-svg";
 import { scheduleOnRN } from "react-native-worklets";
-import { useSkinSelector } from "../hooks/use-skin-selector";
+import { useSkinSelector } from "./use-skin-selector";
 import {
   DEFAULT_SKIN_ID,
   SKIN_ASSETS,
   SKIN_ID_TO_VARIANT,
   type Skin,
-} from "../types/skin";
+} from "./skin-config";
 
 const { width } = Dimensions.get("window");
 const ITEM_SIZE = width * 0.21;
