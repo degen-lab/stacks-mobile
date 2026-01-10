@@ -9,7 +9,7 @@ import {
   View,
 } from "@/components/ui";
 import colors from "@/components/ui/colors";
-import { SCORE_MULTIPLIER } from "../../constants";
+import { getDisplayScore, getBaseScore } from "../../utils/scoreCalculation";
 import type { ActionHandler } from "../../types";
 
 type ReviveOverlayProps = {
@@ -34,9 +34,9 @@ export default function ReviveOverlay({
   adError,
 }: ReviveOverlayProps) {
   const canCompareHighScore = highScore > 0;
-  const newScore = score * SCORE_MULTIPLIER;
+  const newScore = getDisplayScore(score);
   const isHighScorePace = canCompareHighScore && newScore >= highScore;
-  const bridgesLeft = (highScore - newScore) / SCORE_MULTIPLIER + 1;
+  const bridgesLeft = getBaseScore(highScore - newScore) + 1;
   return (
     <OverlayPanel>
       <View className="w-full items-center gap-4">

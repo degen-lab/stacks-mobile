@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import type { LayoutChangeEvent } from "react-native";
 
-import { BRIDGE_CONFIG, SCREEN_HEIGHT } from "../constants";
+import { VISUAL_CONFIG, SCREEN_HEIGHT } from "../config";
 
 export const useBridgeLayout = () => {
   const [layoutHeight, setLayoutHeight] = useState(SCREEN_HEIGHT);
@@ -14,7 +14,7 @@ export const useBridgeLayout = () => {
   }, []);
 
   const canvasHeight = layoutHeight;
-  const worldOffsetY = canvasHeight - BRIDGE_CONFIG.CANVAS_H;
+  const worldOffsetY = canvasHeight - VISUAL_CONFIG.CANVAS_H;
 
   return { canvasHeight, handleLayout, layoutHeight, worldOffsetY };
 };

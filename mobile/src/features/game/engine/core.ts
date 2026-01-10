@@ -1,4 +1,4 @@
-import { BRIDGE_CONFIG } from "./constants";
+import { PHYSICS_CONFIG, VISUAL_CONFIG } from "../config";
 import { createRng, randomRange } from "./rng";
 import type {
   EngineEvent,
@@ -6,7 +6,7 @@ import type {
   PlayerMove,
   MoveClientDebug,
   RenderState,
-} from "./types";
+} from "../types";
 
 class Camera {
   x = 0;
@@ -18,13 +18,13 @@ class Camera {
     if (Math.abs(diff) < 1) {
       this.x = this.targetX;
     } else {
-      this.x += diff * Math.min(1, dt * BRIDGE_CONFIG.SCROLL_SPEED);
+      this.x += diff * Math.min(1, dt * PHYSICS_CONFIG.SCROLL_SPEED);
     }
 
     if (this.shakeIntensity > 0) {
       this.shakeIntensity = Math.max(
         0,
-        this.shakeIntensity - dt * BRIDGE_CONFIG.SHAKE_DECAY,
+        this.shakeIntensity - dt * PHYSICS_CONFIG.SHAKE_DECAY,
       );
     }
   }
@@ -62,14 +62,14 @@ class Platform {
     this.maxX = x;
     this.initialX = x; // Store initial position
 
-    if (canMove && rng() < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE) {
+    if (canMove && rng() < PHYSICS_CONFIG.PLATFORM_MOVE_CHANCE) {
       this.isMoving = true;
-      this.vx = BRIDGE_CONFIG.PLATFORM_MOVE_VELOCITY * (rng() > 0.5 ? 1 : -1);
+      this.vx = PHYSICS_CONFIG.PLATFORM_MOVE_VELOCITY * (rng() > 0.5 ? 1 : -1);
       this.initialVx = this.vx;
       const range = randomRange(
         rng,
-        BRIDGE_CONFIG.PLATFORM_MOVE_MIN_RANGE,
-        BRIDGE_CONFIG.PLATFORM_MOVE_MAX_RANGE,
+        PHYSICS_CONFIG.PLATFORM_MOVE_MIN_RANGE,
+        PHYSICS_CONFIG.PLATFORM_MOVE_MAX_RANGE,
       );
       this.minX = x - range;
       this.maxX = x + range;
@@ -110,9 +110,9 @@ class Bridge {
   length = 0;
   rotation = 0;
   grow(dt: number) {
-    this.length += BRIDGE_CONFIG.GROW_SPEED * dt;
-    if (this.length > BRIDGE_CONFIG.MAX_BRIDGE_LENGTH)
-      this.length = BRIDGE_CONFIG.MAX_BRIDGE_LENGTH;
+    this.length += PHYSICS_CONFIG.GROW_SPEED * dt;
+    if (this.length > VISUAL_CONFIG.MAX_BRIDGE_LENGTH)
+      this.length = VISUAL_CONFIG.MAX_BRIDGE_LENGTH;
   }
   reset() {
     this.length = 0;
@@ -125,11 +125,11 @@ class Hero {
   y = 0;
   rotation = 0;
   resetToPlatform(p: Platform) {
-    this.x = p.x + p.w - BRIDGE_CONFIG.HERO_SIZE;
+    this.x = p.x + p.w - VISUAL_CONFIG.HERO_SIZE;
     this.y =
-      BRIDGE_CONFIG.CANVAS_H -
-      BRIDGE_CONFIG.PLATFORM_H -
-      BRIDGE_CONFIG.HERO_SIZE;
+      VISUAL_CONFIG.CANVAS_H -
+      VISUAL_CONFIG.PLATFORM_H -
+      VISUAL_CONFIG.HERO_SIZE;
     this.rotation = 0;
   }
 }
@@ -230,10 +230,6 @@ export class StacksBridgeEngine {
     this.idleStartTime = Math.floor(this.engineTimeMs);
   }
 
-  private getGameTime() {
-    return Math.floor(performance.now() - this.startedAt);
-  }
-
   private resetWorld() {
     this.startedAt = performance.now();
     this.moves = [];
@@ -243,8 +239,8 @@ export class StacksBridgeEngine {
     this.engineTimeMs = 0;
 
     this.platforms = [
-      new Platform(0, BRIDGE_CONFIG.PLATFORM_START_WIDTH, 0, false, this.rng),
-      this.generateNextPlatform(BRIDGE_CONFIG.PLATFORM_START_WIDTH, 1),
+      new Platform(0, VISUAL_CONFIG.PLATFORM_START_WIDTH, 0, false, this.rng),
+      this.generateNextPlatform(VISUAL_CONFIG.PLATFORM_START_WIDTH, 1),
     ];
 
     this.hero.resetToPlatform(this.platforms[0]);
@@ -262,20 +258,20 @@ export class StacksBridgeEngine {
     const gapRng = this.rng();
     const gap =
       gapRng *
-        (BRIDGE_CONFIG.PLATFORM_MAX_GAP - BRIDGE_CONFIG.PLATFORM_MIN_GAP) +
-      BRIDGE_CONFIG.PLATFORM_MIN_GAP;
+        (VISUAL_CONFIG.PLATFORM_MAX_GAP - VISUAL_CONFIG.PLATFORM_MIN_GAP) +
+      VISUAL_CONFIG.PLATFORM_MIN_GAP;
 
     const widthRng = this.rng();
     const w =
       widthRng *
-        (BRIDGE_CONFIG.PLATFORM_MAX_WIDTH - BRIDGE_CONFIG.PLATFORM_MIN_WIDTH) +
-      BRIDGE_CONFIG.PLATFORM_MIN_WIDTH;
+        (VISUAL_CONFIG.PLATFORM_MAX_WIDTH - VISUAL_CONFIG.PLATFORM_MIN_WIDTH) +
+      VISUAL_CONFIG.PLATFORM_MIN_WIDTH;
 
     const platform = new Platform(lastX + gap, w, index, index > 2, this.rng);
 
     if (platform.isMoving) {
-      const safeMinX = lastX + BRIDGE_CONFIG.PLATFORM_MIN_GAP;
-      const safeMaxX = platform.initialX + BRIDGE_CONFIG.PLATFORM_MIN_GAP;
+      const safeMinX = lastX + VISUAL_CONFIG.PLATFORM_MIN_GAP;
+      const safeMaxX = platform.initialX + VISUAL_CONFIG.PLATFORM_MIN_GAP;
       platform.minX = Math.max(platform.minX, safeMinX);
       platform.maxX = Math.min(platform.maxX, safeMaxX);
       if (platform.maxX <= platform.minX) {
@@ -323,13 +319,13 @@ export class StacksBridgeEngine {
 
     if (this.currentPressStart !== null) {
       const maxDurationMs = Math.floor(
-        (BRIDGE_CONFIG.MAX_BRIDGE_LENGTH / BRIDGE_CONFIG.GROW_SPEED) * 1000,
+        (VISUAL_CONFIG.MAX_BRIDGE_LENGTH / PHYSICS_CONFIG.GROW_SPEED) * 1000,
       );
       const duration = Math.min(
         Math.floor(this.engineTimeMs) - this.currentPressStart,
         maxDurationMs,
       );
-      const bridgeLength = (duration / 1000) * BRIDGE_CONFIG.GROW_SPEED;
+      const bridgeLength = (duration / 1000) * PHYSICS_CONFIG.GROW_SPEED;
       const idleDurationMs = Math.max(
         0,
         this.currentPressStart - this.idleStartTime,
@@ -401,7 +397,7 @@ export class StacksBridgeEngine {
         break;
 
       case "ROTATING":
-        this.bridge.rotation += BRIDGE_CONFIG.ROTATE_SPEED * dt;
+        this.bridge.rotation += PHYSICS_CONFIG.ROTATE_SPEED * dt;
         if (this.bridge.rotation >= 90) {
           this.bridge.rotation = 90;
           this.phase = "WALKING";
@@ -445,28 +441,28 @@ export class StacksBridgeEngine {
     const platformCenter = debug?.platformCenter ?? pNext.center;
     const hit = stickTip >= platformX && stickTip <= platformRight;
     const distToCenter = Math.abs(stickTip - platformCenter);
-    this.perfect = hit && distToCenter <= BRIDGE_CONFIG.PERFECT_TOLERANCE;
+    this.perfect = hit && distToCenter <= VISUAL_CONFIG.PERFECT_TOLERANCE;
 
     if (this.perfect) {
       events.push({
         type: "perfect",
         x: pNext.center,
-        y: BRIDGE_CONFIG.CANVAS_H - BRIDGE_CONFIG.PLATFORM_H - 24,
+        y: VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H - 24,
       });
     }
 
     if (hit && this.particleSpawn) {
       this.particleSpawn(
         stickTip,
-        BRIDGE_CONFIG.CANVAS_H - BRIDGE_CONFIG.PLATFORM_H,
-        BRIDGE_CONFIG.COLORS.TEXT_SUB,
+        VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H,
+        VISUAL_CONFIG.COLORS.TEXT_SUB,
         10,
       );
     }
   }
 
   private updateHeroWalking(dt: number, events: EngineEvent[]) {
-    this.hero.x += BRIDGE_CONFIG.WALK_SPEED * dt;
+    this.hero.x += PHYSICS_CONFIG.WALK_SPEED * dt;
 
     const currentPlatform = this.platforms[0];
     if (!currentPlatform) {
@@ -475,7 +471,7 @@ export class StacksBridgeEngine {
     }
     const p1 = this.platforms[1];
     const stickTip = currentPlatform.right + this.bridge.length;
-    const heroFront = this.hero.x + BRIDGE_CONFIG.HERO_SIZE;
+    const heroFront = this.hero.x + VISUAL_CONFIG.HERO_SIZE;
 
     const hit = p1 && stickTip >= p1.x && stickTip <= p1.right;
     const hasLanded =
@@ -484,15 +480,15 @@ export class StacksBridgeEngine {
       heroFront >= p1.x &&
       this.hero.x >=
         p1.right -
-          BRIDGE_CONFIG.HERO_SIZE -
-          BRIDGE_CONFIG.HERO_MIN_LANDING_DISTANCE;
+          VISUAL_CONFIG.HERO_SIZE -
+          VISUAL_CONFIG.HERO_MIN_LANDING_DISTANCE;
 
     if (!hit && heroFront > stickTip) {
       this.hero.x = stickTip;
       this.phase = "FALLING";
     } else if (hasLanded) {
-      const inset = BRIDGE_CONFIG.HERO_PLATFORM_INSET;
-      const maxX = p1.right - BRIDGE_CONFIG.HERO_SIZE - inset;
+      const inset = VISUAL_CONFIG.HERO_PLATFORM_INSET;
+      const maxX = p1.right - VISUAL_CONFIG.HERO_SIZE - inset;
 
       this.hero.x = Math.min(this.hero.x, maxX);
       this.handleSuccess(p1, events);
@@ -500,11 +496,11 @@ export class StacksBridgeEngine {
   }
 
   private updateHeroFalling(dt: number, events: EngineEvent[]) {
-    this.hero.y += BRIDGE_CONFIG.GRAVITY * dt;
-    this.hero.rotation += BRIDGE_CONFIG.FALL_ROTATION * dt;
-    this.bridge.rotation += BRIDGE_CONFIG.ROTATE_SPEED * dt;
+    this.hero.y += PHYSICS_CONFIG.GRAVITY * dt;
+    this.hero.rotation += PHYSICS_CONFIG.FALL_ROTATION * dt;
+    this.bridge.rotation += PHYSICS_CONFIG.ROTATE_SPEED * dt;
 
-    if (this.hero.y > BRIDGE_CONFIG.CANVAS_H + 100) {
+    if (this.hero.y > VISUAL_CONFIG.CANVAS_H + 100) {
       if (!this.hasRevived && this.score > 0) {
         events.push({ type: "revivePrompt", value: this.score });
       } else {
@@ -533,7 +529,7 @@ export class StacksBridgeEngine {
         this.particleSpawn(
           p.center,
           this.hero.y,
-          BRIDGE_CONFIG.COLORS.BRAND,
+          VISUAL_CONFIG.COLORS.BRAND,
           24,
         );
       }

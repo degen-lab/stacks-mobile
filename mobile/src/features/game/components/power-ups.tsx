@@ -6,6 +6,7 @@ import { HeartIcon } from "@/components/ui/icons/heart";
 import { RulerIcon } from "@/components/ui/icons/ruler";
 import PowerUpButton from "./power-up-button";
 import { useGameStore } from "@/lib/store/game";
+import { GAMEPLAY_CONFIG } from "../config";
 
 type PowerUpsContainerProps = {
   dropPointAvailable: boolean;
@@ -32,7 +33,7 @@ const PowerUpsContainer = ({
   const handleActivateGhost = useCallback(() => {
     if (ghost.used || !dropPointAvailable) return;
     const now = performance.now();
-    activateGhostPowerUp(now + 30000);
+    activateGhostPowerUp(now + GAMEPLAY_CONFIG.GHOST_DURATION_MS);
     consumeDropPoint();
   }, [activateGhostPowerUp, consumeDropPoint, dropPointAvailable, ghost.used]);
 
@@ -71,7 +72,7 @@ const PowerUpsContainer = ({
         setCurrentTime(ghost.expiresAt as number);
         clearInterval(interval);
       }
-    }, 100);
+    }, GAMEPLAY_CONFIG.GHOST_TIMER_UPDATE_INTERVAL);
 
     return () => clearInterval(interval);
   }, [ghostActive, ghost.expiresAt]);
@@ -102,7 +103,7 @@ const PowerUpsContainer = ({
                   ? `${Math.ceil((ghost.expiresAt! - currentTime) / 1000)}s`
                   : ghost.used
                     ? "Used"
-                    : "30s"
+                    : `${GAMEPLAY_CONFIG.GHOST_DURATION_MS / 1000}s`
               }
               isActive={ghostActive}
               isUsed={ghost.used}

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
-import { SCORE_MULTIPLIER } from "../../constants";
+import { getDisplayScore } from "../../utils/scoreCalculation";
+import { GAMEPLAY_CONFIG } from "../../config";
 import { GameOverOverlay, ReviveOverlay } from ".";
 import type { RunSummary } from "../../utils/runSummary";
 import type { ActionHandler } from "../../types";
@@ -39,9 +40,9 @@ const BridgeOverlays = ({
   const score = useGameStore((state) => state.score);
   const summary: RunSummary = useMemo(
     () => ({
-      score: runSummary?.score ?? score * SCORE_MULTIPLIER,
+      score: runSummary?.score ?? getDisplayScore(score),
       baseScore: runSummary?.baseScore ?? score,
-      scoreMultiplier: SCORE_MULTIPLIER,
+      scoreMultiplier: GAMEPLAY_CONFIG.SCORE_MULTIPLIER,
       distance: Math.max(0, runSummary?.distance ?? Math.round(score * 0.8)),
       platforms: runSummary?.platforms ?? 0,
       pointsEarned: runSummary?.pointsEarned,

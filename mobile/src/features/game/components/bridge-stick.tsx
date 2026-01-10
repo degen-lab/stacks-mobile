@@ -1,5 +1,6 @@
 import { Group, Rect } from "@shopify/react-native-skia";
 import { useMemo } from "react";
+import { VISUAL_CONFIG } from "../config";
 
 type BridgeStickProps = {
   originX: number;
@@ -10,9 +11,6 @@ type BridgeStickProps = {
   color?: string;
   shadowColor?: string;
 };
-
-const BLOCK_HEIGHT = 8;
-const GAP = 1;
 
 const BridgeStick = ({
   originX,
@@ -25,12 +23,16 @@ const BridgeStick = ({
 }: BridgeStickProps) => {
   const usableLength = Math.max(0, length);
   const blocks = useMemo(() => {
-    const spacing = BLOCK_HEIGHT + GAP;
+    const spacing =
+      VISUAL_CONFIG.STICK_BLOCK_HEIGHT + VISUAL_CONFIG.STICK_BLOCK_GAP;
     const count = usableLength === 0 ? 0 : Math.ceil(usableLength / spacing);
     const items: { index: number; y: number; height: number }[] = [];
     for (let i = 0; i < count; i++) {
       const start = i * spacing;
-      const height = Math.min(BLOCK_HEIGHT, Math.max(usableLength - start, 0));
+      const height = Math.min(
+        VISUAL_CONFIG.STICK_BLOCK_HEIGHT,
+        Math.max(usableLength - start, 0),
+      );
       const yOffset = -(start + height);
       items.push({ index: i, y: yOffset, height });
     }

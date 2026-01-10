@@ -7,7 +7,8 @@ import {
 } from "@/api/game";
 import type { ItemVariant } from "@/lib/enums";
 
-import { SCORE_MULTIPLIER } from "../constants";
+import { getBaseScore } from "../utils/scoreCalculation";
+import { GAMEPLAY_CONFIG } from "../config";
 import type { PlayerMove } from "../types";
 import type { RunSummary } from "../utils/runSummary";
 import type { BridgeOverlayState } from "@/lib/store/game";
@@ -141,8 +142,8 @@ export const useGameSession = ({
             ...prev,
             pointsEarned,
             score,
-            baseScore: score / SCORE_MULTIPLIER,
-            scoreMultiplier: SCORE_MULTIPLIER,
+            baseScore: getBaseScore(score),
+            scoreMultiplier: GAMEPLAY_CONFIG.SCORE_MULTIPLIER,
             isHighScore,
           };
         });

@@ -17,7 +17,7 @@ import { Pressable, View } from "@/components/ui";
 import { useGameStore } from "@/lib/store/game";
 
 import { getSkinById } from "@/features/play/components/skins/types";
-import { BRIDGE_CONFIG, SCREEN_WIDTH } from "../constants";
+import { PHYSICS_CONFIG, VISUAL_CONFIG, SCREEN_WIDTH } from "../config";
 import type { Particle, RenderState } from "../types";
 import BridgeStick from "./bridge-stick";
 
@@ -36,8 +36,7 @@ type BridgeGameCanvasProps = {
   showGhostPreview?: boolean;
 };
 
-const PLATFORM_SPAWN_MS = 100;
-const PLATFORM_SPAWN_OFFSET = 40;
+// Animation constants moved to config/visual.ts
 
 const BridgeGameCanvas = ({
   state,
@@ -62,7 +61,12 @@ const BridgeGameCanvas = ({
   const platformSpawnTimesRef = useRef<Map<number, number>>(new Map());
 
   const spawnParticles = useCallback(
-    (x: number, y: number, color: string, count = 14) => {
+    (
+      x: number,
+      y: number,
+      color: string,
+      count: number = VISUAL_CONFIG.PARTICLE_COUNT,
+    ) => {
       const next = particlesRef.current.slice();
       for (let i = 0; i < count; i++) {
         next.push({
@@ -72,7 +76,11 @@ const BridgeGameCanvas = ({
           vy: (Math.random() - 0.5) * 220 - 140,
           life: 1,
           color,
-          size: 5 + Math.random() * 6,
+          size:
+            VISUAL_CONFIG.PARTICLE_MIN_SIZE +
+            Math.random() *
+              (VISUAL_CONFIG.PARTICLE_MAX_SIZE -
+                VISUAL_CONFIG.PARTICLE_MIN_SIZE),
         });
       }
       particlesRef.current = next;
@@ -110,10 +118,11 @@ const BridgeGameCanvas = ({
 
       const next: Particle[] = [];
       for (const p of particlesRef.current) {
-        const life = p.life - deltaTime * 1.6;
+        const life =
+          p.life - deltaTime * PHYSICS_CONFIG.PARTICLE_LIFETIME_DECAY;
         if (life <= 0) continue;
         const vx = p.vx;
-        const vy = p.vy + 320 * deltaTime;
+        const vy = p.vy + PHYSICS_CONFIG.PARTICLE_GRAVITY * deltaTime;
         const x = p.x + vx * deltaTime;
         const y = p.y + vy * deltaTime;
         next.push({ ...p, x, y, vx, vy, life });
@@ -124,10 +133,11 @@ const BridgeGameCanvas = ({
 
       const nextTexts: typeof perfectTextsRef.current = [];
       for (const t of perfectTextsRef.current) {
-        const life = t.life - deltaTime * 0.8;
+        const life =
+          t.life - deltaTime * PHYSICS_CONFIG.PERFECT_TEXT_LIFETIME_DECAY;
         if (life <= 0) continue;
-        const vx = t.vx * 0.99;
-        const vy = t.vy + 420 * deltaTime;
+        const vx = t.vx * PHYSICS_CONFIG.PERFECT_TEXT_FRICTION;
+        const vy = t.vy + PHYSICS_CONFIG.PERFECT_TEXT_GRAVITY * deltaTime;
         const x = t.x + vx * deltaTime;
         const y = t.y + vy * deltaTime;
         nextTexts.push({ ...t, x, y, vx, vy, life });
@@ -149,13 +159,13 @@ const BridgeGameCanvas = ({
   const { selectedSkinId } = useGameStore();
   const selectedSkin = getSkinById(selectedSkinId);
   const heroSvg = useSVG(selectedSkin.icon);
-  const heroSize = BRIDGE_CONFIG.HERO_SIZE;
+  const heroSize = VISUAL_CONFIG.HERO_SIZE;
   const heroHalf = heroSize / 2;
 
   const stickOriginX = state.platforms[0]
     ? state.platforms[0].x + state.platforms[0].w
     : 0;
-  const stickOriginY = BRIDGE_CONFIG.CANVAS_H - BRIDGE_CONFIG.PLATFORM_H;
+  const stickOriginY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
 
   const now = performance.now();
   const platformSpawnTimes = platformSpawnTimesRef.current;
@@ -177,9 +187,9 @@ const BridgeGameCanvas = ({
       <Canvas style={{ flex: 1 }} pointerEvents="none">
         <Rect x={0} y={0} width={SCREEN_WIDTH} height={canvasHeight}>
           <LinearGradient
-            start={vec(0, canvasHeight - BRIDGE_CONFIG.CANVAS_H)}
+            start={vec(0, canvasHeight - VISUAL_CONFIG.CANVAS_H)}
             end={vec(0, canvasHeight)}
-            colors={[BRIDGE_CONFIG.COLORS.BG_TOP, BRIDGE_CONFIG.COLORS.BG_BOT]}
+            colors={[VISUAL_CONFIG.COLORS.BG_TOP, VISUAL_CONFIG.COLORS.BG_BOT]}
           />
         </Rect>
 
@@ -190,14 +200,18 @@ const BridgeGameCanvas = ({
           ]}
         >
           {state.platforms.map((p) => {
-            const platformY = BRIDGE_CONFIG.CANVAS_H - BRIDGE_CONFIG.PLATFORM_H;
+            const platformY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
             const spawnTime =
               p.index === 0 ? now : (platformSpawnTimes.get(p.index) ?? now);
             const spawnProgress =
               p.index === 0
                 ? 1
-                : Math.min(1, (now - spawnTime) / PLATFORM_SPAWN_MS);
-            const spawnOffset = (1 - spawnProgress) * PLATFORM_SPAWN_OFFSET;
+                : Math.min(
+                    1,
+                    (now - spawnTime) / VISUAL_CONFIG.PLATFORM_SPAWN_MS,
+                  );
+            const spawnOffset =
+              (1 - spawnProgress) * VISUAL_CONFIG.PLATFORM_SPAWN_OFFSET;
             return (
               <Group
                 key={`plat-${p.index}`}
@@ -208,17 +222,17 @@ const BridgeGameCanvas = ({
                   x={p.x}
                   y={platformY + 8}
                   width={p.w}
-                  height={BRIDGE_CONFIG.PLATFORM_H}
-                  color={BRIDGE_CONFIG.COLORS.PLATFORM_SIDE}
+                  height={VISUAL_CONFIG.PLATFORM_H}
+                  color={VISUAL_CONFIG.COLORS.PLATFORM_SIDE}
                 />
                 <Rect
                   x={p.x}
                   y={platformY}
                   width={p.w}
-                  height={BRIDGE_CONFIG.PLATFORM_H}
+                  height={VISUAL_CONFIG.PLATFORM_H}
                 >
                   <LinearGradient
-                    start={vec(p.x, platformY + BRIDGE_CONFIG.PLATFORM_H)}
+                    start={vec(p.x, platformY + VISUAL_CONFIG.PLATFORM_H)}
                     end={vec(p.x, platformY)}
                     colors={["rgba(253, 157, 65, 0.81)", "#FC6432"]}
                     positions={[0.81, 1]}
@@ -236,7 +250,7 @@ const BridgeGameCanvas = ({
                   y={platformY + 6}
                   width={8}
                   height={8}
-                  color={BRIDGE_CONFIG.COLORS.BG_BOT}
+                  color={VISUAL_CONFIG.COLORS.BG_BOT}
                 />
               </Group>
             );
@@ -246,16 +260,16 @@ const BridgeGameCanvas = ({
             <>
               <Rect
                 x={stickOriginX}
-                y={stickOriginY - BRIDGE_CONFIG.STICK_WIDTH / 2}
+                y={stickOriginY - VISUAL_CONFIG.STICK_WIDTH / 2}
                 width={state.stick.length}
-                height={BRIDGE_CONFIG.STICK_WIDTH}
+                height={VISUAL_CONFIG.STICK_WIDTH}
                 color="rgba(0, 0, 0, 0.2)"
               />
               <Rect
                 x={stickOriginX + state.stick.length - 4}
-                y={stickOriginY - BRIDGE_CONFIG.STICK_WIDTH / 2}
+                y={stickOriginY - VISUAL_CONFIG.STICK_WIDTH / 2}
                 width={6}
-                height={BRIDGE_CONFIG.STICK_WIDTH}
+                height={VISUAL_CONFIG.STICK_WIDTH}
                 color="#DC2626"
               />
             </>
@@ -265,10 +279,10 @@ const BridgeGameCanvas = ({
             originX={stickOriginX}
             originY={stickOriginY}
             length={state.stick.length}
-            width={BRIDGE_CONFIG.STICK_WIDTH}
+            width={VISUAL_CONFIG.STICK_WIDTH}
             rotation={state.stick.rotation}
-            color={BRIDGE_CONFIG.COLORS.BRAND}
-            shadowColor={BRIDGE_CONFIG.COLORS.BRAND_DARK}
+            color={VISUAL_CONFIG.COLORS.BRAND}
+            shadowColor={VISUAL_CONFIG.COLORS.BRAND_DARK}
           />
 
           <Group
@@ -292,7 +306,7 @@ const BridgeGameCanvas = ({
                   y={state.hero.y}
                   width={heroSize}
                   height={heroSize}
-                  color={BRIDGE_CONFIG.COLORS.BRAND}
+                  color={VISUAL_CONFIG.COLORS.BRAND}
                 />
                 <Circle
                   cx={state.hero.x + 8}
@@ -340,7 +354,7 @@ const BridgeGameCanvas = ({
                       x={t.x - width / 2}
                       y={t.y}
                       text={text}
-                      color={BRIDGE_CONFIG.COLORS.BRAND}
+                      color={VISUAL_CONFIG.COLORS.BRAND}
                       opacity={opacity}
                       font={perfectFont}
                     />

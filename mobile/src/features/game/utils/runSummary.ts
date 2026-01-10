@@ -1,4 +1,5 @@
-import { SCORE_MULTIPLIER } from "../constants";
+import { getDisplayScore } from "./scoreCalculation";
+import { GAMEPLAY_CONFIG } from "../config";
 import type { PlayerMove } from "../types";
 
 type BuildRunSummaryParams = {
@@ -34,8 +35,8 @@ export const buildRunSummary = ({
   raffleSubmissionsUsed,
 }: BuildRunSummaryParams): RunSummary => {
   const platforms = moves.length;
-  const scoreMultiplier = SCORE_MULTIPLIER;
-  const totalScore = baseScore * scoreMultiplier;
+  const scoreMultiplier = GAMEPLAY_CONFIG.SCORE_MULTIPLIER;
+  const totalScore = getDisplayScore(baseScore);
   const distance = Math.max(0, Math.round(baseScore * 0.8));
   const isHighScore =
     bestSubmittedScore === null ? true : totalScore > bestSubmittedScore;

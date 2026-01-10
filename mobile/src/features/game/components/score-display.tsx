@@ -24,9 +24,7 @@ const ScoreDisplay = () => {
       >
         {score}
       </Text>
-      <Animated.Text
-        className="mt-3 mx-4 text-center text-3xl font-dm-sans-extralight font-extralight text-secondary"
-      >
+      <Animated.Text className="mt-3 mx-4 text-center text-3xl font-dm-sans-extralight font-extralight text-secondary">
         Hold finger on screen to build stacks bridge
       </Animated.Text>
     </View>
