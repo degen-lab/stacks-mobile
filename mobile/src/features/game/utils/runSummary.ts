@@ -5,7 +5,6 @@ import type { PlayerMove } from "../types";
 type BuildRunSummaryParams = {
   baseScore: number;
   moves?: PlayerMove[];
-  streak?: number;
   canSubmitScore?: boolean;
   bestSubmittedScore: number | null;
   raffleSubmissionsUsed: number;
@@ -20,7 +19,6 @@ export type RunSummary = {
   pointsEarned?: number | undefined;
   canSubmitScore: boolean;
   isHighScore: boolean;
-  streak: number;
   submissionsUsed: number;
   submittedHighscore: boolean;
   submittedRaffle: boolean;
@@ -29,7 +27,6 @@ export type RunSummary = {
 export const buildRunSummary = ({
   baseScore,
   moves = [],
-  streak = 0,
   canSubmitScore = true,
   bestSubmittedScore,
   raffleSubmissionsUsed,
@@ -49,7 +46,6 @@ export const buildRunSummary = ({
     platforms,
     canSubmitScore,
     isHighScore,
-    streak,
     submissionsUsed: raffleSubmissionsUsed,
     submittedHighscore: false,
     submittedRaffle: false,

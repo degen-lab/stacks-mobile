@@ -10,7 +10,6 @@ type UseGameControllerOptions = {
     handleInputDown: (isPlaying: boolean) => void;
     handleInputUp: (isPlaying: boolean) => void;
     revivePowerUp: () => void;
-    state: { streak: number };
   };
   revivePowerUp: { activated: boolean; consumed: boolean };
   overlayState: BridgeOverlayState;
@@ -21,7 +20,6 @@ type UseGameControllerOptions = {
   getRunSummary: (
     baseScore: number,
     moves: PlayerMove[],
-    streak: number,
     canSubmitScore: boolean,
   ) => RunSummary;
   canSubmitTournament: boolean;
@@ -69,18 +67,12 @@ export const useGameController = ({
               break;
             }
 
-            const currentStreak = engine.state.streak;
             updateScore(event.value);
             if (overlayState !== "GAME_OVER") {
               setOverlay("GAME_OVER");
             }
             setRunSummary(
-              getRunSummary(
-                event.value,
-                event.moves,
-                currentStreak,
-                canSubmitTournament,
-              ),
+              getRunSummary(event.value, event.moves, canSubmitTournament),
             );
             submitSession(event.moves);
             break;

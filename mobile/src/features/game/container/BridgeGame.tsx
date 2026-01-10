@@ -150,16 +150,11 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   >(null);
 
   const declineRevive = useCallback(() => {
-    const { score: baseScore, streak } = engineRef.current.state;
+    const { score: baseScore } = engineRef.current.state;
     const runData = engineRef.current.getRunData();
 
     setRunSummary(
-      getRunSummary(
-        baseScore,
-        runData?.moves ?? [],
-        streak,
-        canSubmitTournament,
-      ),
+      getRunSummary(baseScore, runData?.moves ?? [], canSubmitTournament),
     );
     updateScore(baseScore);
     setOverlay("GAME_OVER");

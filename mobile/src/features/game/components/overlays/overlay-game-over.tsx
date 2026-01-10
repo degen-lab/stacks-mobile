@@ -47,7 +47,7 @@ export default function GameOverOverlay({
       ? undefined
       : "Submit Phase not started.";
 
-  const dailyStreak = summary.streak ?? userProfile?.streak ?? 0;
+  const dailyStreak = userProfile?.streak ?? 0;
   const streakStats = calculateStreakStats({ streak: dailyStreak });
   const boostRate = streakStats.boostPercentage / 100;
   const basePoints = summary.baseScore;

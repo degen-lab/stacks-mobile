@@ -146,7 +146,6 @@ export class StacksBridgeEngine {
   private perfect = false;
   private lastMoveDebug: MoveClientDebug | null = null;
   private score = 0;
-  private streak = 0;
   private hasRevived = false;
 
   private moves: PlayerMove[] = [];
@@ -194,7 +193,6 @@ export class StacksBridgeEngine {
   get state() {
     return {
       score: this.score,
-      streak: this.streak,
       phase: this.phase,
     };
   }
@@ -251,7 +249,6 @@ export class StacksBridgeEngine {
 
     this.phase = "IDLE";
     this.score = 0;
-    this.streak = 0;
   }
 
   private generateNextPlatform(lastX: number, index: number) {
@@ -523,8 +520,6 @@ export class StacksBridgeEngine {
     events.push({ type: "score", value: this.score });
 
     if (isPerfect) {
-      this.streak++;
-      events.push({ type: "streak", value: this.streak });
       if (this.particleSpawn) {
         this.particleSpawn(
           p.center,
@@ -533,8 +528,6 @@ export class StacksBridgeEngine {
           24,
         );
       }
-    } else {
-      this.streak = 0;
     }
 
     this.phase = "SCROLLING";

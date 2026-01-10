@@ -54,7 +54,6 @@ export type MoveClientDebug = {
 export type EngineEvent =
   | { type: "score"; value: number }
   | { type: "perfect"; x: number; y: number }
-  | { type: "streak"; value: number }
   | { type: "gameOver"; value: number; seed: number; moves: PlayerMove[] }
   | { type: "revivePrompt"; value: number }
   | { type: "particles"; x: number; y: number; color: string; count: number };

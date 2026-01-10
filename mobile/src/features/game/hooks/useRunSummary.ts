@@ -15,16 +15,10 @@ export const useRunSummary = ({
   const [runSummary, setRunSummary] = useState<RunSummary | null>(null);
 
   const getRunSummary = useCallback(
-    (
-      baseScore: number,
-      moves: PlayerMove[] = [],
-      streak = 0,
-      canSubmitScore = true,
-    ) =>
+    (baseScore: number, moves: PlayerMove[] = [], canSubmitScore = true) =>
       buildRunSummary({
         baseScore,
         moves,
-        streak,
         canSubmitScore,
         bestSubmittedScore,
         raffleSubmissionsUsed,
