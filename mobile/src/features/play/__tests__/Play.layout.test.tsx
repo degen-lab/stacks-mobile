@@ -35,16 +35,20 @@ jest.mock("@/features/play/components", () => {
     ),
     ChallengeCard: () => null,
     PowerUpsModal: (() => {
-      const Component = React.forwardRef((_props: Record<string, any>) => {
-        return null;
-      });
+      const Component = React.forwardRef(
+        (_props: Record<string, any>, _ref: React.Ref<BottomSheetModal>) => {
+          return null;
+        },
+      );
       Component.displayName = "PowerUpsModal";
       return Component;
     })(),
     SkinSelectorModal: (() => {
-      const Component = React.forwardRef((_props: Record<string, any>) => {
-        return null;
-      });
+      const Component = React.forwardRef(
+        (_props: Record<string, any>, _ref: React.Ref<BottomSheetModal>) => {
+          return null;
+        },
+      );
       Component.displayName = "SkinSelectorModal";
       return Component;
     })(),
