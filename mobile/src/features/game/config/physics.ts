@@ -5,14 +5,14 @@
 
 export const PHYSICS_CONFIG = {
   // Movement speeds
-  GROW_SPEED: 480, // pixels per second
-  ROTATE_SPEED: 300, // degrees per second
-  WALK_SPEED: 480, // pixels per second
-  GRAVITY: 1200, // pixels per second squared
+  GROW_SPEED: 400, // pixels per second
+  ROTATE_SPEED: 240, // degrees per second
+  WALK_SPEED: 380, // pixels per second
+  GRAVITY: 900, // pixels per second squared
   FALL_ROTATION: 250, // degrees per second when falling
 
   // Camera & Scroll
-  SCROLL_SPEED: 15, // camera scroll velocity
+  SCROLL_SPEED: 12, // camera scroll velocity
   SHAKE_DECAY: 5.0, // camera shake decay rate
 
   // Particle physics
