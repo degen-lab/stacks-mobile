@@ -31,8 +31,7 @@ import { useSelectedNetwork } from "@/lib/store/settings";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { StacksBridgeEngine } from "../engine";
 import { useEngineRunner } from "../hooks/useEngineRunner";
-import { useGameController } from "../hooks/useGameController";
-import type { PlayerMove, RenderState } from "../types";
+import type { EngineEvent, PlayerMove, RenderState } from "../types";
 import BridgeGameCanvas from "../components/canvas";
 import BridgeGameLayout from "./BridgeGame.layout";
 
@@ -234,29 +233,93 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     registerUsedItem,
   });
 
-  const { handleEvents, handleInputDown, handleInputUp, isPlaying } =
-    useGameController({
-      engine: engineRef.current,
-      revivePowerUp,
-      overlayState,
-      setOverlay,
-      updateScore,
+  // Game event handling and input
+  const isPlaying = overlayState === "PLAYING";
+
+  const handleEvents = useCallback(
+    (events: EngineEvent[]) => {
+      if (!events.length) return;
+      applyEngineEvents(events);
+      for (const event of events) {
+        switch (event.type) {
+          case "perfect": {
+            setPerfectCue({
+              x: event.x,
+              y: event.y,
+              createdAt: performance.now(),
+            });
+            break;
+          }
+          case "gameOver": {
+            if (revivePowerUp.activated && !revivePowerUp.consumed) {
+              engineRef.current.revivePowerUp();
+              if (overlayState !== "PLAYING") {
+                setOverlay("PLAYING");
+              }
+              setRunSummary(null);
+              consumeRevive();
+              break;
+            }
+
+            updateScore(event.value);
+            if (overlayState !== "GAME_OVER") {
+              setOverlay("GAME_OVER");
+            }
+            setRunSummary(
+              getRunSummary(event.value, event.moves, canSubmitTournament),
+            );
+            submitSession(event.moves);
+            break;
+          }
+          case "revivePrompt":
+            updateScore(event.value);
+            if (revivePowerUp.activated && !revivePowerUp.consumed) {
+              engineRef.current.revivePowerUp();
+              if (overlayState !== "PLAYING") {
+                setOverlay("PLAYING");
+              }
+              setRunSummary(null);
+              consumeRevive();
+            } else {
+              if (overlayState !== "REVIVE") {
+                setOverlay("REVIVE");
+              }
+              resetReviveReward();
+              if (!reviveAd.loaded && !reviveAd.loading) {
+                reviveAd.loadAd();
+              }
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    },
+    [
       applyEngineEvents,
-      setRunSummary,
-      getRunSummary,
       canSubmitTournament,
-      submitSession,
       consumeRevive,
+      getRunSummary,
+      overlayState,
       resetReviveReward,
+      revivePowerUp.activated,
+      revivePowerUp.consumed,
+      setOverlay,
+      setPerfectCue,
+      setRunSummary,
+      submitSession,
+      updateScore,
       reviveAd,
-      onPerfectCue: (event) => {
-        setPerfectCue({
-          x: event.x,
-          y: event.y,
-          createdAt: performance.now(),
-        });
-      },
-    });
+    ],
+  );
+
+  const handleInputDown = useCallback(() => {
+    engineRef.current.handleInputDown(isPlaying);
+  }, [isPlaying]);
+
+  const handleInputUp = useCallback(() => {
+    engineRef.current.handleInputUp(isPlaying);
+  }, [isPlaying]);
 
   const { handleSubmissionSuccess, handleSubmitSponsored, handleSubmitWallet } =
     useSubmissionActions({
