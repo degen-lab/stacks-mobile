@@ -346,22 +346,27 @@ export class StacksBridgeEngine {
       const stickTip = currentPlatform
         ? currentPlatform.right + bridgeLength
         : null;
+
+      const debugInfo: MoveClientDebug | undefined = __DEV__
+        ? {
+            stickTip,
+            bridgeLength,
+            currentPlatformRight: currentPlatform?.right ?? null,
+            nextPlatformIndex: nextPlatform?.index ?? null,
+            platformX: platformXAtRelease,
+            platformRight: platformRightAtRelease,
+            platformCenter: platformCenterAtRelease,
+            platformIsMoving: nextPlatform?.isMoving ?? null,
+          }
+        : undefined;
+
       this.moves.push({
         startTime: this.currentPressStart,
         duration: duration,
         idleDurationMs,
-        debug: {
-          stickTip,
-          bridgeLength,
-          currentPlatformRight: currentPlatform?.right ?? null,
-          nextPlatformIndex: nextPlatform?.index ?? null,
-          platformX: platformXAtRelease,
-          platformRight: platformRightAtRelease,
-          platformCenter: platformCenterAtRelease,
-          platformIsMoving: nextPlatform?.isMoving ?? null,
-        },
+        ...(debugInfo && { debug: debugInfo }),
       });
-      this.lastMoveDebug = this.moves[this.moves.length - 1]?.debug ?? null;
+      this.lastMoveDebug = debugInfo ?? null;
       this.currentPressStart = null;
     }
 
