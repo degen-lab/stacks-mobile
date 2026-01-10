@@ -1,14 +1,12 @@
 import { useMemo } from "react";
 
-import { SCORE_MULTIPLIER } from "../constants";
-import { GameOverOverlay, ReviveOverlay, type RunSummary } from "../overlays";
-import type { ActionHandler } from "../overlays/types";
-
-type OverlayState = "START" | "PLAYING" | "REVIVE" | "GAME_OVER";
+import { SCORE_MULTIPLIER } from "../../constants";
+import { GameOverOverlay, ReviveOverlay } from ".";
+import type { RunSummary } from "../../utils/runSummary";
+import type { ActionHandler } from "../../types";
+import { useGameStore } from "@/lib/store/game";
 
 type BridgeOverlaysProps = {
-  uiState: OverlayState;
-  uiScore: number;
   highScore?: number;
   runSummary?: RunSummary | null;
   onRestart: ActionHandler;
@@ -24,8 +22,6 @@ type BridgeOverlaysProps = {
 };
 
 const BridgeOverlays = ({
-  uiState,
-  uiScore,
   highScore,
   runSummary,
   onRestart,
@@ -39,29 +35,31 @@ const BridgeOverlays = ({
   adLoading,
   adError,
 }: BridgeOverlaysProps) => {
+  const overlayState = useGameStore((state) => state.overlayState);
+  const score = useGameStore((state) => state.score);
   const summary: RunSummary = useMemo(
     () => ({
-      score: runSummary?.score ?? uiScore * SCORE_MULTIPLIER,
-      baseScore: runSummary?.baseScore ?? uiScore,
-      distance: Math.max(0, runSummary?.distance ?? Math.round(uiScore * 0.8)),
+      score: runSummary?.score ?? score * SCORE_MULTIPLIER,
+      baseScore: runSummary?.baseScore ?? score,
+      scoreMultiplier: SCORE_MULTIPLIER,
+      distance: Math.max(0, runSummary?.distance ?? Math.round(score * 0.8)),
       platforms: runSummary?.platforms ?? 0,
       pointsEarned: runSummary?.pointsEarned,
-      dailyProgress: runSummary?.dailyProgress ?? 50,
       canSubmitScore: runSummary?.canSubmitScore ?? false,
       isHighScore: runSummary?.isHighScore ?? false,
-      streak: runSummary?.streak,
-      submissionsUsed: runSummary?.submissionsUsed,
-      submittedHighscore: runSummary?.submittedHighscore,
-      submittedRaffle: runSummary?.submittedRaffle,
+      streak: runSummary?.streak ?? 0,
+      submissionsUsed: runSummary?.submissionsUsed ?? 0,
+      submittedHighscore: runSummary?.submittedHighscore ?? false,
+      submittedRaffle: runSummary?.submittedRaffle ?? false,
     }),
-    [runSummary, uiScore],
+    [runSummary, score],
   );
 
-  switch (uiState) {
+  switch (overlayState) {
     case "REVIVE":
       return (
         <ReviveOverlay
-          score={uiScore}
+          score={score}
           highScore={highScore}
           onRevive={onRevive}
           onDeclineRevive={onDeclineRevive}
@@ -89,5 +87,4 @@ const BridgeOverlays = ({
   }
 };
 
-export type { OverlayState };
 export default BridgeOverlays;

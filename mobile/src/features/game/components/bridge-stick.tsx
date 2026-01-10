@@ -1,7 +1,7 @@
 import { Group, Rect } from "@shopify/react-native-skia";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 
-type BlockBuilderStickProps = {
+type BridgeStickProps = {
   originX: number;
   originY: number;
   length: number;
@@ -14,7 +14,7 @@ type BlockBuilderStickProps = {
 const BLOCK_HEIGHT = 8;
 const GAP = 1;
 
-const BlockBuilderStick = ({
+const BridgeStick = ({
   originX,
   originY,
   length,
@@ -22,7 +22,7 @@ const BlockBuilderStick = ({
   rotation,
   color = "#FC6432",
   shadowColor = "#E4570F",
-}: BlockBuilderStickProps) => {
+}: BridgeStickProps) => {
   const usableLength = Math.max(0, length);
   const blocks = useMemo(() => {
     const spacing = BLOCK_HEIGHT + GAP;
@@ -67,4 +67,4 @@ const BlockBuilderStick = ({
   );
 };
 
-export default BlockBuilderStick;
+export default BridgeStick;

@@ -2,15 +2,16 @@ import React from "react";
 
 import { View } from "@/components/ui";
 
-type PanelWrapperProps = {
+type OverlayPanelProps = {
   children: React.ReactNode;
   translucent?: boolean;
 };
 
-export default function PanelWrapper({
+// this is used for game overlays
+export default function OverlayPanel({
   children,
   translucent = true,
-}: PanelWrapperProps) {
+}: OverlayPanelProps) {
   return (
     <View
       className={`absolute inset-0 items-center justify-center px-4 py-8 ${

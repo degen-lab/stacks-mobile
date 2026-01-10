@@ -1,15 +1,46 @@
-import { AnimatedStarSplash, Pressable, Text, View } from "@/components/ui";
-import colors from "@/components/ui/colors";
+import {
+  AnimatedStarSplash,
+  ClassicTicket,
+  Pressable,
+  Text,
+  View,
+  colors,
+} from "@/components/ui";
 import GradientBorder from "@/components/ui/gradient-border";
-import RaffleEntryIndicator from "./RaffleEntryIndicator";
-import type { ActionHandler } from "./types";
 
 type RaffleSubmissionProps = {
   canSubmit: boolean;
   sponsoredSubmissionsLeft: number;
   submissionsUsed?: number;
   statusMessage?: string;
-  onSubmit?: ActionHandler;
+  onSubmit?: () => void | Promise<void>;
+};
+
+type RaffleEntryIndicatorProps = {
+  submittedEntries: number;
+  totalSlots?: number;
+  backgroundColor?: string;
+};
+
+const RaffleEntryIndicator = ({
+  submittedEntries,
+  totalSlots = 3,
+  backgroundColor = colors.neutral[100],
+}: RaffleEntryIndicatorProps) => {
+  return (
+    <View className="flex-row items-start justify-between px-2 w-full">
+      {Array.from({ length: totalSlots }).map((_, index) => {
+        const isActive = index < submittedEntries;
+        return (
+          <ClassicTicket
+            key={index}
+            active={isActive}
+            backgroundColor={backgroundColor}
+          />
+        );
+      })}
+    </View>
+  );
 };
 
 export default function RaffleSubmission({

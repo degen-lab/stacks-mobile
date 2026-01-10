@@ -68,3 +68,5 @@ export interface RenderState {
   platforms: PlatformSnapshot[];
   score: number;
 }
+
+export type ActionHandler = () => void | Promise<void>;

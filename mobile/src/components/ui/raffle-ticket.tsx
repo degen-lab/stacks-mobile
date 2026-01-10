@@ -71,30 +71,3 @@ export const ClassicTicket = ({
     </View>
   );
 };
-
-type RaffleEntryIndicatorProps = {
-  submittedEntries: number;
-  totalSlots?: number;
-  backgroundColor?: string;
-};
-
-export default function RaffleEntryIndicator({
-  submittedEntries,
-  totalSlots = 3,
-  backgroundColor = DEFAULT_BG,
-}: RaffleEntryIndicatorProps) {
-  return (
-    <View className="flex-row items-start justify-between px-2 w-full">
-      {Array.from({ length: totalSlots }).map((_, index) => {
-        const isActive = index < submittedEntries;
-        return (
-          <ClassicTicket
-            key={index}
-            active={isActive}
-            backgroundColor={backgroundColor}
-          />
-        );
-      })}
-    </View>
-  );
-}

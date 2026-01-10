@@ -177,6 +177,14 @@ export class StacksBridgeEngine {
     this.resetWorld();
   }
 
+  reset(seed?: number) {
+    if (seed !== undefined) {
+      this.seed = seed;
+    }
+    this.rng = createRng(this.seed);
+    this.resetWorld();
+  }
+
   setParticleEmitter(
     spawn: (x: number, y: number, color: string, count?: number) => void,
   ) {
@@ -201,6 +209,7 @@ export class StacksBridgeEngine {
   revive() {
     this.hasRevived = true;
     const safePlatform = this.platforms[0];
+    if (!safePlatform) return;
     this.hero.resetToPlatform(safePlatform);
     this.bridge.reset();
     this.phase = "IDLE";
@@ -212,6 +221,7 @@ export class StacksBridgeEngine {
   revivePowerUp() {
     // Revive without setting hasRevived flag, so ad revive is still available
     const safePlatform = this.platforms[0];
+    if (!safePlatform) return;
     this.hero.resetToPlatform(safePlatform);
     this.bridge.reset();
     this.phase = "IDLE";
@@ -423,7 +433,7 @@ export class StacksBridgeEngine {
     const pCurrent = this.platforms[0];
     const pNext = this.platforms[1];
 
-    if (!pNext) {
+    if (!pCurrent || !pNext) {
       this.perfect = false;
       return;
     }
@@ -445,7 +455,7 @@ export class StacksBridgeEngine {
       });
     }
 
-    if (this.particleSpawn) {
+    if (hit && this.particleSpawn) {
       this.particleSpawn(
         stickTip,
         BRIDGE_CONFIG.CANVAS_H - BRIDGE_CONFIG.PLATFORM_H,
@@ -458,8 +468,13 @@ export class StacksBridgeEngine {
   private updateHeroWalking(dt: number, events: EngineEvent[]) {
     this.hero.x += BRIDGE_CONFIG.WALK_SPEED * dt;
 
+    const currentPlatform = this.platforms[0];
+    if (!currentPlatform) {
+      this.phase = "IDLE";
+      return;
+    }
     const p1 = this.platforms[1];
-    const stickTip = this.platforms[0].right + this.bridge.length;
+    const stickTip = currentPlatform.right + this.bridge.length;
     const heroFront = this.hero.x + BRIDGE_CONFIG.HERO_SIZE;
 
     const hit = p1 && stickTip >= p1.x && stickTip <= p1.right;

@@ -1,11 +1,16 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, Video } from "lucide-react-native";
 
-import { ActivityIndicator, Pressable, Text, View } from "@/components/ui";
+import {
+  ActivityIndicator,
+  OverlayPanel,
+  Pressable,
+  Text,
+  View,
+} from "@/components/ui";
 import colors from "@/components/ui/colors";
-import { SCORE_MULTIPLIER } from "../constants";
-import PanelWrapper from "./PanelWrapper";
-import type { ActionHandler } from "./types";
+import { SCORE_MULTIPLIER } from "../../constants";
+import type { ActionHandler } from "../../types";
 
 type ReviveOverlayProps = {
   score: number;
@@ -33,7 +38,7 @@ export default function ReviveOverlay({
   const isHighScorePace = canCompareHighScore && newScore >= highScore;
   const bridgesLeft = (highScore - newScore) / SCORE_MULTIPLIER + 1;
   return (
-    <PanelWrapper>
+    <OverlayPanel>
       <View className="w-full items-center gap-4">
         <View className="w-full items-center gap-3 rounded-2xl border border-sand-200 bg-white px-4 py-5 dark:bg-neutral-900 dark:border-neutral-800">
           <LinearGradient
@@ -121,6 +126,6 @@ export default function ReviveOverlay({
           </View>
         )}
       </View>
-    </PanelWrapper>
+    </OverlayPanel>
   );
 }

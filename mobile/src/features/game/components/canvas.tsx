@@ -19,9 +19,9 @@ import { useGameStore } from "@/lib/store/game";
 import { getSkinById } from "@/features/play/components/skins/types";
 import { BRIDGE_CONFIG, SCREEN_WIDTH } from "../constants";
 import type { Particle, RenderState } from "../types";
-import BlockBuilderStick from "./BlockBuilderStick";
+import BridgeStick from "./bridge-stick";
 
-type BridgeCanvasProps = {
+type BridgeGameCanvasProps = {
   state: RenderState;
   canvasHeight: number;
   worldOffsetY: number;
@@ -39,7 +39,7 @@ type BridgeCanvasProps = {
 const PLATFORM_SPAWN_MS = 100;
 const PLATFORM_SPAWN_OFFSET = 40;
 
-const BridgeCanvas = ({
+const BridgeGameCanvas = ({
   state,
   canvasHeight,
   worldOffsetY,
@@ -50,7 +50,7 @@ const BridgeCanvas = ({
   onEmitterReady,
   perfectCue,
   showGhostPreview = false,
-}: BridgeCanvasProps) => {
+}: BridgeGameCanvasProps) => {
   const [particles, setParticles] = useState<Particle[]>([]);
   const particlesRef = useRef<Particle[]>([]);
   const [perfectTexts, setPerfectTexts] = useState<
@@ -261,7 +261,7 @@ const BridgeCanvas = ({
             </>
           ) : null}
 
-          <BlockBuilderStick
+          <BridgeStick
             originX={stickOriginX}
             originY={stickOriginY}
             length={state.stick.length}
@@ -361,4 +361,4 @@ const BridgeCanvas = ({
   );
 };
 
-export default BridgeCanvas;
+export default BridgeGameCanvas;

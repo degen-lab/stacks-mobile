@@ -33,7 +33,7 @@ export default function GameCard({
   submissions,
   onPressPlay,
 }: GameCardProps) {
-  const { selectedSkinId } = useGameStore();
+  const selectedSkinId = useGameStore((state) => state.selectedSkinId);
   const selectedSkin = getSkinById(selectedSkinId);
   const [isIconLoaded, setIsIconLoaded] = useState(
     () => typeof selectedSkin.icon !== "number",

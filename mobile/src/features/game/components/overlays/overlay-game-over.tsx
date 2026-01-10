@@ -1,13 +1,19 @@
 import { RotateCcw } from "lucide-react-native";
 
 import { useSponsoredSubmissionsLeft, useUserProfile } from "@/api/user";
-import { Button, Text, View, CardGradientRight } from "@/components/ui";
+import {
+  Button,
+  Text,
+  View,
+  CardGradientRight,
+  OverlayPanel,
+} from "@/components/ui";
 import colors from "@/components/ui/colors";
 import { TrophyIcon } from "@/components/ui/icons/trophy-icon";
 import { calculateStreakStats } from "@/lib/streak";
-import PanelWrapper from "./PanelWrapper";
-import RaffleSubmission from "./RaffleSubmission";
-import type { ActionHandler, RunSummary } from "./types";
+import RaffleSubmission from "./raffle";
+import type { ActionHandler } from "../../types";
+import type { RunSummary } from "../../utils/runSummary";
 
 type GameOverOverlayProps = {
   summary: RunSummary;
@@ -52,7 +58,7 @@ export default function GameOverOverlay({
       ? Math.max(0, summary.pointsEarned - basePoints)
       : calculatedBonus;
   return (
-    <PanelWrapper>
+    <OverlayPanel>
       <View className="w-full flex-col items-center gap-4">
         <View className="items-center">
           <Text className="text-base font-instrument-sans uppercase tracking-widest text-secondary dark:text-sand-300">
@@ -145,6 +151,6 @@ export default function GameOverOverlay({
           />
         </View>
       </View>
-    </PanelWrapper>
+    </OverlayPanel>
   );
 }
