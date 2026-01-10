@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import type { Ref } from "react";
 import { View, Card } from "@/components/ui";
 import InviteFriendCard from "../components/invite-friend";
-import PortfolioSummary from "../components/portfolio";
+import PortfolioSummary from "../components/Portfolio";
 import { EmptyWalletModal } from "../components/empty-wallet-modal";
 
 type HomeScreenLayoutProps = {
