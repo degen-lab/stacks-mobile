@@ -9,6 +9,7 @@ import {
 import { User } from '../../src/domain/entities/user';
 import { ItemType, ItemVariant } from '../../src/domain/entities/enums';
 import { ConsumableItem } from '../../src/domain/entities/consumableItem';
+import { storeItems } from '../../src/domain/helpers/gameStoreItems';
 
 describe('Game Store Purchase Integration Tests', () => {
   let app: FastifyInstance;
@@ -86,8 +87,10 @@ describe('Game Store Purchase Integration Tests', () => {
 
   describe('POST /store/purchase', () => {
     it('should purchase a consumable item successfully', async () => {
-      // Give user enough points (100 points for 1 Power-Up)
-      await updateUserPoints(userId, 200);
+      const revivePrice = storeItems[ItemVariant.Revive].price;
+      const initialPoints = 200;
+      // Give user enough points
+      await updateUserPoints(userId, initialPoints);
 
       const response = await app.inject({
         method: 'POST',
@@ -110,7 +113,7 @@ describe('Game Store Purchase Integration Tests', () => {
       expect(body.success).toBe(true);
       expect(body.message).toBe('Item purchased successfully');
       expect(body.data).toBeDefined();
-      expect(body.data.points).toBe(185); // 200 - 15 = 185
+      expect(body.data.points).toBe(initialPoints - revivePrice);
       expect(body.data.items).toBeDefined();
       expect(body.data.items.length).toBe(1);
       expect(body.data.items[0].type).toBe(ItemType.PowerUp);
@@ -124,7 +127,7 @@ describe('Game Store Purchase Integration Tests', () => {
         relations: ['items'],
       });
 
-      expect(user?.points).toBe(185);
+      expect(user?.points).toBe(initialPoints - revivePrice);
       expect(user?.items.length).toBe(1);
       expect(user?.items[0].type).toBe(ItemType.PowerUp);
       const consumableItem = user?.items[0] as ConsumableItem;
@@ -132,8 +135,10 @@ describe('Game Store Purchase Integration Tests', () => {
     });
 
     it('should purchase a unique item successfully', async () => {
-      // Give user enough points (500 points for PurpleSkin)
-      await updateUserPoints(userId, 600);
+      const purpleSkinPrice = storeItems[ItemVariant.PurpleSkin].price;
+      const initialPoints = 600;
+      // Give user enough points
+      await updateUserPoints(userId, initialPoints);
 
       const response = await app.inject({
         method: 'POST',
@@ -155,7 +160,7 @@ describe('Game Store Purchase Integration Tests', () => {
       expect(body.success).toBe(true);
       expect(body.message).toBe('Item purchased successfully');
       expect(body.data).toBeDefined();
-      expect(body.data.points).toBe(100); // 600 - 500 = 100
+      expect(body.data.points).toBe(initialPoints - purpleSkinPrice);
       expect(body.data.items).toBeDefined();
       expect(body.data.items.length).toBe(1);
       expect(body.data.items[0].type).toBe(ItemType.Skin);
@@ -168,7 +173,7 @@ describe('Game Store Purchase Integration Tests', () => {
         relations: ['items'],
       });
 
-      expect(user?.points).toBe(100);
+      expect(user?.points).toBe(initialPoints - purpleSkinPrice);
       expect(user?.items.length).toBe(1);
       expect(user?.items[0].type).toBe(ItemType.Skin);
     });
@@ -212,8 +217,10 @@ describe('Game Store Purchase Integration Tests', () => {
     });
 
     it('should throw an error if the user does not have enough points for unique item', async () => {
-      // Give user insufficient points (400 points, need 500 for PurpleSkin)
-      await updateUserPoints(userId, 400);
+      const purpleSkinPrice = storeItems[ItemVariant.PurpleSkin].price;
+      const insufficientPoints = purpleSkinPrice - 1;
+      // Give user insufficient points
+      await updateUserPoints(userId, insufficientPoints);
 
       const response = await app.inject({
         method: 'POST',
@@ -245,13 +252,15 @@ describe('Game Store Purchase Integration Tests', () => {
         relations: ['items'],
       });
 
-      expect(user?.points).toBe(400); // Points unchanged
+      expect(user?.points).toBe(insufficientPoints); // Points unchanged
       expect(user?.items.length).toBe(0); // No items purchased
     });
 
     it('should merge quantities when purchasing the same consumable item multiple times', async () => {
-      // Give user enough points for 2 purchases (30 points for 2 items at 15 each)
-      await updateUserPoints(userId, 50);
+      const revivePrice = storeItems[ItemVariant.Revive].price;
+      const initialPoints = 50;
+      // Give user enough points for 2 purchases
+      await updateUserPoints(userId, initialPoints);
 
       // First purchase
       const firstResponse = await app.inject({
@@ -271,7 +280,7 @@ describe('Game Store Purchase Integration Tests', () => {
 
       expect(firstResponse.statusCode).toBe(200);
       const firstBody = JSON.parse(firstResponse.body);
-      expect(firstBody.data.points).toBe(35); // 50 - 15 = 35
+      expect(firstBody.data.points).toBe(initialPoints - revivePrice);
       expect(firstBody.data.items.length).toBe(1);
       expect(firstBody.data.items[0].quantity).toBe(1);
 
@@ -293,7 +302,7 @@ describe('Game Store Purchase Integration Tests', () => {
 
       expect(secondResponse.statusCode).toBe(200);
       const secondBody = JSON.parse(secondResponse.body);
-      expect(secondBody.data.points).toBe(20); // 35 - 15 = 20
+      expect(secondBody.data.points).toBe(initialPoints - revivePrice * 2);
       expect(secondBody.data.items.length).toBe(1); // Same item, merged
       expect(secondBody.data.items[0].quantity).toBe(2); // Quantities merged
 
@@ -305,7 +314,7 @@ describe('Game Store Purchase Integration Tests', () => {
         relations: ['items'],
       });
 
-      expect(user?.points).toBe(20); // 50 - 15 - 15 = 20
+      expect(user?.points).toBe(initialPoints - revivePrice * 2);
       expect(user?.items.length).toBe(1);
       const consumableItem = user?.items[0] as ConsumableItem;
       expect(consumableItem.quantity).toBe(2);
