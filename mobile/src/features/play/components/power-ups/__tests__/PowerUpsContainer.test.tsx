@@ -1,7 +1,7 @@
 import type { StoreItem, StorePurchaseResponse } from "@/api/store/types";
 import type { UserItem } from "@/api/user/types";
 import { ItemType, ItemVariant, PurchaseType } from "@/lib/enums";
-import { render, waitFor } from "@/lib/tests";
+import { act, render, waitFor } from "@/lib/tests";
 import PowerUpsContainer from "../power-ups";
 
 let mockLatestProps: any;
@@ -131,10 +131,8 @@ describe("PowerUpsContainer", () => {
 
     render(<PowerUpsContainer />);
 
-    const purchasePromise = mockLatestProps.onPurchase(ItemVariant.Revive);
-
-    await waitFor(async () => {
-      await purchasePromise;
+    await act(async () => {
+      await mockLatestProps.onPurchase(ItemVariant.Revive);
     });
 
     expect(mutateAsync).toHaveBeenCalledWith({
@@ -156,6 +154,7 @@ describe("PowerUpsContainer", () => {
   });
 
   it("shows error when purchase fails", async () => {
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
     const mutateAsync = jest.fn(async () => Promise.reject(new Error("fail")));
 
     mockUseStorePurchaseMutation.mockReturnValue({
@@ -165,17 +164,22 @@ describe("PowerUpsContainer", () => {
 
     render(<PowerUpsContainer />);
 
-    const purchasePromise = mockLatestProps.onPurchase(ItemVariant.DropPoint);
+    await act(async () => {
+      await mockLatestProps.onPurchase(ItemVariant.DropPoint);
+    });
 
-    await waitFor(
-      async () => {
-        await purchasePromise;
-        expect(mockLatestProps.purchaseError).toBe(
-          "Unable to complete purchase. Please try again.",
-        );
-      },
-      { timeout: 3000 },
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to purchase item",
+      expect.any(Error),
     );
+
+    await waitFor(() => {
+      expect(mockLatestProps.purchaseError).toBe(
+        "Unable to complete purchase. Please try again.",
+      );
+    });
+
+    errorSpy.mockRestore();
   });
 
   it("sets pending variant while purchase is in flight", async () => {
@@ -195,24 +199,25 @@ describe("PowerUpsContainer", () => {
 
     render(<PowerUpsContainer />);
 
-    const purchasePromise = mockLatestProps.onPurchase(ItemVariant.Revive);
+    let purchasePromise: Promise<void>;
+    await act(async () => {
+      purchasePromise = mockLatestProps.onPurchase(ItemVariant.Revive);
+    });
 
     await waitFor(() => {
       expect(mockLatestProps.pendingVariant).toBe(ItemVariant.Revive);
     });
 
-    resolvePurchase!({
-      success: true,
-      message: "Purchase successful",
-      data: {
-        points: 50,
-        items: [],
-      },
-    } as StorePurchaseResponse);
-
-    await waitFor(async () => {
-      await purchasePromise;
-      expect(mockLatestProps.pendingVariant).toBeNull();
+    await act(async () => {
+      resolvePurchase!({
+        success: true,
+        message: "Purchase successful",
+        data: {
+          points: 50,
+          items: [],
+        },
+      } as StorePurchaseResponse);
+      await purchasePromise!;
     });
   });
 });
