@@ -2,7 +2,7 @@ import type { ImageSource } from "expo-image";
 
 import { Text, View } from "@/components/ui";
 import type { LeaderboardUser, PodiumUser } from "@/features/leaderboard/types";
-import { LeaderboardItem } from "./LeaderboardItem";
+import { LeaderboardItem } from "./leaderboard-item";
 
 export type WeeklyTournamentPreviewProps = {
   podiumUsers?: PodiumUser[];
@@ -12,8 +12,6 @@ export type WeeklyTournamentPreviewProps = {
 };
 
 export function WeeklyTournamentPreview({
-  // TODO: add podium only if user is in top 3
-  // podiumUsers = mockPodiumUsers,
   projectedUser,
   avatarFallback,
 }: WeeklyTournamentPreviewProps) {
@@ -33,9 +31,6 @@ export function WeeklyTournamentPreview({
           />
         ) : null}
       </View>
-      {/* <View className="mt-3">
-        <Podium users={podiumUsers} />
-      </View> */}
     </View>
   );
 }

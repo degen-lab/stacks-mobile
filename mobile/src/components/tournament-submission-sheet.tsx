@@ -10,7 +10,7 @@ import {
   View,
   colors,
 } from "@/components/ui";
-import { WeeklyTournamentPreview } from "@/features/leaderboard/components/WeeklyTournamentPreview";
+import { WeeklyTournamentPreview } from "@/features/leaderboard/components/submission-tournament-card";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import React from "react";

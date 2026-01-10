@@ -1,6 +1,6 @@
 import { View } from "@/components/ui";
 import type { PodiumUser } from "@/features/leaderboard/types";
-import { PodiumPlace } from "./PodiumPlace";
+import { PodiumPlace } from "./podium-place";
 
 export type PodiumProps = {
   users?: PodiumUser[];

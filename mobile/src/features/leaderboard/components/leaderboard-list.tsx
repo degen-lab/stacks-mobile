@@ -1,5 +1,5 @@
 import { Button, View } from "@/components/ui";
-import { LeaderboardItem } from "@/features/leaderboard/components/LeaderboardItem";
+import { LeaderboardItem } from "@/features/leaderboard/components/leaderboard-item";
 import type { LeaderboardUser } from "@/features/leaderboard/types";
 import { useAuth } from "@/lib/store/auth";
 import type { RelativePathString } from "expo-router";

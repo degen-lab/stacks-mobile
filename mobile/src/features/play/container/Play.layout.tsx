@@ -2,8 +2,8 @@ import type { UserProfile } from "@/api/user/types";
 import { ScrollView, Text } from "@/components/ui";
 import { StackIcon } from "@/components/ui/icons/stack";
 import { StarIcon } from "@/components/ui/icons/star";
-import { LeaderboardList } from "@/features/leaderboard/components/LeaderboardList";
-import { Podium } from "@/features/leaderboard/components/Podium";
+import { LeaderboardList } from "@/features/leaderboard/components/leaderboard-list";
+import { Podium } from "@/features/leaderboard/components/podium";
 import type { LeaderboardUser } from "@/features/leaderboard/types";
 import {
   ChallengeCard,

@@ -5,11 +5,11 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import React from "react";
 import { PlayLayout } from "../container/Play.layout";
 
-jest.mock("@/features/leaderboard/components/LeaderboardList", () => ({
+jest.mock("@/features/leaderboard/components/leaderboard-list", () => ({
   LeaderboardList: () => null,
 }));
 
-jest.mock("@/features/leaderboard/components/Podium", () => ({
+jest.mock("@/features/leaderboard/components/podium", () => ({
   Podium: () => null,
 }));
 
