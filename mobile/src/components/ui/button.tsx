@@ -57,8 +57,8 @@ const button = tv({
       },
       secondaryNavbar: {
         container:
-          "bg-neutral-sand-500 hover:bg-neutral-sand-600 px-3 py-0 rounded-md flex items-center justify-center",
-        label: "text-background text-xs font-instrument-sans",
+          "bg-sand-850 hover:bg-sand-900 px-3 py-0 rounded-lg flex items-center justify-center",
+        label: "text-sand-100 text-xs font-instrument-sans",
         indicator: "text-background",
       },
       gamePrimary: {

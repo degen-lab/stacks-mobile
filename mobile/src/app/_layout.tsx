@@ -7,19 +7,14 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
-import { StyleSheet } from "react-native";
 import FlashMessage from "react-native-flash-message";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { APIProvider } from "@/api";
-import { ReferralHeader } from "@/features/referral/components/ReferralHeader";
-import { initializeAds } from "@/lib/ads";
+import { ReferralHeader } from "@/features/referral/components/referral-header";
+import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
 import { fontConfig } from "@/lib/fonts";
-import { hydrateAuth } from "@/lib/store/auth";
-import { useGameStore } from "@/lib/store/game";
-import { loadSettings } from "@/lib/store/settings";
-import { loadSelectedTheme } from "@/lib/theme/use-selected-theme";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";
 
 export { ErrorBoundary } from "expo-router";
@@ -28,29 +23,13 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontConfig);
+  const isAppReady = useAppBootstrap();
 
   useEffect(() => {
-    const initApp = async () => {
-      try {
-        await Promise.all([
-          hydrateAuth(),
-          loadSelectedTheme(),
-          loadSettings(),
-          useGameStore.getState().hydrateSelectedSkin(),
-          // TODO: add consent before initializing ads
-          initializeAds(), // Initialize Google Mobile Ads SDK
-        ]);
-      } catch (error) {
-        console.error("Failed to initialize app:", error);
-      } finally {
-        if (fontsLoaded || fontError) {
-          await SplashScreen.hideAsync();
-        }
-      }
-    };
-
-    initApp();
-  }, [fontsLoaded, fontError]);
+    if (isAppReady && (fontsLoaded || fontError)) {
+      SplashScreen.hideAsync();
+    }
+  }, [isAppReady, fontsLoaded, fontError]);
 
   return (
     <Providers>
@@ -92,10 +71,7 @@ export default function RootLayout() {
 function Providers({ children }: { children: React.ReactNode }) {
   const theme = useThemeConfig();
   return (
-    <GestureHandlerRootView
-      style={styles.container}
-      className={theme.dark ? `dark` : undefined}
-    >
+    <GestureHandlerRootView className={`flex-1 ${theme.dark ? "dark" : ""}`}>
       <KeyboardProvider>
         <ThemeProvider value={theme}>
           <APIProvider>
@@ -109,9 +85,3 @@ function Providers({ children }: { children: React.ReactNode }) {
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

@@ -1,9 +1,16 @@
 import type { ImageSource } from "expo-image";
 
 import { OrDivider } from "@/components/or-divider";
-import { Button, Modal, Spinner, Text, View, colors } from "@/components/ui";
-import { WeeklyTournamentPreview } from "@/features/leaderboard/components/WeeklyTournamentPreview";
-import { ClassicTicket } from "@/features/play/bridge-game/overlays/RaffleEntryIndicator";
+import {
+  Button,
+  ClassicTicket,
+  Modal,
+  Spinner,
+  Text,
+  View,
+  colors,
+} from "@/components/ui";
+import { WeeklyTournamentPreview } from "@/features/leaderboard/components/submission-tournament-card";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import React from "react";

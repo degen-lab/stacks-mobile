@@ -2,23 +2,10 @@ import { HapticTab } from "@/components/haptic-tab";
 import { EarnIcon, GamepadIcon, HomeIcon } from "@/components/ui/icons";
 import { Header } from "@/features/header";
 import { useAuth } from "@/lib/store/auth";
-import { Redirect, SplashScreen, Tabs } from "expo-router";
-import { useCallback, useEffect } from "react";
+import { Redirect, Tabs } from "expo-router";
 
 export default function TabLayout() {
   const { isAuthenticated, hasHydrated } = useAuth();
-
-  const hideSplash = useCallback(async () => {
-    await SplashScreen.hideAsync();
-  }, []);
-
-  useEffect(() => {
-    if (hasHydrated) {
-      setTimeout(() => {
-        hideSplash();
-      }, 1000);
-    }
-  }, [hasHydrated, hideSplash]);
 
   if (!hasHydrated) return null;
   if (!isAuthenticated) return <Redirect href="/login" />;

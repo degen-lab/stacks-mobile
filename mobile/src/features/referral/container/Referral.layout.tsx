@@ -2,11 +2,14 @@ import type { ImageSource } from "expo-image";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Text, View } from "@/components/ui";
-import InvitedPlayerCard from "@/features/referral/components/InvitedPlayerCard";
-import ReferralCodeCard from "@/features/referral/components/ReferralCard";
-import ReferralShareSection from "../components/ShareSection";
-import StatCard from "../components/StatCard";
+import {
+  Text,
+  View,
+  CardGradientRight,
+  CardGradientLayers,
+} from "@/components/ui";
+import UserCard from "@/features/referral/components/user-card";
+import ReferralShareSection from "@/features/referral/components/referral-cta";
 
 export type InvitedPlayer = {
   id: number | string;
@@ -48,22 +51,24 @@ export default function ReferralLayout({
         {hasReferralCode && (
           <>
             <View className="flex-row gap-3 mb-6">
-              <StatCard
+              <CardGradientRight
                 value={stats.totalInvites}
                 label="Total Invites"
                 gradient="blood-orange"
+                testID="referral-stat-total-invites"
               />
-              <StatCard
+              <CardGradientRight
                 value={stats.pointsEarned}
                 label="Points Earned"
                 gradient="bitcoin"
+                testID="referral-stat-points-earned"
               />
             </View>
           </>
         )}
 
         <View className="mb-6">
-          <ReferralCodeCard
+          <CardGradientLayers
             referralCode={referralCode}
             hasReferralCode={hasReferralCode}
             borderRadius={18}
@@ -91,7 +96,7 @@ export default function ReferralLayout({
 
             <View className="gap-2">
               {invitedPlayers.map((player) => (
-                <InvitedPlayerCard
+                <UserCard
                   key={player.id}
                   id={player.id}
                   nickname={player.nickname}
@@ -99,6 +104,7 @@ export default function ReferralLayout({
                   isActive={player.isActive}
                   pointsEarned={player.pointsEarned}
                   imageUri={player.imageUri}
+                  testID={`referral-user-${player.id}`}
                 />
               ))}
             </View>
