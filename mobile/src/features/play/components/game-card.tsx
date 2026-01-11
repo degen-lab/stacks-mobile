@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { Image, Pressable } from "react-native";
 import { SvgUri } from "react-native-svg";
 import { getSkinById } from "@/features/play/components/skins/types";
+import { useSvgAsset } from "@/hooks/use-svg-asset";
 
 type HeroIconComponent = ComponentType<{
   size?: number;
@@ -33,16 +34,25 @@ export default function GameCard({
   submissions,
   onPressPlay,
 }: GameCardProps) {
-  const { selectedSkinId } = useGameStore();
+  const selectedSkinId = useGameStore((state) => state.selectedSkinId);
   const selectedSkin = getSkinById(selectedSkinId);
-  const [isIconLoaded, setIsIconLoaded] = useState(
-    () => typeof selectedSkin.icon !== "number",
-  );
   const iconSize = 82;
+  const svgUri = useSvgAsset(
+    typeof selectedSkin.icon === "number" ? selectedSkin.icon : null,
+  );
+  const [isIconLoaded, setIsIconLoaded] = useState(
+    () => typeof selectedSkin.icon !== "number" || svgUri !== null,
+  );
 
   useEffect(() => {
-    setIsIconLoaded(typeof selectedSkin.icon !== "number");
-  }, [selectedSkin.icon]);
+    if (typeof selectedSkin.icon === "number" && svgUri) {
+      setIsIconLoaded(true);
+    } else if (typeof selectedSkin.icon !== "number") {
+      setIsIconLoaded(true);
+    } else {
+      setIsIconLoaded(false);
+    }
+  }, [selectedSkin.icon, svgUri]);
 
   const renderIcon = () => {
     const iconToUse = selectedSkin.icon;
@@ -52,23 +62,25 @@ export default function GameCard({
       const isSvg = asset.type === "svg";
 
       if (isSvg) {
+        if (!svgUri) {
+          return (
+            <View
+              className="relative"
+              style={{ width: iconSize, height: iconSize }}
+              pointerEvents="none"
+            >
+              <View className="absolute inset-0 rounded-lg bg-neutral-300 dark:bg-neutral-600" />
+            </View>
+          );
+        }
+
         return (
           <View
             className="relative"
             style={{ width: iconSize, height: iconSize }}
             pointerEvents="none"
           >
-            {!isIconLoaded && (
-              <View className="absolute inset-0 rounded-lg bg-neutral-300 dark:bg-neutral-600" />
-            )}
-            <SvgUri
-              uri={asset.uri}
-              width={iconSize}
-              height={iconSize}
-              onLoad={() => setIsIconLoaded(true)}
-              onError={() => setIsIconLoaded(true)}
-              style={{ opacity: isIconLoaded ? 1 : 0 }}
-            />
+            <SvgUri uri={svgUri} width={iconSize} height={iconSize} />
           </View>
         );
       }

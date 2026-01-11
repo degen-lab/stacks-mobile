@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { SvgUri } from "react-native-svg";
+import { useSvgAsset } from "@/hooks/use-svg-asset";
 
 type CardProps = {
   imageSource?: ImageSourcePropType;
@@ -34,60 +35,65 @@ export function Card({
   imageClassName,
   onPress,
 }: CardProps) {
+  const svgUri = useSvgAsset(
+    imageSource && typeof imageSource === "number" ? imageSource : null,
+  );
+
   const renderImage = () => {
     if (!imageSource) return null;
 
-    try {
-      const asset = Asset.fromModule(imageSource as number);
-      const isSvg = asset.type === "svg";
+    const asset =
+      typeof imageSource === "number" ? Asset.fromModule(imageSource) : null;
+    const isSvg = asset?.type === "svg";
 
-      return (
-        <View
-          className={`items-center justify-center ${imageClassName ?? ""}`}
-          style={{
-            width: imageSize.width,
-            height: imageSize.height,
-          }}
-        >
-          {isSvg ? (
-            <SvgUri
-              uri={asset.uri}
-              width={imageSize.width}
-              height={imageSize.height}
-            />
-          ) : (
-            <Image
-              source={imageSource}
-              style={{
-                width: imageSize.width,
-                height: imageSize.height,
-              }}
-              resizeMode="contain"
-            />
-          )}
-        </View>
-      );
-    } catch (error) {
-      console.error(error);
-      return (
-        <View
-          className={`items-center justify-center ${imageClassName ?? ""}`}
-          style={{
-            width: imageSize.width,
-            height: imageSize.height,
-          }}
-        >
-          <Image
-            source={imageSource}
+    if (isSvg) {
+      if (!svgUri) {
+        return (
+          <View
+            className={`items-center justify-center ${imageClassName ?? ""}`}
             style={{
               width: imageSize.width,
               height: imageSize.height,
             }}
-            resizeMode="contain"
+          />
+        );
+      }
+
+      return (
+        <View
+          className={`items-center justify-center ${imageClassName ?? ""}`}
+          style={{
+            width: imageSize.width,
+            height: imageSize.height,
+          }}
+        >
+          <SvgUri
+            uri={svgUri}
+            width={imageSize.width}
+            height={imageSize.height}
           />
         </View>
       );
     }
+
+    return (
+      <View
+        className={`items-center justify-center ${imageClassName ?? ""}`}
+        style={{
+          width: imageSize.width,
+          height: imageSize.height,
+        }}
+      >
+        <Image
+          source={imageSource}
+          style={{
+            width: imageSize.width,
+            height: imageSize.height,
+          }}
+          resizeMode="contain"
+        />
+      </View>
+    );
   };
 
   const content = (

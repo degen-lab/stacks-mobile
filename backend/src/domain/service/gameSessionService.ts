@@ -16,7 +16,7 @@ import { InvalidSeedError } from '../errors/sessionError';
 
 // Game engine constants (must match frontend engine.ts)
 const BRIDGE_CONFIG = {
-  GROW_SPEED: 480, // pixels per second
+  GROW_SPEED: 400, // pixels per second
   PERFECT_TOLERANCE: 3, // pixels
   HERO_SIZE: 40, // pixels
   HERO_PLATFORM_INSET: 6, // pixels

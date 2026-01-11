@@ -1,11 +1,11 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Asset } from "expo-asset";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { View } from "react-native";
 import { SvgUri } from "react-native-svg";
 import { z } from "zod";
+import { useSvgAsset } from "@/hooks/use-svg-asset";
 
 import { Button } from "../../../components/ui/button";
 import { ControlledInput } from "../../../components/ui/input";
@@ -99,7 +99,7 @@ export const ReferralCodeModal = React.forwardRef<
     onDismiss?.();
   };
 
-  const giftAsset = Asset.fromModule(require("@/assets/images/gift.svg"));
+  const svgUri = useSvgAsset(require("@/assets/images/gift.svg"));
 
   return (
     <Modal
@@ -118,7 +118,7 @@ export const ReferralCodeModal = React.forwardRef<
               height: 80,
             }}
           >
-            <SvgUri uri={giftAsset.uri} width={110} height={110} />
+            {svgUri && <SvgUri uri={svgUri} width={110} height={110} />}
           </View>
         </View>
 
