@@ -28,6 +28,7 @@ import {
   type SkinId,
 } from "./types";
 import SkinItem from "./skin-item";
+import { useSvgAsset } from "@/hooks/use-svg-asset";
 
 const { width } = Dimensions.get("window");
 export const SKIN_ITEM_SIZE = width * 0.21;
@@ -78,12 +79,16 @@ export const buildAvailableSkins = (storeItems?: StoreItem[]): Skin[] => {
   }, []);
 };
 
-const renderSkinIcon = (icon: number) => {
+const RenderSkinIcon = ({ icon }: { icon: number }) => {
+  const svgUri = useSvgAsset(icon);
   const asset = Asset.fromModule(icon);
   const isSvg = asset.type === "svg";
 
   if (isSvg) {
-    return <SvgUri uri={asset.uri} width={128} height={128} />;
+    if (!svgUri) {
+      return <View style={{ width: 128, height: 128 }} />;
+    }
+    return <SvgUri uri={svgUri} width={128} height={128} />;
   }
 
   return (
@@ -207,7 +212,7 @@ export function SkinSelectorLayout({
   return (
     <View className="w-full items-center">
       <View className="mb-8 items-center gap-2">
-        {renderSkinIcon(activeSkin.icon)}
+        <RenderSkinIcon icon={activeSkin.icon} />
         <Text className="text-lg font-matter text-primary">
           {activeSkin.name}
         </Text>
