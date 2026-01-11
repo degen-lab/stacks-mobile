@@ -37,9 +37,10 @@ export const useGameAds = ({
   const submissionRewardedRef = useRef(false);
   const adRewardedRef = useRef(false);
 
-  const adUnitId = __DEV__
-    ? TestIds.REWARDED
-    : Env.ANDROID_REWARDS_AD_MOBIN_KEY;
+  const adUnitId =
+    Env.APP_ENV === "production"
+      ? Env.ANDROID_REWARDS_AD_MOBIN_KEY
+      : TestIds.REWARDED;
 
   const handleAdEarned = useCallback(() => {
     adRewardedRef.current = true;
