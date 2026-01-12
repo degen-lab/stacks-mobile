@@ -12,6 +12,7 @@ import type {
 
 type BridgeGameLayoutProps = {
   overlayState: BridgeOverlayState;
+  actualOverlayState: BridgeOverlayState;
   score: number;
   ghost: GhostState;
   revivePowerUp: RevivePowerUpState;
@@ -37,6 +38,7 @@ type BridgeGameLayoutProps = {
 
 const BridgeGameLayout = ({
   overlayState,
+  actualOverlayState,
   score,
   ghost,
   revivePowerUp,
@@ -63,7 +65,7 @@ const BridgeGameLayout = ({
     <>
       <ScoreDisplay overlayState={overlayState} score={score} />
       <PowerUpsContainer
-        overlayState={overlayState}
+        overlayState={actualOverlayState}
         ghost={ghost}
         revivePowerUp={revivePowerUp}
         dropPointAvailable={dropPointAvailable}

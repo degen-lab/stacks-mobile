@@ -585,6 +585,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
         />
         <BridgeGameLayout
           overlayState={overlayStateForUi}
+          actualOverlayState={overlayState}
           score={score}
           ghost={ghost}
           revivePowerUp={revivePowerUp}

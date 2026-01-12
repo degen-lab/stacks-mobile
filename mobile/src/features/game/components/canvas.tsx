@@ -64,9 +64,6 @@ export const BridgeGameCanvas = ({
   const perfectTextsRef = useRef<
     { x: number; y: number; vx: number; vy: number; life: number }[]
   >([]);
-  const platformSpawnTimes = useRef(new Map<number, number>());
-  const emitterReadyRef = useRef(false);
-  const assetsLoadedRef = useRef(false);
 
   const [, setTick] = useState(0);
 
@@ -92,10 +89,7 @@ export const BridgeGameCanvas = ({
   );
 
   useEffect(() => {
-    if (onEmitterReady && !emitterReadyRef.current) {
-      onEmitterReady(spawnParticles);
-      emitterReadyRef.current = true;
-    }
+    onEmitterReady?.(spawnParticles);
   }, [onEmitterReady, spawnParticles]);
 
   useEffect(() => {
@@ -167,15 +161,7 @@ export const BridgeGameCanvas = ({
   );
 
   useEffect(() => {
-    if (
-      perfectFont &&
-      heroImage &&
-      onAssetsLoaded &&
-      !assetsLoadedRef.current
-    ) {
-      onAssetsLoaded();
-      assetsLoadedRef.current = true;
-    }
+    if (perfectFont && heroImage && onAssetsLoaded) onAssetsLoaded();
   }, [perfectFont, heroImage, onAssetsLoaded]);
 
   if (!perfectFont || !heroImage) return <View style={{ flex: 1 }} />;
@@ -186,8 +172,6 @@ export const BridgeGameCanvas = ({
   const heroHalf = heroSize / 2;
   const platformY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
   const stickOriginY = platformY;
-
-  const now = performance.now();
 
   return (
     <View style={{ flex: 1 }} className="relative">
@@ -207,25 +191,15 @@ export const BridgeGameCanvas = ({
             { translateY: worldOffsetY },
           ]}
         >
-          {renderState.platforms.map((p) => {
-            const spawnTime = platformSpawnTimes.current.get(p.index) ?? now;
-            if (!platformSpawnTimes.current.has(p.index)) {
-              platformSpawnTimes.current.set(p.index, spawnTime);
-            }
-            const spawnProgress =
-              p.index === 0
-                ? 1
-                : Math.min(
-                    1,
-                    (now - spawnTime) / VISUAL_CONFIG.PLATFORM_SPAWN_MS,
-                  );
-            const spawnOffset =
-              (1 - spawnProgress) * VISUAL_CONFIG.PLATFORM_SPAWN_OFFSET;
-            return (
-              <Group
-                key={`plat-${p.index}`}
-                transform={[{ translateY: spawnOffset }]}
-              >
+          {/* Platforms with Culling */}
+          {renderState.platforms
+            .filter(
+              (p) =>
+                p.x + p.w > renderState.cameraX - 100 &&
+                p.x < renderState.cameraX + SCREEN_WIDTH + 100,
+            )
+            .map((p) => (
+              <Group key={`plat-${p.index}`}>
                 <Rect
                   x={p.x}
                   y={platformY + 8}
@@ -261,8 +235,7 @@ export const BridgeGameCanvas = ({
                   color={VISUAL_CONFIG.COLORS.BG_BOT}
                 />
               </Group>
-            );
-          })}
+            ))}
 
           {/* Stick Origin Logic */}
           {renderState.platforms[0] && (

@@ -202,11 +202,13 @@ jest.mock("../hooks/usePowerUpInventory", () => ({
     registerUsedItem,
   }: any) => ({
     consumeDropPoint: jest.fn(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { ItemVariant } = require("@/lib/enums");
       registerUsedItem(ItemVariant.DropPoint);
       onConsumeDropPoint();
     }),
     consumeRevive: jest.fn(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { ItemVariant } = require("@/lib/enums");
       mockConsumeRevive();
       registerUsedItem(ItemVariant.Revive);
