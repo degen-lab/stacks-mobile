@@ -9,7 +9,7 @@ import { getItemVariant } from "@/api/user/types";
 import { ItemVariant, TournamentStatusEnum } from "@/lib/enums";
 import { RelativePathString, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StatusBar } from "react-native";
+import { AppState, BackHandler, StatusBar } from "react-native";
 import { useGameAds } from "../hooks/useGameAds";
 import { useAutoStart } from "../hooks/useAutoStart";
 import { useBridgeLayout } from "../hooks/useBridgeLayout";
@@ -209,7 +209,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     }
   }, [reviveAd]);
 
-  const { registerUsedItem, startGame, submitSession } = useGameSession({
+  const { registerUsedItem, startGame, submitSession, cancelPendingStart } =
+    useGameSession({
     engine: engineRef.current,
     bestSubmittedScore,
     updateScore,
@@ -412,6 +413,39 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   }, [hydrateHighscore]);
 
   useAutoStart(autoStart, overlayState, startGame);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active" || isWatchingAd) return;
+      cancelPendingStart();
+      resetSession();
+      setOverlay("START");
+      setRunSummary(null);
+      setPerfectCue(null);
+    });
+
+    return () => subscription.remove();
+  }, [
+    cancelPendingStart,
+    isWatchingAd,
+    resetSession,
+    setOverlay,
+    setPerfectCue,
+    setRunSummary,
+  ]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        cancelPendingStart();
+        resetSession();
+        return false;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [cancelPendingStart, resetSession]);
 
   const state: RenderState = engineRef.current.getRenderState();
   const ghostActive =
