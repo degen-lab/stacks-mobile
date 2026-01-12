@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import type { Ref } from "react";
 import { View, Card } from "@/components/ui";
 import InviteFriendCard from "../components/invite-friend";
-import PortfolioSummary from "../components/Portfolio";
+import PortfolioSummary from "../components/portfolio";
 import { EmptyWalletModal } from "../components/empty-wallet-modal";
 
 type HomeScreenLayoutProps = {
@@ -25,7 +25,7 @@ export default function HomeScreenLayout({
   onDepositCrypto,
 }: HomeScreenLayoutProps) {
   return (
-    <View className="flex-1 px-4 pt-6 bg-surface-tertiary">
+    <View className="flex-1 px-4 py-6 bg-surface-tertiary">
       <PortfolioSummary balance={usdBalance} onPress={navigateToPortfolio} />
       <View className="mt-10 flex-row gap-3">
         <View className="flex-1">

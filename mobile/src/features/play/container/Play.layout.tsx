@@ -49,7 +49,14 @@ export function PlayLayout({
   onOpenPowerUps,
 }: PlayLayoutProps) {
   return (
-    <ScrollView className="flex-1 bg-surface-tertiary px-4 pt-5">
+    <ScrollView
+      className="flex-1 bg-surface-tertiary"
+      contentContainerStyle={{
+        paddingHorizontal: 16,
+        paddingTop: 20,
+        paddingBottom: 20,
+      }}
+    >
       <Text className="text-xl mb-3">Let&apos;s Play!</Text>
       <GameCard
         title="Stacks Bridge"
