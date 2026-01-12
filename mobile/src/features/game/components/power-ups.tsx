@@ -1,5 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { View } from "@/components/ui";
 import { HeartIcon } from "@/components/ui/icons/heart";
@@ -35,6 +37,9 @@ const PowerUpsContainer = ({
   onActivateGhost,
   onActivateRevive,
 }: PowerUpsContainerProps) => {
+  const insets = useSafeAreaInsets();
+  const androidBottomInset =
+    Platform.OS === "android" ? Math.max(insets.bottom, 12) : 0;
   const [currentTime, setCurrentTime] = useState(performance.now());
 
   const handleActivateGhost = useCallback(() => {
@@ -88,8 +93,8 @@ const PowerUpsContainer = ({
         start={{ x: 0.5, y: 1 }}
         end={{ x: 0.5, y: 0 }}
         style={{
-          height: 140,
-          paddingBottom: 0,
+          height: 140 + androidBottomInset,
+          paddingBottom: androidBottomInset,
           paddingTop: 20,
           paddingHorizontal: 20,
         }}
