@@ -23,8 +23,8 @@ export const PHYSICS_CONFIG = {
   PERFECT_TEXT_FRICTION: 0.99, // horizontal velocity friction
 
   // Platform movement
-  PLATFORM_MOVE_VELOCITY: 96, // pixels per second
+  PLATFORM_MOVE_VELOCITY: 70, // pixels per second
   PLATFORM_MOVE_CHANCE: 0.4, // 40% chance to move
-  PLATFORM_MOVE_MIN_RANGE: 40, // pixels
-  PLATFORM_MOVE_MAX_RANGE: 80, // pixels
+  PLATFORM_MOVE_MIN_RANGE: 80, // pixels
+  PLATFORM_MOVE_MAX_RANGE: 180, // pixels
 } as const;

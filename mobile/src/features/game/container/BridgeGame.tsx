@@ -38,7 +38,7 @@ import type {
   PlayerMove,
   RevivePowerUpState,
 } from "../types";
-import {BridgeGameCanvas} from "../components/canvas";
+import { BridgeGameCanvas } from "../components/canvas";
 import BridgeGameLayout from "./BridgeGame.layout";
 
 type BridgeGameProps = {
@@ -67,8 +67,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const isMountedRef = useRef(true);
 
-  const [overlayState, setOverlayState] =
-    useState<BridgeOverlayState>("START");
+  const [overlayState, setOverlayState] = useState<BridgeOverlayState>("START");
   const [score, setScore] = useState(0);
   const [ghost, setGhost] = useState<GhostState>({
     active: false,
@@ -435,19 +434,48 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       ? raffleSubmissionsLeft
       : weeklyContestSubmissionsLeft;
 
-  useEffect(() => {
-    if (!ssvData) return;
-    if (!submissionAd.loaded && !submissionAd.loading) {
-      submissionAd.loadAd();
-    }
-  }, [ssvData, submissionAd]);
+  // Refs to prevent redundant ad operations
+  const prevSsvDataRef = useRef(ssvData);
+  const hasLoadedSubmissionAdRef = useRef(false);
+  const submissionAdLoadRef = useRef(submissionAd.loadAd);
+  const submissionAdShowRef = useRef(submissionAd.showAd);
 
+  // Update refs when functions change
+  useEffect(() => {
+    submissionAdLoadRef.current = submissionAd.loadAd;
+    submissionAdShowRef.current = submissionAd.showAd;
+  }, [submissionAd.loadAd, submissionAd.showAd]);
+
+  // Load submission ad when ssvData becomes available
+  useEffect(() => {
+    if (!ssvData) {
+      prevSsvDataRef.current = null;
+      hasLoadedSubmissionAdRef.current = false;
+      return;
+    }
+
+    // Only load if ssvData changed and ad isn't already loaded/loading
+    if (
+      prevSsvDataRef.current !== ssvData &&
+      !submissionAd.loaded &&
+      !submissionAd.loading &&
+      !hasLoadedSubmissionAdRef.current
+    ) {
+      submissionAdLoadRef.current();
+      hasLoadedSubmissionAdRef.current = true;
+    }
+    prevSsvDataRef.current = ssvData;
+  }, [ssvData, submissionAd.loaded, submissionAd.loading]);
+
+  // Show submission ad when it becomes loaded
   useEffect(() => {
     if (!ssvData) return;
-    if (submissionAd.loaded) {
-      submissionAd.showAd();
+    // Only show if ad just became loaded
+    if (submissionAd.loaded && hasLoadedSubmissionAdRef.current) {
+      submissionAdShowRef.current();
+      hasLoadedSubmissionAdRef.current = false;
     }
-  }, [ssvData, submissionAd]);
+  }, [ssvData, submissionAd.loaded]);
 
   const handleAddFunds = useCallback(() => {
     router.push("/add-funds" as RelativePathString); // TOOD: when we add this screen we should need a way to navigate back to the game and still let user submit

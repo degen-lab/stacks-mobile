@@ -70,11 +70,7 @@ export interface RenderState {
 
 export type ActionHandler = () => void | Promise<void>;
 
-export type BridgeOverlayState =
-  | "START"
-  | "PLAYING"
-  | "REVIVE"
-  | "GAME_OVER";
+export type BridgeOverlayState = "START" | "PLAYING" | "REVIVE" | "GAME_OVER";
 
 export type GhostState = {
   active: boolean;

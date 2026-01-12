@@ -73,6 +73,7 @@ export type SessionValidationPlatformDebug = {
     moveChanceRng?: number;
     directionRng?: number;
     rangeRng?: number;
+    patrolSeedRng?: number;
   };
 };
 

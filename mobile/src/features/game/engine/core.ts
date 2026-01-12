@@ -1,4 +1,4 @@
-import { PHYSICS_CONFIG, VISUAL_CONFIG } from "../config";
+import { DIFFICULTY_CONFIG, PHYSICS_CONFIG, VISUAL_CONFIG } from "../config";
 import { createRng, randomRange } from "./rng";
 import type {
   EngineEvent,
@@ -38,40 +38,34 @@ class Platform {
   index: number;
   isMoving: boolean;
   vx: number;
-  initialVx: number;
   minX: number;
   maxX: number;
   initialX: number; // Store initial position for platform generation
+  moveTime: number;
+  baseSpeed: number;
+  patrolSeed: number;
 
   constructor(
     x: number,
     w: number,
     index: number,
-    canMove: boolean,
-    rng: () => number,
+    isMoving: boolean,
+    minX: number,
+    maxX: number,
+    baseSpeed: number,
+    patrolSeed: number,
   ) {
     this.x = x;
     this.w = w;
     this.index = index;
-    this.isMoving = false;
+    this.isMoving = isMoving;
     this.vx = 0;
-    this.initialVx = 0;
-    this.minX = x;
-    this.maxX = x;
+    this.minX = minX;
+    this.maxX = maxX;
     this.initialX = x; // Store initial position
-
-    if (canMove && rng() < PHYSICS_CONFIG.PLATFORM_MOVE_CHANCE) {
-      this.isMoving = true;
-      this.vx = PHYSICS_CONFIG.PLATFORM_MOVE_VELOCITY * (rng() > 0.5 ? 1 : -1);
-      this.initialVx = this.vx;
-      const range = randomRange(
-        rng,
-        PHYSICS_CONFIG.PLATFORM_MOVE_MIN_RANGE,
-        PHYSICS_CONFIG.PLATFORM_MOVE_MAX_RANGE,
-      );
-      this.minX = x - range;
-      this.maxX = x + range;
-    }
+    this.moveTime = 0;
+    this.baseSpeed = baseSpeed;
+    this.patrolSeed = patrolSeed;
   }
 
   get right() {
@@ -81,17 +75,63 @@ class Platform {
     return this.x + this.w / 2;
   }
 
+  getXAtTime(timeSec: number) {
+    if (!this.isMoving) return this.initialX;
+    const range = this.maxX - this.minX;
+    if (range <= 0) return this.initialX;
+    const rng = createRng(this.patrolSeed);
+    let t = 0;
+    let x = this.initialX;
+    const speedBase = this.baseSpeed;
+    if (speedBase <= 0) return this.initialX;
+    const span = this.maxX - this.minX;
+    const minTargetDistance = Math.max(
+      DIFFICULTY_CONFIG.PLATFORM_TARGET_MIN_DISTANCE,
+      span * DIFFICULTY_CONFIG.PLATFORM_TARGET_MIN_DISTANCE_RATIO,
+    );
+
+    while (true) {
+      let target = x;
+      const attempts = 5;
+      for (let attempt = 0; attempt < attempts; attempt++) {
+        const candidate = this.minX + rng() * span;
+        target = candidate;
+        if (
+          span <= minTargetDistance ||
+          Math.abs(candidate - x) >= minTargetDistance
+        ) {
+          break;
+        }
+      }
+      const variance =
+        this.index >= DIFFICULTY_CONFIG.PLATFORM_VARIANCE_START_INDEX
+          ? randomRange(
+              rng,
+              DIFFICULTY_CONFIG.PLATFORM_SPEED_VARIANCE_MIN,
+              DIFFICULTY_CONFIG.PLATFORM_SPEED_VARIANCE_MAX,
+            )
+          : 1;
+      const speed = speedBase * variance;
+      if (speed <= 0) return x;
+      const dist = Math.abs(target - x);
+      if (dist === 0) {
+        if (t >= timeSec) return x;
+        continue;
+      }
+      const duration = dist / speed;
+      if (t + duration >= timeSec) {
+        const dir = target > x ? 1 : -1;
+        return x + dir * speed * (timeSec - t);
+      }
+      t += duration;
+      x = target;
+    }
+  }
+
   update(deltaTime: number) {
     if (!this.isMoving) return;
-    this.x += this.vx * deltaTime;
-    // Single branch for boundary check
-    if (this.x <= this.minX) {
-      this.x = this.minX;
-      this.vx = -this.vx;
-    } else if (this.x >= this.maxX) {
-      this.x = this.maxX;
-      this.vx = -this.vx;
-    }
+    this.moveTime += deltaTime;
+    this.x = this.getXAtTime(this.moveTime);
   }
 
   stop() {
@@ -249,7 +289,10 @@ export class StacksBridgeEngine {
       VISUAL_CONFIG.PLATFORM_START_WIDTH,
       0,
       false,
-      this.rng,
+      0,
+      0,
+      0,
+      0,
     );
     const platform1 = this.generateNextPlatform(
       VISUAL_CONFIG.PLATFORM_START_WIDTH,
@@ -279,12 +322,69 @@ export class StacksBridgeEngine {
       VISUAL_CONFIG.PLATFORM_MIN_GAP;
 
     const widthRng = this.rng();
-    const w =
+    const baseWidth =
       widthRng *
         (VISUAL_CONFIG.PLATFORM_MAX_WIDTH - VISUAL_CONFIG.PLATFORM_MIN_WIDTH) +
       VISUAL_CONFIG.PLATFORM_MIN_WIDTH;
 
-    const platform = new Platform(lastX + gap, w, index, index > 2, this.rng);
+    const shrinkStages =
+      index >= DIFFICULTY_CONFIG.PLATFORM_SHRINK_START_INDEX
+        ? Math.floor(
+            (index - DIFFICULTY_CONFIG.PLATFORM_SHRINK_START_INDEX) /
+              DIFFICULTY_CONFIG.PLATFORM_SHRINK_EVERY,
+          ) + 1
+        : 0;
+    const shrinkFactor = Math.pow(
+      DIFFICULTY_CONFIG.PLATFORM_SHRINK_FACTOR,
+      shrinkStages,
+    );
+    const minWidth =
+      index < DIFFICULTY_CONFIG.PLATFORM_MIN_WIDTH_LATE_INDEX
+        ? DIFFICULTY_CONFIG.PLATFORM_MIN_WIDTH_EARLY
+        : DIFFICULTY_CONFIG.PLATFORM_MIN_WIDTH_LATE;
+    const w = Math.max(baseWidth * shrinkFactor, minWidth);
+
+    const speedStages =
+      index >= DIFFICULTY_CONFIG.PLATFORM_SPEED_START_INDEX
+        ? Math.floor(
+            (index - DIFFICULTY_CONFIG.PLATFORM_SPEED_START_INDEX) /
+              DIFFICULTY_CONFIG.PLATFORM_SPEED_EVERY,
+          ) + 1
+        : 0;
+    const speedMultiplier =
+      1 + speedStages * DIFFICULTY_CONFIG.PLATFORM_SPEED_INCREMENT;
+    const baseSpeed = PHYSICS_CONFIG.PLATFORM_MOVE_VELOCITY * speedMultiplier;
+
+    const canMove = index >= DIFFICULTY_CONFIG.PLATFORM_MOVE_START_INDEX;
+    let shouldMove = false;
+    if (canMove) {
+      const moveChanceRng = this.rng();
+      shouldMove = moveChanceRng < PHYSICS_CONFIG.PLATFORM_MOVE_CHANCE;
+    }
+    let minX = lastX + gap;
+    let maxX = lastX + gap;
+    let patrolSeed = 0;
+    if (shouldMove) {
+      const range = randomRange(
+        this.rng,
+        PHYSICS_CONFIG.PLATFORM_MOVE_MIN_RANGE,
+        PHYSICS_CONFIG.PLATFORM_MOVE_MAX_RANGE,
+      );
+      minX = lastX + gap - range;
+      maxX = lastX + gap + range;
+      patrolSeed = Math.floor(this.rng() * 0xffffffff);
+    }
+
+    const platform = new Platform(
+      lastX + gap,
+      w,
+      index,
+      shouldMove,
+      minX,
+      maxX,
+      baseSpeed,
+      patrolSeed,
+    );
 
     if (platform.isMoving) {
       const safeMinX = lastX + VISUAL_CONFIG.PLATFORM_MIN_GAP;
@@ -294,9 +394,9 @@ export class StacksBridgeEngine {
       if (platform.maxX <= platform.minX) {
         platform.isMoving = false;
         platform.vx = 0;
-        platform.initialVx = 0;
         platform.minX = platform.initialX;
         platform.maxX = platform.initialX;
+        platform.patrolSeed = 0;
       }
     }
 
@@ -311,16 +411,8 @@ export class StacksBridgeEngine {
     if (!platform) return null;
     if (!platform.isMoving) return platform.x;
 
-    const range = platform.maxX - platform.minX;
-    if (range <= 0) return platform.initialX;
-
     const releaseTime = (idleDurationMs + moveDurationMs) / 1000;
-    const period = 2 * range;
-    const travel =
-      platform.initialX - platform.minX + platform.initialVx * releaseTime;
-    const mod = ((travel % period) + period) % period;
-    if (mod <= range) return platform.minX + mod;
-    return platform.maxX - (mod - range);
+    return platform.getXAtTime(releaseTime);
   }
 
   handleInputDown(isPlaying: boolean) {
