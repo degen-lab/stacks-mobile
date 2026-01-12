@@ -1,5 +1,5 @@
+import React, { useMemo } from "react";
 import { Group, Rect } from "@shopify/react-native-skia";
-import { useMemo } from "react";
 import { VISUAL_CONFIG } from "../config";
 
 type BridgeStickProps = {
@@ -12,61 +12,70 @@ type BridgeStickProps = {
   shadowColor?: string;
 };
 
-const BridgeStick = ({
+const BridgeStick = React.memo(({
   originX,
   originY,
   length,
   width,
   rotation,
   color = "#FC6432",
-  shadowColor = "#E4570F",
 }: BridgeStickProps) => {
   const usableLength = Math.max(0, length);
+
+  // We bring back the blocks but use a simplified math approach.
   const blocks = useMemo(() => {
-    const spacing =
-      VISUAL_CONFIG.STICK_BLOCK_HEIGHT + VISUAL_CONFIG.STICK_BLOCK_GAP;
+    const blockH = VISUAL_CONFIG.STICK_BLOCK_HEIGHT || 10;
+    const gap = VISUAL_CONFIG.STICK_BLOCK_GAP || 2;
+    const spacing = blockH + gap;
+    
     const count = usableLength === 0 ? 0 : Math.ceil(usableLength / spacing);
-    const items: { index: number; y: number; height: number }[] = [];
+    const items = [];
+    
     for (let i = 0; i < count; i++) {
       const start = i * spacing;
-      const height = Math.min(
-        VISUAL_CONFIG.STICK_BLOCK_HEIGHT,
-        Math.max(usableLength - start, 0),
-      );
-      const yOffset = -(start + height);
-      items.push({ index: i, y: yOffset, height });
+      // Calculate how much of this specific block is actually "grown"
+      const currentBlockHeight = Math.min(blockH, usableLength - start);
+      
+      if (currentBlockHeight > 0) {
+        items.push({
+          id: i,
+          y: -(start + currentBlockHeight),
+          h: currentBlockHeight,
+        });
+      }
     }
     return items;
   }, [usableLength]);
 
   return (
     <Group
-      transform={[
-        { translateX: originX },
-        { translateY: originY },
-        { rotate: (rotation * Math.PI) / 180 },
-      ]}
+      origin={{ x: originX, y: originY }}
+      transform={[{ rotate: (rotation * Math.PI) / 180 }]}
     >
+      {/* 1. Subtle Background Shadow (optional, looks nice for depth) */}
       <Rect
-        x={-width / 2}
-        y={-usableLength}
+        x={originX - width / 2}
+        y={originY - usableLength}
         width={width}
         height={usableLength}
-        color={`${shadowColor}40`}
+        color="rgba(0,0,0,0.1)"
       />
 
+      {/* 2. The Actual Blocks */}
       {blocks.map((block) => (
         <Rect
-          key={`block-${block.index}`}
-          x={-width / 2}
-          y={block.y}
+          key={block.id}
+          x={originX - width / 2}
+          y={originY + block.y}
           width={width}
-          height={block.height}
+          height={block.h}
           color={color}
         />
       ))}
     </Group>
   );
-};
+});
+
+BridgeStick.displayName = "BridgeStick";
 
 export default BridgeStick;

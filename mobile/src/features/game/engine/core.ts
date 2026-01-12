@@ -22,10 +22,8 @@ class Camera {
     }
 
     if (this.shakeIntensity > 0) {
-      this.shakeIntensity = Math.max(
-        0,
-        this.shakeIntensity - dt * PHYSICS_CONFIG.SHAKE_DECAY,
-      );
+      this.shakeIntensity -= dt * PHYSICS_CONFIG.SHAKE_DECAY;
+      if (this.shakeIntensity < 0) this.shakeIntensity = 0;
     }
   }
 
@@ -86,13 +84,13 @@ class Platform {
   update(deltaTime: number) {
     if (!this.isMoving) return;
     this.x += this.vx * deltaTime;
-    if (this.x < this.minX) {
+    // Single branch for boundary check
+    if (this.x <= this.minX) {
       this.x = this.minX;
-      this.vx *= -1;
-    }
-    if (this.x > this.maxX) {
+      this.vx = -this.vx;
+    } else if (this.x >= this.maxX) {
       this.x = this.maxX;
-      this.vx *= -1;
+      this.vx = -this.vx;
     }
   }
 
@@ -151,8 +149,18 @@ export class StacksBridgeEngine {
   private moves: PlayerMove[] = [];
   private currentPressStart: number | null = null;
   private engineTimeMs = 0;
-  private startedAt = 0;
   private idleStartTime = 0;
+
+  // Cache render state to avoid allocations every frame
+  private cachedRenderState: RenderState = {
+    phase: "IDLE",
+    cameraX: 0,
+    shakeIntensity: 0,
+    hero: { x: 0, y: 0, rotation: 0 },
+    stick: { length: 0, rotation: 0 },
+    platforms: [],
+    score: 0,
+  };
 
   private particleSpawn?: (
     x: number,
@@ -229,17 +237,29 @@ export class StacksBridgeEngine {
   }
 
   private resetWorld() {
-    this.startedAt = performance.now();
     this.moves = [];
     this.currentPressStart = null;
     this.hasRevived = false;
     this.idleStartTime = 0;
     this.engineTimeMs = 0;
 
-    this.platforms = [
-      new Platform(0, VISUAL_CONFIG.PLATFORM_START_WIDTH, 0, false, this.rng),
-      this.generateNextPlatform(VISUAL_CONFIG.PLATFORM_START_WIDTH, 1),
-    ];
+    // Pre-generate 3 platforms so the third is ready to scroll into view
+    const platform0 = new Platform(
+      0,
+      VISUAL_CONFIG.PLATFORM_START_WIDTH,
+      0,
+      false,
+      this.rng,
+    );
+    const platform1 = this.generateNextPlatform(
+      VISUAL_CONFIG.PLATFORM_START_WIDTH,
+      1,
+    );
+    const platform2 = this.generateNextPlatform(
+      platform1.initialX + platform1.w,
+      2,
+    );
+    this.platforms = [platform0, platform1, platform2];
 
     this.hero.resetToPlatform(this.platforms[0]);
     this.bridge.reset();
@@ -329,18 +349,24 @@ export class StacksBridgeEngine {
       );
       const currentPlatform = this.platforms[0];
       const nextPlatform = this.platforms[1];
-      const platformXAtRelease = this.getPlatformXAtRelease(
+
+      // Platform keeps moving after release until bridge lands
+      // Calculate landing time: release + rotation time (90 degrees / ROTATE_SPEED)
+      const rotationTimeMs = (90 / PHYSICS_CONFIG.ROTATE_SPEED) * 1000;
+      const landingDuration = duration + rotationTimeMs;
+
+      const platformXAtLanding = this.getPlatformXAtRelease(
         nextPlatform,
         idleDurationMs,
-        duration,
+        landingDuration,
       );
-      const platformRightAtRelease =
-        platformXAtRelease !== null && nextPlatform
-          ? platformXAtRelease + nextPlatform.w
+      const platformRightAtLanding =
+        platformXAtLanding !== null && nextPlatform
+          ? platformXAtLanding + nextPlatform.w
           : null;
-      const platformCenterAtRelease =
-        platformXAtRelease !== null && nextPlatform
-          ? platformXAtRelease + nextPlatform.w / 2
+      const platformCenterAtLanding =
+        platformXAtLanding !== null && nextPlatform
+          ? platformXAtLanding + nextPlatform.w / 2
           : null;
       this.bridge.length = bridgeLength;
       const stickTip = currentPlatform
@@ -353,16 +379,16 @@ export class StacksBridgeEngine {
             bridgeLength,
             currentPlatformRight: currentPlatform?.right ?? null,
             nextPlatformIndex: nextPlatform?.index ?? null,
-            platformX: platformXAtRelease,
-            platformRight: platformRightAtRelease,
-            platformCenter: platformCenterAtRelease,
+            platformX: platformXAtLanding,
+            platformRight: platformRightAtLanding,
+            platformCenter: platformCenterAtLanding,
             platformIsMoving: nextPlatform?.isMoving ?? null,
           }
         : undefined;
 
       this.moves.push({
         startTime: this.currentPressStart,
-        duration: duration,
+        duration: landingDuration, // Use landing time (release + rotation) for backend validation
         idleDurationMs,
         ...(debugInfo && { debug: debugInfo }),
       });
@@ -370,14 +396,7 @@ export class StacksBridgeEngine {
       this.currentPressStart = null;
     }
 
-    const target = this.platforms[1];
-    if (target?.isMoving) {
-      const lastDebug = this.lastMoveDebug;
-      if (lastDebug?.platformX !== null && lastDebug?.platformX !== undefined) {
-        target.x = lastDebug.platformX;
-      }
-      target.stop();
-    }
+    // Platform keeps moving until bridge lands (makes game harder)
   }
 
   step(isPlaying: boolean, dt: number): EngineEvent[] {
@@ -388,8 +407,18 @@ export class StacksBridgeEngine {
 
     this.camera.update(dt);
 
-    if (this.phase === "IDLE" || this.phase === "GROWING") {
+    // Update moving platforms based on phase
+    if (
+      this.phase === "IDLE" ||
+      this.phase === "GROWING" ||
+      this.phase === "ROTATING" ||
+      this.phase === "WALKING"
+    ) {
+      // Keep platform moving until bridge lands (makes game harder)
       this.platforms[1]?.update(dt);
+    } else if (this.phase === "SCROLLING") {
+      // During scrolling, update the next platform (index 2) so it starts moving immediately
+      this.platforms[2]?.update(dt);
     }
 
     switch (this.phase) {
@@ -417,7 +446,7 @@ export class StacksBridgeEngine {
         break;
 
       case "SCROLLING":
-        if (Math.abs(this.camera.x - this.camera.targetX) < 1) {
+        if (Math.abs(this.camera.x - this.camera.targetX) < 5) {
           this.camera.x = this.camera.targetX;
           this.advancePlatform();
         }
@@ -436,11 +465,18 @@ export class StacksBridgeEngine {
       return;
     }
 
+    // Use CURRENT platform position (it kept moving after release)
+    const platformX = pNext.x;
+    const platformRight = pNext.right;
+    const platformCenter = pNext.center;
+
+    // Stop the platform now that bridge has landed
+    if (pNext.isMoving) {
+      pNext.stop();
+    }
+
     const debug = this.lastMoveDebug;
     const stickTip = debug?.stickTip ?? pCurrent.right + this.bridge.length;
-    const platformX = debug?.platformX ?? pNext.x;
-    const platformRight = debug?.platformRight ?? pNext.right;
-    const platformCenter = debug?.platformCenter ?? pNext.center;
     const hit = stickTip >= platformX && stickTip <= platformRight;
     const distToCenter = Math.abs(stickTip - platformCenter);
     this.perfect = hit && distToCenter <= VISUAL_CONFIG.PERFECT_TOLERANCE;
@@ -535,19 +571,22 @@ export class StacksBridgeEngine {
       }
     }
 
+    // Pre-generate next platform so it's visible during scrolling
+    const old = this.platforms[1];
+    if (old && this.platforms.length < 3) {
+      const lastX = old.initialX + old.w;
+      const newPlatform = this.generateNextPlatform(lastX, old.index + 1);
+      this.platforms.push(newPlatform);
+    }
+
     this.phase = "SCROLLING";
     this.camera.targetX = p.x;
   }
 
   private advancePlatform() {
-    const old = this.platforms[1];
-    if (old) {
+    // Platform was already pre-generated in handleSuccess, just shift
+    if (this.platforms.length > 1) {
       this.platforms.shift();
-      // Use initial position (initialX + width) instead of current position (x + width)
-      // This matches backend behavior which uses initial positions for platform generation
-      const lastX = old.initialX + old.w;
-      const newPlatform = this.generateNextPlatform(lastX, old.index + 1);
-      this.platforms.push(newPlatform);
     }
     this.bridge.reset();
     this.phase = "IDLE";
@@ -555,15 +594,38 @@ export class StacksBridgeEngine {
   }
 
   getRenderState(): RenderState {
-    return {
-      phase: this.phase,
-      cameraX: this.camera.x,
-      shakeIntensity: this.camera.shakeIntensity,
-      hero: { ...this.hero },
-      stick: { length: this.bridge.length, rotation: this.bridge.rotation },
-      platforms: this.platforms.map((p) => p.snapshot()),
-      score: this.score,
-    };
+    // Reuse cached object to avoid allocations every frame
+    this.cachedRenderState.phase = this.phase;
+    this.cachedRenderState.cameraX = this.camera.x;
+    this.cachedRenderState.shakeIntensity = this.camera.shakeIntensity;
+    this.cachedRenderState.hero.x = this.hero.x;
+    this.cachedRenderState.hero.y = this.hero.y;
+    this.cachedRenderState.hero.rotation = this.hero.rotation;
+    this.cachedRenderState.stick.length = this.bridge.length;
+    this.cachedRenderState.stick.rotation = this.bridge.rotation;
+    this.cachedRenderState.score = this.score;
+
+    // Show the third platform only while scrolling
+    const visibleCount =
+      this.phase === "SCROLLING"
+        ? Math.min(3, this.platforms.length)
+        : Math.min(2, this.platforms.length);
+    if (this.cachedRenderState.platforms.length !== visibleCount) {
+      this.cachedRenderState.platforms = new Array(visibleCount);
+      for (let i = 0; i < visibleCount; i++) {
+        this.cachedRenderState.platforms[i] = { x: 0, w: 0, index: 0 };
+      }
+    }
+
+    // Update platform values in place
+    for (let i = 0; i < visibleCount; i++) {
+      const p = this.platforms[i];
+      this.cachedRenderState.platforms[i].x = p.x;
+      this.cachedRenderState.platforms[i].w = p.w;
+      this.cachedRenderState.platforms[i].index = p.index;
+    }
+
+    return this.cachedRenderState;
   }
 }
 

@@ -1,25 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-
 import {
   Canvas,
   Circle,
   Group,
-  ImageSVG,
+  Image,
   LinearGradient,
   Rect,
   Text,
   useFont,
-  useSVG,
+  useImage,
   vec,
 } from "@shopify/react-native-skia";
 
 import { Pressable, View } from "@/components/ui";
 import { useGameStore } from "@/lib/store/game";
 
-import { getSkinById } from "@/features/play/components/skins/types";
 import { PHYSICS_CONFIG, VISUAL_CONFIG, SCREEN_WIDTH } from "../config";
 import type { Particle, RenderState } from "../types";
 import BridgeStick from "./bridge-stick";
+
+const MAX_PARTICLES = 150;
 
 type BridgeGameCanvasProps = {
   getRenderState: () => RenderState;
@@ -33,11 +33,10 @@ type BridgeGameCanvasProps = {
   ) => void;
   perfectCue?: { x: number; y: number; createdAt: number } | null;
   showGhostPreview?: boolean;
+  onAssetsLoaded?: () => void;
 };
 
-// Animation constants moved to config/visual.ts
-
-const BridgeGameCanvas = ({
+export const BridgeGameCanvas = ({
   getRenderState,
   canvasHeight,
   worldOffsetY,
@@ -47,67 +46,57 @@ const BridgeGameCanvas = ({
   onEmitterReady,
   perfectCue,
   showGhostPreview = false,
+  onAssetsLoaded,
 }: BridgeGameCanvasProps) => {
-  const [renderState, setRenderState] = useState<RenderState>(() =>
-    getRenderState(),
+  // --- Refs & State ---
+  const particlesRef = useRef<Particle[]>(
+    Array.from({ length: MAX_PARTICLES }, () => ({
+      x: 0, y: 0, vx: 0, vy: 0, life: 0, color: "#fff", size: 0 
+    }))
   );
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const particlesRef = useRef<Particle[]>([]);
-  const [perfectTexts, setPerfectTexts] = useState<
-    { x: number; y: number; vx: number; vy: number; life: number }[]
-  >([]);
+  
   const perfectTextsRef = useRef<
     { x: number; y: number; vx: number; vy: number; life: number }[]
   >([]);
-  const platformSpawnTimesRef = useRef<Map<number, number>>(new Map());
+  
+  const [, setTick] = useState(0);
 
+  // --- Emitter ---
   const spawnParticles = useCallback(
-    (
-      x: number,
-      y: number,
-      color: string,
-      count: number = VISUAL_CONFIG.PARTICLE_COUNT,
-    ) => {
-      const next = particlesRef.current.slice();
-      for (let i = 0; i < count; i++) {
-        next.push({
-          x,
-          y,
-          vx: (Math.random() - 0.5) * 220,
-          vy: (Math.random() - 0.5) * 220 - 140,
-          life: 1,
-          color,
-          size:
-            VISUAL_CONFIG.PARTICLE_MIN_SIZE +
-            Math.random() *
-              (VISUAL_CONFIG.PARTICLE_MAX_SIZE -
-                VISUAL_CONFIG.PARTICLE_MIN_SIZE),
-        });
+    (x: number, y: number, color: string, count: number = 12) => {
+      let spawned = 0;
+      for (let i = 0; i < MAX_PARTICLES && spawned < count; i++) {
+        const p = particlesRef.current[i];
+        if (p.life <= 0) {
+          p.x = x;
+          p.y = y;
+          p.vx = (Math.random() - 0.5) * 220;
+          p.vy = (Math.random() - 0.5) * 220 - 140;
+          p.life = 1.0;
+          p.color = color;
+          p.size = VISUAL_CONFIG.PARTICLE_MIN_SIZE + Math.random() * 3;
+          spawned++;
+        }
       }
-      particlesRef.current = next;
-      setParticles(next);
     },
     [],
   );
 
-  useEffect(() => {
-    onEmitterReady?.(spawnParticles);
+  useEffect(() => { 
+    onEmitterReady?.(spawnParticles); 
   }, [onEmitterReady, spawnParticles]);
 
   useEffect(() => {
     if (!perfectCue) return;
-    const next = perfectTextsRef.current.slice();
-    next.push({
-      x: perfectCue.x,
-      y: perfectCue.y,
-      vx: (Math.random() - 0.5) * 80,
-      vy: -180 - Math.random() * 60,
+    perfectTextsRef.current.push({
+      x: perfectCue.x, y: perfectCue.y,
+      vx: (Math.random() - 0.5) * 60,
+      vy: -180,
       life: 1,
     });
-    perfectTextsRef.current = next;
-    setPerfectTexts(next);
   }, [perfectCue]);
 
+  // --- Animation Loop ---
   useEffect(() => {
     if (!isAnimating) return;
     let frameId: number;
@@ -117,82 +106,64 @@ const BridgeGameCanvas = ({
       const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.05);
       lastTime = currentTime;
 
-      const next: Particle[] = [];
-      for (const p of particlesRef.current) {
-        const life =
-          p.life - deltaTime * PHYSICS_CONFIG.PARTICLE_LIFETIME_DECAY;
-        if (life <= 0) continue;
-        const vx = p.vx;
-        const vy = p.vy + PHYSICS_CONFIG.PARTICLE_GRAVITY * deltaTime;
-        const x = p.x + vx * deltaTime;
-        const y = p.y + vy * deltaTime;
-        next.push({ ...p, x, y, vx, vy, life });
+      // Update Particles (Pooled)
+      const particles = particlesRef.current;
+      for (let i = 0; i < MAX_PARTICLES; i++) {
+        const p = particles[i];
+        if (p.life <= 0) continue;
+        p.life -= deltaTime * PHYSICS_CONFIG.PARTICLE_LIFETIME_DECAY;
+        p.vy += PHYSICS_CONFIG.PARTICLE_GRAVITY * deltaTime;
+        p.x += p.vx * deltaTime;
+        p.y += p.vy * deltaTime;
       }
 
-      particlesRef.current = next;
-      setParticles(next);
-
-      const nextTexts: typeof perfectTextsRef.current = [];
-      for (const t of perfectTextsRef.current) {
-        const life =
-          t.life - deltaTime * PHYSICS_CONFIG.PERFECT_TEXT_LIFETIME_DECAY;
-        if (life <= 0) continue;
-        const vx = t.vx * PHYSICS_CONFIG.PERFECT_TEXT_FRICTION;
-        const vy = t.vy + PHYSICS_CONFIG.PERFECT_TEXT_GRAVITY * deltaTime;
-        const x = t.x + vx * deltaTime;
-        const y = t.y + vy * deltaTime;
-        nextTexts.push({ ...t, x, y, vx, vy, life });
+      // Update Texts
+      const texts = perfectTextsRef.current;
+      for (let i = texts.length - 1; i >= 0; i--) {
+        const t = texts[i];
+        t.life -= deltaTime * PHYSICS_CONFIG.PERFECT_TEXT_LIFETIME_DECAY;
+        if (t.life <= 0) { texts.splice(i, 1); } 
+        else {
+          t.vx *= PHYSICS_CONFIG.PERFECT_TEXT_FRICTION;
+          t.vy += PHYSICS_CONFIG.PERFECT_TEXT_GRAVITY * deltaTime;
+          t.y += t.vy * deltaTime;
+          t.x += t.vx * deltaTime;
+        }
       }
-      perfectTextsRef.current = nextTexts;
-      setPerfectTexts(nextTexts);
-      setRenderState(getRenderState());
+
+      setTick((n) => n + 1);
       frameId = requestAnimationFrame(tick);
     };
-
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
-  }, [getRenderState, isAnimating]);
+  }, [isAnimating]);
+
+  // --- Assets ---
+  const perfectFont = useFont(require("@/assets/DMSans_18pt-ExtraLight.ttf"), 24);
+  const { selectedSkinId } = useGameStore();
+  const heroImage = useImage(
+    selectedSkinId === "orange" ? require("@/assets/game/hero/orange.png") : 
+    selectedSkinId === "purple" ? require("@/assets/game/hero/purple.png") : 
+    require("@/assets/game/hero/black.png"),
+  );
 
   useEffect(() => {
-    setRenderState(getRenderState());
-  }, [getRenderState, isAnimating]);
+    if (perfectFont && heroImage && onAssetsLoaded) onAssetsLoaded();
+  }, [perfectFont, heroImage, onAssetsLoaded]);
 
-  const perfectFont = useFont(
-    require("@/assets/DMSans_18pt-ExtraLight.ttf"),
-    24,
-  );
+  if (!perfectFont || !heroImage) return <View style={{ flex: 1 }} />;
 
-  const { selectedSkinId } = useGameStore();
-  const selectedSkin = getSkinById(selectedSkinId);
-  const heroSvg = useSVG(selectedSkin.icon);
+  // --- Render Prep ---
+  const renderState = getRenderState();
   const heroSize = VISUAL_CONFIG.HERO_SIZE;
   const heroHalf = heroSize / 2;
-
-  const stickOriginX = renderState.platforms[0]
-    ? renderState.platforms[0].x + renderState.platforms[0].w
-    : 0;
-  const stickOriginY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
-
-  const now = performance.now();
-  const platformSpawnTimes = platformSpawnTimesRef.current;
-  const visiblePlatformIndices = new Set(
-    renderState.platforms.map((p) => p.index),
-  );
-  renderState.platforms.forEach((p) => {
-    if (p.index === 0) return;
-    if (!platformSpawnTimes.has(p.index)) {
-      platformSpawnTimes.set(p.index, now);
-    }
-  });
-  platformSpawnTimes.forEach((_, key) => {
-    if (!visiblePlatformIndices.has(key)) {
-      platformSpawnTimes.delete(key);
-    }
-  });
+  const platformY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
+  const stickOriginY = platformY;
 
   return (
-    <View className="relative flex-1">
+    <View style={{ flex: 1 }} className="relative">
       <Canvas style={{ flex: 1 }} pointerEvents="none">
+        {/* Background */}
         <Rect x={0} y={0} width={SCREEN_WIDTH} height={canvasHeight}>
           <LinearGradient
             start={vec(0, canvasHeight - VISUAL_CONFIG.CANVAS_H)}
@@ -201,189 +172,86 @@ const BridgeGameCanvas = ({
           />
         </Rect>
 
-        <Group
-          transform={[
-            { translateX: -renderState.cameraX },
-            { translateY: worldOffsetY },
-          ]}
-        >
-          {renderState.platforms.map((p) => {
-            const platformY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
-            const spawnTime =
-              p.index === 0 ? now : (platformSpawnTimes.get(p.index) ?? now);
-            const spawnProgress =
-              p.index === 0
-                ? 1
-                : Math.min(
-                    1,
-                    (now - spawnTime) / VISUAL_CONFIG.PLATFORM_SPAWN_MS,
-                  );
-            const spawnOffset =
-              (1 - spawnProgress) * VISUAL_CONFIG.PLATFORM_SPAWN_OFFSET;
-            return (
-              <Group
-                key={`plat-${p.index}`}
-                transform={[{ translateY: spawnOffset }]}
-              >
-                {/* Platform side */}
-                <Rect
-                  x={p.x}
-                  y={platformY + 8}
-                  width={p.w}
-                  height={VISUAL_CONFIG.PLATFORM_H}
-                  color={VISUAL_CONFIG.COLORS.PLATFORM_SIDE}
-                />
-                <Rect
-                  x={p.x}
-                  y={platformY}
-                  width={p.w}
-                  height={VISUAL_CONFIG.PLATFORM_H}
-                >
-                  <LinearGradient
-                    start={vec(p.x, platformY + VISUAL_CONFIG.PLATFORM_H)}
-                    end={vec(p.x, platformY)}
-                    colors={["rgba(253, 157, 65, 0.81)", "#FC6432"]}
-                    positions={[0.81, 1]}
+        <Group transform={[{ translateX: -renderState.cameraX }, { translateY: worldOffsetY }]}>
+          {/* Platforms with Culling */}
+          {renderState.platforms
+            .filter(p => p.x + p.w > renderState.cameraX - 100 && p.x < renderState.cameraX + SCREEN_WIDTH + 100)
+            .map((p) => (
+              <Group key={`plat-${p.index}`}>
+                <Rect x={p.x} y={platformY + 8} width={p.w} height={VISUAL_CONFIG.PLATFORM_H} color={VISUAL_CONFIG.COLORS.PLATFORM_SIDE} />
+                <Rect x={p.x} y={platformY} width={p.w} height={VISUAL_CONFIG.PLATFORM_H}>
+                  <LinearGradient 
+                    start={vec(p.x, platformY + VISUAL_CONFIG.PLATFORM_H)} 
+                    end={vec(p.x, platformY)} 
+                    colors={["rgba(253, 157, 65, 0.81)", "#FC6432"]} 
+                    positions={[0.81, 1]} 
                   />
                 </Rect>
-                <Rect
-                  x={p.x}
-                  y={platformY}
-                  width={p.w}
-                  height={6}
-                  color="#282828"
-                />
-                <Rect
-                  x={p.x + p.w / 2 - 4}
-                  y={platformY + 6}
-                  width={8}
-                  height={8}
-                  color={VISUAL_CONFIG.COLORS.BG_BOT}
-                />
+                <Rect x={p.x} y={platformY} width={p.w} height={6} color="#282828" />
+                <Rect x={p.x + p.w / 2 - 4} y={platformY + 6} width={8} height={8} color={VISUAL_CONFIG.COLORS.BG_BOT} />
               </Group>
+            ))}
+
+          {/* Stick Origin Logic */}
+          {renderState.platforms[0] && (
+            <BridgeStick 
+              originX={renderState.platforms[0].x + renderState.platforms[0].w} 
+              originY={stickOriginY} 
+              length={renderState.stick.length} 
+              width={VISUAL_CONFIG.STICK_WIDTH} 
+              rotation={renderState.stick.rotation} 
+              color={VISUAL_CONFIG.COLORS.BRAND} 
+              shadowColor={VISUAL_CONFIG.COLORS.BRAND_DARK} 
+            />
+          )}
+
+          {/* Ghost Preview */}
+          {showGhostPreview && renderState.phase === "GROWING" && renderState.platforms[0] && (
+            <Group>
+              <Rect 
+                x={renderState.platforms[0].x + renderState.platforms[0].w} 
+                y={stickOriginY - VISUAL_CONFIG.STICK_WIDTH / 2} 
+                width={renderState.stick.length} 
+                height={VISUAL_CONFIG.STICK_WIDTH} 
+                color="rgba(0, 0, 0, 0.2)" 
+              />
+            </Group>
+          )}
+
+          {/* Hero */}
+          <Group 
+            origin={{ x: renderState.hero.x + heroHalf, y: renderState.hero.y + heroHalf }} 
+            transform={[{ rotate: (renderState.hero.rotation * Math.PI) / 180 }]}
+          >
+            <Group transform={[{ scale: heroSize / 82 }]}>
+              <Image image={heroImage} x={renderState.hero.x * (82 / heroSize)} y={renderState.hero.y * (82 / heroSize)} width={82} height={82} />
+            </Group>
+          </Group>
+
+          {/* Particles */}
+          {particlesRef.current.map((p, i) => {
+            if (p.life <= 0) return null;
+            return (
+              <Circle 
+                key={`p-${i}`} 
+                cx={p.x} cy={p.y} r={p.size} 
+                color={p.color} 
+                opacity={p.life * p.life} 
+              />
             );
           })}
 
-          {showGhostPreview && renderState.phase === "GROWING" ? (
-            <>
-              <Rect
-                x={stickOriginX}
-                y={stickOriginY - VISUAL_CONFIG.STICK_WIDTH / 2}
-                width={renderState.stick.length}
-                height={VISUAL_CONFIG.STICK_WIDTH}
-                color="rgba(0, 0, 0, 0.2)"
-              />
-              <Rect
-                x={stickOriginX + renderState.stick.length - 4}
-                y={stickOriginY - VISUAL_CONFIG.STICK_WIDTH / 2}
-                width={6}
-                height={VISUAL_CONFIG.STICK_WIDTH}
-                color="#DC2626"
-              />
-            </>
-          ) : null}
-
-          <BridgeStick
-            originX={stickOriginX}
-            originY={stickOriginY}
-            length={renderState.stick.length}
-            width={VISUAL_CONFIG.STICK_WIDTH}
-            rotation={renderState.stick.rotation}
-            color={VISUAL_CONFIG.COLORS.BRAND}
-            shadowColor={VISUAL_CONFIG.COLORS.BRAND_DARK}
-          />
-
-          <Group
-            origin={{
-              x: renderState.hero.x + heroHalf,
-              y: renderState.hero.y + heroHalf,
-            }}
-            transform={[
-              { rotate: (renderState.hero.rotation * Math.PI) / 180 },
-            ]}
-          >
-            {heroSvg ? (
-              <Group
-                transform={[
-                  { translateX: renderState.hero.x },
-                  { translateY: renderState.hero.y },
-                  { scale: heroSize / 82 },
-                ]}
-              >
-                <ImageSVG svg={heroSvg} x={0} y={0} width={82} height={82} />
-              </Group>
-            ) : (
-              <>
-                <Rect
-                  x={renderState.hero.x}
-                  y={renderState.hero.y}
-                  width={heroSize}
-                  height={heroSize}
-                  color={VISUAL_CONFIG.COLORS.BRAND}
-                />
-                <Circle
-                  cx={renderState.hero.x + 8}
-                  cy={renderState.hero.y + 8}
-                  r={3}
-                  color="white"
-                />
-                <Circle
-                  cx={renderState.hero.x + 16}
-                  cy={renderState.hero.y + 8}
-                  r={3}
-                  color="white"
-                />
-              </>
-            )}
-          </Group>
-
-          {particles.map((p, i) => (
-            <Circle
-              key={`part-${i}`}
-              cx={p.x}
-              cy={p.y}
-              r={p.size}
-              color={p.color}
-              opacity={Math.max(0, Math.min(1, p.life * p.life))}
-            />
+          {/* Perfect Text */}
+          {perfectTextsRef.current.map((t, i) => (
+            <Group key={`pt-${i}`} opacity={t.life * t.life}>
+              <Text x={t.x - 39} y={t.y + 1} text="PERFECT! X3" font={perfectFont} color="rgba(0,0,0,0.18)" />
+              <Text x={t.x - 40} y={t.y} text="PERFECT! X3" font={perfectFont} color={VISUAL_CONFIG.COLORS.BRAND} />
+            </Group>
           ))}
-
-          {perfectFont
-            ? perfectTexts.map((t, i) => {
-                const text = "PERFECT! X3";
-                const width = perfectFont.getTextWidth(text);
-                const opacity = Math.max(0, Math.min(1, t.life * t.life));
-                return (
-                  <Group key={`perfect-${i}`}>
-                    <Text
-                      x={t.x - width / 2 + 1}
-                      y={t.y + 1}
-                      text={text}
-                      color="rgba(0,0,0,0.18)"
-                      opacity={opacity}
-                      font={perfectFont}
-                    />
-                    <Text
-                      x={t.x - width / 2}
-                      y={t.y}
-                      text={text}
-                      color={VISUAL_CONFIG.COLORS.BRAND}
-                      opacity={opacity}
-                      font={perfectFont}
-                    />
-                  </Group>
-                );
-              })
-            : null}
         </Group>
       </Canvas>
 
-      <Pressable
-        className="absolute inset-0"
-        onPressIn={onInputDown}
-        onPressOut={onInputUp}
-        style={{ zIndex: 0 }}
-      />
+      <Pressable className="absolute inset-0" onPressIn={onInputDown} onPressOut={onInputUp} />
     </View>
   );
 };

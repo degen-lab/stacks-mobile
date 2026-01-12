@@ -11,7 +11,7 @@ import { getBaseScore } from "../utils/scoreCalculation";
 import { GAMEPLAY_CONFIG } from "../config";
 import type { PlayerMove } from "../types";
 import type { RunSummary } from "../utils/runSummary";
-import type { BridgeOverlayState } from "@/lib/store/game";
+import type { BridgeOverlayState } from "../types";
 
 type UseGameSessionOptions = {
   engine: { start: (seed: number) => void };

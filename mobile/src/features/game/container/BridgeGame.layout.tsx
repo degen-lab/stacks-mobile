@@ -4,7 +4,17 @@ import BridgeOverlays from "../components/overlays/overlays";
 import type { RunSummary } from "../utils/runSummary";
 import PowerUpsContainer from "../components/power-ups";
 import ScoreDisplay from "../components/score-display";
+import type {
+  BridgeOverlayState,
+  GhostState,
+  RevivePowerUpState,
+} from "../types";
+
 type BridgeGameLayoutProps = {
+  overlayState: BridgeOverlayState;
+  score: number;
+  ghost: GhostState;
+  revivePowerUp: RevivePowerUpState;
   dropPointAvailable: boolean;
   runSummary?: RunSummary | null;
   highScore?: number;
@@ -21,9 +31,15 @@ type BridgeGameLayoutProps = {
   onSubmitToLeaderboard?: () => void;
   onRestart: () => void;
   onExit?: () => void;
+  onActivateGhost: (expiresAt: number) => void;
+  onActivateRevive: () => void;
 };
 
 const BridgeGameLayout = ({
+  overlayState,
+  score,
+  ghost,
+  revivePowerUp,
   dropPointAvailable,
   runSummary,
   highScore,
@@ -40,18 +56,27 @@ const BridgeGameLayout = ({
   onSubmitToLeaderboard,
   onRestart,
   onExit,
+  onActivateGhost,
+  onActivateRevive,
 }: BridgeGameLayoutProps) => {
   return (
     <>
-      <ScoreDisplay />
+      <ScoreDisplay overlayState={overlayState} score={score} />
       <PowerUpsContainer
+        overlayState={overlayState}
+        ghost={ghost}
+        revivePowerUp={revivePowerUp}
         dropPointAvailable={dropPointAvailable}
         reviveAvailable={reviveAvailable}
         consumeDropPoint={consumeDropPoint}
         consumeRevive={consumeRevive}
+        onActivateGhost={onActivateGhost}
+        onActivateRevive={onActivateRevive}
       />
 
       <BridgeOverlays
+        overlayState={overlayState}
+        score={score}
         runSummary={runSummary}
         highScore={highScore}
         onRestart={onRestart}

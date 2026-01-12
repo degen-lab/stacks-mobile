@@ -16,7 +16,7 @@ import { InvalidSeedError } from '../errors/sessionError';
 
 // Game engine constants (must match frontend engine.ts)
 const BRIDGE_CONFIG = {
-  GROW_SPEED: 400, // pixels per second
+  GROW_SPEED: 320, // pixels per second (reduced by 20% for slower gameplay)
   PERFECT_TOLERANCE: 3, // pixels
   HERO_SIZE: 40, // pixels
   HERO_PLATFORM_INSET: 6, // pixels
@@ -27,7 +27,7 @@ const BRIDGE_CONFIG = {
   PLATFORM_MAX_WIDTH: 100, // pixels
   PLATFORM_START_WIDTH: 80, // pixels
   MAX_BRIDGE_LENGTH: 800, // pixels (80% of typical screen width)
-  PLATFORM_MOVE_VELOCITY: 120, // pixels per second
+  PLATFORM_MOVE_VELOCITY: 96, // pixels per second (reduced by 20% for slower gameplay)
   PLATFORM_MOVE_CHANCE: 0.4, // 40% chance to move
   PLATFORM_MOVE_MIN_RANGE: 40, // pixels
   PLATFORM_MOVE_MAX_RANGE: 80, // pixels

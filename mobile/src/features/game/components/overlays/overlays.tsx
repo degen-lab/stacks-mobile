@@ -4,10 +4,11 @@ import { getDisplayScore } from "../../utils/scoreCalculation";
 import { GAMEPLAY_CONFIG } from "../../config";
 import { GameOverOverlay, ReviveOverlay } from ".";
 import type { RunSummary } from "../../utils/runSummary";
-import type { ActionHandler } from "../../types";
-import { useGameStore } from "@/lib/store/game";
+import type { ActionHandler, BridgeOverlayState } from "../../types";
 
 type BridgeOverlaysProps = {
+  overlayState: BridgeOverlayState;
+  score: number;
   highScore?: number;
   runSummary?: RunSummary | null;
   onRestart: ActionHandler;
@@ -23,6 +24,8 @@ type BridgeOverlaysProps = {
 };
 
 const BridgeOverlays = ({
+  overlayState,
+  score,
   highScore,
   runSummary,
   onRestart,
@@ -36,8 +39,6 @@ const BridgeOverlays = ({
   adLoading,
   adError,
 }: BridgeOverlaysProps) => {
-  const overlayState = useGameStore((state) => state.overlayState);
-  const score = useGameStore((state) => state.score);
   const summary: RunSummary = useMemo(
     () => ({
       score: runSummary?.score ?? getDisplayScore(score),
