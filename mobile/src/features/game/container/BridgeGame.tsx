@@ -30,7 +30,6 @@ import { useGameStore } from "@/lib/store/game";
 import { useSelectedNetwork } from "@/lib/store/settings";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { StacksBridgeEngine } from "../engine";
-import { useEngineRunner } from "../hooks/useEngineRunner";
 import type {
   BridgeOverlayState,
   EngineEvent,
@@ -481,12 +480,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     router.push("/add-funds" as RelativePathString); // TOOD: when we add this screen we should need a way to navigate back to the game and still let user submit
   }, [router]);
 
-  useEngineRunner({
-    engine: engineRef.current,
-    isPlaying,
-    onEvents: handleEvents,
-  });
-
   const handleRevive = useCallback(() => {
     if (reviveAd.loading || isWatchingAd) return;
     resetReviveReward();
@@ -559,10 +552,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     return () => subscription.remove();
   }, [cancelPendingStart, resetSession]);
 
-  const getRenderState = useCallback(
-    () => engineRef.current.getRenderState(),
-    [],
-  );
   const ghostActive =
     ghost.expiresAt !== null && performance.now() < ghost.expiresAt;
   const overlayStateForUi =
@@ -572,7 +561,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       <View className="flex-1 bg-[#F7F4F0]" onLayout={handleLayout}>
         <StatusBar barStyle="dark-content" />
         <BridgeGameCanvas
-          getRenderState={getRenderState}
+          engine={engineRef.current}
           canvasHeight={canvasHeight}
           worldOffsetY={worldOffsetY}
           isAnimating={overlayState === "PLAYING"}
@@ -581,6 +570,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
           onInputDown={handleInputDown}
           onInputUp={handleInputUp}
           onEmitterReady={handleEmitterReady}
+          onEvents={handleEvents}
           onAssetsLoaded={handleAssetsLoaded}
         />
         <BridgeGameLayout

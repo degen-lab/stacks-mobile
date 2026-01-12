@@ -22,7 +22,13 @@ import BridgeStick from "./bridge-stick";
 const MAX_PARTICLES = 50;
 
 type BridgeGameCanvasProps = {
-  getRenderState: () => RenderState;
+  engine: {
+    step: (
+      isPlaying: boolean,
+      deltaTime: number,
+    ) => import("../types").EngineEvent[];
+    getRenderState: () => RenderState;
+  };
   canvasHeight: number;
   worldOffsetY: number;
   isAnimating?: boolean;
@@ -31,19 +37,21 @@ type BridgeGameCanvasProps = {
   onEmitterReady?: (
     spawn: (x: number, y: number, color: string, count?: number) => void,
   ) => void;
+  onEvents?: (events: import("../types").EngineEvent[]) => void;
   perfectCue?: { x: number; y: number; createdAt: number } | null;
   showGhostPreview?: boolean;
   onAssetsLoaded?: () => void;
 };
 
 export const BridgeGameCanvas = ({
-  getRenderState,
+  engine,
   canvasHeight,
   worldOffsetY,
   isAnimating = true,
   onInputDown,
   onInputUp,
   onEmitterReady,
+  onEvents,
   perfectCue,
   showGhostPreview = false,
   onAssetsLoaded,
@@ -66,6 +74,15 @@ export const BridgeGameCanvas = ({
   >([]);
 
   const [, setTick] = useState(0);
+  const renderStateRef = useRef<RenderState>(engine.getRenderState());
+  const onEventsRef = useRef(onEvents);
+  const engineRef = useRef(engine);
+  const platformSpawnTimesRef = useRef<Map<number, number>>(new Map());
+
+  // Keep engine ref in sync
+  useEffect(() => {
+    engineRef.current = engine;
+  }, [engine]);
 
   // --- Emitter ---
   const spawnParticles = useCallback(
@@ -89,6 +106,10 @@ export const BridgeGameCanvas = ({
   );
 
   useEffect(() => {
+    onEventsRef.current = onEvents;
+  }, [onEvents]);
+
+  useEffect(() => {
     onEmitterReady?.(spawnParticles);
   }, [onEmitterReady, spawnParticles]);
 
@@ -103,15 +124,51 @@ export const BridgeGameCanvas = ({
     });
   }, [perfectCue]);
 
-  // --- Animation Loop ---
+  // --- Animation Loop (Combined engine + visuals) ---
   useEffect(() => {
     if (!isAnimating) return;
     let frameId: number;
     let lastTime = performance.now();
 
     const tick = (currentTime: number) => {
-      const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.05);
+      const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
       lastTime = currentTime;
+
+      // Step engine and handle events
+      const events = engineRef.current.step(isAnimating, deltaTime);
+      if (events.length && onEventsRef.current) {
+        onEventsRef.current(events);
+      }
+
+      // Update render state once per frame
+      renderStateRef.current = engineRef.current.getRenderState();
+
+      // Track platform spawn times (moved from render phase)
+      const platformSpawnTimes = platformSpawnTimesRef.current;
+      const currentPlatforms = renderStateRef.current.platforms;
+
+      // Track new platforms
+      for (let i = 0; i < currentPlatforms.length; i++) {
+        const p = currentPlatforms[i];
+        if (p.index !== 0 && !platformSpawnTimes.has(p.index)) {
+          platformSpawnTimes.set(p.index, currentTime);
+        }
+      }
+
+      // Clean up old platforms (simple approach: keep map small)
+      if (platformSpawnTimes.size > 10) {
+        const visibleIndices = new Set<number>();
+        for (let i = 0; i < currentPlatforms.length; i++) {
+          visibleIndices.add(currentPlatforms[i].index);
+        }
+        const keysToDelete: number[] = [];
+        platformSpawnTimes.forEach((_, key) => {
+          if (!visibleIndices.has(key)) {
+            keysToDelete.push(key);
+          }
+        });
+        keysToDelete.forEach((key) => platformSpawnTimes.delete(key));
+      }
 
       // Update Particles (Pooled)
       const particles = particlesRef.current;
@@ -167,11 +224,13 @@ export const BridgeGameCanvas = ({
   if (!perfectFont || !heroImage) return <View style={{ flex: 1 }} />;
 
   // --- Render Prep ---
-  const renderState = getRenderState();
+  const renderState = renderStateRef.current;
   const heroSize = VISUAL_CONFIG.HERO_SIZE;
   const heroHalf = heroSize / 2;
   const platformY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
   const stickOriginY = platformY;
+  const now = performance.now();
+  const platformSpawnTimes = platformSpawnTimesRef.current;
 
   return (
     <View style={{ flex: 1 }} className="relative">
@@ -198,44 +257,62 @@ export const BridgeGameCanvas = ({
                 p.x + p.w > renderState.cameraX - 100 &&
                 p.x < renderState.cameraX + SCREEN_WIDTH + 100,
             )
-            .map((p) => (
-              <Group key={`plat-${p.index}`}>
-                <Rect
-                  x={p.x}
-                  y={platformY + 8}
-                  width={p.w}
-                  height={VISUAL_CONFIG.PLATFORM_H}
-                  color={VISUAL_CONFIG.COLORS.PLATFORM_SIDE}
-                />
-                <Rect
-                  x={p.x}
-                  y={platformY}
-                  width={p.w}
-                  height={VISUAL_CONFIG.PLATFORM_H}
+            .map((p) => {
+              // Calculate spawn animation offset
+              const spawnTime =
+                p.index === 0 ? now : (platformSpawnTimes.get(p.index) ?? now);
+              const spawnProgress =
+                p.index === 0
+                  ? 1
+                  : Math.min(
+                      1,
+                      (now - spawnTime) / VISUAL_CONFIG.PLATFORM_SPAWN_MS,
+                    );
+              const spawnOffset =
+                (1 - spawnProgress) * VISUAL_CONFIG.PLATFORM_SPAWN_OFFSET;
+
+              return (
+                <Group
+                  key={`plat-${p.index}`}
+                  transform={[{ translateY: spawnOffset }]}
                 >
-                  <LinearGradient
-                    start={vec(p.x, platformY + VISUAL_CONFIG.PLATFORM_H)}
-                    end={vec(p.x, platformY)}
-                    colors={["rgba(253, 157, 65, 0.81)", "#FC6432"]}
-                    positions={[0.81, 1]}
+                  <Rect
+                    x={p.x}
+                    y={platformY + 8}
+                    width={p.w}
+                    height={VISUAL_CONFIG.PLATFORM_H}
+                    color={VISUAL_CONFIG.COLORS.PLATFORM_SIDE}
                   />
-                </Rect>
-                <Rect
-                  x={p.x}
-                  y={platformY}
-                  width={p.w}
-                  height={6}
-                  color="#282828"
-                />
-                <Rect
-                  x={p.x + p.w / 2 - 4}
-                  y={platformY + 6}
-                  width={8}
-                  height={8}
-                  color={VISUAL_CONFIG.COLORS.BG_BOT}
-                />
-              </Group>
-            ))}
+                  <Rect
+                    x={p.x}
+                    y={platformY}
+                    width={p.w}
+                    height={VISUAL_CONFIG.PLATFORM_H}
+                  >
+                    <LinearGradient
+                      start={vec(p.x, platformY + VISUAL_CONFIG.PLATFORM_H)}
+                      end={vec(p.x, platformY)}
+                      colors={["rgba(253, 157, 65, 0.81)", "#FC6432"]}
+                      positions={[0.81, 1]}
+                    />
+                  </Rect>
+                  <Rect
+                    x={p.x}
+                    y={platformY}
+                    width={p.w}
+                    height={6}
+                    color="#282828"
+                  />
+                  <Rect
+                    x={p.x + p.w / 2 - 4}
+                    y={platformY + 6}
+                    width={8}
+                    height={8}
+                    color={VISUAL_CONFIG.COLORS.BG_BOT}
+                  />
+                </Group>
+              );
+            })}
 
           {/* Stick Origin Logic */}
           {renderState.platforms[0] && (
