@@ -21,7 +21,7 @@ import { useSubmissionSheet } from "../hooks/useSubmissionSheet";
 
 import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
 import { TournamentSubmissionSheet } from "@/components/tournament-submission-sheet";
-import { View } from "@/components/ui";
+import { ActivityIndicator, View } from "@/components/ui";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { formatAddress } from "@/lib/addresses";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/contracts";
@@ -63,6 +63,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     createdAt: number;
   } | null>(null);
   const { canvasHeight, handleLayout, worldOffsetY } = useBridgeLayout();
+  const [isStarting, setIsStarting] = useState(false);
+  const isMountedRef = useRef(true);
   const overlayState = useGameStore((state) => state.overlayState);
   const score = useGameStore((state) => state.score);
   const highscore = useGameStore((state) => state.highscore);
@@ -225,6 +227,24 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   useEffect(() => {
     submitSessionRef.current = submitSession;
   }, [submitSession]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const startGameWithLoading = useCallback(async () => {
+    if (isStarting) return;
+    setIsStarting(true);
+    try {
+      await startGame();
+    } finally {
+      if (isMountedRef.current) {
+        setIsStarting(false);
+      }
+    }
+  }, [isStarting, startGame]);
 
   const { consumeDropPoint, consumeRevive } = usePowerUpInventory({
     canUseDropPoint: dropPointAvailable,
@@ -401,8 +421,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   // reset session when restarting the game
   const handleRestart = useCallback(() => {
     resetSession();
-    startGame();
-  }, [resetSession, startGame]);
+    void startGameWithLoading();
+  }, [resetSession, startGameWithLoading]);
 
   const handleOpenContractDetails = useCallback(() => {
     contractDetailsSheetRef.current?.present();
@@ -412,7 +432,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     void hydrateHighscore();
   }, [hydrateHighscore]);
 
-  useAutoStart(autoStart, overlayState, startGame);
+  useAutoStart(autoStart, overlayState, startGameWithLoading);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
@@ -484,6 +504,11 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
           onSubmitToLeaderboard={handleSubmitLeaderboard}
           onSubmitToRaffle={handleSubmitRaffle}
         />
+        {isStarting ? (
+          <View className="absolute inset-0 items-center justify-center bg-white">
+            <ActivityIndicator size="small" color="#D1D5DB" />
+          </View>
+        ) : null}
       </View>
       <TournamentSubmissionSheet
         ref={submissionSheetRef}
