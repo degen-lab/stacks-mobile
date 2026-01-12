@@ -9,7 +9,7 @@ import { getItemVariant } from "@/api/user/types";
 import { ItemVariant, TournamentStatusEnum } from "@/lib/enums";
 import { RelativePathString, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StatusBar } from "react-native";
+import { AppState, BackHandler, StatusBar } from "react-native";
 import { useGameAds } from "../hooks/useGameAds";
 import { useAutoStart } from "../hooks/useAutoStart";
 import { useBridgeLayout } from "../hooks/useBridgeLayout";
@@ -21,7 +21,7 @@ import { useSubmissionSheet } from "../hooks/useSubmissionSheet";
 
 import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
 import { TournamentSubmissionSheet } from "@/components/tournament-submission-sheet";
-import { View } from "@/components/ui";
+import { ActivityIndicator, View } from "@/components/ui";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { formatAddress } from "@/lib/addresses";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/contracts";
@@ -31,7 +31,7 @@ import { useSelectedNetwork } from "@/lib/store/settings";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { StacksBridgeEngine } from "../engine";
 import { useEngineRunner } from "../hooks/useEngineRunner";
-import type { EngineEvent, PlayerMove, RenderState } from "../types";
+import type { EngineEvent, PlayerMove } from "../types";
 import BridgeGameCanvas from "../components/canvas";
 import BridgeGameLayout from "./BridgeGame.layout";
 
@@ -45,12 +45,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const { selectedNetwork } = useSelectedNetwork();
   const { balance: walletBalance } = useStxBalance();
   const { userData } = useAuth();
-  const { data: userProfile } = useUserProfile();
-  const { data: leaderboardData } = useTournamentLeaderboard();
-  const { data: tournamentData } = useTournamentData();
-  const { data: currentTournamentSubmissions } =
-    useCurrentTournamentSubmissions();
-  const { data: sponsoredSubmissionsLeft } = useSponsoredSubmissionsLeft();
   const broadcastSponsoredTransactionMutation =
     useBroadcastSponsoredTransactionMutation();
   const submissionDeferredRef = useRef<{
@@ -63,6 +57,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     createdAt: number;
   } | null>(null);
   const { canvasHeight, handleLayout, worldOffsetY } = useBridgeLayout();
+  const [isStarting, setIsStarting] = useState(false);
+  const isMountedRef = useRef(true);
   const overlayState = useGameStore((state) => state.overlayState);
   const score = useGameStore((state) => state.score);
   const highscore = useGameStore((state) => state.highscore);
@@ -78,6 +74,24 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const consumeRevivePowerUp = useGameStore(
     (state) => state.consumeRevivePowerUp,
   );
+
+  const isPlaying = overlayState === "PLAYING";
+  const queryOptions = useMemo(
+    () => ({
+      enabled: !isPlaying,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    }),
+    [isPlaying],
+  );
+
+  const { data: userProfile } = useUserProfile(queryOptions);
+  const { data: leaderboardData } = useTournamentLeaderboard(queryOptions);
+  const { data: tournamentData } = useTournamentData(queryOptions);
+  const { data: currentTournamentSubmissions } =
+    useCurrentTournamentSubmissions(queryOptions);
+  const { data: sponsoredSubmissionsLeft } =
+    useSponsoredSubmissionsLeft(queryOptions);
   const {
     bestSubmittedScore,
     canSubmitTournament,
@@ -209,21 +223,40 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     }
   }, [reviveAd]);
 
-  const { registerUsedItem, startGame, submitSession } = useGameSession({
-    engine: engineRef.current,
-    bestSubmittedScore,
-    updateScore,
-    setOverlay,
-    resetPowerUps,
-    setRunSummary,
-    setPerfectCue,
-    resetReviveReward,
-    ensureReviveAdLoaded,
-  });
+  const { registerUsedItem, startGame, submitSession, cancelPendingStart } =
+    useGameSession({
+      engine: engineRef.current,
+      bestSubmittedScore,
+      updateScore,
+      setOverlay,
+      resetPowerUps,
+      setRunSummary,
+      setPerfectCue,
+      resetReviveReward,
+      ensureReviveAdLoaded,
+    });
 
   useEffect(() => {
     submitSessionRef.current = submitSession;
   }, [submitSession]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const startGameWithLoading = useCallback(async () => {
+    if (isStarting) return;
+    setIsStarting(true);
+    try {
+      await startGame();
+    } finally {
+      if (isMountedRef.current) {
+        setIsStarting(false);
+      }
+    }
+  }, [isStarting, startGame]);
 
   const { consumeDropPoint, consumeRevive } = usePowerUpInventory({
     canUseDropPoint: dropPointAvailable,
@@ -234,8 +267,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   });
 
   // Game event handling and input
-  const isPlaying = overlayState === "PLAYING";
-
   const handleEvents = useCallback(
     (events: EngineEvent[]) => {
       if (!events.length) return;
@@ -368,7 +399,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     router.push("/add-funds" as RelativePathString); // TOOD: when we add this screen we should need a way to navigate back to the game and still let user submit
   }, [router]);
 
-  const { renderTick } = useEngineRunner({
+  useEngineRunner({
     engine: engineRef.current,
     isPlaying,
     onEvents: handleEvents,
@@ -400,8 +431,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   // reset session when restarting the game
   const handleRestart = useCallback(() => {
     resetSession();
-    startGame();
-  }, [resetSession, startGame]);
+    void startGameWithLoading();
+  }, [resetSession, startGameWithLoading]);
 
   const handleOpenContractDetails = useCallback(() => {
     contractDetailsSheetRef.current?.present();
@@ -411,9 +442,45 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     void hydrateHighscore();
   }, [hydrateHighscore]);
 
-  useAutoStart(autoStart, overlayState, startGame);
+  useAutoStart(autoStart, overlayState, startGameWithLoading);
 
-  const state: RenderState = engineRef.current.getRenderState();
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active" || isWatchingAd) return;
+      cancelPendingStart();
+      resetSession();
+      setOverlay("START");
+      setRunSummary(null);
+      setPerfectCue(null);
+    });
+
+    return () => subscription.remove();
+  }, [
+    cancelPendingStart,
+    isWatchingAd,
+    resetSession,
+    setOverlay,
+    setPerfectCue,
+    setRunSummary,
+  ]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        cancelPendingStart();
+        resetSession();
+        return false;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [cancelPendingStart, resetSession]);
+
+  const getRenderState = useCallback(
+    () => engineRef.current.getRenderState(),
+    [],
+  );
   const ghostActive =
     ghost.expiresAt !== null && performance.now() < ghost.expiresAt;
   return (
@@ -421,10 +488,9 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       <View className="flex-1 bg-[#F7F4F0]" onLayout={handleLayout}>
         <StatusBar barStyle="dark-content" />
         <BridgeGameCanvas
-          state={state}
+          getRenderState={getRenderState}
           canvasHeight={canvasHeight}
           worldOffsetY={worldOffsetY}
-          renderTick={renderTick}
           isAnimating={overlayState === "PLAYING"}
           perfectCue={perfectCue}
           showGhostPreview={ghostActive}
@@ -450,6 +516,11 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
           onSubmitToLeaderboard={handleSubmitLeaderboard}
           onSubmitToRaffle={handleSubmitRaffle}
         />
+        {isStarting ? (
+          <View className="absolute inset-0 items-center justify-center bg-white">
+            <ActivityIndicator size="small" color="#D1D5DB" />
+          </View>
+        ) : null}
       </View>
       <TournamentSubmissionSheet
         ref={submissionSheetRef}

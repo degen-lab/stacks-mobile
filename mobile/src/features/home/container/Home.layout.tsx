@@ -25,7 +25,7 @@ export default function HomeScreenLayout({
   onDepositCrypto,
 }: HomeScreenLayoutProps) {
   return (
-    <View className="flex-1 px-4 pt-6 bg-surface-tertiary">
+    <View className="flex-1 px-4 py-6 bg-surface-tertiary">
       <PortfolioSummary balance={usdBalance} onPress={navigateToPortfolio} />
       <View className="mt-10 flex-row gap-3">
         <View className="flex-1">

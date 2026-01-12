@@ -22,10 +22,9 @@ import type { Particle, RenderState } from "../types";
 import BridgeStick from "./bridge-stick";
 
 type BridgeGameCanvasProps = {
-  state: RenderState;
+  getRenderState: () => RenderState;
   canvasHeight: number;
   worldOffsetY: number;
-  renderTick: number;
   isAnimating?: boolean;
   onInputDown: () => void;
   onInputUp: () => void;
@@ -39,10 +38,9 @@ type BridgeGameCanvasProps = {
 // Animation constants moved to config/visual.ts
 
 const BridgeGameCanvas = ({
-  state,
+  getRenderState,
   canvasHeight,
   worldOffsetY,
-  renderTick: _renderTick,
   isAnimating = true,
   onInputDown,
   onInputUp,
@@ -50,6 +48,9 @@ const BridgeGameCanvas = ({
   perfectCue,
   showGhostPreview = false,
 }: BridgeGameCanvasProps) => {
+  const [renderState, setRenderState] = useState<RenderState>(() =>
+    getRenderState(),
+  );
   const [particles, setParticles] = useState<Particle[]>([]);
   const particlesRef = useRef<Particle[]>([]);
   const [perfectTexts, setPerfectTexts] = useState<
@@ -144,12 +145,17 @@ const BridgeGameCanvas = ({
       }
       perfectTextsRef.current = nextTexts;
       setPerfectTexts(nextTexts);
+      setRenderState(getRenderState());
       frameId = requestAnimationFrame(tick);
     };
 
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
-  }, [isAnimating]);
+  }, [getRenderState, isAnimating]);
+
+  useEffect(() => {
+    setRenderState(getRenderState());
+  }, [getRenderState, isAnimating]);
 
   const perfectFont = useFont(
     require("@/assets/DMSans_18pt-ExtraLight.ttf"),
@@ -162,15 +168,17 @@ const BridgeGameCanvas = ({
   const heroSize = VISUAL_CONFIG.HERO_SIZE;
   const heroHalf = heroSize / 2;
 
-  const stickOriginX = state.platforms[0]
-    ? state.platforms[0].x + state.platforms[0].w
+  const stickOriginX = renderState.platforms[0]
+    ? renderState.platforms[0].x + renderState.platforms[0].w
     : 0;
   const stickOriginY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
 
   const now = performance.now();
   const platformSpawnTimes = platformSpawnTimesRef.current;
-  const visiblePlatformIndices = new Set(state.platforms.map((p) => p.index));
-  state.platforms.forEach((p) => {
+  const visiblePlatformIndices = new Set(
+    renderState.platforms.map((p) => p.index),
+  );
+  renderState.platforms.forEach((p) => {
     if (p.index === 0) return;
     if (!platformSpawnTimes.has(p.index)) {
       platformSpawnTimes.set(p.index, now);
@@ -195,11 +203,11 @@ const BridgeGameCanvas = ({
 
         <Group
           transform={[
-            { translateX: -state.cameraX },
+            { translateX: -renderState.cameraX },
             { translateY: worldOffsetY },
           ]}
         >
-          {state.platforms.map((p) => {
+          {renderState.platforms.map((p) => {
             const platformY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
             const spawnTime =
               p.index === 0 ? now : (platformSpawnTimes.get(p.index) ?? now);
@@ -256,17 +264,17 @@ const BridgeGameCanvas = ({
             );
           })}
 
-          {showGhostPreview && state.phase === "GROWING" ? (
+          {showGhostPreview && renderState.phase === "GROWING" ? (
             <>
               <Rect
                 x={stickOriginX}
                 y={stickOriginY - VISUAL_CONFIG.STICK_WIDTH / 2}
-                width={state.stick.length}
+                width={renderState.stick.length}
                 height={VISUAL_CONFIG.STICK_WIDTH}
                 color="rgba(0, 0, 0, 0.2)"
               />
               <Rect
-                x={stickOriginX + state.stick.length - 4}
+                x={stickOriginX + renderState.stick.length - 4}
                 y={stickOriginY - VISUAL_CONFIG.STICK_WIDTH / 2}
                 width={6}
                 height={VISUAL_CONFIG.STICK_WIDTH}
@@ -278,22 +286,27 @@ const BridgeGameCanvas = ({
           <BridgeStick
             originX={stickOriginX}
             originY={stickOriginY}
-            length={state.stick.length}
+            length={renderState.stick.length}
             width={VISUAL_CONFIG.STICK_WIDTH}
-            rotation={state.stick.rotation}
+            rotation={renderState.stick.rotation}
             color={VISUAL_CONFIG.COLORS.BRAND}
             shadowColor={VISUAL_CONFIG.COLORS.BRAND_DARK}
           />
 
           <Group
-            origin={{ x: state.hero.x + heroHalf, y: state.hero.y + heroHalf }}
-            transform={[{ rotate: (state.hero.rotation * Math.PI) / 180 }]}
+            origin={{
+              x: renderState.hero.x + heroHalf,
+              y: renderState.hero.y + heroHalf,
+            }}
+            transform={[
+              { rotate: (renderState.hero.rotation * Math.PI) / 180 },
+            ]}
           >
             {heroSvg ? (
               <Group
                 transform={[
-                  { translateX: state.hero.x },
-                  { translateY: state.hero.y },
+                  { translateX: renderState.hero.x },
+                  { translateY: renderState.hero.y },
                   { scale: heroSize / 82 },
                 ]}
               >
@@ -302,21 +315,21 @@ const BridgeGameCanvas = ({
             ) : (
               <>
                 <Rect
-                  x={state.hero.x}
-                  y={state.hero.y}
+                  x={renderState.hero.x}
+                  y={renderState.hero.y}
                   width={heroSize}
                   height={heroSize}
                   color={VISUAL_CONFIG.COLORS.BRAND}
                 />
                 <Circle
-                  cx={state.hero.x + 8}
-                  cy={state.hero.y + 8}
+                  cx={renderState.hero.x + 8}
+                  cy={renderState.hero.y + 8}
                   r={3}
                   color="white"
                 />
                 <Circle
-                  cx={state.hero.x + 16}
-                  cy={state.hero.y + 8}
+                  cx={renderState.hero.x + 16}
+                  cy={renderState.hero.y + 8}
                   r={3}
                   color="white"
                 />

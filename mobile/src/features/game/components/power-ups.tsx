@@ -40,13 +40,7 @@ const PowerUpsContainer = ({
   const handleActivateRevive = useCallback(() => {
     if (revivePowerUp.activated || !reviveAvailable) return;
     activateRevivePowerUp();
-    consumeRevive();
-  }, [
-    activateRevivePowerUp,
-    consumeRevive,
-    reviveAvailable,
-    revivePowerUp.activated,
-  ]);
+  }, [activateRevivePowerUp, reviveAvailable, revivePowerUp.activated]);
 
   const ghostActive = useMemo(
     () => ghost.expiresAt !== null && currentTime < ghost.expiresAt,

@@ -41,8 +41,7 @@ require('dotenv').config({
 const BUNDLE_ID = 'com.stacksapp'; // ios bundle id
 const PACKAGE = 'com.stacksapp'; // android package name
 const NAME = 'StacksApp'; // app name
-const EXPO_ACCOUNT_OWNER = 'stacksapp'; // expo account owner
-const EAS_PROJECT_ID = 'c3e1075b-6fe7-4686-aa49-35b46a229044'; // eas project id
+const EXPO_ACCOUNT_OWNER = 'degenlab'; // expo account owner
 const SCHEME = 'stacksapp'; // app scheme
 
 /**
@@ -123,7 +122,7 @@ const _clientEnv = {
  */
 const _buildTimeEnv = {
   EXPO_ACCOUNT_OWNER,
-  EAS_PROJECT_ID,
+  EAS_PROJECT_ID: process.env.EAS_PROJECT_ID,
   // ADD YOUR ENV VARS HERE TOO
 };
 
