@@ -130,7 +130,6 @@ jest.mock("@/lib/store/settings", () => ({
 jest.mock("../hooks/useEngineRunner", () => ({
   useEngineRunner: ({ onEvents }: any) => {
     mockEngineRunnerOnEvents = onEvents;
-    return { renderTick: 0 };
   },
 }));
 

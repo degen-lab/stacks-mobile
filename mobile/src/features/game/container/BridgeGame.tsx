@@ -31,7 +31,7 @@ import { useSelectedNetwork } from "@/lib/store/settings";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { StacksBridgeEngine } from "../engine";
 import { useEngineRunner } from "../hooks/useEngineRunner";
-import type { EngineEvent, PlayerMove, RenderState } from "../types";
+import type { EngineEvent, PlayerMove } from "../types";
 import BridgeGameCanvas from "../components/canvas";
 import BridgeGameLayout from "./BridgeGame.layout";
 
@@ -45,12 +45,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const { selectedNetwork } = useSelectedNetwork();
   const { balance: walletBalance } = useStxBalance();
   const { userData } = useAuth();
-  const { data: userProfile } = useUserProfile();
-  const { data: leaderboardData } = useTournamentLeaderboard();
-  const { data: tournamentData } = useTournamentData();
-  const { data: currentTournamentSubmissions } =
-    useCurrentTournamentSubmissions();
-  const { data: sponsoredSubmissionsLeft } = useSponsoredSubmissionsLeft();
   const broadcastSponsoredTransactionMutation =
     useBroadcastSponsoredTransactionMutation();
   const submissionDeferredRef = useRef<{
@@ -80,6 +74,24 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const consumeRevivePowerUp = useGameStore(
     (state) => state.consumeRevivePowerUp,
   );
+
+  const isPlaying = overlayState === "PLAYING";
+  const queryOptions = useMemo(
+    () => ({
+      enabled: !isPlaying,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    }),
+    [isPlaying],
+  );
+
+  const { data: userProfile } = useUserProfile(queryOptions);
+  const { data: leaderboardData } = useTournamentLeaderboard(queryOptions);
+  const { data: tournamentData } = useTournamentData(queryOptions);
+  const { data: currentTournamentSubmissions } =
+    useCurrentTournamentSubmissions(queryOptions);
+  const { data: sponsoredSubmissionsLeft } =
+    useSponsoredSubmissionsLeft(queryOptions);
   const {
     bestSubmittedScore,
     canSubmitTournament,
@@ -213,16 +225,16 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
 
   const { registerUsedItem, startGame, submitSession, cancelPendingStart } =
     useGameSession({
-    engine: engineRef.current,
-    bestSubmittedScore,
-    updateScore,
-    setOverlay,
-    resetPowerUps,
-    setRunSummary,
-    setPerfectCue,
-    resetReviveReward,
-    ensureReviveAdLoaded,
-  });
+      engine: engineRef.current,
+      bestSubmittedScore,
+      updateScore,
+      setOverlay,
+      resetPowerUps,
+      setRunSummary,
+      setPerfectCue,
+      resetReviveReward,
+      ensureReviveAdLoaded,
+    });
 
   useEffect(() => {
     submitSessionRef.current = submitSession;
@@ -255,8 +267,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   });
 
   // Game event handling and input
-  const isPlaying = overlayState === "PLAYING";
-
   const handleEvents = useCallback(
     (events: EngineEvent[]) => {
       if (!events.length) return;
@@ -389,7 +399,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     router.push("/add-funds" as RelativePathString); // TOOD: when we add this screen we should need a way to navigate back to the game and still let user submit
   }, [router]);
 
-  const { renderTick } = useEngineRunner({
+  useEngineRunner({
     engine: engineRef.current,
     isPlaying,
     onEvents: handleEvents,
@@ -467,7 +477,10 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     return () => subscription.remove();
   }, [cancelPendingStart, resetSession]);
 
-  const state: RenderState = engineRef.current.getRenderState();
+  const getRenderState = useCallback(
+    () => engineRef.current.getRenderState(),
+    [],
+  );
   const ghostActive =
     ghost.expiresAt !== null && performance.now() < ghost.expiresAt;
   return (
@@ -475,10 +488,9 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       <View className="flex-1 bg-[#F7F4F0]" onLayout={handleLayout}>
         <StatusBar barStyle="dark-content" />
         <BridgeGameCanvas
-          state={state}
+          getRenderState={getRenderState}
           canvasHeight={canvasHeight}
           worldOffsetY={worldOffsetY}
-          renderTick={renderTick}
           isAnimating={overlayState === "PLAYING"}
           perfectCue={perfectCue}
           showGhostPreview={ghostActive}
