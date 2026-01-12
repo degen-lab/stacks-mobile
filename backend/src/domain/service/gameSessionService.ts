@@ -16,7 +16,8 @@ import { InvalidSeedError } from '../errors/sessionError';
 
 // Game engine constants (must match frontend engine.ts)
 const BRIDGE_CONFIG = {
-  GROW_SPEED: 400, // pixels per second
+  GROW_SPEED: 320, // pixels per second (reduced by 20% for slower gameplay)
+  ROTATE_SPEED: 192, // degrees per second
   PERFECT_TOLERANCE: 3, // pixels
   HERO_SIZE: 40, // pixels
   HERO_PLATFORM_INSET: 6, // pixels
@@ -27,10 +28,25 @@ const BRIDGE_CONFIG = {
   PLATFORM_MAX_WIDTH: 100, // pixels
   PLATFORM_START_WIDTH: 80, // pixels
   MAX_BRIDGE_LENGTH: 800, // pixels (80% of typical screen width)
-  PLATFORM_MOVE_VELOCITY: 120, // pixels per second
+  PLATFORM_SHRINK_START_INDEX: 15,
+  PLATFORM_SHRINK_EVERY: 5,
+  PLATFORM_SHRINK_FACTOR: 0.9,
+  PLATFORM_MIN_WIDTH_EARLY: 40,
+  PLATFORM_MIN_WIDTH_LATE: 25,
+  PLATFORM_MIN_WIDTH_LATE_INDEX: 15,
+  PLATFORM_MOVE_START_INDEX: 10,
+  PLATFORM_MOVE_VELOCITY: 70, // pixels per second
   PLATFORM_MOVE_CHANCE: 0.4, // 40% chance to move
-  PLATFORM_MOVE_MIN_RANGE: 40, // pixels
-  PLATFORM_MOVE_MAX_RANGE: 80, // pixels
+  PLATFORM_MOVE_MIN_RANGE: 80, // pixels
+  PLATFORM_MOVE_MAX_RANGE: 180, // pixels
+  PLATFORM_SPEED_START_INDEX: 10,
+  PLATFORM_SPEED_EVERY: 10,
+  PLATFORM_SPEED_INCREMENT: 0.03,
+  PLATFORM_VARIANCE_START_INDEX: 15,
+  PLATFORM_SPEED_VARIANCE_MIN: 0.98,
+  PLATFORM_SPEED_VARIANCE_MAX: 1.02,
+  PLATFORM_TARGET_MIN_DISTANCE: 70,
+  PLATFORM_TARGET_MIN_DISTANCE_RATIO: 0.6,
   // Fraud detection thresholds
   MIN_BRIDGE_DURATION: 50, // milliseconds - minimum human reaction time
   MAX_PERFECT_RATE: 0.85, // 85% - if more than this, suspicious
@@ -50,6 +66,8 @@ interface Platform {
   minX: number; // Movement bounds
   maxX: number;
   initialX: number; // Store initial position for movement calculation
+  baseSpeed: number;
+  patrolSeed: number;
 }
 
 export class GameSessionService {
@@ -331,8 +349,10 @@ export class GameSessionService {
         }
       }
 
+      const pressDurationMs = this.getPressDurationMs(move.duration);
+
       // Track bridge durations for variance analysis
-      bridgeDurations.push(move.duration);
+      bridgeDurations.push(pressDurationMs);
       hasValidMoves = true;
       totalTimePlayed = Math.max(
         totalTimePlayed,
@@ -346,8 +366,8 @@ export class GameSessionService {
         timeBetweenMoves.push(timeBetween);
       }
 
-      // Calculate bridge length from duration (in milliseconds)
-      const bridgeLength = this.calculateBridgeLength(move.duration);
+      // Calculate bridge length from press duration (input hold time)
+      const bridgeLength = this.calculateBridgeLength(pressDurationMs);
 
       // Check if we have enough platforms - if not, data is invalid
       if (currentPlatformIndex + 1 >= platforms.length) {
@@ -392,8 +412,8 @@ export class GameSessionService {
         },
       });
 
-      // Calculate platform position at the moment bridge is released
-      // Platform moves during IDLE and GROWING phases, stops when input is released
+      // Calculate platform position at the moment bridge lands
+      // Platform moves during IDLE and GROWING phases, continues through rotation
       const frozen = frozenPlatforms.get(nextPlatform.index);
       if (moveDebug) {
         moveDebug.frozen = Boolean(frozen);
@@ -724,6 +744,8 @@ export class GameSessionService {
       minX: 0,
       maxX: 0,
       initialX: 0,
+      baseSpeed: 0,
+      patrolSeed: 0,
     };
     platforms.push(firstPlatform);
     if (debugPlatforms) {
@@ -752,32 +774,58 @@ export class GameSessionService {
           (BRIDGE_CONFIG.PLATFORM_MAX_GAP - BRIDGE_CONFIG.PLATFORM_MIN_GAP);
 
       const widthRng = rng();
-      const w =
+      const baseWidth =
         BRIDGE_CONFIG.PLATFORM_MIN_WIDTH +
         widthRng *
           (BRIDGE_CONFIG.PLATFORM_MAX_WIDTH - BRIDGE_CONFIG.PLATFORM_MIN_WIDTH);
+      const shrinkStages =
+        i >= BRIDGE_CONFIG.PLATFORM_SHRINK_START_INDEX
+          ? Math.floor(
+              (i - BRIDGE_CONFIG.PLATFORM_SHRINK_START_INDEX) /
+                BRIDGE_CONFIG.PLATFORM_SHRINK_EVERY,
+            ) + 1
+          : 0;
+      const shrinkFactor = Math.pow(
+        BRIDGE_CONFIG.PLATFORM_SHRINK_FACTOR,
+        shrinkStages,
+      );
+      const minWidth =
+        i < BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE_INDEX
+          ? BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_EARLY
+          : BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE;
+      const w = Math.max(baseWidth * shrinkFactor, minWidth);
 
       const x = lastX + gap;
 
+      const speedStages =
+        i >= BRIDGE_CONFIG.PLATFORM_SPEED_START_INDEX
+          ? Math.floor(
+              (i - BRIDGE_CONFIG.PLATFORM_SPEED_START_INDEX) /
+                BRIDGE_CONFIG.PLATFORM_SPEED_EVERY,
+            ) + 1
+          : 0;
+      const speedMultiplier =
+        1 + speedStages * BRIDGE_CONFIG.PLATFORM_SPEED_INCREMENT;
+      const baseSpeed = BRIDGE_CONFIG.PLATFORM_MOVE_VELOCITY * speedMultiplier;
+
       // Determine if platform can move (index > 2, matches engine logic)
-      const canMove = i > 2;
+      const canMove = i >= BRIDGE_CONFIG.PLATFORM_MOVE_START_INDEX;
       let isMoving = false;
       let vx = 0;
       let minX = x;
       let maxX = x;
+      let patrolSeed = 0;
 
       let moveChanceRng: number | undefined;
-      let directionRng: number | undefined;
       let rangeRng: number | undefined;
+      let patrolSeedRng: number | undefined;
 
       if (canMove) {
         moveChanceRng = rng();
-        if (moveChanceRng < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE) {
+        const shouldMove =
+          moveChanceRng < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE;
+        if (shouldMove) {
           isMoving = true;
-          directionRng = rng();
-          vx =
-            BRIDGE_CONFIG.PLATFORM_MOVE_VELOCITY *
-            (directionRng > 0.5 ? 1 : -1);
           rangeRng = rng();
           const range =
             BRIDGE_CONFIG.PLATFORM_MOVE_MIN_RANGE +
@@ -796,6 +844,10 @@ export class GameSessionService {
             vx = 0;
             minX = x;
             maxX = x;
+            patrolSeed = 0;
+          } else {
+            patrolSeedRng = rng();
+            patrolSeed = Math.floor(patrolSeedRng * 0xffffffff);
           }
         }
       }
@@ -811,6 +863,8 @@ export class GameSessionService {
         minX,
         maxX,
         initialX: x,
+        baseSpeed,
+        patrolSeed,
       };
       platforms.push(platform);
       if (debugPlatforms) {
@@ -828,13 +882,11 @@ export class GameSessionService {
             gapRng,
             widthRng,
             moveChanceRng,
-            directionRng,
             rangeRng,
+            patrolSeedRng,
           },
         });
       }
-      // Frontend uses initialX + w (not current x + w) for next platform generation
-      // This is critical - platforms can move, but generation uses initial position
       lastX = platform.initialX + platform.w;
 
       // Debug logging for first few platforms
@@ -847,10 +899,6 @@ export class GameSessionService {
           moveChanceRng:
             moveChanceRng !== undefined
               ? Math.round(moveChanceRng * 1000000) / 1000000
-              : undefined,
-          directionRng:
-            directionRng !== undefined
-              ? Math.round(directionRng * 1000000) / 1000000
               : undefined,
           rangeRng:
             rangeRng !== undefined
@@ -871,13 +919,13 @@ export class GameSessionService {
 
   /**
    * Calculate platform position at a specific time, accounting for movement
-   * Platforms move during IDLE and GROWING phases, stop when input is released
+   * Platforms move during IDLE and GROWING phases, continue through rotation
    *
    * Frontend behavior:
    * - Platforms start moving when created (at game start for initial platforms)
    * - Platform moves continuously during IDLE and GROWING phases
-   * - Platform stops moving when input is released (at moveStartTime + moveDuration)
-   * - Position is checked at the moment bridge is released
+   * - Platform keeps moving until the bridge lands (startTime + landingDuration)
+   * - Position is checked at the moment the bridge lands
    */
   private calculatePlatformPositionAtTime(
     platform: Platform,
@@ -891,8 +939,8 @@ export class GameSessionService {
     }
 
     // Platform moves during IDLE and GROWING phases, so use idleDurationMs + moveDuration
-    // Release time is when the input is released (idleDurationMs + moveDuration)
-    const releaseTime = (idleDurationMs + moveDuration) / 1000; // Convert to seconds
+    // Landing time is when the bridge finishes rotating (idleDurationMs + landingDuration)
+    const landingTime = (idleDurationMs + moveDuration) / 1000; // Convert to seconds
 
     // Closed-form ping-pong motion between minX and maxX (no frame-step drift).
     const range = platform.maxX - platform.minX;
@@ -900,17 +948,68 @@ export class GameSessionService {
       return platform.initialX;
     }
 
-    const period = 2 * range;
-    const travel =
-      platform.initialX - platform.minX + platform.vx * releaseTime;
-    const mod = ((travel % period) + period) % period;
-    if (mod <= range) {
-      return platform.minX + mod;
+    const rng = this.createRng(platform.patrolSeed);
+    let t = 0;
+    let x = platform.initialX;
+    const speedBase = platform.baseSpeed;
+    if (speedBase <= 0) {
+      return platform.initialX;
     }
-    return platform.maxX - (mod - range);
+    const span = platform.maxX - platform.minX;
+    const minTargetDistance = Math.max(
+      BRIDGE_CONFIG.PLATFORM_TARGET_MIN_DISTANCE,
+      span * BRIDGE_CONFIG.PLATFORM_TARGET_MIN_DISTANCE_RATIO,
+    );
+
+    while (true) {
+      let target = x;
+      const attempts = 5;
+      for (let attempt = 0; attempt < attempts; attempt++) {
+        const candidate = platform.minX + rng() * span;
+        target = candidate;
+        if (
+          span <= minTargetDistance ||
+          Math.abs(candidate - x) >= minTargetDistance
+        ) {
+          break;
+        }
+      }
+      const variance =
+        platform.index >= BRIDGE_CONFIG.PLATFORM_VARIANCE_START_INDEX
+          ? this.randomRange(
+              rng,
+              BRIDGE_CONFIG.PLATFORM_SPEED_VARIANCE_MIN,
+              BRIDGE_CONFIG.PLATFORM_SPEED_VARIANCE_MAX,
+            )
+          : 1;
+      const speed = speedBase * variance;
+      if (speed <= 0) {
+        return x;
+      }
+      const dist = Math.abs(target - x);
+      if (dist === 0) {
+        if (t >= landingTime) return x;
+        continue;
+      }
+      const duration = dist / speed;
+      if (t + duration >= landingTime) {
+        const dir = target > x ? 1 : -1;
+        return x + dir * speed * (landingTime - t);
+      }
+      t += duration;
+      x = target;
+    }
   }
 
-  private calculateBridgeLength(duration: number): number {
-    return (duration / 1000) * BRIDGE_CONFIG.GROW_SPEED;
+  private getRotationTimeMs(): number {
+    return (90 / BRIDGE_CONFIG.ROTATE_SPEED) * 1000;
+  }
+
+  private getPressDurationMs(landingDurationMs: number): number {
+    return Math.max(0, landingDurationMs - this.getRotationTimeMs());
+  }
+
+  private calculateBridgeLength(pressDurationMs: number): number {
+    return (pressDurationMs / 1000) * BRIDGE_CONFIG.GROW_SPEED;
   }
 }

@@ -43,10 +43,11 @@ export const useGameAds = ({
       : TestIds.REWARDED;
 
   const handleAdEarned = useCallback(() => {
+    if (pendingSubmission) return; // Don't revive if showing submission ad
     adRewardedRef.current = true;
     setIsWatchingAd(false);
     onReviveEarned();
-  }, [onReviveEarned]);
+  }, [onReviveEarned, pendingSubmission]);
 
   const handleAdOpened = useCallback(() => {
     setIsWatchingAd(true);

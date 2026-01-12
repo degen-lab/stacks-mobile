@@ -11,7 +11,7 @@ export const GAMEPLAY_CONFIG = {
   GHOST_DURATION_MS: 30000, // 30 seconds
   GHOST_TIMER_UPDATE_INTERVAL: 100, // update timer every 100ms
 
-  // Anti-cheat validation (backend comparison)
+  // Anti-cheat validation
   MIN_BRIDGE_DURATION: 50, // milliseconds - minimum human reaction time
   MAX_PERFECT_RATE: 0.85, // 85% - if more than this, suspicious
   MIN_TIME_BETWEEN_MOVES: 100, // milliseconds - minimum time between moves

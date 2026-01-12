@@ -2,13 +2,16 @@ import { Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Text, View } from "@/components/ui";
-import { useGameStore } from "@/lib/store/game";
 import { memo } from "react";
+import type { BridgeOverlayState } from "../types";
 
-const ScoreDisplay = () => {
+type ScoreDisplayProps = {
+  overlayState: BridgeOverlayState;
+  score: number;
+};
+
+const ScoreDisplay = ({ overlayState, score }: ScoreDisplayProps) => {
   const insets = useSafeAreaInsets();
-  const overlayState = useGameStore((state) => state.overlayState);
-  const score = useGameStore((state) => state.score);
 
   if (overlayState !== "PLAYING") return null;
 

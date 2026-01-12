@@ -1,46 +1,58 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { View } from "@/components/ui";
 import { HeartIcon } from "@/components/ui/icons/heart";
 import { RulerIcon } from "@/components/ui/icons/ruler";
 import PowerUpButton from "./power-up-button";
-import { useGameStore } from "@/lib/store/game";
 import { GAMEPLAY_CONFIG } from "../config";
+import type {
+  BridgeOverlayState,
+  GhostState,
+  RevivePowerUpState,
+} from "../types";
 
 type PowerUpsContainerProps = {
+  overlayState: BridgeOverlayState;
+  ghost: GhostState;
+  revivePowerUp: RevivePowerUpState;
   dropPointAvailable: boolean;
   reviveAvailable: boolean;
   consumeDropPoint: () => void;
   consumeRevive: () => void;
+  onActivateGhost: (expiresAt: number) => void;
+  onActivateRevive: () => void;
 };
 
 const PowerUpsContainer = ({
+  overlayState,
+  ghost,
+  revivePowerUp,
   dropPointAvailable,
   reviveAvailable,
   consumeDropPoint,
   consumeRevive,
+  onActivateGhost,
+  onActivateRevive,
 }: PowerUpsContainerProps) => {
-  const overlayState = useGameStore((state) => state.overlayState);
-  const ghost = useGameStore((state) => state.ghost);
-  const revivePowerUp = useGameStore((state) => state.revivePowerUp);
-  const activateGhostPowerUp = useGameStore((state) => state.activateGhost);
-  const activateRevivePowerUp = useGameStore(
-    (state) => state.activateRevivePowerUp,
-  );
+  const insets = useSafeAreaInsets();
+  const androidBottomInset =
+    Platform.OS === "android" ? Math.max(insets.bottom, 12) : 0;
   const [currentTime, setCurrentTime] = useState(performance.now());
 
   const handleActivateGhost = useCallback(() => {
     if (ghost.used || !dropPointAvailable) return;
     const now = performance.now();
-    activateGhostPowerUp(now + GAMEPLAY_CONFIG.GHOST_DURATION_MS);
+    onActivateGhost(now + GAMEPLAY_CONFIG.GHOST_DURATION_MS);
     consumeDropPoint();
-  }, [activateGhostPowerUp, consumeDropPoint, dropPointAvailable, ghost.used]);
+  }, [onActivateGhost, consumeDropPoint, dropPointAvailable, ghost.used]);
 
   const handleActivateRevive = useCallback(() => {
     if (revivePowerUp.activated || !reviveAvailable) return;
-    activateRevivePowerUp();
-  }, [activateRevivePowerUp, reviveAvailable, revivePowerUp.activated]);
+    onActivateRevive();
+  }, [onActivateRevive, reviveAvailable, revivePowerUp.activated]);
 
   const ghostActive = useMemo(
     () => ghost.expiresAt !== null && currentTime < ghost.expiresAt,
@@ -81,8 +93,8 @@ const PowerUpsContainer = ({
         start={{ x: 0.5, y: 1 }}
         end={{ x: 0.5, y: 0 }}
         style={{
-          height: 140,
-          paddingBottom: 0,
+          height: 140 + androidBottomInset,
+          paddingBottom: androidBottomInset,
           paddingTop: 20,
           paddingHorizontal: 20,
         }}

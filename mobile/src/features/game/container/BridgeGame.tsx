@@ -11,8 +11,8 @@ import { RelativePathString, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, BackHandler, StatusBar } from "react-native";
 import { useGameAds } from "../hooks/useGameAds";
-import { useAutoStart } from "../hooks/useAutoStart";
 import { useBridgeLayout } from "../hooks/useBridgeLayout";
+import { useAutoStart } from "../hooks/useAutoStart";
 import { useGameSession } from "../hooks/useGameSession";
 import { usePowerUpInventory } from "../hooks/usePowerUpInventory";
 import { useRunSummary } from "../hooks/useRunSummary";
@@ -31,8 +31,14 @@ import { useSelectedNetwork } from "@/lib/store/settings";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { StacksBridgeEngine } from "../engine";
 import { useEngineRunner } from "../hooks/useEngineRunner";
-import type { EngineEvent, PlayerMove } from "../types";
-import BridgeGameCanvas from "../components/canvas";
+import type {
+  BridgeOverlayState,
+  EngineEvent,
+  GhostState,
+  PlayerMove,
+  RevivePowerUpState,
+} from "../types";
+import { BridgeGameCanvas } from "../components/canvas";
 import BridgeGameLayout from "./BridgeGame.layout";
 
 type BridgeGameProps = {
@@ -58,22 +64,69 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   } | null>(null);
   const { canvasHeight, handleLayout, worldOffsetY } = useBridgeLayout();
   const [isStarting, setIsStarting] = useState(false);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
   const isMountedRef = useRef(true);
-  const overlayState = useGameStore((state) => state.overlayState);
-  const score = useGameStore((state) => state.score);
+
+  const [overlayState, setOverlayState] = useState<BridgeOverlayState>("START");
+  const [score, setScore] = useState(0);
+  const [ghost, setGhost] = useState<GhostState>({
+    active: false,
+    expiresAt: null as number | null,
+    used: false,
+  });
+  const [revivePowerUp, setRevivePowerUp] = useState<RevivePowerUpState>({
+    activated: false,
+    consumed: false,
+  });
+
+  // Only highscore from Zustand
   const highscore = useGameStore((state) => state.highscore);
-  const ghost = useGameStore((state) => state.ghost);
-  const revivePowerUp = useGameStore((state) => state.revivePowerUp);
   const setHighscore = useGameStore((state) => state.setHighscore);
   const hydrateHighscore = useGameStore((state) => state.hydrateHighscore);
-  const resetSession = useGameStore((state) => state.resetSession);
-  const setOverlay = useGameStore((state) => state.setOverlay);
-  const updateScore = useGameStore((state) => state.updateScore);
-  const applyEngineEvents = useGameStore((state) => state.applyEngineEvents);
-  const resetPowerUps = useGameStore((state) => state.resetPowerUps);
-  const consumeRevivePowerUp = useGameStore(
-    (state) => state.consumeRevivePowerUp,
+
+  // Local state updaters
+  const updateScore = useCallback((newScore: number) => setScore(newScore), []);
+  const setOverlay = useCallback(
+    (state: BridgeOverlayState) => setOverlayState(state),
+    [],
   );
+  const resetPowerUps = useCallback(() => {
+    setGhost({ active: false, expiresAt: null, used: false });
+    setRevivePowerUp({ activated: false, consumed: false });
+  }, []);
+  const consumeRevivePowerUp = useCallback(() => {
+    setRevivePowerUp((prev) => ({ ...prev, consumed: true }));
+  }, []);
+  const resetSession = useCallback(() => {
+    setOverlayState("START");
+    setScore(0);
+    setGhost({ active: false, expiresAt: null, used: false });
+    setRevivePowerUp({ activated: false, consumed: false });
+  }, []);
+  const applyEngineEvents = useCallback((events: EngineEvent[]) => {
+    for (const event of events) {
+      if (event.type === "score") {
+        setScore(event.value);
+      }
+    }
+  }, []);
+
+  const handleActivateGhost = useCallback((expiresAt: number) => {
+    setGhost((prev) => ({
+      ...prev,
+      active: true,
+      expiresAt,
+      used: true,
+    }));
+  }, []);
+
+  const handleActivateRevive = useCallback(() => {
+    setRevivePowerUp((prev) => ({ ...prev, activated: true }));
+  }, []);
+
+  const handleAssetsLoaded = useCallback(() => {
+    setAssetsLoaded(true);
+  }, []);
 
   const isPlaying = overlayState === "PLAYING";
   const queryOptions = useMemo(
@@ -381,19 +434,48 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       ? raffleSubmissionsLeft
       : weeklyContestSubmissionsLeft;
 
-  useEffect(() => {
-    if (!ssvData) return;
-    if (!submissionAd.loaded && !submissionAd.loading) {
-      submissionAd.loadAd();
-    }
-  }, [ssvData, submissionAd]);
+  // Refs to prevent redundant ad operations
+  const prevSsvDataRef = useRef(ssvData);
+  const hasLoadedSubmissionAdRef = useRef(false);
+  const submissionAdLoadRef = useRef(submissionAd.loadAd);
+  const submissionAdShowRef = useRef(submissionAd.showAd);
 
+  // Update refs when functions change
+  useEffect(() => {
+    submissionAdLoadRef.current = submissionAd.loadAd;
+    submissionAdShowRef.current = submissionAd.showAd;
+  }, [submissionAd.loadAd, submissionAd.showAd]);
+
+  // Load submission ad when ssvData becomes available
+  useEffect(() => {
+    if (!ssvData) {
+      prevSsvDataRef.current = null;
+      hasLoadedSubmissionAdRef.current = false;
+      return;
+    }
+
+    // Only load if ssvData changed and ad isn't already loaded/loading
+    if (
+      prevSsvDataRef.current !== ssvData &&
+      !submissionAd.loaded &&
+      !submissionAd.loading &&
+      !hasLoadedSubmissionAdRef.current
+    ) {
+      submissionAdLoadRef.current();
+      hasLoadedSubmissionAdRef.current = true;
+    }
+    prevSsvDataRef.current = ssvData;
+  }, [ssvData, submissionAd.loaded, submissionAd.loading]);
+
+  // Show submission ad when it becomes loaded
   useEffect(() => {
     if (!ssvData) return;
-    if (submissionAd.loaded) {
-      submissionAd.showAd();
+    // Only show if ad just became loaded
+    if (submissionAd.loaded && hasLoadedSubmissionAdRef.current) {
+      submissionAdShowRef.current();
+      hasLoadedSubmissionAdRef.current = false;
     }
-  }, [ssvData, submissionAd]);
+  }, [ssvData, submissionAd.loaded]);
 
   const handleAddFunds = useCallback(() => {
     router.push("/add-funds" as RelativePathString); // TOOD: when we add this screen we should need a way to navigate back to the game and still let user submit
@@ -483,6 +565,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   );
   const ghostActive =
     ghost.expiresAt !== null && performance.now() < ghost.expiresAt;
+  const overlayStateForUi =
+    isStarting || !assetsLoaded ? "PLAYING" : overlayState;
   return (
     <>
       <View className="flex-1 bg-[#F7F4F0]" onLayout={handleLayout}>
@@ -497,8 +581,14 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
           onInputDown={handleInputDown}
           onInputUp={handleInputUp}
           onEmitterReady={handleEmitterReady}
+          onAssetsLoaded={handleAssetsLoaded}
         />
         <BridgeGameLayout
+          overlayState={overlayStateForUi}
+          actualOverlayState={overlayState}
+          score={score}
+          ghost={ghost}
+          revivePowerUp={revivePowerUp}
           dropPointAvailable={dropPointAvailable}
           runSummary={runSummary}
           highScore={bestSubmittedScore ?? 0}
@@ -515,8 +605,10 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
           onExit={handleExit}
           onSubmitToLeaderboard={handleSubmitLeaderboard}
           onSubmitToRaffle={handleSubmitRaffle}
+          onActivateGhost={handleActivateGhost}
+          onActivateRevive={handleActivateRevive}
         />
-        {isStarting ? (
+        {isStarting || !assetsLoaded ? (
           <View className="absolute inset-0 items-center justify-center bg-white">
             <ActivityIndicator size="small" color="#D1D5DB" />
           </View>
