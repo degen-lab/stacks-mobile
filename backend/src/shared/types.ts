@@ -95,6 +95,9 @@ export type SessionValidationMoveDebug = {
   platformMinX: number | null;
   platformMaxX: number | null;
   platformIsMoving: boolean | null;
+  platformXAtRelease: number | null;
+  platformRightAtRelease: number | null;
+  platformCenterAtRelease: number | null;
   platformXAtLanding: number | null;
   platformRightAtLanding: number | null;
   platformCenterAtLanding: number | null;

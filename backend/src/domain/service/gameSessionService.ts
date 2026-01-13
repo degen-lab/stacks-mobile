@@ -249,10 +249,6 @@ export class GameSessionService {
     let isFraud = false;
     let currentPlatformIndex = 0;
     let hasValidMoves = false;
-    const frozenPlatforms = new Map<
-      number,
-      { x: number; right: number; center: number }
-    >();
     // Track where each platform stopped after landing (for moving platforms)
     // For platform 0 (fixed), this is always the base position
     let currentPlatformStoppedRight = platforms[0].right;
@@ -282,7 +278,6 @@ export class GameSessionService {
             duration: move.duration,
             idleDurationMs,
             client: move.debug,
-            frozen: false,
             bridgeLength: null,
             currentPlatformIndex: null,
             currentPlatformRight: null,
@@ -297,6 +292,9 @@ export class GameSessionService {
             platformXAtRelease: null,
             platformRightAtRelease: null,
             platformCenterAtRelease: null,
+            platformXAtLanding: null,
+            platformRightAtLanding: null,
+            platformCenterAtLanding: null,
             stickTip: null,
             distToCenter: null,
             isPerfect: null,
@@ -412,32 +410,15 @@ export class GameSessionService {
         },
       });
 
-      // Calculate platform position at the moment bridge lands
-      // Platform moves during IDLE and GROWING phases, continues through rotation
-      const frozen = frozenPlatforms.get(nextPlatform.index);
-      if (moveDebug) {
-        moveDebug.frozen = Boolean(frozen);
-      }
-      const platformXAtRelease = frozen
-        ? frozen.x
-        : this.calculatePlatformPositionAtTime(
-            nextPlatform,
-            idleDurationMs,
-            move.duration,
-          );
+      const platformXAtRelease = this.calculatePlatformPositionAtTime(
+        nextPlatform,
+        idleDurationMs,
+        move.duration,
+      );
 
-      // Update platform position for hit detection
-      const platformRightAtRelease = frozen
-        ? frozen.right
-        : platformXAtRelease + nextPlatform.w;
-      const platformCenterAtRelease = frozen
-        ? frozen.center
-        : platformXAtRelease + nextPlatform.w / 2;
+      const platformRightAtRelease = platformXAtRelease + nextPlatform.w;
+      const platformCenterAtRelease = platformXAtRelease + nextPlatform.w / 2;
 
-      // Calculate current platform's position at move time
-      // For the first move, currentPlatform is platform 0 (fixed, doesn't move)
-      // For subsequent moves, we use where the previous platform stopped after landing
-      // (stored in currentPlatformStoppedRight)
       const currentPlatformRight = currentPlatformStoppedRight;
 
       const stickTip = currentPlatformRight + bridgeLength;
@@ -471,7 +452,7 @@ export class GameSessionService {
         moveDebug.platformWidth = nextPlatform.w;
         moveDebug.platformMinX = nextPlatform.minX;
         moveDebug.platformMaxX = nextPlatform.maxX;
-        moveDebug.platformIsMoving = nextPlatform.isMoving && !frozen;
+        moveDebug.platformIsMoving = nextPlatform.isMoving;
         moveDebug.platformXAtRelease = platformXAtRelease;
         moveDebug.platformRightAtRelease = platformRightAtRelease;
         moveDebug.platformCenterAtRelease = platformCenterAtRelease;
@@ -545,14 +526,7 @@ export class GameSessionService {
           gap: Math.round((platformXAtRelease - stickTip) * 100) / 100,
         });
 
-        if (nextPlatform.isMoving && !frozen) {
-          frozenPlatforms.set(nextPlatform.index, {
             x: platformXAtRelease,
-            right: platformRightAtRelease,
-            center: platformCenterAtRelease,
-          });
-        }
-
         if (moveDebug) {
           moveDebug.distToCenter = null;
           moveDebug.isPerfect = null;
@@ -603,17 +577,21 @@ export class GameSessionService {
           ) / bridgeDurations.length;
         const stdDev = Math.sqrt(variance);
 
+        const scaledMinVariance = Math.max(
+          10,
+          BRIDGE_CONFIG.MIN_VARIANCE_IN_DURATION /
+            Math.sqrt(bridgeDurations.length),
+        );
+
         // If standard deviation is too low, durations are too consistent (bot-like)
-        if (stdDev < BRIDGE_CONFIG.MIN_VARIANCE_IN_DURATION) {
+        if (stdDev < scaledMinVariance) {
           isFraud = true;
           fraudReason = FraudReason.DURATION_VARIANCE_TOO_LOW;
         }
       }
     }
 
-    // Check variance in time between moves (bots are too consistent)
     if (!isFraud && timeBetweenMoves.length >= 3) {
-      // Check for moves too close together (bot-like speed)
       const tooFastMoves = timeBetweenMoves.filter(
         (t) => t < BRIDGE_CONFIG.MIN_TIME_BETWEEN_MOVES,
       ).length;
@@ -622,7 +600,6 @@ export class GameSessionService {
         fraudReason = FraudReason.TOO_FAST_BETWEEN_MOVES;
       }
 
-      // Check variance (too consistent = bot)
       if (!isFraud) {
         const avgTimeBetween =
           timeBetweenMoves.reduce((a, b) => a + b, 0) / timeBetweenMoves.length;
@@ -633,19 +610,26 @@ export class GameSessionService {
           ) / timeBetweenMoves.length;
         const stdDev = Math.sqrt(variance);
 
-        // If standard deviation is too low, timing is too consistent (bot-like)
-        if (stdDev < BRIDGE_CONFIG.MIN_VARIANCE_IN_DURATION) {
+        const scaledMinVariance = Math.max(
+          10,
+          BRIDGE_CONFIG.MIN_VARIANCE_IN_DURATION /
+            Math.sqrt(timeBetweenMoves.length),
+        );
+
+        if (stdDev < scaledMinVariance) {
           isFraud = true;
           fraudReason = FraudReason.TIMING_VARIANCE_TOO_LOW;
         }
       }
     }
 
-    // Check perfect landing patterns (bots are too consistent)
     if (!isFraud && successfulLandings > 0) {
-      // Check perfect landing rate (too consistent = bot)
       const perfectRate = perfectLandings / successfulLandings;
-      if (perfectRate > BRIDGE_CONFIG.MAX_PERFECT_RATE) {
+      const threshold =
+        sortedMoves.length >= 20
+          ? 0.9 // More lenient for longer sessions (sliding window approximation)
+          : BRIDGE_CONFIG.MAX_PERFECT_RATE; // Original threshold for short sessions
+      if (perfectRate > threshold) {
         isFraud = true;
         fraudReason = FraudReason.PERFECT_RATE_TOO_HIGH;
       }
@@ -822,8 +806,7 @@ export class GameSessionService {
 
       if (canMove) {
         moveChanceRng = rng();
-        const shouldMove =
-          moveChanceRng < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE;
+        const shouldMove = moveChanceRng < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE;
         if (shouldMove) {
           isMoving = true;
           rangeRng = rng();

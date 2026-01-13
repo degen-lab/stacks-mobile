@@ -191,6 +191,8 @@ export class StacksBridgeEngine {
   private engineTimeMs = 0;
   private idleStartTime = 0;
 
+  private nextPlatformCalculatedX: number | null = null;
+
   // Cache render state to avoid allocations every frame
   private cachedRenderState: RenderState = {
     phase: "IDLE",
@@ -265,7 +267,6 @@ export class StacksBridgeEngine {
   }
 
   revivePowerUp() {
-    // Revive without setting hasRevived flag, so ad revive is still available
     const safePlatform = this.platforms[0];
     if (!safePlatform) return;
     this.hero.resetToPlatform(safePlatform);
@@ -452,6 +453,15 @@ export class StacksBridgeEngine {
         idleDurationMs,
         landingDuration,
       );
+
+      // Store calculated position to snap platform to when it stops (ensures backend sync)
+      // This eliminates drift between visual position and calculated position
+      if (platformXAtLanding !== null && nextPlatform?.isMoving) {
+        this.nextPlatformCalculatedX = platformXAtLanding;
+      } else {
+        this.nextPlatformCalculatedX = null;
+      }
+
       const platformRightAtLanding =
         platformXAtLanding !== null && nextPlatform
           ? platformXAtLanding + nextPlatform.w
@@ -487,8 +497,6 @@ export class StacksBridgeEngine {
       this.lastMoveDebug = debugInfo ?? null;
       this.currentPressStart = null;
     }
-
-    // Platform keeps moving until bridge lands (makes game harder)
   }
 
   step(isPlaying: boolean, dt: number): EngineEvent[] {
@@ -557,17 +565,19 @@ export class StacksBridgeEngine {
       return;
     }
 
-    // Use CURRENT visual platform positions for collision detection
+    // TODO: CHECK THIS SNAP
+    if (pNext.isMoving) {
+      pNext.stop();
+      if (this.nextPlatformCalculatedX !== null) {
+        pNext.x = this.nextPlatformCalculatedX;
+        this.nextPlatformCalculatedX = null;
+      }
+    }
+
     const platformX = pNext.x;
     const platformRight = pNext.right;
     const platformCenter = pNext.center;
 
-    // Stop the platform now that bridge has landed
-    if (pNext.isMoving) {
-      pNext.stop();
-    }
-
-    // Use actual current platform position for stickTip calculation
     const stickTip = pCurrent.right + this.bridge.length;
     const hit = stickTip >= platformX && stickTip <= platformRight;
     const distToCenter = Math.abs(stickTip - platformCenter);
@@ -603,7 +613,6 @@ export class StacksBridgeEngine {
     const stickTip = currentPlatform.right + this.bridge.length;
     const heroFront = this.hero.x + VISUAL_CONFIG.HERO_SIZE;
 
-    // Use actual visual platform positions for collision detection
     const hit = p1 && stickTip >= p1.x && stickTip <= p1.right;
     const hasLanded =
       hit &&
@@ -664,7 +673,6 @@ export class StacksBridgeEngine {
       }
     }
 
-    // Pre-generate next platform so it's visible during scrolling
     const old = this.platforms[1];
     if (old && this.platforms.length < 3) {
       const lastX = old.initialX + old.w;
@@ -677,7 +685,6 @@ export class StacksBridgeEngine {
   }
 
   private advancePlatform() {
-    // Platform was already pre-generated in handleSuccess, just shift
     if (this.platforms.length > 1) {
       this.platforms.shift();
     }
