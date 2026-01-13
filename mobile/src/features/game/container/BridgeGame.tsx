@@ -498,15 +498,19 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
 
   // reset session when exiting the game
   const handleExit = useCallback(() => {
+    cancelPendingStart();
+    setIsStarting(false); // Reset loading state before exit
     resetSession();
     router.back();
-  }, [resetSession, router]);
+  }, [cancelPendingStart, resetSession, router]);
 
   // reset session when restarting the game
   const handleRestart = useCallback(() => {
+    cancelPendingStart();
+    setIsStarting(false); // Reset loading state before restart
     resetSession();
     void startGameWithLoading();
-  }, [resetSession, startGameWithLoading]);
+  }, [cancelPendingStart, resetSession, startGameWithLoading]);
 
   const handleOpenContractDetails = useCallback(() => {
     contractDetailsSheetRef.current?.present();
@@ -523,6 +527,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       "hardwareBackPress",
       () => {
         cancelPendingStart();
+        setIsStarting(false); // Reset loading state on back press
         resetSession();
         return false;
       },

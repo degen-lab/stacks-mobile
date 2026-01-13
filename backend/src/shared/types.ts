@@ -84,7 +84,6 @@ export type SessionValidationMoveDebug = {
   duration: number;
   idleDurationMs: number;
   client?: MoveClientDebug;
-  frozen?: boolean;
   bridgeLength: number | null;
   currentPlatformIndex: number | null;
   currentPlatformRight: number | null;
@@ -96,9 +95,9 @@ export type SessionValidationMoveDebug = {
   platformMinX: number | null;
   platformMaxX: number | null;
   platformIsMoving: boolean | null;
-  platformXAtRelease: number | null;
-  platformRightAtRelease: number | null;
-  platformCenterAtRelease: number | null;
+  platformXAtLanding: number | null;
+  platformRightAtLanding: number | null;
+  platformCenterAtLanding: number | null;
   stickTip: number | null;
   distToCenter: number | null;
   isPerfect: boolean | null;

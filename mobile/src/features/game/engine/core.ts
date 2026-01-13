@@ -469,7 +469,7 @@ export class StacksBridgeEngine {
         ? {
             stickTip,
             bridgeLength,
-            currentPlatformRight: currentPlatform?.right ?? null,
+            currentPlatformRight: null, // Will be set in checkLanding after platform stops
             nextPlatformIndex: nextPlatform?.index ?? null,
             platformX: platformXAtLanding,
             platformRight: platformRightAtLanding,
@@ -557,7 +557,7 @@ export class StacksBridgeEngine {
       return;
     }
 
-    // Use CURRENT platform position (it kept moving after release)
+    // Use CURRENT visual platform positions for collision detection
     const platformX = pNext.x;
     const platformRight = pNext.right;
     const platformCenter = pNext.center;
@@ -567,8 +567,8 @@ export class StacksBridgeEngine {
       pNext.stop();
     }
 
-    const debug = this.lastMoveDebug;
-    const stickTip = debug?.stickTip ?? pCurrent.right + this.bridge.length;
+    // Use actual current platform position for stickTip calculation
+    const stickTip = pCurrent.right + this.bridge.length;
     const hit = stickTip >= platformX && stickTip <= platformRight;
     const distToCenter = Math.abs(stickTip - platformCenter);
     this.perfect = hit && distToCenter <= VISUAL_CONFIG.PERFECT_TOLERANCE;
@@ -603,6 +603,7 @@ export class StacksBridgeEngine {
     const stickTip = currentPlatform.right + this.bridge.length;
     const heroFront = this.hero.x + VISUAL_CONFIG.HERO_SIZE;
 
+    // Use actual visual platform positions for collision detection
     const hit = p1 && stickTip >= p1.x && stickTip <= p1.right;
     const hasLanded =
       hit &&

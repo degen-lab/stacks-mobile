@@ -163,6 +163,9 @@ export const useGameSession = ({
 
   const cancelPendingStart = useCallback(() => {
     startTokenRef.current += 1;
+    // Reset submission state to prevent blocking on restart
+    isSubmittingRef.current = false;
+    runSubmittedRef.current = false;
   }, []);
 
   return { registerUsedItem, startGame, submitSession, cancelPendingStart };
