@@ -9,7 +9,7 @@ import { getItemVariant } from "@/api/user/types";
 import { ItemVariant, TournamentStatusEnum } from "@/lib/enums";
 import { RelativePathString, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, BackHandler, StatusBar } from "react-native";
+import { BackHandler, StatusBar } from "react-native";
 import { useGameAds } from "../hooks/useGameAds";
 import { useBridgeLayout } from "../hooks/useBridgeLayout";
 import { useAutoStart } from "../hooks/useAutoStart";
@@ -78,7 +78,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     consumed: false,
   });
 
-  // Only highscore from Zustand
   const highscore = useGameStore((state) => state.highscore);
   const setHighscore = useGameStore((state) => state.setHighscore);
   const hydrateHighscore = useGameStore((state) => state.hydrateHighscore);
@@ -518,26 +517,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   }, [hydrateHighscore]);
 
   useAutoStart(autoStart, overlayState, startGameWithLoading);
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active" || isWatchingAd) return;
-      cancelPendingStart();
-      resetSession();
-      setOverlay("START");
-      setRunSummary(null);
-      setPerfectCue(null);
-    });
-
-    return () => subscription.remove();
-  }, [
-    cancelPendingStart,
-    isWatchingAd,
-    resetSession,
-    setOverlay,
-    setPerfectCue,
-    setRunSummary,
-  ]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
