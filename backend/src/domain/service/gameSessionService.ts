@@ -526,7 +526,6 @@ export class GameSessionService {
           gap: Math.round((platformXAtRelease - stickTip) * 100) / 100,
         });
 
-            x: platformXAtRelease,
         if (moveDebug) {
           moveDebug.distToCenter = null;
           moveDebug.isPerfect = null;
