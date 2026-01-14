@@ -12,13 +12,17 @@ import { GameStoreDomainService } from '../domain/service/gameStoreDomainService
 import { ICachePort } from './ports/ICachePort';
 import { RewardsService } from './rewards/rewardsService';
 import { RewardsCalculator } from '../domain/service/rewardsCalculator';
+import { TransakPurchaseClient } from '../infra/purchase/transakPurchaseClient';
+import { CryptoPurchaseService } from './purchase/cryptoPurchaseService';
+import { CryptoPurchaseDomainService } from '../domain/service/cryptoPurchaseDomainService';
 
 type ServiceType =
   | UserService
   | TransactionService
   | StreakService
   | GameStoreService
-  | RewardsService;
+  | RewardsService
+  | CryptoPurchaseService; 
 
 type ServiceConstructor<T extends ServiceType> = new (...args: unknown[]) => T;
 
@@ -114,5 +118,20 @@ export class ServiceFactory {
       );
     }
     return this.services.get('rewardsService') as RewardsService;
+  }
+
+  getCryptoPurchaseService(): CryptoPurchaseService { 
+    if (!this.services.has('cryptoPurchaseService')) {
+      this.services.set(
+        'cryptoPurchaseService',
+        new CryptoPurchaseService(
+          this.dataSource.createEntityManager(),
+          this.cacheAdapter,
+          new TransakPurchaseClient(),
+          new CryptoPurchaseDomainService()
+        )
+      );
+    }
+    return this.services.get('cryptoPurchaseService') as CryptoPurchaseService;
   }
 }
