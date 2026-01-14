@@ -119,3 +119,8 @@ export type SessionValidationDebug = {
   };
   summary?: SessionValidationResult;
 };
+
+export enum TransakApiRoutes {
+  REFRESH_ACCESS_TOKEN = 'api/v2/refresh-token',
+  CREATE_WIDGET_URL = 'api/v2/auth/session',
+}
