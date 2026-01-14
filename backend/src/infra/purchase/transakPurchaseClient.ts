@@ -1,10 +1,10 @@
-import { TRANSAK_API_KEY, TRANSAK_BASE_URL, TRANSAK_USER_AUTH_TOKEN } from "../../shared/constants";
-import { TransakApiRoutes } from "../../shared/types";
+import { TRANSAK_API_KEY, TRANSAK_API_SECRET, TRANSAK_BASE_URL, TRANSAK_USER_AUTH_TOKEN } from "../../shared/constants";
+import { TransakAccessToken, TransakApiRoutes } from "../../shared/types";
 
 export class TransakPurchaseClient { 
  
 
-  async createWidgetUrl(accessToken: string, cryptoCurrencyCode: string, fiatCurrency: string): Promise<string> {
+  async createWidgetUrl(accessToken: string, cryptoCurrencyCode: string, fiatCurrency: string, fiatAmount: number, partnerCustomerId): Promise<string> {
     const options = {
       method: 'POST',
       headers: {
@@ -19,6 +19,8 @@ export class TransakPurchaseClient {
           referrerDomain: 'TRANSAK_REFERRER_DOMAIN',
           cryptoCurrencyCode,
           fiatCurrency,
+          fiatAmount,
+          partnerCustomerId
         }
       })
     };
@@ -27,10 +29,7 @@ export class TransakPurchaseClient {
     return responseBody.data.widgetUrl;
   }
 
-  async refreshAccessToken(): Promise<{
-    accessToken: string;
-    expiresAt: number;
-  }> {
+  async refreshAccessToken(): Promise<TransakAccessToken> {
     const options = {
       method: 'POST',
       headers: {

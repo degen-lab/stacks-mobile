@@ -13,7 +13,7 @@ import { PurchaseType, SubmissionType } from './enums';
 import { FraudAttempt } from './fraudAttempt';
 import { Submission } from './submission';
 import { UniqueItem } from './uniqueItem';
-import { CryptoPurchase } from './transaction';
+import { CryptoPurchase } from './cryptoPurchase';
 @Entity()
 export class User extends BaseAppEntity {
   @Column({ type: 'varchar', unique: true })

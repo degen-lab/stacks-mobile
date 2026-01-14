@@ -124,3 +124,8 @@ export enum TransakApiRoutes {
   REFRESH_ACCESS_TOKEN = 'api/v2/refresh-token',
   CREATE_WIDGET_URL = 'api/v2/auth/session',
 }
+
+export type TransakAccessToken = {
+  accessToken: string,
+  expiresAt: number,
+}

@@ -18,7 +18,7 @@ export class CryptoPurchase extends BaseAppEntity {
   @Column({ type: 'bigint', nullable: true })
   fiatAmount: number;
   @Column({ type: 'bigint', nullable: true })
-  tokensReceived: number;
+  cryptoAmount: number;
   @ManyToOne(() => User, (user) => user.transactions, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
