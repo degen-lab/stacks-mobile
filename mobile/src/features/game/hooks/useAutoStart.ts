@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-
-import type { BridgeOverlayState } from "@/lib/store/game";
+import type { BridgeOverlayState } from "../types";
 
 export const useAutoStart = (
   enabled: boolean,

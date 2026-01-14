@@ -147,11 +147,26 @@ jest.mock("../hooks/useBridgeLayout", () => ({
 }));
 
 jest.mock("../hooks/useGameSession", () => ({
-  useGameSession: () => ({
+  useGameSession: ({
+    engine,
+    updateScore,
+    setOverlay,
+    resetPowerUps,
+    setRunSummary,
+    setPerfectCue,
+    resetReviveReward,
+    ensureReviveAdLoaded,
+  }: any) => ({
     registerUsedItem: jest.fn(),
     startGame: jest.fn(async () => {
-      mockEngine.start(12345);
-      mockGameStore.setOverlay("PLAYING");
+      engine.start(12345);
+      updateScore(0);
+      setOverlay("PLAYING");
+      setRunSummary(null);
+      resetPowerUps();
+      setPerfectCue(null);
+      resetReviveReward();
+      ensureReviveAdLoaded();
     }),
     submitSession: jest.fn(),
     cancelPendingStart: jest.fn(),
@@ -181,9 +196,24 @@ jest.mock("../hooks/useGameAds", () => ({
 }));
 
 jest.mock("../hooks/usePowerUpInventory", () => ({
-  usePowerUpInventory: () => ({
-    consumeDropPoint: jest.fn(),
-    consumeRevive: mockConsumeRevive,
+  usePowerUpInventory: ({
+    onConsumeDropPoint,
+    onConsumeRevive,
+    registerUsedItem,
+  }: any) => ({
+    consumeDropPoint: jest.fn(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { ItemVariant } = require("@/lib/enums");
+      registerUsedItem(ItemVariant.DropPoint);
+      onConsumeDropPoint();
+    }),
+    consumeRevive: jest.fn(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { ItemVariant } = require("@/lib/enums");
+      mockConsumeRevive();
+      registerUsedItem(ItemVariant.Revive);
+      onConsumeRevive();
+    }),
   }),
 }));
 
@@ -228,13 +258,19 @@ jest.mock("../container/BridgeGame.layout", () => ({
 
 jest.mock("../components/canvas", () => ({
   __esModule: true,
-  default: (props: Record<string, any>) => {
+  BridgeGameCanvas: (props: Record<string, any>) => {
     mockCanvasProps.current = props;
     return null;
   },
 }));
 
 describe("BridgeGame Integration Tests", () => {
+  const loadAssets = async () => {
+    await act(async () => {
+      mockCanvasProps.current?.onAssetsLoaded?.();
+    });
+  };
+
   const runEvents = async (events: EngineEvent[]) => {
     await act(async () => {
       mockEngineRunnerOnEvents!(events);
@@ -292,9 +328,12 @@ describe("BridgeGame Integration Tests", () => {
   });
 
   describe("Game Input Handling", () => {
-    it("should handle input down and up when playing", () => {
-      mockGameStore.overlayState = "PLAYING";
+    it("should handle input down and up when playing", async () => {
       render(<BridgeGame autoStart={false} />);
+
+      await act(async () => {
+        mockLayoutProps.current?.onRestart?.();
+      });
 
       const onInputDown = mockCanvasProps.current?.onInputDown;
       const onInputUp = mockCanvasProps.current?.onInputUp;
@@ -307,7 +346,6 @@ describe("BridgeGame Integration Tests", () => {
     });
 
     it("should not handle input when not playing", () => {
-      mockGameStore.overlayState = "GAME_OVER";
       render(<BridgeGame autoStart={false} />);
 
       const onInputDown = mockCanvasProps.current?.onInputDown;
@@ -323,23 +361,21 @@ describe("BridgeGame Integration Tests", () => {
 
   describe("Score Event Handling", () => {
     it("should update score when score event is received", async () => {
-      mockGameStore.overlayState = "PLAYING";
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       expect(mockEngineRunnerOnEvents).not.toBeNull();
 
       await runEvents([{ type: "score", value: 5 }]);
 
-      expect(mockGameStore.applyEngineEvents).toHaveBeenCalledWith([
-        { type: "score", value: 5 },
-      ]);
+      expect(mockLayoutProps.current?.score).toBe(5);
     });
   });
 
   describe("Perfect Landing", () => {
     it("should show perfect cue when perfect event is received", async () => {
-      mockGameStore.overlayState = "PLAYING";
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       const perfectEvent: EngineEvent = {
         type: "perfect",
@@ -361,8 +397,8 @@ describe("BridgeGame Integration Tests", () => {
 
   describe("Game Over Flow", () => {
     it("should show game over overlay when game over event is received", async () => {
-      mockGameStore.overlayState = "PLAYING";
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       const gameOverEvent: EngineEvent = {
         type: "gameOver",
@@ -373,14 +409,17 @@ describe("BridgeGame Integration Tests", () => {
 
       await runEvents([gameOverEvent]);
 
-      expect(mockGameStore.updateScore).toHaveBeenCalledWith(10);
-      expect(mockGameStore.setOverlay).toHaveBeenCalledWith("GAME_OVER");
+      expect(mockLayoutProps.current?.score).toBe(10);
+      expect(mockLayoutProps.current?.overlayState).toBe("GAME_OVER");
     });
 
     it("should auto-revive with power-up on game over", async () => {
-      mockGameStore.overlayState = "GAME_OVER";
-      mockGameStore.revivePowerUp = { activated: true, consumed: false };
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
+
+      await act(async () => {
+        mockLayoutProps.current?.onActivateRevive?.();
+      });
 
       const gameOverEvent: EngineEvent = {
         type: "gameOver",
@@ -393,14 +432,19 @@ describe("BridgeGame Integration Tests", () => {
 
       // Should call revivePowerUp instead of showing game over
       expect(mockEngine.revivePowerUp).toHaveBeenCalled();
-      expect(mockGameStore.setOverlay).toHaveBeenCalledWith("PLAYING");
-      expect(mockGameStore.updateScore).not.toHaveBeenCalled();
+      expect(mockLayoutProps.current?.overlayState).toBe("PLAYING");
     });
 
     it("should not auto-revive if power-up is already consumed", async () => {
-      mockGameStore.overlayState = "PLAYING";
-      mockGameStore.revivePowerUp = { activated: true, consumed: true };
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
+
+      await act(async () => {
+        mockLayoutProps.current?.onActivateRevive?.();
+      });
+      await act(async () => {
+        mockLayoutProps.current?.consumeRevive?.();
+      });
 
       const gameOverEvent: EngineEvent = {
         type: "gameOver",
@@ -413,14 +457,14 @@ describe("BridgeGame Integration Tests", () => {
 
       // Should show game over, not revive
       expect(mockEngine.revivePowerUp).not.toHaveBeenCalled();
-      expect(mockGameStore.setOverlay).toHaveBeenCalledWith("GAME_OVER");
+      expect(mockLayoutProps.current?.overlayState).toBe("GAME_OVER");
     });
   });
 
   describe("Revive Prompt Flow", () => {
     it("should show revive overlay when revive prompt is received", async () => {
-      mockGameStore.overlayState = "PLAYING";
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       const revivePromptEvent: EngineEvent = {
         type: "revivePrompt",
@@ -429,14 +473,17 @@ describe("BridgeGame Integration Tests", () => {
 
       await runEvents([revivePromptEvent]);
 
-      expect(mockGameStore.updateScore).toHaveBeenCalledWith(8);
-      expect(mockGameStore.setOverlay).toHaveBeenCalledWith("REVIVE");
+      expect(mockLayoutProps.current?.score).toBe(8);
+      expect(mockLayoutProps.current?.overlayState).toBe("REVIVE");
     });
 
     it("should auto-revive with power-up on revive prompt", async () => {
-      mockGameStore.overlayState = "REVIVE";
-      mockGameStore.revivePowerUp = { activated: true, consumed: false };
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
+
+      await act(async () => {
+        mockLayoutProps.current?.onActivateRevive?.();
+      });
 
       const revivePromptEvent: EngineEvent = {
         type: "revivePrompt",
@@ -447,12 +494,10 @@ describe("BridgeGame Integration Tests", () => {
 
       // Should call revivePowerUp instead of showing revive prompt
       expect(mockEngine.revivePowerUp).toHaveBeenCalled();
-      expect(mockGameStore.setOverlay).toHaveBeenCalledWith("PLAYING");
-      expect(mockGameStore.setOverlay).not.toHaveBeenCalledWith("REVIVE");
+      expect(mockLayoutProps.current?.overlayState).toBe("PLAYING");
     });
 
     it("should handle ad revive flow", () => {
-      mockGameStore.overlayState = "REVIVE";
       render(<BridgeGame autoStart={false} />);
 
       const onRevive = mockLayoutProps.current?.onRevive;
@@ -466,50 +511,57 @@ describe("BridgeGame Integration Tests", () => {
       expect(mockReviveAdLoadAd).not.toHaveBeenCalled();
     });
 
-    it("should handle decline revive flow", () => {
-      mockGameStore.overlayState = "REVIVE";
+    it("should handle decline revive flow", async () => {
       mockEngine.state.score = 8;
       mockEngine.getRunData.mockReturnValue({
         seed: 12345,
         moves: [{ startTime: 0, duration: 100, idleDurationMs: 0 }],
       });
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       const onDeclineRevive = mockLayoutProps.current?.onDeclineRevive;
       expect(onDeclineRevive).toBeDefined();
 
-      onDeclineRevive();
+      await act(async () => {
+        onDeclineRevive();
+      });
 
       // Should transition to game over
-      expect(mockGameStore.updateScore).toHaveBeenCalledWith(8);
-      expect(mockGameStore.setOverlay).toHaveBeenCalledWith("GAME_OVER");
+      expect(mockLayoutProps.current?.score).toBe(8);
+      expect(mockLayoutProps.current?.overlayState).toBe("GAME_OVER");
     });
   });
 
   describe("Game Lifecycle", () => {
-    it("should handle restart flow", () => {
-      mockGameStore.overlayState = "GAME_OVER";
+    it("should handle restart flow", async () => {
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       const onRestart = mockLayoutProps.current?.onRestart;
       expect(onRestart).toBeDefined();
 
-      onRestart();
+      await act(async () => {
+        onRestart();
+      });
 
-      expect(mockGameStore.resetSession).toHaveBeenCalled();
+      expect(mockEngine.start).toHaveBeenCalled();
+      expect(mockLayoutProps.current?.overlayState).toBe("PLAYING");
     });
 
-    it("should handle exit flow", () => {
-      mockGameStore.overlayState = "GAME_OVER";
+    it("should handle exit flow", async () => {
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       const onExit = mockLayoutProps.current?.onExit;
       expect(onExit).toBeDefined();
 
-      onExit();
+      await act(async () => {
+        onExit();
+      });
 
-      expect(mockGameStore.resetSession).toHaveBeenCalled();
       expect(__mockRouter.back).toHaveBeenCalled();
+      expect(mockLayoutProps.current?.overlayState).toBe("START");
     });
 
     it("should set particle emitter when canvas is ready", () => {
@@ -534,8 +586,8 @@ describe("BridgeGame Integration Tests", () => {
     });
 
     it("should compute run summary on game over", async () => {
-      mockGameStore.overlayState = "PLAYING";
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       const gameOverEvent: EngineEvent = {
         type: "gameOver",
@@ -617,7 +669,9 @@ describe("BridgeGame Integration Tests", () => {
       const consumeRevive = mockLayoutProps.current?.consumeRevive;
       expect(consumeRevive).toBeDefined();
 
-      consumeRevive();
+      act(() => {
+        consumeRevive();
+      });
 
       expect(mockConsumeRevive).toHaveBeenCalled();
     });
@@ -625,8 +679,8 @@ describe("BridgeGame Integration Tests", () => {
 
   describe("Multiple Events", () => {
     it("should handle multiple events in single step", async () => {
-      mockGameStore.overlayState = "PLAYING";
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       const events: EngineEvent[] = [
         { type: "score", value: 5 },
@@ -636,12 +690,15 @@ describe("BridgeGame Integration Tests", () => {
 
       await runEvents(events);
 
-      expect(mockGameStore.applyEngineEvents).toHaveBeenCalledWith(events);
+      expect(mockLayoutProps.current?.score).toBe(5);
+      expect(mockCanvasProps.current?.perfectCue).toEqual(
+        expect.objectContaining({ x: 100, y: 200 }),
+      );
     });
 
     it("should prioritize game over event in batch", async () => {
-      mockGameStore.overlayState = "PLAYING";
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
 
       const events: EngineEvent[] = [
         { type: "score", value: 10 },
@@ -650,35 +707,35 @@ describe("BridgeGame Integration Tests", () => {
 
       await runEvents(events);
 
-      expect(mockGameStore.setOverlay).toHaveBeenCalledWith("GAME_OVER");
+      expect(mockLayoutProps.current?.overlayState).toBe("GAME_OVER");
+      expect(mockLayoutProps.current?.score).toBe(10);
     });
   });
 
   describe("Ghost Mode", () => {
-    it("should show ghost preview when active", () => {
-      mockGameStore.ghost = {
-        active: true,
-        expiresAt: performance.now() + 10000,
-        used: true,
-      };
+    it("should show ghost preview when active", async () => {
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
+
+      await act(async () => {
+        mockLayoutProps.current?.onActivateGhost?.(performance.now() + 10000);
+      });
 
       expect(mockCanvasProps.current?.showGhostPreview).toBe(true);
     });
 
-    it("should not show ghost preview when expired", () => {
-      mockGameStore.ghost = {
-        active: false,
-        expiresAt: performance.now() - 1000,
-        used: false,
-      };
+    it("should not show ghost preview when expired", async () => {
       render(<BridgeGame autoStart={false} />);
+      await loadAssets();
+
+      await act(async () => {
+        mockLayoutProps.current?.onActivateGhost?.(performance.now() - 1000);
+      });
 
       expect(mockCanvasProps.current?.showGhostPreview).toBe(false);
     });
 
     it("should not show ghost preview when not set", () => {
-      mockGameStore.ghost = { active: false, expiresAt: null, used: false };
       render(<BridgeGame autoStart={false} />);
 
       expect(mockCanvasProps.current?.showGhostPreview).toBe(false);
