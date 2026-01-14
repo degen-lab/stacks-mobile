@@ -14,6 +14,7 @@ export class TransakPurchaseClient {
     fiatCurrency: string,
     fiatAmount: number,
     partnerCustomerId: string,
+    partnerOrderId: string,
   ): Promise<string> {
     const options = {
       method: 'POST',
@@ -31,6 +32,7 @@ export class TransakPurchaseClient {
           fiatCurrency,
           fiatAmount,
           partnerCustomerId,
+          partnerOrderId,
         },
       }),
     };

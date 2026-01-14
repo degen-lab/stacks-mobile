@@ -3,7 +3,9 @@ import { TransakPurchaseClient } from '../../infra/purchase/transakPurchaseClien
 import { ICachePort } from '../ports/ICachePort';
 import { TransakAccessToken } from '../../shared/types';
 import { UserNotFoundError } from '../errors/userErrors';
+import { PurchaseNotFoundError } from '../errors/purchaseErrors';
 import { User } from '../../domain/entities/user';
+import { CryptoPurchase } from '../../domain/entities/cryptoPurchase';
 import { CryptoPurchaseDomainService } from '../../domain/service/cryptoPurchaseDomainService';
 
 export class CryptoPurchaseService {
@@ -63,6 +65,47 @@ export class CryptoPurchaseService {
       fiatCurrency,
       fiatAmount,
       savedPurchase.id.toString(),
+      purchase.id.toString(),
     );
+  }
+
+  async updatePurchaseFromWebhook(webhookData: {
+    id: string; // Transak order ID
+    partnerCustomerId?: string;
+    partnerOrderId?: string; // Our purchase ID
+    status: string;
+    cryptoAmount?: number;
+    transactionHash?: string;
+  }): Promise<CryptoPurchase> {
+    const purchaseId = webhookData.partnerOrderId;
+    if (!purchaseId) {
+      throw new PurchaseNotFoundError(
+        'partnerCustomerId not provided in webhook',
+      );
+    }
+
+    const purchase = await this.entityManager.findOne(CryptoPurchase, {
+      where: { id: parseInt(purchaseId, 10) },
+    });
+
+    if (!purchase) {
+      throw new PurchaseNotFoundError(
+        `Purchase with id ${purchaseId} not found`,
+      );
+    }
+
+    // Update purchase fields
+    purchase.orderId = webhookData.id;
+    purchase.status = webhookData.status;
+
+    if (webhookData.cryptoAmount !== undefined) {
+      purchase.cryptoAmount = webhookData.cryptoAmount;
+    }
+
+    return await this.entityManager.save(purchase);
+  }
+
+  async getAccessTokenForWebhook(): Promise<string> {
+    return this.getAccessToken();
   }
 }

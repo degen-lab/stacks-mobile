@@ -141,6 +141,7 @@ describe('CryptoPurchaseService unit test', () => {
         fiatCurrency,
         fiatAmount,
         testPurchase.id.toString(),
+        testPurchase.id.toString(),
       );
     });
 
@@ -171,6 +172,7 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        testPurchase.id.toString(),
         testPurchase.id.toString(),
       );
     });
@@ -208,6 +210,7 @@ describe('CryptoPurchaseService unit test', () => {
         fiatCurrency,
         fiatAmount,
         testPurchase.id.toString(),
+        testPurchase.id.toString(),
       );
     });
 
@@ -240,6 +243,7 @@ describe('CryptoPurchaseService unit test', () => {
         fiatCurrency,
         fiatAmount,
         testPurchase.id.toString(),
+        testPurchase.id.toString(),
       );
     });
 
@@ -269,6 +273,7 @@ describe('CryptoPurchaseService unit test', () => {
         fiatCurrency,
         fiatAmount,
         '12345', // partnerCustomerId should be the saved purchase id as string
+        testPurchase.id.toString(), // partnerOrderId from original purchase object
       );
     });
 
@@ -302,6 +307,7 @@ describe('CryptoPurchaseService unit test', () => {
         'BTC',
         'EUR',
         500,
+        testPurchase.id.toString(),
         testPurchase.id.toString(),
       );
     });
