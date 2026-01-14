@@ -78,14 +78,21 @@ export class CryptoPurchaseService {
     transactionHash?: string;
   }): Promise<CryptoPurchase> {
     const purchaseId = webhookData.partnerOrderId;
+    const partnerCustomerId = webhookData.partnerCustomerId;
     if (!purchaseId) {
+      throw new PurchaseNotFoundError('puchase not provided in webhook');
+    }
+    if (!partnerCustomerId) {
       throw new PurchaseNotFoundError(
         'partnerCustomerId not provided in webhook',
       );
     }
 
     const purchase = await this.entityManager.findOne(CryptoPurchase, {
-      where: { id: parseInt(purchaseId, 10) },
+      where: {
+        id: parseInt(purchaseId, 10),
+        user: { id: parseInt(partnerCustomerId, 10) },
+      },
     });
 
     if (!purchase) {
@@ -95,7 +102,6 @@ export class CryptoPurchaseService {
     }
 
     // Update purchase fields
-    purchase.orderId = webhookData.id;
     purchase.status = webhookData.status;
 
     if (webhookData.cryptoAmount !== undefined) {

@@ -6,6 +6,7 @@ import {
   TRANSAK_USER_AUTH_TOKEN,
 } from '../../shared/constants';
 import { TransakAccessToken, TransakApiRoutes } from '../../shared/types';
+import { TransakApiError } from '../../application/errors/purchaseErrors';
 
 export class TransakPurchaseClient {
   async createWidgetUrl(
@@ -36,11 +37,30 @@ export class TransakPurchaseClient {
         },
       }),
     };
+
     const response = await fetch(
       `${TRANSAK_BASE_URL}${TransakApiRoutes.CREATE_WIDGET_URL}`,
       options,
     );
+
     const responseBody = await response.json();
+
+    if (!response.ok) {
+      throw new TransakApiError(
+        `Transak API error: ${responseBody?.message || responseBody?.error || 'Unknown error'}`,
+        response.status,
+        responseBody,
+      );
+    }
+
+    if (!responseBody?.data?.widgetUrl) {
+      throw new TransakApiError(
+        'Transak API returned invalid response: missing widgetUrl',
+        response.status,
+        responseBody,
+      );
+    }
+
     return responseBody.data.widgetUrl;
   }
 
@@ -61,7 +81,25 @@ export class TransakPurchaseClient {
       `${TRANSAK_BASE_URL}${TransakApiRoutes.REFRESH_ACCESS_TOKEN}`,
       options,
     );
+
     const responseBody = await response.json();
+
+    if (!response.ok) {
+      throw new TransakApiError(
+        `Transak token refresh failed: ${responseBody?.message || responseBody?.error || 'Unknown error'}`,
+        response.status,
+        responseBody,
+      );
+    }
+
+    if (!responseBody?.data?.accessToken || !responseBody?.data?.expiresAt) {
+      throw new TransakApiError(
+        'Transak API returned invalid token response',
+        response.status,
+        responseBody,
+      );
+    }
+
     return responseBody.data;
   }
 }

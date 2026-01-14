@@ -17,3 +17,16 @@ export class InvalidWebhookPayloadError extends BaseError {
     super(message);
   }
 }
+
+export class TransakApiError extends BaseError {
+  readonly statusCode = 502;
+  readonly name = 'TransakApiError';
+
+  constructor(
+    message: string,
+    public readonly transakStatusCode?: number,
+    public readonly transakError?: unknown,
+  ) {
+    super(message);
+  }
+}

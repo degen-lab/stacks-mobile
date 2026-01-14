@@ -4,9 +4,6 @@ import { User } from './user';
 
 @Entity()
 export class CryptoPurchase extends BaseAppEntity {
-  @Column({ type: 'text' })
-  @Index()
-  orderId: string;
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
   @Column({ type: 'text' })
