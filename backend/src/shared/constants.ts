@@ -115,12 +115,20 @@ export const TRANSAK_BASE_URL: string =
 
 export const TRANSAK_USER_AUTH_TOKEN: string = configParser(
   'TRANSAK_USER_AUTH_TOKEN',
+  isTest ? 'test-transak-user-auth-token' : undefined,
 );
 
-export const TRANSAK_API_KEY: string = configParser('TRANSAK_API_KEY');
+export const TRANSAK_API_KEY: string = configParser(
+  'TRANSAK_API_KEY',
+  isTest ? 'test-transak-api-key' : undefined,
+);
 
-export const TRANSAK_API_SECRET: string = configParser('TRANSAK_API_SECRET');
+export const TRANSAK_API_SECRET: string = configParser(
+  'TRANSAK_API_SECRET',
+  isTest ? 'test-transak-api-secret' : undefined,
+);
 
 export const TRANSAK_REFERRER_DOMAIN: string = configParser(
   'TRANSAK_REFERRER_DOMAIN',
+  isTest ? 'localhost' : undefined,
 );
