@@ -9,9 +9,8 @@ import type { ItemVariant } from "@/lib/enums";
 
 import { getBaseScore } from "../utils/scoreCalculation";
 import { GAMEPLAY_CONFIG } from "../config";
-import type { PlayerMove } from "../types";
+import type { BridgeOverlayState, PlayerMove } from "../types";
 import type { RunSummary } from "../utils/runSummary";
-import type { BridgeOverlayState } from "@/lib/store/game";
 
 type UseGameSessionOptions = {
   engine: { start: (seed: number) => void };
@@ -164,6 +163,9 @@ export const useGameSession = ({
 
   const cancelPendingStart = useCallback(() => {
     startTokenRef.current += 1;
+    // Reset submission state to prevent blocking on restart
+    isSubmittingRef.current = false;
+    runSubmittedRef.current = false;
   }, []);
 
   return { registerUsedItem, startGame, submitSession, cancelPendingStart };

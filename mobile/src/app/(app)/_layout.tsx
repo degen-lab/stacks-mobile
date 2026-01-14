@@ -3,9 +3,14 @@ import { EarnIcon, GamepadIcon, HomeIcon } from "@/components/ui/icons";
 import { Header } from "@/features/header";
 import { useAuth } from "@/lib/store/auth";
 import { Redirect, Tabs } from "expo-router";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const { isAuthenticated, hasHydrated } = useAuth();
+  const insets = useSafeAreaInsets();
+  const androidBottomInset =
+    Platform.OS === "android" ? Math.max(insets.bottom, 12) : 0;
 
   if (!hasHydrated) return null;
   if (!isAuthenticated) return <Redirect href="/login" />;
@@ -23,7 +28,8 @@ export default function TabLayout() {
           shadowOffset: { width: 0, height: 0 },
           shadowRadius: 0,
           elevation: 0,
-          height: 90,
+          height: 90 + androidBottomInset,
+          paddingBottom: androidBottomInset,
         },
         tabBarLabelStyle: {
           fontSize: 12,
