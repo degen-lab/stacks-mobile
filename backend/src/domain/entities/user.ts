@@ -13,7 +13,7 @@ import { PurchaseType, SubmissionType } from './enums';
 import { FraudAttempt } from './fraudAttempt';
 import { Submission } from './submission';
 import { UniqueItem } from './uniqueItem';
-
+import { CryptoPurchase } from './transaction';
 @Entity()
 export class User extends BaseAppEntity {
   @Column({ type: 'varchar', unique: true })
@@ -51,6 +51,10 @@ export class User extends BaseAppEntity {
   items: DefaultItem[];
   @OneToMany(() => Submission, (submission) => submission.user)
   submissions: Submission[];
+  @OneToMany(() => CryptoPurchase, (transaction) => transaction.user, {
+    cascade: true,
+  })
+  transactions: CryptoPurchase[];
 
   updateBlacklistStatus() {
     if (!this.fraudAttempts || this.fraudAttempts.length === 0) {
