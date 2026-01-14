@@ -31,18 +31,38 @@ export class CryptoPurchaseService {
     return tokenData!.accessToken;
   }
 
-  async createPurchaseSession(userId: number, cryptoCurrencyCode: string, fiatCurrency: string, fiatAmount: number): Promise<string> {
-    const user = await this.entityManager.findOne(User, {where: {
-      id: userId,
-    }});
+  async createPurchaseSession(
+    userId: number,
+    cryptoCurrencyCode: string,
+    fiatCurrency: string,
+    fiatAmount: number,
+  ): Promise<string> {
+    const user = await this.entityManager.findOne(User, {
+      where: {
+        id: userId,
+      },
+    });
 
     if (!user) {
-      throw new UserNotFoundError(`Error: User with id ${userId} doesn't exists`);
+      throw new UserNotFoundError(
+        `Error: User with id ${userId} doesn't exists`,
+      );
     }
 
-    const purchase = this.purchaseDomainService.createPurchase(user, cryptoCurrencyCode, fiatCurrency, fiatAmount);
+    const purchase = this.purchaseDomainService.createPurchase(
+      user,
+      cryptoCurrencyCode,
+      fiatCurrency,
+      fiatAmount,
+    );
     const savedPurchase = await this.entityManager.save(purchase);
     const accessToken = await this.getAccessToken();
-    return await this.purchaseClient.createWidgetUrl(accessToken, cryptoCurrencyCode, fiatCurrency, fiatAmount, savedPurchase.id);
+    return await this.purchaseClient.createWidgetUrl(
+      accessToken,
+      cryptoCurrencyCode,
+      fiatCurrency,
+      fiatAmount,
+      savedPurchase.id.toString(),
+    );
   }
 }

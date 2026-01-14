@@ -108,18 +108,19 @@ export const BRONZE_TIER_BONUS: number = 500;
 
 export const GOLD_TIER_USTX_BONUS: number = 50000000;
 
-export const TRANSAK_BASE_URL: string = NODE_ENV === 'production' 
-  ? 'https://api-gateway.transak.com/'
-  : 'https://api-gateway-stg.transak.com/';
+export const TRANSAK_BASE_URL: string =
+  NODE_ENV === 'production'
+    ? 'https://api-gateway.transak.com/'
+    : 'https://api-gateway-stg.transak.com/';
 
 export const TRANSAK_USER_AUTH_TOKEN: string = configParser(
   'TRANSAK_USER_AUTH_TOKEN',
 );
 
-export const TRANSAK_API_KEY: string = configParser(
-  'TRANSAK_API_KEY'
-);
+export const TRANSAK_API_KEY: string = configParser('TRANSAK_API_KEY');
 
-export const TRANSAK_API_SECRET: string = configParser(
-  'TRANSAK_API_SECRET',
+export const TRANSAK_API_SECRET: string = configParser('TRANSAK_API_SECRET');
+
+export const TRANSAK_REFERRER_DOMAIN: string = configParser(
+  'TRANSAK_REFERRER_DOMAIN',
 );

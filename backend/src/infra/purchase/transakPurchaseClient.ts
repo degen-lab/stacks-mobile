@@ -1,10 +1,20 @@
-import { TRANSAK_API_KEY, TRANSAK_API_SECRET, TRANSAK_BASE_URL, TRANSAK_USER_AUTH_TOKEN } from "../../shared/constants";
-import { TransakAccessToken, TransakApiRoutes } from "../../shared/types";
+import {
+  TRANSAK_API_KEY,
+  TRANSAK_API_SECRET,
+  TRANSAK_BASE_URL,
+  TRANSAK_REFERRER_DOMAIN,
+  TRANSAK_USER_AUTH_TOKEN,
+} from '../../shared/constants';
+import { TransakAccessToken, TransakApiRoutes } from '../../shared/types';
 
-export class TransakPurchaseClient { 
- 
-
-  async createWidgetUrl(accessToken: string, cryptoCurrencyCode: string, fiatCurrency: string, fiatAmount: number, partnerCustomerId): Promise<string> {
+export class TransakPurchaseClient {
+  async createWidgetUrl(
+    accessToken: string,
+    cryptoCurrencyCode: string,
+    fiatCurrency: string,
+    fiatAmount: number,
+    partnerCustomerId: string,
+  ): Promise<string> {
     const options = {
       method: 'POST',
       headers: {
@@ -16,15 +26,18 @@ export class TransakPurchaseClient {
       body: JSON.stringify({
         widgetParams: {
           apiKey: TRANSAK_API_KEY,
-          referrerDomain: 'TRANSAK_REFERRER_DOMAIN',
+          referrerDomain: TRANSAK_REFERRER_DOMAIN,
           cryptoCurrencyCode,
           fiatCurrency,
           fiatAmount,
-          partnerCustomerId
-        }
-      })
+          partnerCustomerId,
+        },
+      }),
     };
-    const response = await fetch(`${TRANSAK_BASE_URL}${TransakApiRoutes.CREATE_WIDGET_URL}`, options)
+    const response = await fetch(
+      `${TRANSAK_BASE_URL}${TransakApiRoutes.CREATE_WIDGET_URL}`,
+      options,
+    );
     const responseBody = await response.json();
     return responseBody.data.widgetUrl;
   }
@@ -39,10 +52,13 @@ export class TransakPurchaseClient {
       },
       body: JSON.stringify({
         apiKey: TRANSAK_API_KEY,
-      })
+      }),
     };
 
-    const response = await fetch(`${TRANSAK_BASE_URL}${TransakApiRoutes.REFRESH_ACCESS_TOKEN}`, options);
+    const response = await fetch(
+      `${TRANSAK_BASE_URL}${TransakApiRoutes.REFRESH_ACCESS_TOKEN}`,
+      options,
+    );
     const responseBody = await response.json();
     return responseBody.data;
   }
