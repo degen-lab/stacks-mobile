@@ -1,10 +1,11 @@
 import {
+    ANDROID_REFERRER_DOMAIN,
+    IOS_REFERRER_DOMAIN,
   TRANSAK_API_KEY,
   TRANSAK_API_SECRET,
   TRANSAK_BASE_URL,
-  TRANSAK_REFERRER_DOMAIN,
 } from '../../shared/constants';
-import { TransakAccessToken, TransakApiRoutes } from '../../shared/types';
+import { AppPlatform, TransakAccessToken, TransakApiRoutes } from '../../shared/types';
 import { TransakApiError } from '../../application/errors/purchaseErrors';
 
 export class TransakPurchaseClient {
@@ -15,7 +16,11 @@ export class TransakPurchaseClient {
     fiatAmount: number,
     partnerCustomerId: string,
     partnerOrderId: string,
+    platform: AppPlatform,
   ): Promise<string> {
+    const referrerDomain = platform === AppPlatform.IOS
+      ? IOS_REFERRER_DOMAIN
+      : ANDROID_REFERRER_DOMAIN
     const options = {
       method: 'POST',
       headers: {
@@ -26,7 +31,7 @@ export class TransakPurchaseClient {
       body: JSON.stringify({
         widgetParams: {
           apiKey: TRANSAK_API_KEY,
-          referrerDomain: TRANSAK_REFERRER_DOMAIN,
+          referrerDomain,
           cryptoCurrencyCode,
           fiatCurrency,
           fiatAmount,

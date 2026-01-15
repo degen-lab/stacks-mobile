@@ -1,4 +1,4 @@
-import { configDotenv } from 'dotenv';
+import { config, configDotenv } from 'dotenv';
 import { configParser } from './configParser';
 import { DatabaseType } from './types';
 
@@ -123,7 +123,12 @@ export const TRANSAK_API_SECRET: string = configParser(
   isTest ? 'test-transak-api-secret' : undefined,
 );
 
-export const TRANSAK_REFERRER_DOMAIN: string = configParser(
-  'TRANSAK_REFERRER_DOMAIN',
-  isTest ? 'localhost' : undefined,
+export const ANDROID_REFERRER_DOMAIN: string = configParser(
+  'ANDROID_REFERRER_DOMAIN',
+  isTest ? 'android.dev' : undefined,
+);
+
+export const IOS_REFERRER_DOMAIN: string = configParser(
+  'IOS_REFERRER_DOMAIN',
+  isTest ? 'ios.dev' : undefined,
 );

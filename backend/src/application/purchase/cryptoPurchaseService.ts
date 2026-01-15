@@ -1,7 +1,7 @@
 import { EntityManager } from 'typeorm';
 import { TransakPurchaseClient } from '../../infra/purchase/transakPurchaseClient';
 import { ICachePort } from '../ports/ICachePort';
-import { TransakAccessToken } from '../../shared/types';
+import { AppPlatform, TransakAccessToken } from '../../shared/types';
 import { UserNotFoundError } from '../errors/userErrors';
 import { PurchaseNotFoundError } from '../errors/purchaseErrors';
 import { User } from '../../domain/entities/user';
@@ -38,6 +38,7 @@ export class CryptoPurchaseService {
     cryptoCurrencyCode: string,
     fiatCurrency: string,
     fiatAmount: number,
+    platform: AppPlatform, 
   ): Promise<string> {
     const user = await this.entityManager.findOne(User, {
       where: {
@@ -66,6 +67,7 @@ export class CryptoPurchaseService {
       fiatAmount,
       savedPurchase.id.toString(),
       purchase.id.toString(),
+      platform
     );
   }
 

@@ -6,7 +6,7 @@ import { CryptoPurchaseDomainService } from '../../../src/domain/service/cryptoP
 import { User } from '../../../src/domain/entities/user';
 import { CryptoPurchase } from '../../../src/domain/entities/cryptoPurchase';
 import { UserNotFoundError } from '../../../src/application/errors/userErrors';
-import { TransakAccessToken } from '../../../src/shared/types';
+import { AppPlatform, TransakAccessToken } from '../../../src/shared/types';
 
 describe('CryptoPurchaseService unit test', () => {
   let cryptoPurchaseService: CryptoPurchaseService;
@@ -81,6 +81,7 @@ describe('CryptoPurchaseService unit test', () => {
           cryptoCurrencyCode,
           fiatCurrency,
           fiatAmount,
+          AppPlatform.ANDROID,
         ),
       ).rejects.toThrow(UserNotFoundError);
 
@@ -101,6 +102,7 @@ describe('CryptoPurchaseService unit test', () => {
           cryptoCurrencyCode,
           fiatCurrency,
           fiatAmount,
+          AppPlatform.ANDROID,
         ),
       ).rejects.toThrow(`Error: User with id ${userId} doesn't exists`);
     });
@@ -122,6 +124,7 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        AppPlatform.ANDROID,
       );
 
       expect(result).toBe(expectedWidgetUrl);
@@ -142,6 +145,7 @@ describe('CryptoPurchaseService unit test', () => {
         fiatAmount,
         testPurchase.id.toString(),
         testPurchase.id.toString(),
+        AppPlatform.ANDROID,
       );
     });
 
@@ -162,6 +166,7 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        AppPlatform.ANDROID,
       );
 
       expect(mockCacheClient.get).toHaveBeenCalledWith('accessToken');
@@ -174,6 +179,7 @@ describe('CryptoPurchaseService unit test', () => {
         fiatAmount,
         testPurchase.id.toString(),
         testPurchase.id.toString(),
+        AppPlatform.ANDROID,
       );
     });
 
@@ -199,6 +205,7 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        AppPlatform.ANDROID,
       );
 
       expect(mockCacheClient.get).toHaveBeenCalledWith('accessToken');
@@ -211,6 +218,7 @@ describe('CryptoPurchaseService unit test', () => {
         fiatAmount,
         testPurchase.id.toString(),
         testPurchase.id.toString(),
+        AppPlatform.ANDROID,
       );
     });
 
@@ -232,6 +240,7 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        AppPlatform.ANDROID,
       );
 
       expect(mockCacheClient.get).toHaveBeenCalledWith('accessToken');
@@ -244,6 +253,7 @@ describe('CryptoPurchaseService unit test', () => {
         fiatAmount,
         testPurchase.id.toString(),
         testPurchase.id.toString(),
+        AppPlatform.ANDROID,
       );
     });
 
@@ -265,6 +275,7 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        AppPlatform.ANDROID,
       );
 
       expect(mockPurchaseClient.createWidgetUrl).toHaveBeenCalledWith(
@@ -274,6 +285,7 @@ describe('CryptoPurchaseService unit test', () => {
         fiatAmount,
         '12345', // partnerCustomerId should be the saved purchase id as string
         testPurchase.id.toString(), // partnerOrderId from original purchase object
+        AppPlatform.ANDROID,
       );
     });
 
@@ -294,6 +306,7 @@ describe('CryptoPurchaseService unit test', () => {
         'BTC',
         'EUR',
         500,
+        AppPlatform.ANDROID,
       );
 
       expect(mockPurchaseDomainService.createPurchase).toHaveBeenCalledWith(
@@ -309,6 +322,7 @@ describe('CryptoPurchaseService unit test', () => {
         500,
         testPurchase.id.toString(),
         testPurchase.id.toString(),
+        AppPlatform.ANDROID,
       );
     });
 
@@ -336,6 +350,7 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        AppPlatform.ANDROID,
       );
 
       expect(callOrder).toEqual(['save', 'createWidgetUrl']);

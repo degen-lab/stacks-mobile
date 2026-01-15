@@ -132,3 +132,8 @@ export type TransakAccessToken = {
   accessToken: string,
   expiresAt: number,
 }
+
+export enum AppPlatform {
+  IOS,
+  ANDROID,
+}
