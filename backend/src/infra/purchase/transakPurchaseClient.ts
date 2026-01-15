@@ -3,7 +3,6 @@ import {
   TRANSAK_API_SECRET,
   TRANSAK_BASE_URL,
   TRANSAK_REFERRER_DOMAIN,
-  TRANSAK_USER_AUTH_TOKEN,
 } from '../../shared/constants';
 import { TransakAccessToken, TransakApiRoutes } from '../../shared/types';
 import { TransakApiError } from '../../application/errors/purchaseErrors';
@@ -22,7 +21,6 @@ export class TransakPurchaseClient {
       headers: {
         accept: 'application/json',
         'access-token': accessToken,
-        authorization: TRANSAK_USER_AUTH_TOKEN,
         'content-type': 'application/json',
       },
       body: JSON.stringify({

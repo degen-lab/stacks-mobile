@@ -113,11 +113,6 @@ export const TRANSAK_BASE_URL: string =
     ? 'https://api-gateway.transak.com/'
     : 'https://api-gateway-stg.transak.com/';
 
-export const TRANSAK_USER_AUTH_TOKEN: string = configParser(
-  'TRANSAK_USER_AUTH_TOKEN',
-  isTest ? 'test-transak-user-auth-token' : undefined,
-);
-
 export const TRANSAK_API_KEY: string = configParser(
   'TRANSAK_API_KEY',
   isTest ? 'test-transak-api-key' : undefined,
