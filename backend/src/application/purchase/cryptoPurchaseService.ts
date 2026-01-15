@@ -7,6 +7,7 @@ import { PurchaseNotFoundError } from '../errors/purchaseErrors';
 import { User } from '../../domain/entities/user';
 import { CryptoPurchase } from '../../domain/entities/cryptoPurchase';
 import { CryptoPurchaseDomainService } from '../../domain/service/cryptoPurchaseDomainService';
+import { logger } from '../../api/helpers/logger';
 
 export class CryptoPurchaseService {
   constructor(
@@ -17,8 +18,12 @@ export class CryptoPurchaseService {
   ) {}
 
   private async getAccessToken(): Promise<string> {
-    const tokenData =
-      await this.cacheClient.get<TransakAccessToken>('accessToken');
+    let tokenData: TransakAccessToken | undefined = undefined;
+    try {
+      tokenData = await this.cacheClient.get<TransakAccessToken>('accessToken');
+    } catch {
+      logger.info('No access token found in cache, refreshing');
+    }
     const needRefresh: boolean = tokenData
       ? Date.now() >= tokenData.expiresAt
         ? true
@@ -38,7 +43,7 @@ export class CryptoPurchaseService {
     cryptoCurrencyCode: string,
     fiatCurrency: string,
     fiatAmount: number,
-    platform: AppPlatform, 
+    platform: AppPlatform,
   ): Promise<string> {
     const user = await this.entityManager.findOne(User, {
       where: {
@@ -67,7 +72,7 @@ export class CryptoPurchaseService {
       fiatAmount,
       savedPurchase.id.toString(),
       purchase.id.toString(),
-      platform
+      platform,
     );
   }
 

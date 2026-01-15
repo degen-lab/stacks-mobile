@@ -1,12 +1,18 @@
 import {
-    ANDROID_REFERRER_DOMAIN,
-    IOS_REFERRER_DOMAIN,
+  ANDROID_REFERRER_DOMAIN,
+  IOS_REFERRER_DOMAIN,
   TRANSAK_API_KEY,
   TRANSAK_API_SECRET,
-  TRANSAK_BASE_URL,
+  TRANSAK_API_URL,
+  TRANSAK_GATEWAY_URL,
 } from '../../shared/constants';
-import { AppPlatform, TransakAccessToken, TransakApiRoutes } from '../../shared/types';
+import {
+  AppPlatform,
+  TransakAccessToken,
+  TransakApiRoutes,
+} from '../../shared/types';
 import { TransakApiError } from '../../application/errors/purchaseErrors';
+import { logger } from '../../api/helpers/logger';
 
 export class TransakPurchaseClient {
   async createWidgetUrl(
@@ -18,9 +24,10 @@ export class TransakPurchaseClient {
     partnerOrderId: string,
     platform: AppPlatform,
   ): Promise<string> {
-    const referrerDomain = platform === AppPlatform.IOS
-      ? IOS_REFERRER_DOMAIN
-      : ANDROID_REFERRER_DOMAIN
+    const referrerDomain =
+      platform === AppPlatform.IOS
+        ? IOS_REFERRER_DOMAIN
+        : ANDROID_REFERRER_DOMAIN;
     const options = {
       method: 'POST',
       headers: {
@@ -42,7 +49,7 @@ export class TransakPurchaseClient {
     };
 
     const response = await fetch(
-      `${TRANSAK_BASE_URL}${TransakApiRoutes.CREATE_WIDGET_URL}`,
+      `${TRANSAK_GATEWAY_URL}${TransakApiRoutes.CREATE_WIDGET_URL}`,
       options,
     );
 
@@ -68,6 +75,7 @@ export class TransakPurchaseClient {
   }
 
   async refreshAccessToken(): Promise<TransakAccessToken> {
+    const url = `${TRANSAK_API_URL}${TransakApiRoutes.REFRESH_ACCESS_TOKEN}`;
     const options = {
       method: 'POST',
       headers: {
@@ -80,16 +88,18 @@ export class TransakPurchaseClient {
       }),
     };
 
-    const response = await fetch(
-      `${TRANSAK_BASE_URL}${TransakApiRoutes.REFRESH_ACCESS_TOKEN}`,
-      options,
-    );
+    const response = await fetch(url, options);
 
     const responseBody = await response.json();
 
     if (!response.ok) {
+      logger.error({
+        msg: 'Transak token refresh failed',
+        status: response.status,
+        responseBody: JSON.stringify(responseBody),
+      });
       throw new TransakApiError(
-        `Transak token refresh failed: ${responseBody?.message || responseBody?.error || 'Unknown error'}`,
+        `Transak token refresh failed: ${JSON.stringify(responseBody)}`,
         response.status,
         responseBody,
       );

@@ -5,7 +5,7 @@ export const createWidgetUrlSchema = z.object({
   cryptoCurrencyCode: z.string(),
   fiatCurrency: z.string(),
   fiatAmount: z.number(),
-  platform: z.enum(AppPlatform)
+  platform: z.enum(AppPlatform),
 });
 
 // Transak webhook payload after JWT decryption

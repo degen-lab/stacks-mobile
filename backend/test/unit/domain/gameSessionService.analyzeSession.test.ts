@@ -430,6 +430,7 @@ describe('GameSessionService.analyzeSession validation logic', () => {
       // INVALID_DATA might be returned if moves don't hit platforms properly
       const expectedFraudReasons = [
         FraudReason.TOO_FAST_BETWEEN_MOVES,
+        FraudReason.TOO_FAST_BRIDGE,
         FraudReason.DURATION_VARIANCE_TOO_LOW,
         FraudReason.TIMING_VARIANCE_TOO_LOW,
         FraudReason.INVALID_DATA,

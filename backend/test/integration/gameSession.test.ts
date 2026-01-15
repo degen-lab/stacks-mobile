@@ -44,12 +44,15 @@ describe('Game Session Integration Tests', () => {
 
   /**
    * Helper function to create a valid game session
+   * Default moves have:
+   * - Varied timing to avoid TIMING_VARIANCE_TOO_LOW fraud detection
+   * - Durations covering the gap range (40-180px at 320px/s)
    */
   const createValidGameSession = async (
     moves: Array<{ startTime: number; duration: number }> = [
-      { startTime: 0, duration: 100 },
-      { startTime: 200, duration: 150 },
-      { startTime: 400, duration: 120 },
+      { startTime: 0, duration: 200 },      // 64px
+      { startTime: 500, duration: 400 },    // 128px
+      { startTime: 1200, duration: 300 },   // 96px
     ],
     usedItems: ItemVariant[] = [],
   ): Promise<GameSession> => {
@@ -223,13 +226,14 @@ describe('Game Session Integration Tests', () => {
       await setupDailyStreakChallenge(challenge);
 
       // Create a valid game session with reasonable moves
-      // Using moves that are spaced out and have reasonable durations
+      // Durations cover range of gaps (40-180px at 320px/s = 125-562ms)
+      // Timing varied to avoid TIMING_VARIANCE_TOO_LOW fraud detection
       const gameSession = await createValidGameSession([
-        { startTime: 0, duration: 200 },
-        { startTime: 500, duration: 250 },
-        { startTime: 1000, duration: 200 },
-        { startTime: 1500, duration: 300 },
-        { startTime: 2000, duration: 250 },
+        { startTime: 0, duration: 200 },      // 64px
+        { startTime: 500, duration: 400 },    // 128px
+        { startTime: 1200, duration: 300 },   // 96px
+        { startTime: 1750, duration: 500 },   // 160px
+        { startTime: 2550, duration: 250 },   // 80px
       ]);
 
       // Get initial user points
@@ -396,13 +400,13 @@ describe('Game Session Integration Tests', () => {
       // Try up to 10 times to get a valid session that passes the challenge
       for (let attempt = 0; attempt < 10; attempt++) {
         const gameSession = await createValidGameSession([
-          { startTime: 0, duration: 200 },
-          { startTime: 500, duration: 250 },
-          { startTime: 1000, duration: 200 },
-          { startTime: 1500, duration: 300 },
-          { startTime: 2000, duration: 250 },
-          { startTime: 2500, duration: 200 },
-          { startTime: 3000, duration: 250 },
+          { startTime: 0, duration: 200 },      // 64px
+          { startTime: 500, duration: 400 },    // 128px
+          { startTime: 1200, duration: 300 },   // 96px
+          { startTime: 1750, duration: 500 },   // 160px
+          { startTime: 2550, duration: 250 },   // 80px
+          { startTime: 3100, duration: 450 },   // 144px
+          { startTime: 3850, duration: 350 },   // 112px
         ]);
 
         const response = await app.inject({
@@ -483,13 +487,13 @@ describe('Game Session Integration Tests', () => {
         attempt++
       ) {
         const gameSession = await createValidGameSession([
-          { startTime: 0, duration: 200 },
-          { startTime: 500, duration: 250 },
-          { startTime: 1000, duration: 200 },
-          { startTime: 1500, duration: 300 },
-          { startTime: 2000, duration: 250 },
-          { startTime: 2500, duration: 200 },
-          { startTime: 3000, duration: 250 },
+          { startTime: 0, duration: 200 },      // 64px
+          { startTime: 500, duration: 400 },    // 128px
+          { startTime: 1200, duration: 300 },   // 96px
+          { startTime: 1750, duration: 500 },   // 160px
+          { startTime: 2550, duration: 250 },   // 80px
+          { startTime: 3100, duration: 450 },   // 144px
+          { startTime: 3850, duration: 350 },   // 112px
         ]);
 
         const response = await app.inject({

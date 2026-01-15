@@ -22,7 +22,7 @@ type ServiceType =
   | StreakService
   | GameStoreService
   | RewardsService
-  | CryptoPurchaseService; 
+  | CryptoPurchaseService;
 
 type ServiceConstructor<T extends ServiceType> = new (...args: unknown[]) => T;
 
@@ -120,7 +120,7 @@ export class ServiceFactory {
     return this.services.get('rewardsService') as RewardsService;
   }
 
-  getCryptoPurchaseService(): CryptoPurchaseService { 
+  getCryptoPurchaseService(): CryptoPurchaseService {
     if (!this.services.has('cryptoPurchaseService')) {
       this.services.set(
         'cryptoPurchaseService',
@@ -128,8 +128,8 @@ export class ServiceFactory {
           this.dataSource.createEntityManager(),
           this.cacheAdapter,
           new TransakPurchaseClient(),
-          new CryptoPurchaseDomainService()
-        )
+          new CryptoPurchaseDomainService(),
+        ),
       );
     }
     return this.services.get('cryptoPurchaseService') as CryptoPurchaseService;

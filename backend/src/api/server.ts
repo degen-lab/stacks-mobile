@@ -57,7 +57,8 @@ export const buildServer = async (dataSource: DataSource) => {
   const streakService: StreakService = factory.getStreakService();
   const gameStoreService: GameStoreService = factory.getGameStoreService();
   const rewardsService: RewardsService = factory.getRewardsService();
-  const cryptoPurchaseService: CryptoPurchaseService = factory.getCryptoPurchaseService();
+  const cryptoPurchaseService: CryptoPurchaseService =
+    factory.getCryptoPurchaseService();
   app.register(userRoutes, {
     userService,
     prefix: '/user',
@@ -90,12 +91,11 @@ export const buildServer = async (dataSource: DataSource) => {
     prefix: '/adMob',
   });
   app.register(prometheusRoutes);
-  
-  app.register(
-    purchaseRoutes, {
-      cryptoPurchaseService,
-      prefix: '/purchase'
-    });
-  
+
+  app.register(purchaseRoutes, {
+    cryptoPurchaseService,
+    prefix: '/purchase',
+  });
+
   return app;
 };

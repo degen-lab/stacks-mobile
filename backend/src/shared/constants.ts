@@ -1,11 +1,10 @@
-import { config, configDotenv } from 'dotenv';
+import { configDotenv } from 'dotenv';
 import { configParser } from './configParser';
 import { DatabaseType } from './types';
 
 configDotenv({ debug: false });
 
-const isTest =
-  process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'testing';
+const isTest = process.env.NODE_ENV !== 'production';
 
 export const NODE_ENV: string = configParser('NODE_ENV', 'development');
 
@@ -108,10 +107,15 @@ export const BRONZE_TIER_BONUS: number = 500;
 
 export const GOLD_TIER_USTX_BONUS: number = 50000000;
 
-export const TRANSAK_BASE_URL: string =
+export const TRANSAK_GATEWAY_URL: string =
   NODE_ENV === 'production'
     ? 'https://api-gateway.transak.com/'
     : 'https://api-gateway-stg.transak.com/';
+
+export const TRANSAK_API_URL: string =
+  NODE_ENV === 'production'
+    ? 'https://api.transak.com/'
+    : 'https://api-stg.transak.com/';
 
 export const TRANSAK_API_KEY: string = configParser(
   'TRANSAK_API_KEY',

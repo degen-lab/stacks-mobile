@@ -1,5 +1,5 @@
 import { BaseAppEntity } from './baseAppEntity';
-import { Column, Entity, Index, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { User } from './user';
 
 @Entity()

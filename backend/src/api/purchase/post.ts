@@ -15,8 +15,8 @@ export default function purchasePostRoutes(
   },
 ) {
   app.post('/create-widget-url', {
+    preHandler: app.authenticateUser,
     config: {
-      preHandler: app.authenticateUser,
       rateLimit: rateLimitOptions({
         max: 2,
         timeWindow: '60000',
@@ -49,7 +49,7 @@ export default function purchasePostRoutes(
           data.cryptoCurrencyCode,
           data.fiatCurrency,
           data.fiatAmount,
-          data.platform
+          data.platform,
         );
         return reply.status(200).send({
           success: true,
