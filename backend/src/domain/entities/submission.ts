@@ -36,7 +36,7 @@ export class Submission extends BaseAppEntity {
   serializedTx?: string;
   @Column({ type: 'bool', default: false })
   adWatched: boolean;
-  @Column({ type: 'bool' })
+  @Column({ type: 'bool', default: false })
   isSponsored: boolean;
   /**
    * Invariant: Validates that the Stacks address is valid.

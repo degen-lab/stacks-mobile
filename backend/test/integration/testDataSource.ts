@@ -13,6 +13,7 @@ import { Submission } from '../../src/domain/entities/submission';
 import { FraudAttempt } from '../../src/domain/entities/fraudAttempt';
 import { RewardsDistributionData } from '../../src/domain/entities/rewardsDistributionData';
 import { TournamentStatus } from '../../src/domain/entities/tournamentStatus';
+import { CryptoPurchase } from '../../src/domain/entities/cryptoPurchase';
 
 let testDataSource: DataSource | null = null;
 
@@ -59,6 +60,7 @@ export const createTestDataSource = async (
       FraudAttempt,
       RewardsDistributionData,
       TournamentStatus,
+      CryptoPurchase,
     ],
   });
 
@@ -115,6 +117,7 @@ export const cleanTestDatabase = async (): Promise<void> => {
       .from(RewardsDistributionData)
       .execute();
     await manager.createQueryBuilder().delete().from(FraudAttempt).execute();
+    await manager.createQueryBuilder().delete().from(CryptoPurchase).execute();
     await manager.createQueryBuilder().delete().from(Submission).execute();
     await manager.createQueryBuilder().delete().from(ConsumableItem).execute();
     await manager.createQueryBuilder().delete().from(UniqueItem).execute();

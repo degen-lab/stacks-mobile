@@ -4,8 +4,7 @@ import { DatabaseType } from './types';
 
 configDotenv({ debug: false });
 
-const isTest =
-  process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'testing';
+const isTest = process.env.NODE_ENV !== 'production';
 
 export const NODE_ENV: string = configParser('NODE_ENV', 'development');
 
@@ -107,3 +106,33 @@ export const SILVER_TIER_BONUS: number = 1000;
 export const BRONZE_TIER_BONUS: number = 500;
 
 export const GOLD_TIER_USTX_BONUS: number = 50000000;
+
+export const TRANSAK_GATEWAY_URL: string =
+  NODE_ENV === 'production'
+    ? 'https://api-gateway.transak.com/'
+    : 'https://api-gateway-stg.transak.com/';
+
+export const TRANSAK_API_URL: string =
+  NODE_ENV === 'production'
+    ? 'https://api.transak.com/'
+    : 'https://api-stg.transak.com/';
+
+export const TRANSAK_API_KEY: string = configParser(
+  'TRANSAK_API_KEY',
+  isTest ? 'test-transak-api-key' : undefined,
+);
+
+export const TRANSAK_API_SECRET: string = configParser(
+  'TRANSAK_API_SECRET',
+  isTest ? 'test-transak-api-secret' : undefined,
+);
+
+export const ANDROID_REFERRER_DOMAIN: string = configParser(
+  'ANDROID_REFERRER_DOMAIN',
+  isTest ? 'android.dev' : undefined,
+);
+
+export const IOS_REFERRER_DOMAIN: string = configParser(
+  'IOS_REFERRER_DOMAIN',
+  isTest ? 'ios.dev' : undefined,
+);
