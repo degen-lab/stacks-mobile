@@ -24,10 +24,10 @@ export class CryptoPurchaseService {
     } catch {
       logger.info('No access token found in cache, refreshing');
     }
+    // expiresAt from Transak is in seconds (Unix timestamp), Date.now() is milliseconds
+    const nowInSeconds = Math.floor(Date.now() / 1000);
     const needRefresh: boolean = tokenData
-      ? Date.now() >= tokenData.expiresAt
-        ? true
-        : false
+      ? nowInSeconds >= tokenData.expiresAt
       : true;
     if (needRefresh) {
       const newAccessTokenData: TransakAccessToken =
@@ -70,8 +70,8 @@ export class CryptoPurchaseService {
       cryptoCurrencyCode,
       fiatCurrency,
       fiatAmount,
+      user.id.toString(),
       savedPurchase.id.toString(),
-      purchase.id.toString(),
       platform,
     );
   }
