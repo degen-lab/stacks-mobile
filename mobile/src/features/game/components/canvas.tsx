@@ -26,12 +26,15 @@ type BridgeGameCanvasProps = {
     step: (
       isPlaying: boolean,
       deltaTime: number,
+      totalTime: number,
     ) => import("../types").EngineEvent[];
+    updatePlatformsOnly: (totalTime: number) => void;
     getRenderState: () => RenderState;
   };
   canvasHeight: number;
   worldOffsetY: number;
   isAnimating?: boolean;
+  isReviving?: boolean;
   onInputDown: () => void;
   onInputUp: () => void;
   onEmitterReady?: (
@@ -48,6 +51,7 @@ export const BridgeGameCanvas = ({
   canvasHeight,
   worldOffsetY,
   isAnimating = true,
+  isReviving = false,
   onInputDown,
   onInputUp,
   onEmitterReady,
@@ -56,7 +60,6 @@ export const BridgeGameCanvas = ({
   showGhostPreview = false,
   onAssetsLoaded,
 }: BridgeGameCanvasProps) => {
-  // --- Refs & State ---
   const particlesRef = useRef<Particle[]>(
     Array.from({ length: MAX_PARTICLES }, () => ({
       x: 0,
@@ -79,12 +82,12 @@ export const BridgeGameCanvas = ({
   const engineRef = useRef(engine);
   const platformSpawnTimesRef = useRef<Map<number, number>>(new Map());
 
-  // Keep engine ref in sync
+  const startTimeRef = useRef<number | null>(null);
+
   useEffect(() => {
     engineRef.current = engine;
   }, [engine]);
 
-  // --- Emitter ---
   const spawnParticles = useCallback(
     (x: number, y: number, color: string, count: number = 12) => {
       let spawned = 0;
@@ -124,75 +127,78 @@ export const BridgeGameCanvas = ({
     });
   }, [perfectCue]);
 
-  // --- Animation Loop (Combined engine + visuals) ---
   useEffect(() => {
     if (!isAnimating) return;
     let frameId: number;
     let lastTime = performance.now();
 
+    if (startTimeRef.current === null) {
+      startTimeRef.current = lastTime;
+    }
+
     const tick = (currentTime: number) => {
-      const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
+      const rawDelta = (currentTime - lastTime) / 1000;
       lastTime = currentTime;
 
-      // Step engine and handle events
-      const events = engineRef.current.step(isAnimating, deltaTime);
-      if (events.length && onEventsRef.current) {
-        onEventsRef.current(events);
+      const totalTimeMs = currentTime - (startTimeRef.current || 0);
+
+      const physicsDelta = Math.min(rawDelta, 0.1);
+
+      if (isReviving) {
+        engineRef.current.updatePlatformsOnly(totalTimeMs);
+      } else {
+        const events = engineRef.current.step(
+          isAnimating,
+          physicsDelta,
+          totalTimeMs,
+        );
+        if (events.length && onEventsRef.current) {
+          onEventsRef.current(events);
+        }
       }
 
-      // Update render state once per frame
       renderStateRef.current = engineRef.current.getRenderState();
 
-      // Track platform spawn times (moved from render phase)
       const platformSpawnTimes = platformSpawnTimesRef.current;
       const currentPlatforms = renderStateRef.current.platforms;
-
-      // Track new platforms
       for (let i = 0; i < currentPlatforms.length; i++) {
         const p = currentPlatforms[i];
         if (p.index !== 0 && !platformSpawnTimes.has(p.index)) {
           platformSpawnTimes.set(p.index, currentTime);
         }
       }
-
-      // Clean up old platforms (simple approach: keep map small)
       if (platformSpawnTimes.size > 10) {
         const visibleIndices = new Set<number>();
-        for (let i = 0; i < currentPlatforms.length; i++) {
+        for (let i = 0; i < currentPlatforms.length; i++)
           visibleIndices.add(currentPlatforms[i].index);
-        }
         const keysToDelete: number[] = [];
         platformSpawnTimes.forEach((_, key) => {
-          if (!visibleIndices.has(key)) {
-            keysToDelete.push(key);
-          }
+          if (!visibleIndices.has(key)) keysToDelete.push(key);
         });
         keysToDelete.forEach((key) => platformSpawnTimes.delete(key));
       }
 
-      // Update Particles (Pooled)
       const particles = particlesRef.current;
       for (let i = 0; i < MAX_PARTICLES; i++) {
         const p = particles[i];
         if (p.life <= 0) continue;
-        p.life -= deltaTime * PHYSICS_CONFIG.PARTICLE_LIFETIME_DECAY;
-        p.vy += PHYSICS_CONFIG.PARTICLE_GRAVITY * deltaTime;
-        p.x += p.vx * deltaTime;
-        p.y += p.vy * deltaTime;
+        p.life -= physicsDelta * PHYSICS_CONFIG.PARTICLE_LIFETIME_DECAY;
+        p.vy += PHYSICS_CONFIG.PARTICLE_GRAVITY * physicsDelta;
+        p.x += p.vx * physicsDelta;
+        p.y += p.vy * physicsDelta;
       }
 
-      // Update Texts
       const texts = perfectTextsRef.current;
       for (let i = texts.length - 1; i >= 0; i--) {
         const t = texts[i];
-        t.life -= deltaTime * PHYSICS_CONFIG.PERFECT_TEXT_LIFETIME_DECAY;
+        t.life -= physicsDelta * PHYSICS_CONFIG.PERFECT_TEXT_LIFETIME_DECAY;
         if (t.life <= 0) {
           texts.splice(i, 1);
         } else {
           t.vx *= PHYSICS_CONFIG.PERFECT_TEXT_FRICTION;
-          t.vy += PHYSICS_CONFIG.PERFECT_TEXT_GRAVITY * deltaTime;
-          t.y += t.vy * deltaTime;
-          t.x += t.vx * deltaTime;
+          t.vy += PHYSICS_CONFIG.PERFECT_TEXT_GRAVITY * physicsDelta;
+          t.y += t.vy * physicsDelta;
+          t.x += t.vx * physicsDelta;
         }
       }
 
@@ -201,9 +207,8 @@ export const BridgeGameCanvas = ({
     };
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
-  }, [isAnimating]);
+  }, [isAnimating, isReviving]);
 
-  // --- Assets ---
   const perfectFont = useFont(
     require("@/assets/DMSans_18pt-ExtraLight.ttf"),
     24,
@@ -216,26 +221,22 @@ export const BridgeGameCanvas = ({
         ? require("@/assets/game/hero/purple.png")
         : require("@/assets/game/hero/black.png"),
   );
-
   useEffect(() => {
     if (perfectFont && heroImage && onAssetsLoaded) onAssetsLoaded();
   }, [perfectFont, heroImage, onAssetsLoaded]);
-
   if (!perfectFont || !heroImage) return <View style={{ flex: 1 }} />;
 
-  // --- Render Prep ---
   const renderState = renderStateRef.current;
-  const heroSize = VISUAL_CONFIG.HERO_SIZE;
-  const heroHalf = heroSize / 2;
   const platformY = VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H;
   const stickOriginY = platformY;
   const now = performance.now();
   const platformSpawnTimes = platformSpawnTimesRef.current;
+  const heroSize = VISUAL_CONFIG.HERO_SIZE;
+  const heroHalf = heroSize / 2;
 
   return (
     <View style={{ flex: 1 }} className="relative">
       <Canvas style={{ flex: 1 }} pointerEvents="none">
-        {/* Background */}
         <Rect x={0} y={0} width={SCREEN_WIDTH} height={canvasHeight}>
           <LinearGradient
             start={vec(0, canvasHeight - VISUAL_CONFIG.CANVAS_H)}
@@ -243,14 +244,12 @@ export const BridgeGameCanvas = ({
             colors={[VISUAL_CONFIG.COLORS.BG_TOP, VISUAL_CONFIG.COLORS.BG_BOT]}
           />
         </Rect>
-
         <Group
           transform={[
             { translateX: -renderState.cameraX },
             { translateY: worldOffsetY },
           ]}
         >
-          {/* Platforms with Culling */}
           {renderState.platforms
             .filter(
               (p) =>
@@ -258,7 +257,6 @@ export const BridgeGameCanvas = ({
                 p.x < renderState.cameraX + SCREEN_WIDTH + 100,
             )
             .map((p) => {
-              // Calculate spawn animation offset
               const spawnTime =
                 p.index === 0 ? now : (platformSpawnTimes.get(p.index) ?? now);
               const spawnProgress =
@@ -270,7 +268,6 @@ export const BridgeGameCanvas = ({
                     );
               const spawnOffset =
                 (1 - spawnProgress) * VISUAL_CONFIG.PLATFORM_SPAWN_OFFSET;
-
               return (
                 <Group
                   key={`plat-${p.index}`}
@@ -313,8 +310,6 @@ export const BridgeGameCanvas = ({
                 </Group>
               );
             })}
-
-          {/* Stick Origin Logic */}
           {renderState.platforms[0] && (
             <BridgeStick
               originX={renderState.platforms[0].x + renderState.platforms[0].w}
@@ -326,8 +321,6 @@ export const BridgeGameCanvas = ({
               shadowColor={VISUAL_CONFIG.COLORS.BRAND_DARK}
             />
           )}
-
-          {/* Ghost Preview */}
           {showGhostPreview &&
             renderState.phase === "GROWING" &&
             renderState.platforms[0] && (
@@ -353,8 +346,6 @@ export const BridgeGameCanvas = ({
                 />
               </Group>
             )}
-
-          {/* Hero */}
           <Group
             origin={{
               x: renderState.hero.x + heroHalf,
@@ -374,8 +365,6 @@ export const BridgeGameCanvas = ({
               />
             </Group>
           </Group>
-
-          {/* Particles */}
           {particlesRef.current.map((p, i) => {
             if (p.life <= 0) return null;
             return (
@@ -389,8 +378,6 @@ export const BridgeGameCanvas = ({
               />
             );
           })}
-
-          {/* Perfect Text */}
           {perfectTextsRef.current.map((t, i) => (
             <Group key={`pt-${i}`} opacity={t.life * t.life}>
               <Text
@@ -411,7 +398,6 @@ export const BridgeGameCanvas = ({
           ))}
         </Group>
       </Canvas>
-
       <Pressable
         className="absolute inset-0"
         onPressIn={onInputDown}

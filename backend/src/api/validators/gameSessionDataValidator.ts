@@ -18,9 +18,10 @@ const gameSessionSchema: z.ZodType<GameSession> = z.object({
           currentPlatformRight: z.number().nullable(),
           nextPlatformIndex: z.number().nullable(),
           platformX: z.number().nullable(),
-          platformRight: z.number().nullable(),
-          platformCenter: z.number().nullable(),
+          platformRight: z.number().nullable().optional(),
+          platformCenter: z.number().nullable().optional(),
           platformIsMoving: z.boolean().nullable(),
+          distToCenter: z.number().nullable().optional(),
         })
         .optional(),
     }),

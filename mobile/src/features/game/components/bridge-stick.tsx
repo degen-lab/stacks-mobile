@@ -23,7 +23,6 @@ const BridgeStick = React.memo(
   }: BridgeStickProps) => {
     const usableLength = Math.max(0, length);
 
-    // We bring back the blocks but use a simplified math approach.
     const blocks = useMemo(() => {
       const blockH = VISUAL_CONFIG.STICK_BLOCK_HEIGHT || 10;
       const gap = VISUAL_CONFIG.STICK_BLOCK_GAP || 2;
@@ -34,7 +33,7 @@ const BridgeStick = React.memo(
 
       for (let i = 0; i < count; i++) {
         const start = i * spacing;
-        // Calculate how much of this specific block is actually "grown"
+
         const currentBlockHeight = Math.min(blockH, usableLength - start);
 
         if (currentBlockHeight > 0) {
@@ -53,7 +52,7 @@ const BridgeStick = React.memo(
         origin={{ x: originX, y: originY }}
         transform={[{ rotate: (rotation * Math.PI) / 180 }]}
       >
-        {/* 1. Subtle Background Shadow (optional, looks nice for depth) */}
+        {/* Optional Shadow/Background for depth */}
         <Rect
           x={originX - width / 2}
           y={originY - usableLength}
@@ -62,7 +61,7 @@ const BridgeStick = React.memo(
           color="rgba(0,0,0,0.1)"
         />
 
-        {/* 2. The Actual Blocks */}
+        {/* Render Blocks */}
         {blocks.map((block) => (
           <Rect
             key={block.id}

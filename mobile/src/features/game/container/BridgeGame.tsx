@@ -548,7 +548,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
           engine={engineRef.current}
           canvasHeight={canvasHeight}
           worldOffsetY={worldOffsetY}
-          isAnimating={overlayState === "PLAYING"}
+          isAnimating={overlayState === "PLAYING" || overlayState === "REVIVE"}
+          isReviving={overlayState === "REVIVE"}
           perfectCue={perfectCue}
           showGhostPreview={ghostActive}
           onInputDown={handleInputDown}

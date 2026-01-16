@@ -19,6 +19,7 @@ export type MoveClientDebug = {
   platformRight: number | null;
   platformCenter: number | null;
   platformIsMoving: boolean | null;
+  distToCenter?: number | null;
 };
 
 /**

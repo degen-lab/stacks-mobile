@@ -1,5 +1,5 @@
 import { DIFFICULTY_CONFIG, PHYSICS_CONFIG, VISUAL_CONFIG } from "../config";
-import { createRng, randomRange } from "./rng";
+import { createRng } from "./rng";
 import type {
   EngineEvent,
   PlatformSnapshot,
@@ -7,6 +7,77 @@ import type {
   MoveClientDebug,
   RenderState,
 } from "../types";
+
+const PRECISION = 10000;
+
+const BRIDGE_CONFIG_INT = {
+  ...PHYSICS_CONFIG,
+  GROW_SPEED: PHYSICS_CONFIG.GROW_SPEED * PRECISION,
+  ROTATE_SPEED: PHYSICS_CONFIG.ROTATE_SPEED * PRECISION,
+  PLATFORM_MIN_GAP: VISUAL_CONFIG.PLATFORM_MIN_GAP * PRECISION,
+  PLATFORM_MAX_GAP: VISUAL_CONFIG.PLATFORM_MAX_GAP * PRECISION,
+  PLATFORM_MIN_WIDTH: VISUAL_CONFIG.PLATFORM_MIN_WIDTH * PRECISION,
+  PLATFORM_MAX_WIDTH: VISUAL_CONFIG.PLATFORM_MAX_WIDTH * PRECISION,
+  PLATFORM_START_WIDTH: VISUAL_CONFIG.PLATFORM_START_WIDTH * PRECISION,
+  PLATFORM_MOVE_VELOCITY: PHYSICS_CONFIG.PLATFORM_MOVE_VELOCITY * PRECISION,
+  PLATFORM_MOVE_MIN_RANGE: PHYSICS_CONFIG.PLATFORM_MOVE_MIN_RANGE * PRECISION,
+  PLATFORM_MOVE_MAX_RANGE: PHYSICS_CONFIG.PLATFORM_MOVE_MAX_RANGE * PRECISION,
+  PLATFORM_MIN_WIDTH_EARLY:
+    DIFFICULTY_CONFIG.PLATFORM_MIN_WIDTH_EARLY * PRECISION,
+  PLATFORM_MIN_WIDTH_LATE:
+    DIFFICULTY_CONFIG.PLATFORM_MIN_WIDTH_LATE * PRECISION,
+  PERFECT_TOLERANCE: VISUAL_CONFIG.PERFECT_TOLERANCE * PRECISION,
+  MAX_BRIDGE_LENGTH: VISUAL_CONFIG.MAX_BRIDGE_LENGTH * PRECISION,
+};
+
+function calculatePlatformPosInt(
+  minX: number,
+  maxX: number,
+  speed: number,
+  timeMs: number,
+  index: number,
+): number {
+  if (speed <= 0 || minX >= maxX) return minX;
+
+  const width = maxX - minX;
+
+  // 1. Cycle Logic
+  const baseCycle = 300000 * PRECISION;
+  let cycleDuration = Math.floor(baseCycle / speed);
+  cycleDuration = Math.max(2000, Math.min(5000, cycleDuration));
+
+  // 2. Identify Cycle
+  const cycleIndex = Math.floor(timeMs / cycleDuration);
+  const timeInCycle = timeMs % cycleDuration;
+  const progress = timeInCycle / cycleDuration;
+
+  // 3. Shifting Sentry Target
+  const hash = Math.imul(index ^ cycleIndex, 0x5f356495);
+  const reachRatio = 0.3 + ((Math.abs(hash) % 1000) / 1000) * 0.7;
+
+  const cycleTargetX = minX + Math.floor(width * reachRatio);
+  const xStart = minX;
+
+  // 4. Move Schedule
+  let currentPos = 0;
+
+  if (progress < 0.4) {
+    // PHASE 1: Move Out
+    let t = progress / 0.4;
+    t = t * t * (3 - 2 * t);
+    currentPos = xStart + Math.floor((cycleTargetX - xStart) * t);
+  } else if (progress < 0.55) {
+    // PHASE 2: Stop
+    currentPos = cycleTargetX;
+  } else {
+    // PHASE 3: Return
+    let t = (progress - 0.55) / 0.45;
+    t = t * t * (3 - 2 * t);
+    currentPos = cycleTargetX + Math.floor((xStart - cycleTargetX) * t);
+  }
+
+  return currentPos;
+}
 
 class Camera {
   x = 0;
@@ -37,13 +108,11 @@ class Platform {
   w: number;
   index: number;
   isMoving: boolean;
-  vx: number;
   minX: number;
   maxX: number;
-  initialX: number; // Store initial position for platform generation
-  moveTime: number;
-  baseSpeed: number;
-  patrolSeed: number;
+  initialX: number;
+  spawnX: number;
+  speed: number;
 
   constructor(
     x: number,
@@ -52,91 +121,53 @@ class Platform {
     isMoving: boolean,
     minX: number,
     maxX: number,
-    baseSpeed: number,
-    patrolSeed: number,
+    spawnX: number,
+    speed: number,
   ) {
     this.x = x;
     this.w = w;
     this.index = index;
     this.isMoving = isMoving;
-    this.vx = 0;
     this.minX = minX;
     this.maxX = maxX;
-    this.initialX = x; // Store initial position
-    this.moveTime = 0;
-    this.baseSpeed = baseSpeed;
-    this.patrolSeed = patrolSeed;
+    this.initialX = x;
+    this.spawnX = spawnX;
+    this.speed = speed;
   }
 
-  get right() {
-    return this.x + this.w;
+  get rightFloat() {
+    return (this.x + this.w) / PRECISION;
   }
-  get center() {
-    return this.x + this.w / 2;
+  get xFloat() {
+    return this.x / PRECISION;
+  }
+  get wFloat() {
+    return this.w / PRECISION;
+  }
+  get centerFloat() {
+    return (this.x + this.w / 2) / PRECISION;
   }
 
-  getXAtTime(timeSec: number) {
-    if (!this.isMoving) return this.initialX;
-    const range = this.maxX - this.minX;
-    if (range <= 0) return this.initialX;
-    const rng = createRng(this.patrolSeed);
-    let t = 0;
-    let x = this.initialX;
-    const speedBase = this.baseSpeed;
-    if (speedBase <= 0) return this.initialX;
-    const span = this.maxX - this.minX;
-    const minTargetDistance = Math.max(
-      DIFFICULTY_CONFIG.PLATFORM_TARGET_MIN_DISTANCE,
-      span * DIFFICULTY_CONFIG.PLATFORM_TARGET_MIN_DISTANCE_RATIO,
-    );
-
-    while (true) {
-      let target = x;
-      const attempts = 5;
-      for (let attempt = 0; attempt < attempts; attempt++) {
-        const candidate = this.minX + rng() * span;
-        target = candidate;
-        if (
-          span <= minTargetDistance ||
-          Math.abs(candidate - x) >= minTargetDistance
-        ) {
-          break;
-        }
-      }
-      const variance =
-        this.index >= DIFFICULTY_CONFIG.PLATFORM_VARIANCE_START_INDEX
-          ? randomRange(
-              rng,
-              DIFFICULTY_CONFIG.PLATFORM_SPEED_VARIANCE_MIN,
-              DIFFICULTY_CONFIG.PLATFORM_SPEED_VARIANCE_MAX,
-            )
-          : 1;
-      const speed = speedBase * variance;
-      if (speed <= 0) return x;
-      const dist = Math.abs(target - x);
-      if (dist === 0) {
-        if (t >= timeSec) return x;
-        continue;
-      }
-      const duration = dist / speed;
-      if (t + duration >= timeSec) {
-        const dir = target > x ? 1 : -1;
-        return x + dir * speed * (timeSec - t);
-      }
-      t += duration;
-      x = target;
+  update(globalTimeMs: number) {
+    if (!this.isMoving) {
+      this.x = this.initialX;
+      return;
     }
-  }
-
-  update(deltaTime: number) {
-    if (!this.isMoving) return;
-    this.moveTime += deltaTime;
-    this.x = this.getXAtTime(this.moveTime);
+    this.x = calculatePlatformPosInt(
+      this.minX,
+      this.maxX,
+      this.speed,
+      globalTimeMs,
+      this.index,
+    );
   }
 
   stop() {
     this.isMoving = false;
-    this.vx = 0;
+    this.initialX = this.x;
+    this.minX = this.x;
+    this.maxX = this.x;
+    this.speed = 0;
   }
 
   snapshot(): PlatformSnapshot {
@@ -163,7 +194,7 @@ class Hero {
   y = 0;
   rotation = 0;
   resetToPlatform(p: Platform) {
-    this.x = p.x + p.w - VISUAL_CONFIG.HERO_SIZE;
+    this.x = p.xFloat + p.wFloat - VISUAL_CONFIG.HERO_SIZE;
     this.y =
       VISUAL_CONFIG.CANVAS_H -
       VISUAL_CONFIG.PLATFORM_H -
@@ -186,14 +217,15 @@ export class StacksBridgeEngine {
   private score = 0;
   private hasRevived = false;
 
+  //TODO: check if this is needed
+  private lastJumpSucceeded = true;
+
   private moves: PlayerMove[] = [];
   private currentPressStart: number | null = null;
+
   private engineTimeMs = 0;
   private idleStartTime = 0;
 
-  private nextPlatformCalculatedX: number | null = null;
-
-  // Cache render state to avoid allocations every frame
   private cachedRenderState: RenderState = {
     phase: "IDLE",
     cameraX: 0,
@@ -218,76 +250,77 @@ export class StacksBridgeEngine {
   }
 
   start(seed?: number) {
-    if (seed === undefined) {
-      throw new Error("start() must be called with a seed");
-    }
+    if (seed === undefined) throw new Error("start() called without seed");
     this.seed = seed;
     this.rng = createRng(this.seed);
     this.resetWorld();
   }
 
   reset(seed?: number) {
-    if (seed !== undefined) {
-      this.seed = seed;
-    }
+    if (seed !== undefined) this.seed = seed;
     this.rng = createRng(this.seed);
     this.resetWorld();
   }
 
-  setParticleEmitter(
-    spawn: (x: number, y: number, color: string, count?: number) => void,
-  ) {
+  setParticleEmitter(spawn: any) {
     this.particleSpawn = spawn;
   }
-
   get state() {
-    return {
-      score: this.score,
-      phase: this.phase,
-    };
+    return { score: this.score, phase: this.phase };
   }
-
   getRunData() {
-    return {
-      seed: this.seed,
-      moves: [...this.moves],
-    };
+    return { seed: this.seed, moves: [...this.moves] };
   }
 
   revive() {
+    this.performRevive();
     this.hasRevived = true;
-    const safePlatform = this.platforms[0];
-    if (!safePlatform) return;
-    this.hero.resetToPlatform(safePlatform);
-    this.bridge.reset();
-    this.phase = "IDLE";
-    this.camera.targetX = safePlatform.x;
-    this.camera.x = safePlatform.x;
-    this.idleStartTime = Math.floor(this.engineTimeMs);
   }
 
   revivePowerUp() {
+    this.performRevive();
+  }
+
+  updatePlatformsOnly(totalTimeMs: number) {
+    this.engineTimeMs = totalTimeMs;
+
+    this.platforms.forEach((p) => {
+      if (p.isMoving) {
+        p.update(Math.floor(this.engineTimeMs));
+      }
+    });
+  }
+
+  private performRevive() {
     const safePlatform = this.platforms[0];
     if (!safePlatform) return;
+
     this.hero.resetToPlatform(safePlatform);
     this.bridge.reset();
     this.phase = "IDLE";
-    this.camera.targetX = safePlatform.x;
-    this.camera.x = safePlatform.x;
+    this.camera.targetX = safePlatform.xFloat;
+    this.camera.x = safePlatform.xFloat;
+
+    safePlatform.stop();
+
     this.idleStartTime = Math.floor(this.engineTimeMs);
+
+    for (let i = 1; i < this.platforms.length; i++) {
+      this.platforms[i].update(Math.floor(this.engineTimeMs));
+    }
   }
 
   private resetWorld() {
     this.moves = [];
     this.currentPressStart = null;
     this.hasRevived = false;
+    this.lastJumpSucceeded = true;
     this.idleStartTime = 0;
     this.engineTimeMs = 0;
 
-    // Pre-generate 3 platforms so the third is ready to scroll into view
-    const platform0 = new Platform(
+    const p0 = new Platform(
       0,
-      VISUAL_CONFIG.PLATFORM_START_WIDTH,
+      BRIDGE_CONFIG_INT.PLATFORM_START_WIDTH,
       0,
       false,
       0,
@@ -295,38 +328,45 @@ export class StacksBridgeEngine {
       0,
       0,
     );
-    const platform1 = this.generateNextPlatform(
-      VISUAL_CONFIG.PLATFORM_START_WIDTH,
+    const p1 = this.generateNextPlatform(
+      BRIDGE_CONFIG_INT.PLATFORM_START_WIDTH,
       1,
     );
-    const platform2 = this.generateNextPlatform(
-      platform1.initialX + platform1.w,
-      2,
-    );
-    this.platforms = [platform0, platform1, platform2];
+    const p2 = this.generateNextPlatform(p1.spawnX + p1.w, 2);
+    this.platforms = [p0, p1, p2];
 
     this.hero.resetToPlatform(this.platforms[0]);
     this.bridge.reset();
     this.camera.x = 0;
     this.camera.targetX = 0;
     this.camera.shakeIntensity = 0;
-
     this.phase = "IDLE";
     this.score = 0;
   }
 
   private generateNextPlatform(lastX: number, index: number) {
     const gapRng = this.rng();
-    const gap =
-      gapRng *
-        (VISUAL_CONFIG.PLATFORM_MAX_GAP - VISUAL_CONFIG.PLATFORM_MIN_GAP) +
-      VISUAL_CONFIG.PLATFORM_MIN_GAP;
+    const gap = Math.floor(
+      BRIDGE_CONFIG_INT.PLATFORM_MIN_GAP +
+        gapRng *
+          (BRIDGE_CONFIG_INT.PLATFORM_MAX_GAP -
+            BRIDGE_CONFIG_INT.PLATFORM_MIN_GAP),
+    );
 
     const widthRng = this.rng();
     const baseWidth =
+      BRIDGE_CONFIG_INT.PLATFORM_MIN_WIDTH +
       widthRng *
-        (VISUAL_CONFIG.PLATFORM_MAX_WIDTH - VISUAL_CONFIG.PLATFORM_MIN_WIDTH) +
-      VISUAL_CONFIG.PLATFORM_MIN_WIDTH;
+        (BRIDGE_CONFIG_INT.PLATFORM_MAX_WIDTH -
+          BRIDGE_CONFIG_INT.PLATFORM_MIN_WIDTH);
+
+    const canMove = index >= DIFFICULTY_CONFIG.PLATFORM_MOVE_START_INDEX;
+    let shouldMove = false;
+
+    if (canMove) {
+      const moveChanceRng = this.rng();
+      shouldMove = moveChanceRng < PHYSICS_CONFIG.PLATFORM_MOVE_CHANCE;
+    }
 
     const shrinkStages =
       index >= DIFFICULTY_CONFIG.PLATFORM_SHRINK_START_INDEX
@@ -341,9 +381,10 @@ export class StacksBridgeEngine {
     );
     const minWidth =
       index < DIFFICULTY_CONFIG.PLATFORM_MIN_WIDTH_LATE_INDEX
-        ? DIFFICULTY_CONFIG.PLATFORM_MIN_WIDTH_EARLY
-        : DIFFICULTY_CONFIG.PLATFORM_MIN_WIDTH_LATE;
-    const w = Math.max(baseWidth * shrinkFactor, minWidth);
+        ? BRIDGE_CONFIG_INT.PLATFORM_MIN_WIDTH_EARLY
+        : BRIDGE_CONFIG_INT.PLATFORM_MIN_WIDTH_LATE;
+
+    const w = Math.floor(Math.max(baseWidth * shrinkFactor, minWidth));
 
     const speedStages =
       index >= DIFFICULTY_CONFIG.PLATFORM_SPEED_START_INDEX
@@ -354,66 +395,62 @@ export class StacksBridgeEngine {
         : 0;
     const speedMultiplier =
       1 + speedStages * DIFFICULTY_CONFIG.PLATFORM_SPEED_INCREMENT;
-    const baseSpeed = PHYSICS_CONFIG.PLATFORM_MOVE_VELOCITY * speedMultiplier;
+    let baseSpeed = Math.floor(
+      BRIDGE_CONFIG_INT.PLATFORM_MOVE_VELOCITY * speedMultiplier,
+    );
 
-    const canMove = index >= DIFFICULTY_CONFIG.PLATFORM_MOVE_START_INDEX;
-    let shouldMove = false;
-    if (canMove) {
-      const moveChanceRng = this.rng();
-      shouldMove = moveChanceRng < PHYSICS_CONFIG.PLATFORM_MOVE_CHANCE;
-    }
-    let minX = lastX + gap;
-    let maxX = lastX + gap;
-    let patrolSeed = 0;
+    let minX = 0;
+    let maxX = 0;
+    let spawnX = 0;
+    const idealX = lastX + gap;
+
     if (shouldMove) {
-      const range = randomRange(
-        this.rng,
-        PHYSICS_CONFIG.PLATFORM_MOVE_MIN_RANGE,
-        PHYSICS_CONFIG.PLATFORM_MOVE_MAX_RANGE,
+      const rangeRng = this.rng();
+      const range = Math.floor(
+        BRIDGE_CONFIG_INT.PLATFORM_MOVE_MIN_RANGE +
+          rangeRng *
+            (BRIDGE_CONFIG_INT.PLATFORM_MOVE_MAX_RANGE -
+              BRIDGE_CONFIG_INT.PLATFORM_MOVE_MIN_RANGE),
       );
-      minX = lastX + gap - range;
-      maxX = lastX + gap + range;
-      patrolSeed = Math.floor(this.rng() * 0xffffffff);
+
+      const varianceRng = this.rng();
+      const varianceScaler = Math.floor(varianceRng * 4000) + 8000;
+      baseSpeed = Math.floor((baseSpeed * varianceScaler) / 10000);
+
+      minX = idealX - range;
+      maxX = idealX + range;
+
+      const safeMinX = lastX + BRIDGE_CONFIG_INT.PLATFORM_MIN_GAP;
+      const safeMaxX = lastX + BRIDGE_CONFIG_INT.PLATFORM_MAX_GAP;
+
+      minX = Math.max(minX, safeMinX);
+      maxX = Math.min(maxX, safeMaxX);
+
+      if (maxX <= minX) {
+        shouldMove = false;
+        minX = maxX = idealX;
+        baseSpeed = 0;
+        spawnX = idealX;
+      } else {
+        spawnX = Math.floor((minX + maxX) / 2);
+      }
+    } else {
+      baseSpeed = 0;
+      spawnX = idealX;
+      minX = spawnX;
+      maxX = spawnX;
     }
 
-    const platform = new Platform(
-      lastX + gap,
+    return new Platform(
+      spawnX,
       w,
       index,
       shouldMove,
       minX,
       maxX,
+      spawnX,
       baseSpeed,
-      patrolSeed,
     );
-
-    if (platform.isMoving) {
-      const safeMinX = lastX + VISUAL_CONFIG.PLATFORM_MIN_GAP;
-      const safeMaxX = platform.initialX + VISUAL_CONFIG.PLATFORM_MIN_GAP;
-      platform.minX = Math.max(platform.minX, safeMinX);
-      platform.maxX = Math.min(platform.maxX, safeMaxX);
-      if (platform.maxX <= platform.minX) {
-        platform.isMoving = false;
-        platform.vx = 0;
-        platform.minX = platform.initialX;
-        platform.maxX = platform.initialX;
-        platform.patrolSeed = 0;
-      }
-    }
-
-    return platform;
-  }
-
-  private getPlatformXAtRelease(
-    platform: Platform | undefined,
-    idleDurationMs: number,
-    moveDurationMs: number,
-  ) {
-    if (!platform) return null;
-    if (!platform.isMoving) return platform.x;
-
-    const releaseTime = (idleDurationMs + moveDurationMs) / 1000;
-    return platform.getXAtTime(releaseTime);
   }
 
   handleInputDown(isPlaying: boolean) {
@@ -424,109 +461,63 @@ export class StacksBridgeEngine {
 
   handleInputUp(isPlaying: boolean) {
     if (!isPlaying || this.phase !== "GROWING") return;
-
     this.phase = "ROTATING";
 
     if (this.currentPressStart !== null) {
       const maxDurationMs = Math.floor(
         (VISUAL_CONFIG.MAX_BRIDGE_LENGTH / PHYSICS_CONFIG.GROW_SPEED) * 1000,
       );
-      const duration = Math.min(
+      const pressDuration = Math.min(
         Math.floor(this.engineTimeMs) - this.currentPressStart,
         maxDurationMs,
       );
-      const bridgeLength = (duration / 1000) * PHYSICS_CONFIG.GROW_SPEED;
+
+      this.bridge.length = (pressDuration / 1000) * PHYSICS_CONFIG.GROW_SPEED;
+
       const idleDurationMs = Math.max(
         0,
         this.currentPressStart - this.idleStartTime,
       );
-      const currentPlatform = this.platforms[0];
-      const nextPlatform = this.platforms[1];
-
-      // Platform keeps moving after release until bridge lands
-      // Calculate landing time: release + rotation time (90 degrees / ROTATE_SPEED)
       const rotationTimeMs = (90 / PHYSICS_CONFIG.ROTATE_SPEED) * 1000;
-      const landingDuration = duration + rotationTimeMs;
-
-      const platformXAtLanding = this.getPlatformXAtRelease(
-        nextPlatform,
-        idleDurationMs,
-        landingDuration,
-      );
-
-      // Store calculated position to snap platform to when it stops (ensures backend sync)
-      // This eliminates drift between visual position and calculated position
-      if (platformXAtLanding !== null && nextPlatform?.isMoving) {
-        this.nextPlatformCalculatedX = platformXAtLanding;
-      } else {
-        this.nextPlatformCalculatedX = null;
-      }
-
-      const platformRightAtLanding =
-        platformXAtLanding !== null && nextPlatform
-          ? platformXAtLanding + nextPlatform.w
-          : null;
-      const platformCenterAtLanding =
-        platformXAtLanding !== null && nextPlatform
-          ? platformXAtLanding + nextPlatform.w / 2
-          : null;
-      this.bridge.length = bridgeLength;
-      const stickTip = currentPlatform
-        ? currentPlatform.right + bridgeLength
-        : null;
+      const landingDuration = pressDuration + rotationTimeMs;
 
       const debugInfo: MoveClientDebug | undefined = __DEV__
         ? {
-            stickTip,
-            bridgeLength,
-            currentPlatformRight: null, // Will be set in checkLanding after platform stops
-            nextPlatformIndex: nextPlatform?.index ?? null,
-            platformX: platformXAtLanding,
-            platformRight: platformRightAtLanding,
-            platformCenter: platformCenterAtLanding,
-            platformIsMoving: nextPlatform?.isMoving ?? null,
+            stickTip: 0,
+            bridgeLength: this.bridge.length,
+            currentPlatformRight: this.platforms[0].rightFloat,
+            nextPlatformIndex: this.platforms[1]?.index ?? 0,
+            platformX: 0,
+            platformIsMoving: this.platforms[1]?.isMoving ?? false,
           }
         : undefined;
 
       this.moves.push({
         startTime: this.currentPressStart,
-        duration: landingDuration, // Use landing time (release + rotation) for backend validation
+        duration: landingDuration,
         idleDurationMs,
         ...(debugInfo && { debug: debugInfo }),
       });
+
       this.lastMoveDebug = debugInfo ?? null;
       this.currentPressStart = null;
     }
   }
 
-  step(isPlaying: boolean, dt: number): EngineEvent[] {
+  step(isPlaying: boolean, dt: number, totalTimeMs: number): EngineEvent[] {
     const events: EngineEvent[] = [];
     if (!isPlaying) return events;
 
-    this.engineTimeMs += dt * 1000;
+    this.engineTimeMs = totalTimeMs;
 
     this.camera.update(dt);
-
-    // Update moving platforms based on phase
-    if (
-      this.phase === "IDLE" ||
-      this.phase === "GROWING" ||
-      this.phase === "ROTATING" ||
-      this.phase === "WALKING"
-    ) {
-      // Keep platform moving until bridge lands (makes game harder)
-      this.platforms[1]?.update(dt);
-    } else if (this.phase === "SCROLLING") {
-      // During scrolling, update the next platform (index 2) so it starts moving immediately
-      this.platforms[2]?.update(dt);
-    }
+    this.platforms.forEach((p) => p.update(Math.floor(this.engineTimeMs)));
 
     switch (this.phase) {
       case "GROWING":
         this.bridge.grow(dt);
         this.camera.trigger(0.8);
         break;
-
       case "ROTATING":
         this.bridge.rotation += PHYSICS_CONFIG.ROTATE_SPEED * dt;
         if (this.bridge.rotation >= 90) {
@@ -536,15 +527,12 @@ export class StacksBridgeEngine {
           this.checkLanding(events);
         }
         break;
-
       case "WALKING":
         this.updateHeroWalking(dt, events);
         break;
-
       case "FALLING":
         this.updateHeroFalling(dt, events);
         break;
-
       case "SCROLLING":
         if (Math.abs(this.camera.x - this.camera.targetX) < 5) {
           this.camera.x = this.camera.targetX;
@@ -552,52 +540,69 @@ export class StacksBridgeEngine {
         }
         break;
     }
-
     return events;
   }
 
   private checkLanding(events: EngineEvent[]) {
     const pCurrent = this.platforms[0];
     const pNext = this.platforms[1];
+    if (!pCurrent || !pNext) return;
 
-    if (!pCurrent || !pNext) {
-      this.perfect = false;
-      return;
+    const lastMove = this.moves[this.moves.length - 1];
+    if (lastMove && pNext.isMoving) {
+      const theoreticalLandingTime = Math.floor(
+        lastMove.startTime + lastMove.duration,
+      );
+      pNext.update(theoreticalLandingTime);
     }
 
-    // TODO: CHECK THIS SNAP
-    if (pNext.isMoving) {
-      pNext.stop();
-      if (this.nextPlatformCalculatedX !== null) {
-        pNext.x = this.nextPlatformCalculatedX;
-        this.nextPlatformCalculatedX = null;
+    const bridgeInt = Math.floor(this.bridge.length * PRECISION);
+    const stickTipInt = pCurrent.x + pCurrent.w + bridgeInt;
+    const hit = stickTipInt >= pNext.x && stickTipInt <= pNext.x + pNext.w;
+
+    // Update debug info with actual landing values
+    if (lastMove?.debug && __DEV__) {
+      const stickTipFloat = pCurrent.rightFloat + this.bridge.length;
+      lastMove.debug.stickTip = stickTipFloat;
+      lastMove.debug.platformX = pNext.xFloat;
+      lastMove.debug.platformRight = pNext.rightFloat;
+      lastMove.debug.platformCenter = pNext.centerFloat;
+
+      if (hit) {
+        const distToCenterFloat = Math.abs(stickTipFloat - pNext.centerFloat);
+        lastMove.debug.distToCenter = distToCenterFloat;
+      } else {
+        lastMove.debug.distToCenter = null;
       }
     }
 
-    const platformX = pNext.x;
-    const platformRight = pNext.right;
-    const platformCenter = pNext.center;
+    if (hit) {
+      pNext.stop();
 
-    const stickTip = pCurrent.right + this.bridge.length;
-    const hit = stickTip >= platformX && stickTip <= platformRight;
-    const distToCenter = Math.abs(stickTip - platformCenter);
-    this.perfect = hit && distToCenter <= VISUAL_CONFIG.PERFECT_TOLERANCE;
+      const stickTipFloat = pCurrent.rightFloat + this.bridge.length;
+      const distToCenterFloat = Math.abs(stickTipFloat - pNext.centerFloat);
 
-    if (this.perfect) {
-      events.push({
-        type: "perfect",
-        x: pNext.center,
-        y: VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H - 24,
-      });
-    }
+      this.perfect = distToCenterFloat <= VISUAL_CONFIG.PERFECT_TOLERANCE;
 
-    if (hit && this.particleSpawn) {
-      this.particleSpawn(
-        stickTip,
-        VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H,
-        VISUAL_CONFIG.COLORS.TEXT_SUB,
-        10,
-      );
+      if (this.perfect) {
+        events.push({
+          type: "perfect",
+          x: pNext.centerFloat,
+          y: VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H - 24,
+        });
+      }
+      if (this.particleSpawn) {
+        this.particleSpawn(
+          stickTipFloat,
+          VISUAL_CONFIG.CANVAS_H - VISUAL_CONFIG.PLATFORM_H,
+          VISUAL_CONFIG.COLORS.TEXT_SUB,
+          10,
+        );
+      }
+
+      this.lastJumpSucceeded = true;
+    } else {
+      this.lastJumpSucceeded = false;
     }
   }
 
@@ -610,25 +615,26 @@ export class StacksBridgeEngine {
       return;
     }
     const p1 = this.platforms[1];
-    const stickTip = currentPlatform.right + this.bridge.length;
+    const stickTip = currentPlatform.rightFloat + this.bridge.length;
     const heroFront = this.hero.x + VISUAL_CONFIG.HERO_SIZE;
 
-    const hit = p1 && stickTip >= p1.x && stickTip <= p1.right;
+    const hit = p1 && stickTip >= p1.xFloat && stickTip <= p1.rightFloat;
     const hasLanded =
       hit &&
       p1 &&
-      heroFront >= p1.x &&
+      heroFront >= p1.xFloat &&
       this.hero.x >=
-        p1.right -
+        p1.rightFloat -
           VISUAL_CONFIG.HERO_SIZE -
           VISUAL_CONFIG.HERO_MIN_LANDING_DISTANCE;
 
     if (!hit && heroFront > stickTip) {
       this.hero.x = stickTip;
       this.phase = "FALLING";
+      this.lastJumpSucceeded = false;
     } else if (hasLanded) {
       const inset = VISUAL_CONFIG.HERO_PLATFORM_INSET;
-      const maxX = p1.right - VISUAL_CONFIG.HERO_SIZE - inset;
+      const maxX = p1.rightFloat - VISUAL_CONFIG.HERO_SIZE - inset;
 
       this.hero.x = Math.min(this.hero.x, maxX);
       this.handleSuccess(p1, events);
@@ -657,44 +663,59 @@ export class StacksBridgeEngine {
   private handleSuccess(p: Platform, events: EngineEvent[]) {
     const isPerfect = this.perfect;
     this.perfect = false;
-    const pts = isPerfect ? 3 : 1;
-
-    this.score += pts;
+    this.score += isPerfect ? 3 : 1;
     events.push({ type: "score", value: this.score });
 
-    if (isPerfect) {
-      if (this.particleSpawn) {
-        this.particleSpawn(
-          p.center,
-          this.hero.y,
-          VISUAL_CONFIG.COLORS.BRAND,
-          24,
-        );
-      }
+    if (isPerfect && this.particleSpawn) {
+      this.particleSpawn(
+        p.centerFloat,
+        this.hero.y,
+        VISUAL_CONFIG.COLORS.BRAND,
+        24,
+      );
     }
 
     const old = this.platforms[1];
     if (old && this.platforms.length < 3) {
-      const lastX = old.initialX + old.w;
+      const lastX = old.spawnX + old.w;
       const newPlatform = this.generateNextPlatform(lastX, old.index + 1);
       this.platforms.push(newPlatform);
     }
 
+    this.lastJumpSucceeded = true;
+
     this.phase = "SCROLLING";
-    this.camera.targetX = p.x;
+    this.camera.targetX = p.xFloat;
   }
 
   private advancePlatform() {
-    if (this.platforms.length > 1) {
+    if (this.lastJumpSucceeded && this.platforms.length > 1) {
       this.platforms.shift();
     }
     this.bridge.reset();
     this.phase = "IDLE";
+    this.lastJumpSucceeded = true;
     this.idleStartTime = Math.floor(this.engineTimeMs);
   }
 
   getRenderState(): RenderState {
-    // Reuse cached object to avoid allocations every frame
+    const visibleCount =
+      this.phase === "SCROLLING"
+        ? Math.min(3, this.platforms.length)
+        : Math.min(2, this.platforms.length);
+    if (this.cachedRenderState.platforms.length !== visibleCount) {
+      this.cachedRenderState.platforms = new Array(visibleCount)
+        .fill(null)
+        .map(() => ({ x: 0, w: 0, index: 0 }));
+    }
+
+    for (let i = 0; i < visibleCount; i++) {
+      const p = this.platforms[i];
+      this.cachedRenderState.platforms[i].x = p.xFloat;
+      this.cachedRenderState.platforms[i].w = p.wFloat;
+      this.cachedRenderState.platforms[i].index = p.index;
+    }
+
     this.cachedRenderState.phase = this.phase;
     this.cachedRenderState.cameraX = this.camera.x;
     this.cachedRenderState.shakeIntensity = this.camera.shakeIntensity;
@@ -704,26 +725,6 @@ export class StacksBridgeEngine {
     this.cachedRenderState.stick.length = this.bridge.length;
     this.cachedRenderState.stick.rotation = this.bridge.rotation;
     this.cachedRenderState.score = this.score;
-
-    // Show the third platform only while scrolling
-    const visibleCount =
-      this.phase === "SCROLLING"
-        ? Math.min(3, this.platforms.length)
-        : Math.min(2, this.platforms.length);
-    if (this.cachedRenderState.platforms.length !== visibleCount) {
-      this.cachedRenderState.platforms = new Array(visibleCount);
-      for (let i = 0; i < visibleCount; i++) {
-        this.cachedRenderState.platforms[i] = { x: 0, w: 0, index: 0 };
-      }
-    }
-
-    // Update platform values in place
-    for (let i = 0; i < visibleCount; i++) {
-      const p = this.platforms[i];
-      this.cachedRenderState.platforms[i].x = p.x;
-      this.cachedRenderState.platforms[i].w = p.w;
-      this.cachedRenderState.platforms[i].index = p.index;
-    }
 
     return this.cachedRenderState;
   }
