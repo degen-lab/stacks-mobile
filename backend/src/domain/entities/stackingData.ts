@@ -1,6 +1,7 @@
 import { BaseAppEntity } from "./baseAppEntity";
-import { Column, Entity } from "typeorm";
+import { Column, Entity, ManyToOne } from "typeorm";
 import { TransactionStatus } from "./enums";
+import { User } from "./user";
 
 @Entity()
 export class StackingData extends BaseAppEntity {
@@ -20,4 +21,9 @@ export class StackingData extends BaseAppEntity {
   txId: string;
   @Column({ type: 'enum', enum: TransactionStatus, default: TransactionStatus.Pending })
   txStatus: TransactionStatus;
+  @ManyToOne(() => User, (user) => user.stackingData, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+  })
+  user: User;
 }
