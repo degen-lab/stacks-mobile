@@ -32,6 +32,11 @@ import {
 } from '../../shared/constants';
 import { ContractFunctions } from '../helpers/types';
 import { logger } from '../../api/helpers/logger';
+import { StxTransactionData } from '../../shared/types';
+import { BaseError } from '../../shared/errors/baseError';
+import { da } from 'zod/v4/locales';
+import { integer } from 'zod/v4/core/regexes.cjs';
+import { number } from 'zod';
 
 // Extended type for broadcast transaction response that may include error fields
 type BroadcastResponse = TxBroadcastResult & {
@@ -577,7 +582,9 @@ export class TransactionClient implements ITransactionClient {
     return hexToBytes(r + s + v);
   }
 
-  private async fetchTransactionStatus(txId: string): Promise<boolean> {
+  async fetchStackingTransactionData(
+    txId: string,
+  ): Promise<StxTransactionData> {
     const url = `${this.network.client.baseUrl}/extended/v1/tx/${txId}`;
     logger.info({
       msg: 'Fetching transaction status',
@@ -593,7 +600,7 @@ export class TransactionClient implements ITransactionClient {
         status: response.status,
         statusText: response.statusText,
       });
-      return false;
+      throw new Error('Error: failed to fetch transaction data');
     }
 
     const data = await response.json();
@@ -613,8 +620,37 @@ export class TransactionClient implements ITransactionClient {
         error: data.tx_result || data.error,
       });
     }
+    const functionArgs = data.contract_call.function_args;
 
-    return isSuccess;
+    const amountRepr = functionArgs[0].repr;
+    const amountUstx = Number(amountRepr.slice(1)); // remove "u" prefix
+
+    const delegateRepr = functionArgs[1].repr;
+    const delegateTo = delegateRepr.startsWith("'")
+      ? delegateRepr.slice(1)
+      : delegateRepr;
+
+    const untilBurnRepr = functionArgs[2].repr;
+    let untilBurnHeight: number | undefined = undefined;
+    if (untilBurnRepr !== 'none') {
+      const match = untilBurnRepr.match(/\(some u(\d+)\)/);
+      if (match) {
+        untilBurnHeight = Number(match[1]);
+      }
+    }
+
+    const poxAddrRepr = functionArgs[3].repr;
+    const poxAddress = poxAddrRepr === 'none' ? undefined : poxAddrRepr;
+
+    const txData: StxTransactionData = {
+      functionName: data.contract_call.function_name,
+      txStatus: data.tx_status,
+      amountUstx,
+      delegateTo,
+      untilBurnHeight,
+      poxAddress,
+    };
+    return txData;
   }
 
   async getTransactionStatus(txId: string): Promise<string> {

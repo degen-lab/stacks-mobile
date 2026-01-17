@@ -137,3 +137,12 @@ export enum AppPlatform {
   IOS,
   ANDROID,
 }
+
+export type StxTransactionData = {
+  functionName: string;
+  txStatus: string;
+  amountUstx: number;
+  delegateTo: string;
+  untilBurnHeight: number | undefined;
+  poxAddress: string | undefined;
+};
