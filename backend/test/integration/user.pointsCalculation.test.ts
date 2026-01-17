@@ -72,14 +72,14 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
       // If we can't find a valid seed, use default moves
       // The tests will handle cases where validation fails gracefully
       validMoves = [
-        { startTime: 0, duration: 200 },      // 64px
-        { startTime: 500, duration: 400 },    // 128px
-        { startTime: 1200, duration: 300 },   // 96px
-        { startTime: 1750, duration: 500 },   // 160px
-        { startTime: 2550, duration: 250 },   // 80px
-        { startTime: 3100, duration: 450 },   // 144px
-        { startTime: 3850, duration: 350 },   // 112px
-        { startTime: 4500, duration: 380 },   // 122px
+        { startTime: 0, duration: 200 }, // 64px
+        { startTime: 500, duration: 400 }, // 128px
+        { startTime: 1200, duration: 300 }, // 96px
+        { startTime: 1750, duration: 500 }, // 160px
+        { startTime: 2550, duration: 250 }, // 80px
+        { startTime: 3100, duration: 450 }, // 144px
+        { startTime: 3850, duration: 350 }, // 112px
+        { startTime: 4500, duration: 380 }, // 122px
       ];
       console.warn(
         'Could not find a guaranteed valid seed, using default. Tests may be flaky.',
@@ -154,57 +154,57 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
         await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
 
       // Try different move patterns - more moves = higher chance of success
-      // IMPORTANT: 
+      // IMPORTANT:
       // 1. Timing must be varied (not consistent) to avoid TIMING_VARIANCE_TOO_LOW fraud detection
       // 2. Durations must cover the range of possible gaps (40-180px at 320px/s = 125-562ms)
       //    Adding platform width (~100px), max bridge needed is ~280px = 875ms
       const movePatterns = [
         // Pattern 1: Wide range of durations to hit various gap sizes
         [
-          { startTime: 0, duration: 150 },      // 48px - short gaps
-          { startTime: 450, duration: 350 },    // 112px - medium gaps
-          { startTime: 1100, duration: 250 },   // 80px
-          { startTime: 1550, duration: 450 },   // 144px
-          { startTime: 2300, duration: 200 },   // 64px
-          { startTime: 2800, duration: 550 },   // 176px - long gaps
-          { startTime: 3600, duration: 300 },   // 96px
-          { startTime: 4150, duration: 400 },   // 128px
-          { startTime: 4850, duration: 180 },   // 58px
-          { startTime: 5350, duration: 500 },   // 160px
+          { startTime: 0, duration: 150 }, // 48px - short gaps
+          { startTime: 450, duration: 350 }, // 112px - medium gaps
+          { startTime: 1100, duration: 250 }, // 80px
+          { startTime: 1550, duration: 450 }, // 144px
+          { startTime: 2300, duration: 200 }, // 64px
+          { startTime: 2800, duration: 550 }, // 176px - long gaps
+          { startTime: 3600, duration: 300 }, // 96px
+          { startTime: 4150, duration: 400 }, // 128px
+          { startTime: 4850, duration: 180 }, // 58px
+          { startTime: 5350, duration: 500 }, // 160px
         ],
         // Pattern 2: Focus on medium-long gaps
         [
-          { startTime: 0, duration: 300 },      // 96px
-          { startTime: 600, duration: 450 },    // 144px
-          { startTime: 1350, duration: 350 },   // 112px
-          { startTime: 1950, duration: 550 },   // 176px
-          { startTime: 2750, duration: 400 },   // 128px
-          { startTime: 3400, duration: 500 },   // 160px
-          { startTime: 4200, duration: 380 },   // 122px
-          { startTime: 4850, duration: 480 },   // 154px
+          { startTime: 0, duration: 300 }, // 96px
+          { startTime: 600, duration: 450 }, // 144px
+          { startTime: 1350, duration: 350 }, // 112px
+          { startTime: 1950, duration: 550 }, // 176px
+          { startTime: 2750, duration: 400 }, // 128px
+          { startTime: 3400, duration: 500 }, // 160px
+          { startTime: 4200, duration: 380 }, // 122px
+          { startTime: 4850, duration: 480 }, // 154px
         ],
         // Pattern 3: Many short-medium durations
         [
-          { startTime: 0, duration: 180 },      // 58px
-          { startTime: 400, duration: 280 },    // 90px
-          { startTime: 950, duration: 220 },    // 70px
-          { startTime: 1400, duration: 350 },   // 112px
-          { startTime: 2050, duration: 250 },   // 80px
-          { startTime: 2550, duration: 320 },   // 102px
-          { startTime: 3150, duration: 200 },   // 64px
-          { startTime: 3600, duration: 380 },   // 122px
-          { startTime: 4250, duration: 270 },   // 86px
-          { startTime: 4800, duration: 330 },   // 106px
-          { startTime: 5400, duration: 240 },   // 77px
-          { startTime: 5900, duration: 360 },   // 115px
+          { startTime: 0, duration: 180 }, // 58px
+          { startTime: 400, duration: 280 }, // 90px
+          { startTime: 950, duration: 220 }, // 70px
+          { startTime: 1400, duration: 350 }, // 112px
+          { startTime: 2050, duration: 250 }, // 80px
+          { startTime: 2550, duration: 320 }, // 102px
+          { startTime: 3150, duration: 200 }, // 64px
+          { startTime: 3600, duration: 380 }, // 122px
+          { startTime: 4250, duration: 270 }, // 86px
+          { startTime: 4800, duration: 330 }, // 106px
+          { startTime: 5400, duration: 240 }, // 77px
+          { startTime: 5900, duration: 360 }, // 115px
         ],
         // Pattern 4: Mix covering full range
         [
-          { startTime: 0, duration: 200 },      // 64px
-          { startTime: 500, duration: 400 },    // 128px
-          { startTime: 1200, duration: 300 },   // 96px
-          { startTime: 1750, duration: 500 },   // 160px
-          { startTime: 2550, duration: 250 },   // 80px
+          { startTime: 0, duration: 200 }, // 64px
+          { startTime: 500, duration: 400 }, // 128px
+          { startTime: 1200, duration: 300 }, // 96px
+          { startTime: 1750, duration: 500 }, // 160px
+          { startTime: 2550, duration: 250 }, // 80px
         ],
       ];
 

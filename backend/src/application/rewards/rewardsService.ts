@@ -8,7 +8,7 @@ import { RewardsDistributionData } from '../../domain/entities/rewardsDistributi
 import { SubmissionType, TransactionStatus } from '../../domain/entities/enums';
 import { logger } from '../../api/helpers/logger';
 import { TournamentStatus } from '../../domain/entities/tournamentStatus';
-import { TournamentStatusNotFoundError } from '../errors/rewardsError';
+import { TournamentStatusNotFoundError } from '../errors/rewardsErrors';
 
 export class RewardsService {
   constructor(

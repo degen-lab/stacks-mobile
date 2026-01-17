@@ -15,6 +15,7 @@ import { RewardsCalculator } from '../domain/service/rewardsCalculator';
 import { TransakPurchaseClient } from '../infra/purchase/transakPurchaseClient';
 import { CryptoPurchaseService } from './purchase/cryptoPurchaseService';
 import { CryptoPurchaseDomainService } from '../domain/service/cryptoPurchaseDomainService';
+import { StackingService } from './stacking/stackingService';
 
 type ServiceType =
   | UserService
@@ -22,7 +23,8 @@ type ServiceType =
   | StreakService
   | GameStoreService
   | RewardsService
-  | CryptoPurchaseService;
+  | CryptoPurchaseService
+  | StackingService;
 
 type ServiceConstructor<T extends ServiceType> = new (...args: unknown[]) => T;
 
@@ -133,5 +135,18 @@ export class ServiceFactory {
       );
     }
     return this.services.get('cryptoPurchaseService') as CryptoPurchaseService;
+  }
+
+  getStackingService(): StackingService {
+    if (!this.services.has('stackingService')) {
+      this.services.set(
+        'stackingServices',
+        new StackingService(
+          this.dataSource.createEntityManager(),
+          new TransactionClient(),
+        ),
+      );
+    }
+    return this.services.get('stackingService') as StackingService;
   }
 }

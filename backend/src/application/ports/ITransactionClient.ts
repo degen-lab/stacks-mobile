@@ -14,5 +14,5 @@ export interface ITransactionClient {
   headToNextTournament(): Promise<string>;
   getTransactionStatus(txId: string): Promise<string>;
   broadcastTransaction(serializedTx: string): Promise<TxBroadcastResult>;
-  fetchStackingTransactionData(txId: string): Promise<StxTransactionData>; 
+  fetchStackingTransactionData(txId: string): Promise<StxTransactionData>;
 }
