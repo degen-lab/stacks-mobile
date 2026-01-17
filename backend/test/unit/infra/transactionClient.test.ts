@@ -16,53 +16,32 @@ describe('TransactionClient', () => {
     const mockTxId =
       '0x7f156d3535ab90bff517c39ec002d4a3cd3f0bb8ca86589f009bbf1fa10df50f';
 
+    // Full response matching the actual API response
     const mockSuccessResponse = {
-      tx_id:
-        '0x7f156d3535ab90bff517c39ec002d4a3cd3f0bb8ca86589f009bbf1fa10df50f',
-      nonce: 1,
-      fee_rate: '400',
-      sender_address: 'ST2AGP07VR9SZSKTQJ2MCYAH7GP7J4KAWD9FCPGVT',
+      tx_id: mockTxId,
       tx_status: 'success',
-      tx_result: {
-        hex: '0x0703',
-        repr: '(ok true)',
-      },
       tx_type: 'contract_call',
       contract_call: {
         contract_id: 'ST000000000000000000002AMW42H.pox-4',
         function_name: 'delegate-stx',
-        function_signature:
-          '(define-public (delegate-stx (amount-ustx uint) (delegate-to principal) (until-burn-ht (optional uint)) (pox-addr (optional (tuple (hashbytes (buff 32)) (version (buff 1)))))))',
-        function_args: [
-          {
-            hex: '0x0100000000000000000000000002faf080',
-            repr: 'u50000000',
-            name: 'amount-ustx',
-            type: 'uint',
-          },
-          {
-            hex: '0x051ae6b5beb23e2ca3fb4b64fd84d791aaa53746e567',
-            repr: "'ST3KBBFNJ7RPA7YTBCKYR9NWHNAJKEHQ5CYZ3W0S3",
-            name: 'delegate-to',
-            type: 'principal',
-          },
-          {
-            hex: '0x09',
-            repr: 'none',
-            name: 'until-burn-ht',
-            type: '(optional uint)',
-          },
-          {
-            hex: '0x09',
-            repr: 'none',
-            name: 'pox-addr',
-            type: '(optional (tuple (hashbytes (buff 32)) (version (buff 1))))',
-          },
-        ],
       },
+      events: [
+        {
+          event_index: 0,
+          event_type: 'smart_contract_log',
+          tx_id: mockTxId,
+          contract_log: {
+            contract_id: 'ST000000000000000000002AMW42H.pox-4',
+            topic: 'print',
+            value: {
+              repr: '(ok (tuple (balance u47999393) (burnchain-unlock-height u0) (data (tuple (amount-ustx u50000000) (delegate-to \'ST3KBBFNJ7RPA7YTBCKYR9NWHNAJKEHQ5CYZ3W0S3) (end-cycle-id none) (pox-addr none) (start-cycle-id u149) (unlock-burn-height none))) (locked u0) (name "delegate-stx") (stacker \'ST2AGP07VR9SZSKTQJ2MCYAH7GP7J4KAWD9FCPGVT)))',
+            },
+          },
+        },
+      ],
     };
 
-    it('should correctly parse delegate-stx transaction with none values', async () => {
+    it('should correctly parse delegate-stx transaction from smart contract log', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockSuccessResponse,
@@ -74,77 +53,50 @@ describe('TransactionClient', () => {
       expect(result).toEqual({
         functionName: 'delegate-stx',
         txStatus: 'success',
+        balance: 47999393,
+        burnchainUnlockHeight: 0,
+        locked: 0,
+        stacker: 'ST2AGP07VR9SZSKTQJ2MCYAH7GP7J4KAWD9FCPGVT',
         amountUstx: 50000000,
         delegateTo: 'ST3KBBFNJ7RPA7YTBCKYR9NWHNAJKEHQ5CYZ3W0S3',
-        untilBurnHeight: undefined,
-        poxAddress: undefined,
+        startCycleId: 149,
+        endCycleId: null,
+        unlockBurnHeight: null,
+        poxAddress: null,
       });
     });
 
-    it('should correctly parse delegate-stx transaction with until-burn-height set', async () => {
-      const responseWithBurnHeight = {
+    it('should correctly parse transaction with end-cycle-id and unlock-burn-height set', async () => {
+      const responseWithOptionals = {
         ...mockSuccessResponse,
-        contract_call: {
-          ...mockSuccessResponse.contract_call,
-          function_args: [
-            ...mockSuccessResponse.contract_call.function_args.slice(0, 2),
-            {
-              hex: '0x0a0100000000000000000000000000030d40',
-              repr: '(some u200000)',
-              name: 'until-burn-ht',
-              type: '(optional uint)',
+        events: [
+          {
+            ...mockSuccessResponse.events[0],
+            contract_log: {
+              ...mockSuccessResponse.events[0].contract_log,
+              value: {
+                repr: '(ok (tuple (balance u100000000) (burnchain-unlock-height u150000) (data (tuple (amount-ustx u75000000) (delegate-to \'ST3KBBFNJ7RPA7YTBCKYR9NWHNAJKEHQ5CYZ3W0S3) (end-cycle-id u160) (pox-addr none) (start-cycle-id u150) (unlock-burn-height u200000))) (locked u50000000) (name "delegate-stx") (stacker \'ST2AGP07VR9SZSKTQJ2MCYAH7GP7J4KAWD9FCPGVT)))',
+              },
             },
-            mockSuccessResponse.contract_call.function_args[3],
-          ],
-        },
+          },
+        ],
       };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => responseWithBurnHeight,
+        json: async () => responseWithOptionals,
       });
 
       const result =
         await transactionClient.fetchStackingTransactionData(mockTxId);
 
-      expect(result).toEqual({
-        functionName: 'delegate-stx',
-        txStatus: 'success',
-        amountUstx: 50000000,
-        delegateTo: 'ST3KBBFNJ7RPA7YTBCKYR9NWHNAJKEHQ5CYZ3W0S3',
-        untilBurnHeight: 200000,
-        poxAddress: undefined,
-      });
-    });
-
-    it('should correctly parse delegate-stx transaction with pox-addr set', async () => {
-      const responseWithPoxAddr = {
-        ...mockSuccessResponse,
-        contract_call: {
-          ...mockSuccessResponse.contract_call,
-          function_args: [
-            ...mockSuccessResponse.contract_call.function_args.slice(0, 3),
-            {
-              hex: '0x0a...',
-              repr: '(some (tuple (hashbytes 0x1234...) (version 0x00)))',
-              name: 'pox-addr',
-              type: '(optional (tuple (hashbytes (buff 32)) (version (buff 1))))',
-            },
-          ],
-        },
-      };
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => responseWithPoxAddr,
-      });
-
-      const result =
-        await transactionClient.fetchStackingTransactionData(mockTxId);
-
-      expect(result.poxAddress).toBe(
-        '(some (tuple (hashbytes 0x1234...) (version 0x00)))',
-      );
+      expect(result.balance).toBe(100000000);
+      expect(result.burnchainUnlockHeight).toBe(150000);
+      expect(result.locked).toBe(50000000);
+      expect(result.amountUstx).toBe(75000000);
+      expect(result.startCycleId).toBe(150);
+      expect(result.endCycleId).toBe(160);
+      expect(result.unlockBurnHeight).toBe(200000);
     });
 
     it('should handle pending transaction status', async () => {
@@ -176,7 +128,25 @@ describe('TransactionClient', () => {
       ).rejects.toThrow('Error: failed to fetch transaction data');
     });
 
-    it('should correctly remove quote prefix from delegate-to address', async () => {
+    it('should throw error when smart contract log event is missing', async () => {
+      const responseWithoutEvents = {
+        ...mockSuccessResponse,
+        events: [],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => responseWithoutEvents,
+      });
+
+      await expect(
+        transactionClient.fetchStackingTransactionData(mockTxId),
+      ).rejects.toThrow(
+        'Error: smart contract log event not found in transaction',
+      );
+    });
+
+    it('should correctly remove quote prefix from principal addresses', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockSuccessResponse,
@@ -185,29 +155,29 @@ describe('TransactionClient', () => {
       const result =
         await transactionClient.fetchStackingTransactionData(mockTxId);
 
-      // The original repr has a quote prefix: "'ST3KBBFNJ7..."
-      // It should be removed in the parsed result
+      // Both delegate-to and stacker should have quote prefix removed
       expect(result.delegateTo).toBe(
         'ST3KBBFNJ7RPA7YTBCKYR9NWHNAJKEHQ5CYZ3W0S3',
       );
+      expect(result.stacker).toBe('ST2AGP07VR9SZSKTQJ2MCYAH7GP7J4KAWD9FCPGVT');
       expect(result.delegateTo.startsWith("'")).toBe(false);
+      expect(result.stacker.startsWith("'")).toBe(false);
     });
 
-    it('should correctly parse amount from uint repr format', async () => {
+    it('should correctly parse different amount values', async () => {
       const responseWithDifferentAmount = {
         ...mockSuccessResponse,
-        contract_call: {
-          ...mockSuccessResponse.contract_call,
-          function_args: [
-            {
-              hex: '0x...',
-              repr: 'u123456789',
-              name: 'amount-ustx',
-              type: 'uint',
+        events: [
+          {
+            ...mockSuccessResponse.events[0],
+            contract_log: {
+              ...mockSuccessResponse.events[0].contract_log,
+              value: {
+                repr: '(ok (tuple (balance u999999999) (burnchain-unlock-height u0) (data (tuple (amount-ustx u123456789) (delegate-to \'ST3KBBFNJ7RPA7YTBCKYR9NWHNAJKEHQ5CYZ3W0S3) (end-cycle-id none) (pox-addr none) (start-cycle-id u100) (unlock-burn-height none))) (locked u0) (name "delegate-stx") (stacker \'ST2AGP07VR9SZSKTQJ2MCYAH7GP7J4KAWD9FCPGVT)))',
+              },
             },
-            ...mockSuccessResponse.contract_call.function_args.slice(1),
-          ],
-        },
+          },
+        ],
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -219,6 +189,7 @@ describe('TransactionClient', () => {
         await transactionClient.fetchStackingTransactionData(mockTxId);
 
       expect(result.amountUstx).toBe(123456789);
+      expect(result.balance).toBe(999999999);
       expect(typeof result.amountUstx).toBe('number');
     });
   });

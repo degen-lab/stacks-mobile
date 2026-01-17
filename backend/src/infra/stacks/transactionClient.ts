@@ -33,10 +33,6 @@ import {
 import { ContractFunctions } from '../helpers/types';
 import { logger } from '../../api/helpers/logger';
 import { StxTransactionData } from '../../shared/types';
-import { BaseError } from '../../shared/errors/baseError';
-import { da } from 'zod/v4/locales';
-import { integer } from 'zod/v4/core/regexes.cjs';
-import { number } from 'zod';
 
 // Extended type for broadcast transaction response that may include error fields
 type BroadcastResponse = TxBroadcastResult & {
@@ -620,34 +616,80 @@ export class TransactionClient implements ITransactionClient {
         error: data.tx_result || data.error,
       });
     }
-    const functionArgs = data.contract_call.function_args;
 
-    const amountRepr = functionArgs[0].repr;
-    const amountUstx = Number(amountRepr.slice(1)); // remove "u" prefix
-
-    const delegateRepr = functionArgs[1].repr;
-    const delegateTo = delegateRepr.startsWith("'")
-      ? delegateRepr.slice(1)
-      : delegateRepr;
-
-    const untilBurnRepr = functionArgs[2].repr;
-    let untilBurnHeight: number | undefined = undefined;
-    if (untilBurnRepr !== 'none') {
-      const match = untilBurnRepr.match(/\(some u(\d+)\)/);
-      if (match) {
-        untilBurnHeight = Number(match[1]);
-      }
+    // Parse from smart contract log event repr (delegate-stx always has one log event)
+    const scLogEvent = data.events?.[0];
+    if (!scLogEvent?.contract_log?.value?.repr) {
+      throw new Error(
+        'Error: smart contract log event not found in transaction',
+      );
     }
 
-    const poxAddrRepr = functionArgs[3].repr;
-    const poxAddress = poxAddrRepr === 'none' ? undefined : poxAddrRepr;
+    const repr = scLogEvent.contract_log.value.repr;
+
+    // Helper to extract uint value: "u12345" -> 12345
+    const extractUint = (pattern: RegExp): number | null => {
+      const match = repr.match(pattern);
+      if (match && match[1] !== 'none') {
+        return Number(match[1]);
+      }
+      return null;
+    };
+
+    // Helper to extract optional uint: "none" or "u12345"
+    const extractOptionalUint = (pattern: RegExp): number | null => {
+      const match = repr.match(pattern);
+      if (match) {
+        if (match[1] === 'none') return null;
+        // Handle "(some uXXX)" format - extract just the number
+        const numMatch = match[1].match(/u(\d+)/);
+        return numMatch ? Number(numMatch[1]) : null;
+      }
+      return null;
+    };
+
+    // Helper to extract principal: "'ST..." -> "ST..."
+    const extractPrincipal = (pattern: RegExp): string => {
+      const match = repr.match(pattern);
+      if (match && match[1]) {
+        return match[1].startsWith("'") ? match[1].slice(1) : match[1];
+      }
+      return '';
+    };
+
+    // Parse top-level fields
+    const balance = extractUint(/\(balance u(\d+)\)/) ?? 0;
+    const burnchainUnlockHeight =
+      extractUint(/\(burnchain-unlock-height u(\d+)\)/) ?? 0;
+    const locked = extractUint(/\(locked u(\d+)\)/) ?? 0;
+    const stacker = extractPrincipal(/\(stacker ('S[A-Z0-9]+)\)/);
+
+    // Parse data tuple fields
+    const amountUstx = extractUint(/\(amount-ustx u(\d+)\)/) ?? 0;
+    const delegateTo = extractPrincipal(/\(delegate-to ('S[A-Z0-9]+)\)/);
+    const startCycleId = extractUint(/\(start-cycle-id u(\d+)\)/) ?? 0;
+    const endCycleId = extractOptionalUint(/\(end-cycle-id (none|[^)]+)\)/);
+    const unlockBurnHeight = extractOptionalUint(
+      /\(unlock-burn-height (none|[^)]+)\)/,
+    );
+
+    // Parse pox-addr - can be none or a tuple
+    const poxAddrMatch = repr.match(/\(pox-addr (none|\(tuple[^)]+\))\)/);
+    const poxAddress =
+      poxAddrMatch && poxAddrMatch[1] !== 'none' ? poxAddrMatch[1] : null;
 
     const txData: StxTransactionData = {
       functionName: data.contract_call.function_name,
       txStatus: data.tx_status,
+      balance,
+      burnchainUnlockHeight,
+      locked,
+      stacker,
       amountUstx,
       delegateTo,
-      untilBurnHeight,
+      startCycleId,
+      endCycleId,
+      unlockBurnHeight,
       poxAddress,
     };
     return txData;

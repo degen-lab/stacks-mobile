@@ -5,8 +5,8 @@ import { User } from "./user";
 
 @Entity()
 export class StackingData extends BaseAppEntity {
-  @Column({ type: 'text' })
-  cycleId: string;
+  @Column({ type: 'number' })
+  startCycleId: number;
   @Column({ type: 'text' })
   poolName: string;
   @Column({ type: 'text' })
@@ -15,10 +15,12 @@ export class StackingData extends BaseAppEntity {
   userAddress: string;
   @Column({ type: 'number' })
   amountOfStx: number;
-  @Column({ type: 'int' })
-  numberOfCycles: number;
+  @Column({ type: 'int', nullable: true })
+  endCycleId: number | null;
   @Column({ type: 'text' })
   txId: string;
+  @Column({ type: 'text', nullable: true })
+  poxAddress: string | null;
   @Column({ type: 'enum', enum: TransactionStatus, default: TransactionStatus.Pending })
   txStatus: TransactionStatus;
   @ManyToOne(() => User, (user) => user.stackingData, {
