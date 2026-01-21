@@ -46,9 +46,10 @@ export type MoveClientDebug = {
   currentPlatformRight: number | null;
   nextPlatformIndex: number | null;
   platformX: number | null;
-  platformRight: number | null;
-  platformCenter: number | null;
+  platformRight?: number | null;
+  platformCenter?: number | null;
   platformIsMoving: boolean | null;
+  distToCenter?: number | null;
 };
 
 export type EngineEvent =

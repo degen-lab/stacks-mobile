@@ -17,9 +17,10 @@ export type MoveClientDebug = {
   currentPlatformRight: number | null;
   nextPlatformIndex: number | null;
   platformX: number | null;
-  platformRight: number | null;
-  platformCenter: number | null;
+  platformRight?: number | null;
+  platformCenter?: number | null;
   platformIsMoving: boolean | null;
+  distToCenter?: number | null;
 };
 
 // in milliseconds
@@ -46,6 +47,8 @@ export enum FraudReason {
   TOO_MANY_CONSECUTIVE_PERFECT = 'TOO_MANY_CONSECUTIVE_PERFECT',
   DURATION_VARIANCE_TOO_LOW = 'DURATION_VARIANCE_TOO_LOW',
   TIMING_VARIANCE_TOO_LOW = 'TIMING_VARIANCE_TOO_LOW',
+  LOW_SUCCESS_RATE = 'LOW_SUCCESS_RATE',
+  TOO_MANY_CONSECUTIVE_FAILURES = 'TOO_MANY_CONSECUTIVE_FAILURES',
   USER_BLACK_LISTED = 'USER_BLACK_LISTED',
 }
 
@@ -103,8 +106,8 @@ export type SessionValidationMoveDebug = {
   platformCenterAtLanding: number | null;
   stickTip: number | null;
   distToCenter: number | null;
-  isPerfect: boolean | null;
   hit: boolean | null;
+  isPerfect: boolean | null;
   pointsAwarded: number | null;
   gap: number | null;
   invalidReason?: string;

@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import { logger } from '../../api/helpers/logger';
 import { SCORE_MULTIPLIER } from '../../shared/constants';
 import {
   DailyStreakChallenge,
@@ -7,6 +6,7 @@ import {
   GameSession,
   SessionValidationDebug,
   SessionValidationMoveDebug,
+  SessionValidationPlatformDebug,
   SessionValidationResult,
 } from '../../shared/types';
 import { ConsumableItem } from '../entities/consumableItem';
@@ -14,20 +14,19 @@ import { ItemType, ItemVariant } from '../entities/enums';
 import { User } from '../entities/user';
 import { InvalidSeedError } from '../errors/sessionError';
 
-// Game engine constants (must match frontend engine.ts)
 const BRIDGE_CONFIG = {
-  GROW_SPEED: 320, // pixels per second (reduced by 20% for slower gameplay)
-  ROTATE_SPEED: 192, // degrees per second
-  PERFECT_TOLERANCE: 3, // pixels
-  HERO_SIZE: 40, // pixels
-  HERO_PLATFORM_INSET: 6, // pixels
-  HERO_MIN_LANDING_DISTANCE: 16, // pixels
-  PLATFORM_MIN_GAP: 40, // pixels
-  PLATFORM_MAX_GAP: 180, // pixels
-  PLATFORM_MIN_WIDTH: 50, // pixels
-  PLATFORM_MAX_WIDTH: 100, // pixels
-  PLATFORM_START_WIDTH: 80, // pixels
-  MAX_BRIDGE_LENGTH: 800, // pixels (80% of typical screen width)
+  GROW_SPEED: 320,
+  ROTATE_SPEED: 192,
+  PERFECT_TOLERANCE: 3,
+  HERO_SIZE: 40,
+  HERO_PLATFORM_INSET: 6,
+  HERO_MIN_LANDING_DISTANCE: 16,
+  PLATFORM_MIN_GAP: 40,
+  PLATFORM_MAX_GAP: 200,
+  PLATFORM_MIN_WIDTH: 50,
+  PLATFORM_MAX_WIDTH: 100,
+  PLATFORM_START_WIDTH: 80,
+  MAX_BRIDGE_LENGTH: 800,
   PLATFORM_SHRINK_START_INDEX: 15,
   PLATFORM_SHRINK_EVERY: 5,
   PLATFORM_SHRINK_FACTOR: 0.9,
@@ -35,39 +34,93 @@ const BRIDGE_CONFIG = {
   PLATFORM_MIN_WIDTH_LATE: 25,
   PLATFORM_MIN_WIDTH_LATE_INDEX: 15,
   PLATFORM_MOVE_START_INDEX: 10,
-  PLATFORM_MOVE_VELOCITY: 70, // pixels per second
-  PLATFORM_MOVE_CHANCE: 0.4, // 40% chance to move
-  PLATFORM_MOVE_MIN_RANGE: 80, // pixels
-  PLATFORM_MOVE_MAX_RANGE: 180, // pixels
+  PLATFORM_MOVE_VELOCITY: 70,
+  PLATFORM_MOVE_CHANCE: 0.5,
+  PLATFORM_MOVE_MIN_RANGE: 80,
+  PLATFORM_MOVE_MAX_RANGE: 240,
   PLATFORM_SPEED_START_INDEX: 10,
   PLATFORM_SPEED_EVERY: 10,
   PLATFORM_SPEED_INCREMENT: 0.03,
   PLATFORM_VARIANCE_START_INDEX: 15,
-  PLATFORM_SPEED_VARIANCE_MIN: 0.98,
-  PLATFORM_SPEED_VARIANCE_MAX: 1.02,
+  PLATFORM_SPEED_VARIANCE_MIN: 0.8,
+  PLATFORM_SPEED_VARIANCE_MAX: 1.2,
   PLATFORM_TARGET_MIN_DISTANCE: 70,
   PLATFORM_TARGET_MIN_DISTANCE_RATIO: 0.6,
-  // Fraud detection thresholds
-  MIN_BRIDGE_DURATION: 50, // milliseconds - minimum human reaction time
-  MAX_PERFECT_RATE: 0.85, // 85% - if more than this, suspicious
-  MIN_TIME_BETWEEN_MOVES: 100, // milliseconds - minimum time between moves
-  MAX_CONSECUTIVE_PERFECT: 10, // maximum consecutive perfect landings
-  MIN_VARIANCE_IN_DURATION: 20, // minimum variance in bridge durations (ms)
+  MIN_BRIDGE_DURATION: 50,
+  MAX_PERFECT_RATE: 0.85,
+  MIN_TIME_BETWEEN_MOVES: 100,
+  MAX_CONSECUTIVE_PERFECT: 10,
+  MIN_VARIANCE_IN_DURATION: 20,
+  MIN_SUCCESS_RATE: 0.3, // Minimum 30% success rate (successful moves / total moves)
+  MAX_CONSECUTIVE_FAILURES: 5, // Maximum 5 consecutive failures before fraud
 };
 
 interface Platform {
-  x: number; // Base x position (initial position)
+  x: number;
   w: number;
   index: number;
   center: number;
   right: number;
   isMoving: boolean;
-  vx: number; // Velocity (pixels per second)
-  minX: number; // Movement bounds
+  minX: number;
   maxX: number;
-  initialX: number; // Store initial position for movement calculation
+  initialX: number;
+  spawnX: number;
   baseSpeed: number;
-  patrolSeed: number;
+}
+
+const PRECISION = 10000;
+
+function calculatePlatformPosInt(
+  minX: number,
+  maxX: number,
+  speed: number,
+  timeMs: number,
+  index: number,
+): number {
+  if (speed <= 0 || minX >= maxX) return minX;
+
+  const width = maxX - minX;
+
+  // 1. Cycle Logic
+  const baseCycle = 300000 * PRECISION;
+  let cycleDuration = Math.floor(baseCycle / speed);
+  cycleDuration = Math.max(2000, Math.min(5000, cycleDuration));
+
+  // 2. Identify WHICH loop we are in
+  const cycleIndex = Math.floor(timeMs / cycleDuration);
+  const timeInCycle = timeMs % cycleDuration;
+  const progress = timeInCycle / cycleDuration; // 0.0 to 1.0
+
+  // 3. Deterministic "Random" Target for THIS specific cycle
+  // Hash function: combines Platform ID + Cycle ID
+  const hash = Math.imul(index ^ cycleIndex, 0x5f356495);
+  // Normalize to 0.3 .. 1.0 (30% to 100% reach)
+  const reachRatio = 0.3 + ((Math.abs(hash) % 1000) / 1000) * 0.7;
+
+  // This cycle's specific target
+  const cycleTargetX = minX + Math.floor(width * reachRatio);
+  const xStart = minX;
+
+  // 4. The Move-Stop-Return Schedule
+  let currentPos = 0;
+
+  if (progress < 0.4) {
+    // PHASE 1: Move Out (0% -> 40%)
+    let t = progress / 0.4;
+    t = t * t * (3 - 2 * t);
+    currentPos = xStart + Math.floor((cycleTargetX - xStart) * t);
+  } else if (progress < 0.55) {
+    // PHASE 2: The Stop (40% -> 55%)
+    currentPos = cycleTargetX;
+  } else {
+    // PHASE 3: Return (55% -> 100%)
+    let t = (progress - 0.55) / 0.45;
+    t = t * t * (3 - 2 * t);
+    currentPos = cycleTargetX + Math.floor((xStart - cycleTargetX) * t);
+  }
+
+  return currentPos;
 }
 
 export class GameSessionService {
@@ -149,23 +202,15 @@ export class GameSessionService {
       };
     };
 
-    logger.info({
-      msg: 'Validating game session',
-      userId: user.id,
-      movesCount: session.moves?.length || 0,
-      seed: session.seed.substring(0, 16) + '...',
-    });
-
     if (!this.verifySeed(session.seed, session.signature, secret)) {
       throw new InvalidSeedError('Invalid seed signature');
     }
+
     const itemUsageCount = new Map<ItemVariant, number>();
     for (const usedItem of session.usedItems) {
       const count = itemUsageCount.get(usedItem) || 0;
       itemUsageCount.set(usedItem, count + 1);
     }
-
-    // Check if user has enough quantity for each item type
     for (const [variant, usageCount] of itemUsageCount.entries()) {
       const item = user.items.find(
         (ownedItem) =>
@@ -174,94 +219,52 @@ export class GameSessionService {
             ?.variant === variant,
       ) as ConsumableItem | undefined;
 
-      // Item not found
-      if (!item) {
+      if (!item)
         return fail(FraudReason.INVALID_ITEM, 'INVALID_ITEM: Missing item');
-      }
-
-      // Check if item is a consumable (has quantity property)
       if (!('quantity' in item) || typeof item.quantity !== 'number') {
         return fail(FraudReason.INVALID_ITEM, 'INVALID_ITEM: Not consumable');
       }
-
-      // Check if user has enough quantity
       if (item.quantity < usageCount) {
         return fail(
           FraudReason.INVALID_ITEM,
           'INVALID_ITEM: Insufficient quantity',
         );
       }
-
-      // Consume the items (decrease quantity)
-      for (let i = 0; i < usageCount; i++) {
-        item.consume();
-      }
+      for (let i = 0; i < usageCount; i++) item.consume();
     }
 
-    // Validate moves array
     if (!session.moves || session.moves.length === 0) {
-      logger.warn({
-        msg: 'INVALID_DATA: Empty moves array',
-        userId: user.id,
-      });
       return fail(FraudReason.INVALID_DATA, 'INVALID_DATA: Empty moves array');
     }
 
-    // Parse seed from hex to number
     const seedNumber = this.parseSeedToNumber(session.seed);
-    if (debug) {
-      debug.seedNumber = seedNumber;
-    }
-    logger.info({
-      msg: 'RNG seed parsed',
-      userId: user.id,
-      seedHex: session.seed.substring(0, 16) + '...',
-      seedNumber,
-      seedNumberHex: seedNumber.toString(16),
-    });
+    if (debug) debug.seedNumber = seedNumber;
     const rng = this.createRng(seedNumber);
 
-    // Generate platform sequence (RNG must be called in exact same order as frontend)
     const platforms = this.generatePlatformSequence(
       rng,
       session.moves.length,
       debug?.platforms,
     );
 
-    logger.info({
-      msg: 'Platforms generated',
-      userId: user.id,
-      totalPlatforms: platforms.length,
-      expectedMoves: session.moves.length,
-      platformDetails: platforms.slice(0, 5).map((p) => ({
-        index: p.index,
-        x: Math.round(p.x * 100) / 100,
-        width: Math.round(p.w * 100) / 100,
-        right: Math.round(p.right * 100) / 100,
-        isMoving: p.isMoving,
-      })),
-    });
-
-    // Replay moves and validate
     let score = 0;
     let blocksPassed = 0;
     let totalTimePlayed = 0;
     let isFraud = false;
     let currentPlatformIndex = 0;
     let hasValidMoves = false;
-    // Track where each platform stopped after landing (for moving platforms)
-    // For platform 0 (fixed), this is always the base position
+
     let currentPlatformStoppedRight = platforms[0].right;
 
-    // Fraud detection metrics
     let perfectLandings = 0;
     let successfulLandings = 0;
     let consecutivePerfect = 0;
     let maxConsecutivePerfect = 0;
+    let consecutiveFailures = 0;
+    let maxConsecutiveFailures = 0;
     const bridgeDurations: number[] = [];
     const timeBetweenMoves: number[] = [];
 
-    // Sort moves by startTime to ensure chronological order
     const sortedMoves = [...session.moves]
       .map((move, originalIndex) => ({ ...move, originalIndex }))
       .sort((a, b) => a.startTime - b.startTime);
@@ -270,86 +273,23 @@ export class GameSessionService {
       const move = sortedMoves[i];
       const prevMove = i > 0 ? sortedMoves[i - 1] : null;
       const idleDurationMs = move.idleDurationMs ?? move.startTime;
-      const moveDebug: SessionValidationMoveDebug | null = debug
-        ? {
-            moveIndex: i,
-            originalIndex: move.originalIndex,
-            startTime: move.startTime,
-            duration: move.duration,
-            idleDurationMs,
-            client: move.debug,
-            bridgeLength: null,
-            currentPlatformIndex: null,
-            currentPlatformRight: null,
-            currentPlatformStoppedRight: null,
-            currentPlatformBaseRight: null,
-            nextPlatformIndex: null,
-            platformInitialX: null,
-            platformWidth: null,
-            platformMinX: null,
-            platformMaxX: null,
-            platformIsMoving: null,
-            platformXAtRelease: null,
-            platformRightAtRelease: null,
-            platformCenterAtRelease: null,
-            platformXAtLanding: null,
-            platformRightAtLanding: null,
-            platformCenterAtLanding: null,
-            stickTip: null,
-            distToCenter: null,
-            isPerfect: null,
-            hit: null,
-            pointsAwarded: null,
-            gap: null,
-          }
-        : null;
 
-      // Data validation - if data is invalid, return 0 score and fraud false
       if (move.startTime < 0 || move.duration < 0) {
-        logger.warn({
-          msg: 'INVALID_DATA: Negative startTime or duration',
-          userId: user.id,
-          moveIndex: i,
-          startTime: move.startTime,
-          duration: move.duration,
-        });
-        if (moveDebug) {
-          moveDebug.invalidReason =
-            'INVALID_DATA: Negative startTime or duration';
-          debug?.moves.push(moveDebug);
-        }
         return fail(
           FraudReason.INVALID_DATA,
           'INVALID_DATA: Negative startTime or duration',
           i,
         );
       }
-
-      // Data validation - if moves overlap, data is invalid
-      if (prevMove) {
-        if (move.startTime < prevMove.startTime + prevMove.duration) {
-          logger.warn({
-            msg: 'INVALID_DATA: Overlapping moves',
-            userId: user.id,
-            moveIndex: i,
-            prevMoveEnd: prevMove.startTime + prevMove.duration,
-            currentMoveStart: move.startTime,
-          });
-          if (moveDebug) {
-            moveDebug.invalidReason = 'INVALID_DATA: Overlapping moves';
-            debug?.moves.push(moveDebug);
-          }
-          return fail(
-            FraudReason.INVALID_DATA,
-            'INVALID_DATA: Overlapping moves',
-            i,
-          );
-        }
+      if (prevMove && move.startTime < prevMove.startTime + prevMove.duration) {
+        return fail(
+          FraudReason.INVALID_DATA,
+          'INVALID_DATA: Overlapping moves',
+          i,
+        );
       }
 
       const pressDurationMs = this.getPressDurationMs(move.duration);
-
-      // Track bridge durations for variance analysis
       bridgeDurations.push(pressDurationMs);
       hasValidMoves = true;
       totalTimePlayed = Math.max(
@@ -357,108 +297,63 @@ export class GameSessionService {
         move.startTime + move.duration,
       );
 
-      // Track time between moves for fraud detection
       if (prevMove) {
-        const timeBetween =
-          move.startTime - (prevMove.startTime + prevMove.duration);
-        timeBetweenMoves.push(timeBetween);
-      }
-
-      // Calculate bridge length from press duration (input hold time)
-      const bridgeLength = this.calculateBridgeLength(pressDurationMs);
-
-      // Check if we have enough platforms - if not, data is invalid
-      if (currentPlatformIndex + 1 >= platforms.length) {
-        logger.warn({
-          msg: 'INVALID_DATA: Not enough platforms',
-          userId: user.id,
-          moveIndex: i,
-          currentPlatformIndex,
-          totalPlatforms: platforms.length,
-          totalMoves: sortedMoves.length,
-        });
-        if (moveDebug) {
-          moveDebug.invalidReason = 'INVALID_DATA: Not enough platforms';
-          debug?.moves.push(moveDebug);
-        }
-        return fail(
-          FraudReason.INVALID_DATA,
-          'INVALID_DATA: Not enough platforms',
-          i,
+        timeBetweenMoves.push(
+          move.startTime - (prevMove.startTime + prevMove.duration),
         );
       }
 
-      const currentPlatform = platforms[currentPlatformIndex];
+      const bridgeLength = this.calculateBridgeLength(pressDurationMs);
+
+      if (currentPlatformIndex + 1 >= platforms.length) {
+        break;
+      }
+
       const nextPlatform = platforms[currentPlatformIndex + 1];
 
-      logger.debug({
-        msg: 'Processing move',
-        userId: user.id,
-        moveIndex: i,
-        moveNumber: i + 1,
-        currentPlatformIndex,
-        currentPlatform: {
-          index: currentPlatform.index,
-          x: Math.round(currentPlatform.x * 100) / 100,
-          right: Math.round(currentPlatform.right * 100) / 100,
-        },
-        nextPlatform: {
-          index: nextPlatform.index,
-          x: Math.round(nextPlatform.x * 100) / 100,
-          right: Math.round(nextPlatform.right * 100) / 100,
-          isMoving: nextPlatform.isMoving,
-        },
-      });
+      const landingTimeMs = move.startTime + move.duration;
 
-      const platformXAtRelease = this.calculatePlatformPositionAtTime(
-        nextPlatform,
-        idleDurationMs,
-        move.duration,
+      const scaledSpeed = nextPlatform.baseSpeed;
+
+      const platformXAtRelease = calculatePlatformPosInt(
+        nextPlatform.minX,
+        nextPlatform.maxX,
+        scaledSpeed,
+        landingTimeMs,
+        nextPlatform.index,
       );
 
       const platformRightAtRelease = platformXAtRelease + nextPlatform.w;
       const platformCenterAtRelease = platformXAtRelease + nextPlatform.w / 2;
+      const stickTip = currentPlatformStoppedRight + bridgeLength;
 
-      const currentPlatformRight = currentPlatformStoppedRight;
-
-      const stickTip = currentPlatformRight + bridgeLength;
       const hit =
         stickTip >= platformXAtRelease && stickTip <= platformRightAtRelease;
 
-      logger.debug({
-        msg: 'Hit detection calculation',
-        userId: user.id,
-        moveIndex: i,
-        moveNumber: i + 1,
-        currentPlatformRight: Math.round(currentPlatform.right * 100) / 100,
-        bridgeLength: Math.round(bridgeLength * 100) / 100,
-        stickTip: Math.round(stickTip * 100) / 100,
-        platformXAtRelease: Math.round(platformXAtRelease * 100) / 100,
-        platformRightAtRelease: Math.round(platformRightAtRelease * 100) / 100,
-        platformInitialX: Math.round(nextPlatform.initialX * 100) / 100,
-        platformIsMoving: nextPlatform.isMoving,
-        hit,
-        gap: Math.round((platformXAtRelease - stickTip) * 100) / 100,
-      });
-
-      if (moveDebug) {
-        moveDebug.bridgeLength = bridgeLength;
-        moveDebug.currentPlatformIndex = currentPlatformIndex;
-        moveDebug.currentPlatformRight = currentPlatformRight;
-        moveDebug.currentPlatformStoppedRight = currentPlatformStoppedRight;
-        moveDebug.currentPlatformBaseRight = currentPlatform.right;
-        moveDebug.nextPlatformIndex = nextPlatform.index;
-        moveDebug.platformInitialX = nextPlatform.initialX;
-        moveDebug.platformWidth = nextPlatform.w;
-        moveDebug.platformMinX = nextPlatform.minX;
-        moveDebug.platformMaxX = nextPlatform.maxX;
-        moveDebug.platformIsMoving = nextPlatform.isMoving;
-        moveDebug.platformXAtRelease = platformXAtRelease;
-        moveDebug.platformRightAtRelease = platformRightAtRelease;
-        moveDebug.platformCenterAtRelease = platformCenterAtRelease;
-        moveDebug.stickTip = stickTip;
-        moveDebug.hit = hit;
-        moveDebug.gap = platformXAtRelease - stickTip;
+      if (debug) {
+        debug.moves.push({
+          moveIndex: i,
+          originalIndex: move.originalIndex,
+          startTime: move.startTime,
+          duration: move.duration,
+          idleDurationMs,
+          client: move.debug,
+          bridgeLength,
+          currentPlatformIndex,
+          currentPlatformStoppedRight,
+          nextPlatformIndex: nextPlatform.index,
+          platformIsMoving: nextPlatform.isMoving,
+          platformXAtRelease,
+          platformRightAtRelease,
+          stickTip,
+          hit,
+          gap: platformXAtRelease - stickTip,
+          distToCenter: hit
+            ? Math.abs(stickTip - platformCenterAtRelease)
+            : null,
+          pointsAwarded: 0, // we fill this below
+          isPerfect: false, // we fill this below
+        } as SessionValidationMoveDebug);
       }
 
       if (hit) {
@@ -466,22 +361,12 @@ export class GameSessionService {
         const isPerfect = distToCenter <= BRIDGE_CONFIG.PERFECT_TOLERANCE;
         const points = isPerfect ? 3 : 1;
 
-        logger.debug({
-          msg: 'Move successful',
-          userId: user.id,
-          moveIndex: i,
-          hit: true,
-          landed: true,
-          isPerfect,
-          points,
-          distToCenter: Math.round(distToCenter * 100) / 100,
-          bridgeLength: Math.round(bridgeLength * 100) / 100,
-          stickTip: Math.round(stickTip * 100) / 100,
-          platformX: Math.round(platformXAtRelease * 100) / 100,
-          platformRight: Math.round(platformRightAtRelease * 100) / 100,
-        });
+        if (debug && debug.moves.length > 0) {
+          const lastDebug = debug.moves[debug.moves.length - 1];
+          lastDebug.isPerfect = isPerfect;
+          lastDebug.pointsAwarded = points;
+        }
 
-        // Track perfect landings for fraud detection
         successfulLandings++;
         if (isPerfect) {
           perfectLandings++;
@@ -496,93 +381,52 @@ export class GameSessionService {
 
         score += points;
         blocksPassed++;
+
         currentPlatformIndex++;
         currentPlatformStoppedRight = platformRightAtRelease;
 
-        if (moveDebug) {
-          moveDebug.distToCenter = distToCenter;
-          moveDebug.isPerfect = isPerfect;
-          moveDebug.pointsAwarded = points;
-        }
-
-        if (moveDebug) {
-          moveDebug.distToCenter = distToCenter;
-          moveDebug.isPerfect = isPerfect;
-          moveDebug.pointsAwarded = points;
-        }
+        // Reset consecutive failures on success
+        consecutiveFailures = 0;
       } else {
-        logger.info({
-          msg: 'Move missed platform',
-          userId: user.id,
-          moveIndex: i,
-          moveNumber: i + 1,
-          totalMoves: sortedMoves.length,
-          hit: false,
-          stickTip: Math.round(stickTip * 100) / 100,
-          platformX: Math.round(platformXAtRelease * 100) / 100,
-          platformRight: Math.round(platformRightAtRelease * 100) / 100,
-          bridgeLength: Math.round(bridgeLength * 100) / 100,
-          currentPlatformRight: Math.round(currentPlatform.right * 100) / 100,
-          gap: Math.round((platformXAtRelease - stickTip) * 100) / 100,
-        });
-
-        if (moveDebug) {
-          moveDebug.distToCenter = null;
-          moveDebug.isPerfect = null;
-          moveDebug.pointsAwarded = 0;
-        }
-      }
-
-      if (moveDebug) {
-        debug?.moves.push(moveDebug);
+        consecutivePerfect = 0;
+        consecutiveFailures++;
+        maxConsecutiveFailures = Math.max(
+          maxConsecutiveFailures,
+          consecutiveFailures,
+        );
       }
     }
 
-    // If no valid moves were processed, return 0 score
     if (!hasValidMoves) {
-      logger.warn({
-        msg: 'INVALID_DATA: No valid moves processed',
-        userId: user.id,
-        totalMoves: sortedMoves.length,
-      });
       return fail(
         FraudReason.INVALID_DATA,
         'INVALID_DATA: No valid moves processed',
       );
     }
 
-    // Fraud detection checks - only for bot-like behavior
     let fraudReason: FraudReason = FraudReason.NONE;
 
-    // Check variance in bridge durations (bots tend to be too consistent)
     if (bridgeDurations.length >= 3) {
-      // Check for too fast bridges (bot-like reaction time)
-      const tooFastBridges = bridgeDurations.filter(
+      const tooFast = bridgeDurations.filter(
         (d) => d < BRIDGE_CONFIG.MIN_BRIDGE_DURATION,
       ).length;
-      if (tooFastBridges > 0) {
+      if (tooFast > 0) {
         isFraud = true;
         fraudReason = FraudReason.TOO_FAST_BRIDGE;
       }
 
-      // Check variance (too consistent = bot)
       if (!isFraud) {
-        const avgDuration =
+        const avg =
           bridgeDurations.reduce((a, b) => a + b, 0) / bridgeDurations.length;
         const variance =
-          bridgeDurations.reduce(
-            (sum, d) => sum + Math.pow(d - avgDuration, 2),
-            0,
-          ) / bridgeDurations.length;
+          bridgeDurations.reduce((s, d) => s + Math.pow(d - avg, 2), 0) /
+          bridgeDurations.length;
         const stdDev = Math.sqrt(variance);
-
         const scaledMinVariance = Math.max(
           10,
           BRIDGE_CONFIG.MIN_VARIANCE_IN_DURATION /
             Math.sqrt(bridgeDurations.length),
         );
-
-        // If standard deviation is too low, durations are too consistent (bot-like)
         if (stdDev < scaledMinVariance) {
           isFraud = true;
           fraudReason = FraudReason.DURATION_VARIANCE_TOO_LOW;
@@ -591,30 +435,26 @@ export class GameSessionService {
     }
 
     if (!isFraud && timeBetweenMoves.length >= 3) {
-      const tooFastMoves = timeBetweenMoves.filter(
+      const tooFast = timeBetweenMoves.filter(
         (t) => t < BRIDGE_CONFIG.MIN_TIME_BETWEEN_MOVES,
       ).length;
-      if (tooFastMoves > 0) {
+      if (tooFast > 0) {
         isFraud = true;
         fraudReason = FraudReason.TOO_FAST_BETWEEN_MOVES;
       }
 
       if (!isFraud) {
-        const avgTimeBetween =
+        const avg =
           timeBetweenMoves.reduce((a, b) => a + b, 0) / timeBetweenMoves.length;
         const variance =
-          timeBetweenMoves.reduce(
-            (sum, t) => sum + Math.pow(t - avgTimeBetween, 2),
-            0,
-          ) / timeBetweenMoves.length;
+          timeBetweenMoves.reduce((s, t) => s + Math.pow(t - avg, 2), 0) /
+          timeBetweenMoves.length;
         const stdDev = Math.sqrt(variance);
-
         const scaledMinVariance = Math.max(
           10,
           BRIDGE_CONFIG.MIN_VARIANCE_IN_DURATION /
             Math.sqrt(timeBetweenMoves.length),
         );
-
         if (stdDev < scaledMinVariance) {
           isFraud = true;
           fraudReason = FraudReason.TIMING_VARIANCE_TOO_LOW;
@@ -622,18 +462,31 @@ export class GameSessionService {
       }
     }
 
+    if (
+      !isFraud &&
+      maxConsecutiveFailures > BRIDGE_CONFIG.MAX_CONSECUTIVE_FAILURES
+    ) {
+      isFraud = true;
+      fraudReason = FraudReason.TOO_MANY_CONSECUTIVE_FAILURES;
+    }
+
+    if (!isFraud && sortedMoves.length >= 5) {
+      const successRate = successfulLandings / sortedMoves.length;
+      if (successRate < BRIDGE_CONFIG.MIN_SUCCESS_RATE) {
+        isFraud = true;
+        fraudReason = FraudReason.LOW_SUCCESS_RATE;
+      }
+    }
+
     if (!isFraud && successfulLandings > 0) {
       const perfectRate = perfectLandings / successfulLandings;
       const threshold =
-        sortedMoves.length >= 20
-          ? 0.9 // More lenient for longer sessions (sliding window approximation)
-          : BRIDGE_CONFIG.MAX_PERFECT_RATE; // Original threshold for short sessions
+        sortedMoves.length >= 20 ? 0.9 : BRIDGE_CONFIG.MAX_PERFECT_RATE;
+
       if (perfectRate > threshold) {
         isFraud = true;
         fraudReason = FraudReason.PERFECT_RATE_TOO_HIGH;
       }
-
-      // Check for too many consecutive perfect landings
       if (
         !isFraud &&
         maxConsecutivePerfect > BRIDGE_CONFIG.MAX_CONSECUTIVE_PERFECT
@@ -645,17 +498,6 @@ export class GameSessionService {
 
     const finalScore = score * SCORE_MULTIPLIER;
 
-    logger.info({
-      msg: 'Session validation complete',
-      userId: user.id,
-      score: finalScore,
-      blocksPassed,
-      isFraud,
-      fraudReason,
-      totalMoves: sortedMoves.length,
-      timePlayed: totalTimePlayed,
-    });
-
     return {
       timePlayed: totalTimePlayed,
       score: finalScore,
@@ -664,6 +506,7 @@ export class GameSessionService {
       fraudReason,
     };
   }
+
   async generateRandomSignedSeed(
     secret: string,
   ): Promise<{ seed: string; signature: string }> {
@@ -673,16 +516,11 @@ export class GameSessionService {
   }
 
   signSeed(seed: string, secret: string): string {
-    const signature = crypto
-      .createHmac('sha256', secret)
-      .update(seed)
-      .digest('hex');
-    return signature;
+    return crypto.createHmac('sha256', secret).update(seed).digest('hex');
   }
 
   public verifySeed(seed: string, signature: string, secret: string): boolean {
-    const expectedSignature = this.signSeed(seed, secret);
-    return signature === expectedSignature;
+    return signature === this.signSeed(seed, secret);
   }
 
   private createRng(seed: number) {
@@ -696,16 +534,9 @@ export class GameSessionService {
   }
 
   private parseSeedToNumber(seedHex: string): number {
-    // Parse hex seed to number (using first 32 bits to avoid precision loss)
-    // Normalize seed: remove 0x prefix if present (matches frontend behavior)
     const normalized = seedHex.startsWith('0x') ? seedHex.slice(2) : seedHex;
     const seedBigInt = BigInt('0x' + normalized);
-    // Take lower 32 bits to match engine's seed >>> 0 behavior
     return Number(seedBigInt & BigInt(0xffffffff));
-  }
-
-  private randomRange(rng: () => number, min: number, max: number): number {
-    return min + rng() * (max - min);
   }
 
   private generatePlatformSequence(
@@ -715,52 +546,45 @@ export class GameSessionService {
   ): Platform[] {
     const platforms: Platform[] = [];
 
-    // First platform (fixed, matches engine - cannot move)
+    // Frontend logic matches: initial platform at 0 with integer width
     const firstPlatform: Platform = {
       x: 0,
       w: BRIDGE_CONFIG.PLATFORM_START_WIDTH,
       index: 0,
-      center: BRIDGE_CONFIG.PLATFORM_START_WIDTH / 2,
+      center: Math.floor(BRIDGE_CONFIG.PLATFORM_START_WIDTH / 2),
       right: BRIDGE_CONFIG.PLATFORM_START_WIDTH,
       isMoving: false,
-      vx: 0,
       minX: 0,
       maxX: 0,
       initialX: 0,
+      spawnX: 0,
       baseSpeed: 0,
-      patrolSeed: 0,
     };
     platforms.push(firstPlatform);
+
     if (debugPlatforms) {
       debugPlatforms.push({
-        index: firstPlatform.index,
-        x: firstPlatform.x,
-        w: firstPlatform.w,
-        right: firstPlatform.right,
-        isMoving: firstPlatform.isMoving,
-        vx: firstPlatform.vx,
-        minX: firstPlatform.minX,
-        maxX: firstPlatform.maxX,
-        initialX: firstPlatform.initialX,
-      });
+        ...firstPlatform,
+        vx: 0,
+      } as SessionValidationPlatformDebug);
     }
 
-    // Generate platforms for each move
-    // Frontend uses initialX + w to calculate lastX for next platform (not current x which might have moved)
-    let lastX = BRIDGE_CONFIG.PLATFORM_START_WIDTH;
+    let lastXInt = BRIDGE_CONFIG.PLATFORM_START_WIDTH * PRECISION;
+
     for (let i = 1; i <= numMoves + 1; i++) {
-      // Capture RNG values for debugging (must call rng() before using in randomRange)
       const gapRng = rng();
-      const gap =
-        BRIDGE_CONFIG.PLATFORM_MIN_GAP +
-        gapRng *
-          (BRIDGE_CONFIG.PLATFORM_MAX_GAP - BRIDGE_CONFIG.PLATFORM_MIN_GAP);
+
+      const minGapInt = BRIDGE_CONFIG.PLATFORM_MIN_GAP * PRECISION;
+      const maxGapInt = BRIDGE_CONFIG.PLATFORM_MAX_GAP * PRECISION;
+      const gapInt = Math.floor(minGapInt + gapRng * (maxGapInt - minGapInt));
 
       const widthRng = rng();
-      const baseWidth =
-        BRIDGE_CONFIG.PLATFORM_MIN_WIDTH +
-        widthRng *
-          (BRIDGE_CONFIG.PLATFORM_MAX_WIDTH - BRIDGE_CONFIG.PLATFORM_MIN_WIDTH);
+
+      const minWidthBaseInt = BRIDGE_CONFIG.PLATFORM_MIN_WIDTH * PRECISION;
+      const maxWidthBaseInt = BRIDGE_CONFIG.PLATFORM_MAX_WIDTH * PRECISION;
+      const baseWidthInt =
+        minWidthBaseInt + widthRng * (maxWidthBaseInt - minWidthBaseInt);
+
       const shrinkStages =
         i >= BRIDGE_CONFIG.PLATFORM_SHRINK_START_INDEX
           ? Math.floor(
@@ -768,17 +592,20 @@ export class GameSessionService {
                 BRIDGE_CONFIG.PLATFORM_SHRINK_EVERY,
             ) + 1
           : 0;
+
       const shrinkFactor = Math.pow(
         BRIDGE_CONFIG.PLATFORM_SHRINK_FACTOR,
         shrinkStages,
       );
-      const minWidth =
-        i < BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE_INDEX
-          ? BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_EARLY
-          : BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE;
-      const w = Math.max(baseWidth * shrinkFactor, minWidth);
 
-      const x = lastX + gap;
+      const minWidthThresholdInt =
+        (i < BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE_INDEX
+          ? BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_EARLY
+          : BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE) * PRECISION;
+
+      const wInt = Math.floor(
+        Math.max(baseWidthInt * shrinkFactor, minWidthThresholdInt),
+      );
 
       const speedStages =
         i >= BRIDGE_CONFIG.PLATFORM_SPEED_START_INDEX
@@ -789,198 +616,88 @@ export class GameSessionService {
           : 0;
       const speedMultiplier =
         1 + speedStages * BRIDGE_CONFIG.PLATFORM_SPEED_INCREMENT;
-      const baseSpeed = BRIDGE_CONFIG.PLATFORM_MOVE_VELOCITY * speedMultiplier;
 
-      // Determine if platform can move (index > 2, matches engine logic)
+      let rawBaseSpeed = Math.floor(
+        BRIDGE_CONFIG.PLATFORM_MOVE_VELOCITY * PRECISION * speedMultiplier,
+      );
+
       const canMove = i >= BRIDGE_CONFIG.PLATFORM_MOVE_START_INDEX;
-      let isMoving = false;
-      let vx = 0;
-      let minX = x;
-      let maxX = x;
-      let patrolSeed = 0;
-
-      let moveChanceRng: number | undefined;
-      let rangeRng: number | undefined;
-      let patrolSeedRng: number | undefined;
+      let shouldMove = false;
 
       if (canMove) {
-        moveChanceRng = rng();
-        const shouldMove = moveChanceRng < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE;
-        if (shouldMove) {
-          isMoving = true;
-          rangeRng = rng();
-          const range =
-            BRIDGE_CONFIG.PLATFORM_MOVE_MIN_RANGE +
-            rangeRng *
-              (BRIDGE_CONFIG.PLATFORM_MOVE_MAX_RANGE -
-                BRIDGE_CONFIG.PLATFORM_MOVE_MIN_RANGE);
-          minX = x - range;
-          maxX = x + range;
+        const moveChanceRng = rng();
+        if (moveChanceRng < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE)
+          shouldMove = true;
+      }
 
-          const safeMinX = lastX + BRIDGE_CONFIG.PLATFORM_MIN_GAP;
-          const safeMaxX = x + BRIDGE_CONFIG.PLATFORM_MIN_GAP;
-          minX = Math.max(minX, safeMinX);
-          maxX = Math.min(maxX, safeMaxX);
-          if (maxX <= minX) {
-            isMoving = false;
-            vx = 0;
-            minX = x;
-            maxX = x;
-            patrolSeed = 0;
-          } else {
-            patrolSeedRng = rng();
-            patrolSeed = Math.floor(patrolSeedRng * 0xffffffff);
-          }
+      let minXInt = 0;
+      let maxXInt = 0;
+      let spawnXInt = 0;
+
+      const idealXInt = lastXInt + gapInt;
+
+      if (shouldMove) {
+        const rangeRng = rng();
+        const minRangeInt = BRIDGE_CONFIG.PLATFORM_MOVE_MIN_RANGE * PRECISION;
+        const maxRangeInt = BRIDGE_CONFIG.PLATFORM_MOVE_MAX_RANGE * PRECISION;
+        const rangeInt = Math.floor(
+          minRangeInt + rangeRng * (maxRangeInt - minRangeInt),
+        );
+
+        const varianceRng = rng();
+        const varianceScaler = Math.floor(varianceRng * 4000) + 8000;
+
+        rawBaseSpeed = Math.floor((rawBaseSpeed * varianceScaler) / 10000);
+
+        minXInt = idealXInt - rangeInt;
+        maxXInt = idealXInt + rangeInt;
+
+        const safeMinXInt = lastXInt + minGapInt;
+        const safeMaxXInt = lastXInt + maxGapInt;
+
+        minXInt = Math.max(minXInt, safeMinXInt);
+        maxXInt = Math.min(maxXInt, safeMaxXInt);
+
+        if (maxXInt <= minXInt) {
+          shouldMove = false;
+          minXInt = maxXInt = idealXInt;
+          rawBaseSpeed = 0;
+          spawnXInt = idealXInt;
+        } else {
+          spawnXInt = Math.floor((minXInt + maxXInt) / 2);
         }
+      } else {
+        rawBaseSpeed = 0;
+        spawnXInt = idealXInt;
+        minXInt = spawnXInt;
+        maxXInt = spawnXInt;
       }
 
       const platform: Platform = {
-        x,
-        w,
+        x: spawnXInt / PRECISION,
+        w: wInt / PRECISION,
         index: i,
-        center: x + w / 2,
-        right: x + w,
-        isMoving,
-        vx,
-        minX,
-        maxX,
-        initialX: x,
-        baseSpeed,
-        patrolSeed,
+        center: (spawnXInt + wInt / 2) / PRECISION,
+        right: (spawnXInt + wInt) / PRECISION,
+        isMoving: shouldMove,
+        minX: minXInt / PRECISION,
+        maxX: maxXInt / PRECISION,
+        initialX: spawnXInt / PRECISION,
+        spawnX: spawnXInt / PRECISION,
+        baseSpeed: rawBaseSpeed,
       };
       platforms.push(platform);
+
       if (debugPlatforms) {
         debugPlatforms.push({
-          index: platform.index,
-          x: platform.x,
-          w: platform.w,
-          right: platform.right,
-          isMoving: platform.isMoving,
-          vx: platform.vx,
-          minX: platform.minX,
-          maxX: platform.maxX,
-          initialX: platform.initialX,
-          rng: {
-            gapRng,
-            widthRng,
-            moveChanceRng,
-            rangeRng,
-            patrolSeedRng,
-          },
-        });
+          ...platform,
+          vx: 0,
+        } as SessionValidationPlatformDebug);
       }
-      lastX = platform.initialX + platform.w;
 
-      // Debug logging for first few platforms
-      if (i <= 5) {
-        logger.info({
-          msg: 'Platform generated (RNG debug)',
-          platformIndex: i,
-          gapRng: Math.round(gapRng * 1000000) / 1000000,
-          widthRng: Math.round(widthRng * 1000000) / 1000000,
-          moveChanceRng:
-            moveChanceRng !== undefined
-              ? Math.round(moveChanceRng * 1000000) / 1000000
-              : undefined,
-          rangeRng:
-            rangeRng !== undefined
-              ? Math.round(rangeRng * 1000000) / 1000000
-              : undefined,
-          gap: Math.round(gap * 100) / 100,
-          width: Math.round(w * 100) / 100,
-          x: Math.round(x * 100) / 100,
-          right: Math.round(platform.right * 100) / 100,
-          isMoving,
-          canMove,
-        });
-      }
+      lastXInt = spawnXInt + wInt;
     }
-
     return platforms;
-  }
-
-  /**
-   * Calculate platform position at a specific time, accounting for movement
-   * Platforms move during IDLE and GROWING phases, continue through rotation
-   *
-   * Frontend behavior:
-   * - Platforms start moving when created (at game start for initial platforms)
-   * - Platform moves continuously during IDLE and GROWING phases
-   * - Platform keeps moving until the bridge lands (startTime + landingDuration)
-   * - Position is checked at the moment the bridge lands
-   */
-  private calculatePlatformPositionAtTime(
-    platform: Platform,
-    idleDurationMs: number,
-    moveDuration: number,
-  ): number {
-    if (!platform.isMoving) {
-      // For non-moving platforms, return initialX (which equals x for non-moving platforms)
-      // This ensures consistency with frontend which uses the platform's current position
-      return platform.initialX;
-    }
-
-    // Platform moves during IDLE and GROWING phases, so use idleDurationMs + moveDuration
-    // Landing time is when the bridge finishes rotating (idleDurationMs + landingDuration)
-    const landingTime = (idleDurationMs + moveDuration) / 1000; // Convert to seconds
-
-    // Closed-form ping-pong motion between minX and maxX (no frame-step drift).
-    const range = platform.maxX - platform.minX;
-    if (range <= 0) {
-      return platform.initialX;
-    }
-
-    const rng = this.createRng(platform.patrolSeed);
-    let t = 0;
-    let x = platform.initialX;
-    const speedBase = platform.baseSpeed;
-    if (speedBase <= 0) {
-      return platform.initialX;
-    }
-    const span = platform.maxX - platform.minX;
-    const minTargetDistance = Math.max(
-      BRIDGE_CONFIG.PLATFORM_TARGET_MIN_DISTANCE,
-      span * BRIDGE_CONFIG.PLATFORM_TARGET_MIN_DISTANCE_RATIO,
-    );
-
-    while (true) {
-      let target = x;
-      const attempts = 5;
-      for (let attempt = 0; attempt < attempts; attempt++) {
-        const candidate = platform.minX + rng() * span;
-        target = candidate;
-        if (
-          span <= minTargetDistance ||
-          Math.abs(candidate - x) >= minTargetDistance
-        ) {
-          break;
-        }
-      }
-      const variance =
-        platform.index >= BRIDGE_CONFIG.PLATFORM_VARIANCE_START_INDEX
-          ? this.randomRange(
-              rng,
-              BRIDGE_CONFIG.PLATFORM_SPEED_VARIANCE_MIN,
-              BRIDGE_CONFIG.PLATFORM_SPEED_VARIANCE_MAX,
-            )
-          : 1;
-      const speed = speedBase * variance;
-      if (speed <= 0) {
-        return x;
-      }
-      const dist = Math.abs(target - x);
-      if (dist === 0) {
-        if (t >= landingTime) return x;
-        continue;
-      }
-      const duration = dist / speed;
-      if (t + duration >= landingTime) {
-        const dir = target > x ? 1 : -1;
-        return x + dir * speed * (landingTime - t);
-      }
-      t += duration;
-      x = target;
-    }
   }
 
   private getRotationTimeMs(): number {

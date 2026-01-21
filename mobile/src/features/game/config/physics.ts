@@ -24,7 +24,7 @@ export const PHYSICS_CONFIG = {
 
   // Platform movement
   PLATFORM_MOVE_VELOCITY: 70, // pixels per second
-  PLATFORM_MOVE_CHANCE: 0.4, // 40% chance to move
+  PLATFORM_MOVE_CHANCE: 0.5, // 50% chance to move
   PLATFORM_MOVE_MIN_RANGE: 80, // pixels
-  PLATFORM_MOVE_MAX_RANGE: 180, // pixels
+  PLATFORM_MOVE_MAX_RANGE: 240, // pixels
 } as const;
