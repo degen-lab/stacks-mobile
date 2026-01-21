@@ -31,6 +31,7 @@ interface AuthState {
   backendUserData: BackendUserData | null;
   referralUsed: boolean;
 
+  setHasBackup: (hasBackup: boolean) => void;
   signInWithGoogle: () => Promise<SignInResult>;
   signOut: () => Promise<void>;
   hydrate: () => Promise<void>;
@@ -54,6 +55,8 @@ const useAuthStore = create<AuthState>((set, get) => ({
   userData: null,
   backendUserData: null,
   referralUsed: false,
+
+  setHasBackup: (hasBackup: boolean) => set({ hasBackup }),
 
   signInWithGoogle: async () => {
     set({ isAuthenticating: true });

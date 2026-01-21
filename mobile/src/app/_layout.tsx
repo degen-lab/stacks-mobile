@@ -42,7 +42,11 @@ export default function RootLayout() {
         <Stack.Screen name="wallet-restore" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen
-          name="settings/accounts"
+          name="settings/accounts/index"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="settings/accounts/[id]"
           options={{ headerShown: false }}
         />
         <Stack.Screen
