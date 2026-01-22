@@ -123,7 +123,7 @@ export default function AccountDetailScreen() {
         message: "Account removed",
         type: "success",
       });
-      router.replace("/settings/accounts" as any);
+      router.back();
     } catch (error) {
       console.error("Failed to remove account:", error);
       showMessage({
