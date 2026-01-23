@@ -42,7 +42,7 @@ export class StackingService {
     stackingData.poolAddress = transactionData.delegateTo;
     stackingData.userAddress = transactionData.stacker;
     stackingData.poxAddress = transactionData.poxAddress;
-    stackingData.amountOfStx = transactionData.amountUstx / 1000000;
+    stackingData.amountOfStxStacked = transactionData.amountUstx / 1000000;
     stackingData.poolName = poolName;
     stackingData.user = user;
     return await this.entityManager.save(stackingData);

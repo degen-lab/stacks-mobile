@@ -103,7 +103,7 @@ export const buildServer = async (dataSource: DataSource) => {
 
   app.register(stackingRoutes, {
     stackingService,
-    prefix: '/stacking'
+    prefix: '/stacking',
   });
 
   return app;

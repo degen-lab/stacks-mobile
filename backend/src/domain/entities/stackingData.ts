@@ -14,7 +14,7 @@ export class StackingData extends BaseAppEntity {
   @Column({ type: 'text' })
   userAddress: string;
   @Column({ type: 'number' })
-  amountOfStx: number;
+  amountOfStxStacked: number;
   @Column({ type: 'int', nullable: true })
   endCycleId: number | null;
   @Column({ type: 'text' })
@@ -27,6 +27,8 @@ export class StackingData extends BaseAppEntity {
     default: TransactionStatus.Pending,
   })
   txStatus: TransactionStatus;
+  @Column({ type: 'number', nullable: true })
+  rewardedAmount: number | null;
   @ManyToOne(() => User, (user) => user.stackingData, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
