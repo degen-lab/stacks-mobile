@@ -2,14 +2,16 @@ import { EntityManager } from 'typeorm';
 import { ITransactionClient } from '../ports/ITransactionClient';
 import { StackingData } from '../../domain/entities/stackingData';
 import { StxTransactionData } from '../../shared/types';
-import { WrongStackingFunctionError } from '../errors/stackingDataErrors';
+import { StackingDataNotFoundError, WrongStackingFunctionError } from '../errors/stackingDataErrors';
 import { UserNotFoundError } from '../errors/userErrors';
 import { User } from '../../domain/entities/user';
+import { IStackingPoolClient } from '../ports/IStackingPoolClient';
 
 export class StackingService {
   constructor(
     private entityManager: EntityManager,
     private transactionClient: ITransactionClient,
+    private stackingPoolClient: IStackingPoolClient,
   ) {}
 
   async saveStackingData(
@@ -39,12 +41,38 @@ export class StackingService {
     stackingData.txId = parsedTxId;
     stackingData.startCycleId = transactionData.startCycleId;
     stackingData.endCycleId = transactionData.endCycleId;
-    stackingData.poolAddress = transactionData.delegateTo;
-    stackingData.userAddress = transactionData.stacker;
+    stackingData.poolStxAddress = transactionData.delegateTo;
+    stackingData.userStxAddress = transactionData.stacker;
     stackingData.poxAddress = transactionData.poxAddress;
     stackingData.amountOfStxStacked = transactionData.amountUstx / 1000000;
     stackingData.poolName = poolName;
     stackingData.user = user;
     return await this.entityManager.save(stackingData);
+  }
+
+  async updateRewardData(
+    userId: number,
+    startCycleId: number,
+    userStxAddress: string,
+  ):Promise<void> {
+    const stackingData = await this.entityManager.findOne(StackingData, {
+      where: {
+        user: {
+          id: userId,
+        },
+        startCycleId,
+        userStxAddress,
+      }
+    });
+
+    if (!stackingData) { 
+      throw new StackingDataNotFoundError(`Stacking Data not found for user with id ${userId} and address ${userStxAddress} that started staking on cycle with id ${startCycleId}`);
+    }
+    
+    const rewardedAmount = await this.stackingPoolClient.delegationTotalRewards(userStxAddress, startCycleId, stackingData.endCycleId); 
+
+    await this.entityManager.update(StackingData, stackingData.id, {
+      rewardedStxAmount: rewardedAmount,
+    });
   }
 }

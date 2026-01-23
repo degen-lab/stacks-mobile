@@ -7,3 +7,12 @@ export class WrongStackingFunctionError extends BaseError {
     super(message);
   }
 }
+
+export class StackingDataNotFoundError extends BaseError {
+  readonly statusCode: number = 400;
+  readonly name: string = 'STACKING_DATA_NOT_FOUND_ERROR';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
