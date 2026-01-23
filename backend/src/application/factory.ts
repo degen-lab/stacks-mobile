@@ -16,6 +16,7 @@ import { TransakPurchaseClient } from '../infra/purchase/transakPurchaseClient';
 import { CryptoPurchaseService } from './purchase/cryptoPurchaseService';
 import { CryptoPurchaseDomainService } from '../domain/service/cryptoPurchaseDomainService';
 import { StackingService } from './stacking/stackingService';
+import { FastPoolClient } from '../infra/stacks/fastPoolClient';
 
 type ServiceType =
   | UserService
@@ -144,6 +145,7 @@ export class ServiceFactory {
         new StackingService(
           this.dataSource.createEntityManager(),
           new TransactionClient(),
+          new FastPoolClient()
         ),
       );
     }
