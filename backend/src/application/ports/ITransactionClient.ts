@@ -15,4 +15,7 @@ export interface ITransactionClient {
   getTransactionStatus(txId: string): Promise<string>;
   broadcastTransaction(serializedTx: string): Promise<TxBroadcastResult>;
   fetchStackingTransactionData(txId: string): Promise<StxTransactionData>;
+  fetchPoxCycleData(): Promise<{
+    cycleId: number;
+  }>;
 }

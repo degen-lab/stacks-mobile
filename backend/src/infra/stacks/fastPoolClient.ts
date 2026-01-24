@@ -2,6 +2,7 @@ import { IStackingPoolClient } from '../../application/ports/IStackingPoolClient
 import {
   FAST_POOL_STACKING_DATA_JSON_URL,
   FAST_POOL_REWARDS_COMMITS_URL,
+  GITHUB_API_KEY,
 } from '../../shared/constants';
 
 export class FastPoolClient implements IStackingPoolClient {
@@ -13,6 +14,7 @@ export class FastPoolClient implements IStackingPoolClient {
     const res = await fetch(FAST_POOL_STACKING_DATA_JSON_URL(address), {
       headers: {
         Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${GITHUB_API_KEY}`,
         'X-GitHub-Api-Version': '2022-11-28',
       },
     });
@@ -42,6 +44,7 @@ export class FastPoolClient implements IStackingPoolClient {
     const res = await fetch(FAST_POOL_REWARDS_COMMITS_URL, {
       headers: {
         Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${GITHUB_API_KEY}`,
         'X-GitHub-Api-Version': '2022-11-28',
       },
     });

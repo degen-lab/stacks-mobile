@@ -33,6 +33,7 @@ import {
 import { ContractFunctions } from '../helpers/types';
 import { logger } from '../../api/helpers/logger';
 import { StxTransactionData } from '../../shared/types';
+import { ur } from 'zod/v4/locales';
 
 // Extended type for broadcast transaction response that may include error fields
 type BroadcastResponse = TxBroadcastResult & {
@@ -66,6 +67,23 @@ export class TransactionClient implements ITransactionClient {
         : STACKS_NETWORK === 'testnet'
           ? createNetwork('testnet')
           : createNetwork('devnet');
+  }
+  async fetchPoxCycleData(): Promise<{ cycleId: number }> {
+    const url = `${this.network.client.baseUrl}/v2/pox`;
+
+    const result = await fetch(url);
+
+    if (!result.ok) {
+      logger.error({
+        msg: 'Failed to fetch pox data',
+      });
+      throw new Error('Failed to fetch pox data');
+    }
+    const data = await result.json();
+    const cycleId = data.current_cycle.id;
+    return {
+      cycleId,
+    };
   }
   async broadcastTransaction(serializedTx: string): Promise<TxBroadcastResult> {
     const transaction = deserializeTransaction(serializedTx);

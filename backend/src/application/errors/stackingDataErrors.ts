@@ -9,19 +9,19 @@ export class WrongStackingFunctionError extends BaseError {
   }
 }
 
-export class StackingDataNotFoundError extends BaseError {
+export class RewardFolderRefNotCached extends BaseError {
   readonly statusCode: number = 400;
-  readonly name: string = 'STACKING_DATA_NOT_FOUND_ERROR';
+  readonly name: string = 'REWARD_FOLDER_REF_NOT_CACHED';
 
   constructor(message: string) {
     super(message);
   }
 }
 
-export class RewardFolderRefNotCached extends BaseError {
-  readonly statusCode: number = 400;
-  readonly name: string = 'REWARD_FOLDER_REF_NOT_CACHED';
 
+export class WrongStackingPoolError extends BaseError {
+  readonly statusCode: number = 400;
+  readonly name: string = 'WRONG_STACKING_POOL_ERROR';
   constructor(message: string) {
     super(message);
   }

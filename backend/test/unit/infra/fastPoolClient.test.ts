@@ -18,17 +18,17 @@ describe('FastPoolClient', () => {
   describe('delegationTotalRewards', () => {
     const testAddress = 'SP12PM8QG33GPCAH3Z22JFSZ897Q6RA1PWF39PCF2';
 
-    it('should correctly parse delegation total rewards from GitHub API response', async () => {
-      // Mock GitHub API response structure
+    it('should correctly sum rewards for contiguous cycles', async () => {
+      // Mock GitHub API response with cycles as object (actual structure)
       const mockGitHubResponse = {
         content: Buffer.from(
           JSON.stringify({
             totalRewards: 150000000,
             address: testAddress,
-            cycles: [
-              { cycle: 1, reward: 50000000 },
-              { cycle: 2, reward: 100000000 },
-            ],
+            cycles: {
+              '10': { cycle: 10, rewards: 50000000 },
+              '11': { cycle: 11, rewards: 100000000 },
+            },
           }),
         ).toString('base64'),
         encoding: 'base64',
@@ -39,7 +39,11 @@ describe('FastPoolClient', () => {
         json: async () => mockGitHubResponse,
       });
 
-      const result = await fastPoolClient.delegationTotalRewards(testAddress);
+      const result = await fastPoolClient.delegationTotalRewards(
+        testAddress,
+        10,
+        12,
+      );
 
       expect(result).toBe(150000000);
       expect(mockFetch).toHaveBeenCalledWith(
@@ -53,13 +57,15 @@ describe('FastPoolClient', () => {
       );
     });
 
-    it('should handle zero rewards', async () => {
+    it('should break on first missing cycle', async () => {
       const mockGitHubResponse = {
         content: Buffer.from(
           JSON.stringify({
-            totalRewards: 0,
-            address: testAddress,
-            cycles: [],
+            cycles: {
+              '10': { cycle: 10, rewards: 50000000 },
+              // cycle 11 is missing
+              '12': { cycle: 12, rewards: 100000000 },
+            },
           }),
         ).toString('base64'),
       };
@@ -69,18 +75,26 @@ describe('FastPoolClient', () => {
         json: async () => mockGitHubResponse,
       });
 
-      const result = await fastPoolClient.delegationTotalRewards(testAddress);
+      const result = await fastPoolClient.delegationTotalRewards(
+        testAddress,
+        10,
+        13,
+      );
 
-      expect(result).toBe(0);
+      // Should only count cycle 10, break at 11
+      expect(result).toBe(50000000);
     });
 
-    it('should handle large reward amounts', async () => {
-      const largeAmount = 999999999999;
+    it('should handle null endCycleId and loop until missing cycle', async () => {
       const mockGitHubResponse = {
         content: Buffer.from(
           JSON.stringify({
-            totalRewards: largeAmount,
-            address: testAddress,
+            cycles: {
+              '10': { cycle: 10, rewards: 30000000 },
+              '11': { cycle: 11, rewards: 40000000 },
+              '12': { cycle: 12, rewards: 50000000 },
+              // cycle 13 missing - will break here
+            },
           }),
         ).toString('base64'),
       };
@@ -90,10 +104,40 @@ describe('FastPoolClient', () => {
         json: async () => mockGitHubResponse,
       });
 
-      const result = await fastPoolClient.delegationTotalRewards(testAddress);
+      const result = await fastPoolClient.delegationTotalRewards(
+        testAddress,
+        10,
+        null,
+      );
 
-      expect(result).toBe(largeAmount);
-      expect(typeof result).toBe('number');
+      // Should sum cycles 10, 11, 12 and break at 13
+      expect(result).toBe(120000000);
+    });
+
+    it('should return 0 when start cycle does not exist', async () => {
+      const mockGitHubResponse = {
+        content: Buffer.from(
+          JSON.stringify({
+            cycles: {
+              '10': { cycle: 10, rewards: 50000000 },
+            },
+          }),
+        ).toString('base64'),
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockGitHubResponse,
+      });
+
+      const result = await fastPoolClient.delegationTotalRewards(
+        testAddress,
+        5,
+        15,
+      );
+
+      // Starts at cycle 5 which doesn't exist, breaks immediately
+      expect(result).toBe(0);
     });
 
     it('should throw error when fetch fails', async () => {
@@ -104,8 +148,8 @@ describe('FastPoolClient', () => {
       });
 
       await expect(
-        fastPoolClient.delegationTotalRewards(testAddress),
-      ).rejects.toThrow();
+        fastPoolClient.delegationTotalRewards(testAddress, 10, 20),
+      ).rejects.toThrow('GitHub API error: 404 Not Found');
     });
 
     it('should handle invalid base64 encoding', async () => {
@@ -119,7 +163,7 @@ describe('FastPoolClient', () => {
       });
 
       await expect(
-        fastPoolClient.delegationTotalRewards(testAddress),
+        fastPoolClient.delegationTotalRewards(testAddress, 10, 20),
       ).rejects.toThrow();
     });
 
@@ -134,8 +178,70 @@ describe('FastPoolClient', () => {
       });
 
       await expect(
-        fastPoolClient.delegationTotalRewards(testAddress),
+        fastPoolClient.delegationTotalRewards(testAddress, 10, 20),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('getRewardFolderRef', () => {
+    it('should return the SHA of the latest commit', async () => {
+      const mockCommits = [
+        {
+          sha: 'abc123def456',
+          commit: {
+            message: 'add rewards 126',
+            author: { name: 'friedger', date: '2026-01-17T23:05:52Z' },
+          },
+        },
+        {
+          sha: 'def789ghi012',
+          commit: {
+            message: 'add rewards 125',
+            author: { name: 'friedger', date: '2026-01-15T20:00:00Z' },
+          },
+        },
+      ];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockCommits,
+      });
+
+      const result = await fastPoolClient.getRewardFolderRef();
+
+      expect(result).toBe('abc123def456');
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.github.com/repos/friedger/stacking/commits?path=packages/home/data/rewards',
+        {
+          headers: {
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
+        },
+      );
+    });
+
+    it('should throw error when no commits found', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      });
+
+      await expect(fastPoolClient.getRewardFolderRef()).rejects.toThrow(
+        'No commits found for rewards folder',
+      );
+    });
+
+    it('should throw error when fetch fails', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+      });
+
+      await expect(fastPoolClient.getRewardFolderRef()).rejects.toThrow(
+        'GitHub API error: 403 Forbidden',
+      );
     });
   });
 
@@ -148,17 +254,37 @@ describe('FastPoolClient', () => {
       const realClient = new FastPoolClient();
       const testAddress = 'SP12PM8QG33GPCAH3Z22JFSZ897Q6RA1PWF39PCF2';
 
-      const result = await realClient.delegationTotalRewards(testAddress);
+      // Test with specific cycle range (address has cycles 14, 16, 18, 20)
+      const result = await realClient.delegationTotalRewards(
+        testAddress,
+        14,
+        21,
+      );
 
-      console.log('Total rewards for', testAddress, ':', result);
+      console.log('Total rewards for', testAddress, 'cycles 14-20:', result);
 
       // Verify result is a number
       expect(typeof result).toBe('number');
       expect(result).toBeGreaterThanOrEqual(0);
-      expect(result).toBe(991261); // Expected value for this address
+      // Will return 477296 (only cycle 14) due to break on missing cycle 15
+      expect(result).toBe(477296);
 
       // Restore mock after test
       global.fetch = mockFetch;
-    }, 15000); // 15 second timeout for real API call
+    }, 15000);
+
+    it('should fetch reward folder reference', async () => {
+      global.fetch = originalFetch;
+
+      const realClient = new FastPoolClient();
+      const ref = await realClient.getRewardFolderRef();
+
+      console.log('Latest reward folder commit SHA:', ref);
+
+      expect(typeof ref).toBe('string');
+      expect(ref).toHaveLength(40); // Git SHA is 40 characters
+
+      global.fetch = mockFetch;
+    }, 15000);
   });
 });

@@ -17,7 +17,7 @@ export class StackingData extends BaseAppEntity {
   amountOfStxStacked: number;
   @Column({ type: 'int', nullable: true })
   endCycleId: number | null;
-  @Column({ type: 'text' })
+  @Column({ type: 'text', unique: true })
   txId: string;
   @Column({ type: 'text', nullable: true })
   poxAddress: string | null;

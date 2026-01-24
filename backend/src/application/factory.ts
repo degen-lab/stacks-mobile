@@ -147,7 +147,6 @@ export class ServiceFactory {
           new TransactionClient(),
           new FastPoolClient(),
           this.cacheAdapter,
-          new TransactionClient(),
         ),
       );
     }
