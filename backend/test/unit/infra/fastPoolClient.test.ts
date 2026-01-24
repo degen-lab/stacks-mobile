@@ -1,4 +1,5 @@
 import { FastPoolClient } from '../../../src/infra/stacks/fastPoolClient';
+import { GITHUB_API_KEY } from '../../../src/shared/constants';
 
 // Save original fetch before mocking
 const originalFetch = global.fetch;
@@ -52,6 +53,7 @@ describe('FastPoolClient', () => {
           headers: {
             Accept: 'application/vnd.github+json',
             'X-GitHub-Api-Version': '2022-11-28',
+            Authorization: `Bearer ${GITHUB_API_KEY}`,
           },
         },
       );
@@ -216,6 +218,7 @@ describe('FastPoolClient', () => {
           headers: {
             Accept: 'application/vnd.github+json',
             'X-GitHub-Api-Version': '2022-11-28',
+            Authorization: `Bearer ${GITHUB_API_KEY}`,
           },
         },
       );
@@ -246,6 +249,7 @@ describe('FastPoolClient', () => {
   });
 
   // Real API test - skipped by default, run manually to verify actual API
+  // eslint-disable-next-line jest/no-disabled-tests
   describe.skip('Real API Integration', () => {
     it('should fetch real data from GitHub API for test address', async () => {
       // Restore original fetch for real API call

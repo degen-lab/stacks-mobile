@@ -18,7 +18,7 @@ export class StackingWorker {
   private async handleJob(job: Job) {
     try {
       logger.info(`Handling stacking job: ${job.name} (ID: ${job.id})`);
-      
+
       switch (job.name) {
         case 'updateTxStatus': {
           await this.updateTxStatus();
@@ -47,8 +47,10 @@ export class StackingWorker {
   }
 
   private async updateTxStatus() {
-    logger.info('Starting transaction status update for pending stacking delegations');
-    
+    logger.info(
+      'Starting transaction status update for pending stacking delegations',
+    );
+
     try {
       await this.stackingService.updatePendingStackingDelegations();
       logger.info('Transaction status update completed successfully');
@@ -63,10 +65,10 @@ export class StackingWorker {
 
   private async checkRewardRefAndUpdate() {
     logger.info('Checking if reward folder ref has been updated');
-    
+
     try {
       const hasChanged = await this.stackingService.rewardRefHasChanged();
-      
+
       if (hasChanged) {
         logger.info('Reward folder ref has changed - updating reward data');
         await this.stackingService.updateRewardData();

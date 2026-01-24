@@ -33,7 +33,6 @@ import {
 import { ContractFunctions } from '../helpers/types';
 import { logger } from '../../api/helpers/logger';
 import { StxTransactionData } from '../../shared/types';
-import { ur } from 'zod/v4/locales';
 
 // Extended type for broadcast transaction response that may include error fields
 type BroadcastResponse = TxBroadcastResult & {

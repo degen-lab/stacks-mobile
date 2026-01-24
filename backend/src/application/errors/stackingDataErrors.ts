@@ -1,4 +1,3 @@
-import { extend } from 'zod/v4/core/util.cjs';
 import { BaseError } from '../../shared/errors/baseError';
 
 export class WrongStackingFunctionError extends BaseError {
@@ -17,7 +16,6 @@ export class RewardFolderRefNotCached extends BaseError {
     super(message);
   }
 }
-
 
 export class WrongStackingPoolError extends BaseError {
   readonly statusCode: number = 400;

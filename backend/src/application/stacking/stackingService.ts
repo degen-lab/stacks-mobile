@@ -31,13 +31,13 @@ export class StackingService {
       where: {
         id: userId,
       },
-    }); 
+    });
     if (!user) {
       throw new UserNotFoundError(`User with id ${userId} not found`);
     }
     const parsedTxId = txId.slice(0, 2) !== '0x' ? '0x'.concat(txId) : txId;
     const transactionData: StxTransactionData =
-    await this.transactionClient.fetchStackingTransactionData(parsedTxId);
+      await this.transactionClient.fetchStackingTransactionData(parsedTxId);
     if (transactionData.functionName !== 'delegate-stx') {
       throw new WrongStackingFunctionError(
         'Wrong contract call! the right pool stacking contract call should be: delegate-stx',
@@ -45,8 +45,8 @@ export class StackingService {
     }
     if (transactionData.delegateTo !== FAST_POOL_STX_ADDRESS) {
       throw new WrongStackingPoolError(
-        `Error: Wrong Pool please use fast pool for a better tracking of your stacking data, address: ${FAST_POOL_STX_ADDRESS}`
-      )
+        `Error: Wrong Pool please use fast pool for a better tracking of your stacking data, address: ${FAST_POOL_STX_ADDRESS}`,
+      );
     }
 
     const stackingData = new StackingData();
@@ -70,7 +70,7 @@ export class StackingService {
     while (hasMore) {
       await this.entityManager.transaction(async (manager) => {
         const { cycleId } = await this.transactionClient.fetchPoxCycleData();
-        
+
         const delegations = await manager.find(StackingData, {
           where: {
             endCycleId: Or(IsNull(), LessThan(cycleId as number)),
