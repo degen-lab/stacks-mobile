@@ -21,8 +21,8 @@ import {
   TransactionAlreadySubmittedError,
   TransactionNotFoundError,
   TransactionNotSponsoredError,
-} from '../errors/transactionError';
-import { TournamentStatusNotFoundError } from '../errors/rewardsError';
+} from '../errors/transactionErrors';
+import { TournamentStatusNotFoundError } from '../errors/rewardsErrors';
 import { TournamentStatus } from '../../domain/entities/tournamentStatus';
 import { NODE_ENV } from '../../shared/constants';
 import { TxBroadcastResult } from '@stacks/transactions';

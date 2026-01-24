@@ -21,6 +21,8 @@ import prometheusRoutes from './prometheus';
 import adMobRoutes from './adMob';
 import purchaseRoutes from './purchase';
 import { CryptoPurchaseService } from '../application/purchase/cryptoPurchaseService';
+import stackingRoutes from './stacking';
+import { StackingService } from '../application/stacking/stackingService';
 
 export const buildServer = async (dataSource: DataSource) => {
   const app = Fastify();
@@ -59,6 +61,8 @@ export const buildServer = async (dataSource: DataSource) => {
   const rewardsService: RewardsService = factory.getRewardsService();
   const cryptoPurchaseService: CryptoPurchaseService =
     factory.getCryptoPurchaseService();
+  const stackingService: StackingService = factory.getStackingService();
+
   app.register(userRoutes, {
     userService,
     prefix: '/user',
@@ -95,6 +99,11 @@ export const buildServer = async (dataSource: DataSource) => {
   app.register(purchaseRoutes, {
     cryptoPurchaseService,
     prefix: '/purchase',
+  });
+
+  app.register(stackingRoutes, {
+    stackingService,
+    prefix: '/stacking',
   });
 
   return app;
