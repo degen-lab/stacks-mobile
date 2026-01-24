@@ -2,16 +2,27 @@ import { EntityManager } from 'typeorm';
 import { ITransactionClient } from '../ports/ITransactionClient';
 import { StackingData } from '../../domain/entities/stackingData';
 import { StxTransactionData } from '../../shared/types';
-import { StackingDataNotFoundError, WrongStackingFunctionError } from '../errors/stackingDataErrors';
+import {
+  RewardFolderRefNotCached,
+  StackingDataNotFoundError,
+  WrongStackingFunctionError,
+} from '../errors/stackingDataErrors';
 import { UserNotFoundError } from '../errors/userErrors';
 import { User } from '../../domain/entities/user';
 import { IStackingPoolClient } from '../ports/IStackingPoolClient';
+import { ICachePort } from '../ports/ICachePort';
+import { addAbortListener } from 'events';
+import { markAsUncloneable } from 'worker_threads';
+import { TransactionStatus } from '../../domain/entities/enums';
+import { makeGaiaAssociationToken } from '@stacks/wallet-sdk';
 
 export class StackingService {
   constructor(
     private entityManager: EntityManager,
     private transactionClient: ITransactionClient,
     private stackingPoolClient: IStackingPoolClient,
+    private cacheClient: ICachePort,
+    private transactionClinet: ITransactionClient,
   ) {}
 
   async saveStackingData(
@@ -54,7 +65,7 @@ export class StackingService {
     userId: number,
     startCycleId: number,
     userStxAddress: string,
-  ):Promise<void> {
+  ): Promise<void> {
     const stackingData = await this.entityManager.findOne(StackingData, {
       where: {
         user: {
@@ -62,17 +73,63 @@ export class StackingService {
         },
         startCycleId,
         userStxAddress,
-      }
+      },
     });
 
-    if (!stackingData) { 
-      throw new StackingDataNotFoundError(`Stacking Data not found for user with id ${userId} and address ${userStxAddress} that started staking on cycle with id ${startCycleId}`);
+    if (!stackingData) {
+      throw new StackingDataNotFoundError(
+        `Stacking Data not found for user with id ${userId} and address ${userStxAddress} that started staking on cycle with id ${startCycleId}`,
+      );
     }
-    
-    const rewardedAmount = await this.stackingPoolClient.delegationTotalRewards(userStxAddress, startCycleId, stackingData.endCycleId); 
+
+    const rewardedAmount = await this.stackingPoolClient.delegationTotalRewards(
+      userStxAddress,
+      startCycleId,
+      stackingData.endCycleId,
+    );
 
     await this.entityManager.update(StackingData, stackingData.id, {
       rewardedStxAmount: rewardedAmount,
+    });
+  }
+
+  private setRewardFolderRef(ref: string) {
+    this.cacheClient.set<string>('rewards_ref', ref);
+  }
+
+  async rewardRefHasChanged() {
+    const cachedRef = await this.cacheClient.get('rewards_ref');
+    if (!cachedRef) {
+      throw new RewardFolderRefNotCached('Reward folder ref was not saved');
+    }
+
+    const gitRef = await this.stackingPoolClient.getRewardFolderRef();
+    if (cachedRef !== gitRef) {
+      this.setRewardFolderRef(gitRef);
+      return false;
+    }
+    return true;
+  }
+
+  async updatePendingStackingDelegations() {
+    await this.entityManager.transaction(async (manager) => {
+      const delegations = await manager.find(StackingData, {
+        where: {
+          txStatus: TransactionStatus.Pending,
+        },
+      });
+      for (const delegation of delegations) {
+        const currentStatus: string =
+          await this.transactionClient.getTransactionStatus(delegation.txId);
+        const updatedStatus =
+          currentStatus === 'success'
+            ? TransactionStatus.Success
+            : currentStatus === 'pending'
+              ? TransactionStatus.Pending
+              : TransactionStatus.Failed;
+        delegation.txStatus = updatedStatus;
+        await manager.save(delegation);
+      }
     });
   }
 }

@@ -145,7 +145,9 @@ export class ServiceFactory {
         new StackingService(
           this.dataSource.createEntityManager(),
           new TransactionClient(),
-          new FastPoolClient()
+          new FastPoolClient(),
+          this.cacheAdapter,
+          new TransactionClient(),
         ),
       );
     }

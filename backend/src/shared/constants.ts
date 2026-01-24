@@ -137,7 +137,7 @@ export const IOS_REFERRER_DOMAIN: string = configParser(
   isTest ? 'ios.dev' : undefined,
 );
 
-export const FAST_POOL_STACKING_DATA_JSON_URL = (address: string): string => `https://api.github.com/repos/friedger/stacking/contents/packages/home/data/users/${address}.json`;
+export const FAST_POOL_STACKING_DATA_JSON_URL = (address: string): string =>
+  `https://api.github.com/repos/friedger/stacking/contents/packages/home/data/users/${address}.json`;
 
-export const FAST_POOL_REWARDS_COMMITS_URL = 
-  `https://api.github.com/repos/friedger/stacking/commits?path=packages/home/data/rewards`;
+export const FAST_POOL_REWARDS_COMMITS_URL = `https://api.github.com/repos/friedger/stacking/commits?path=packages/home/data/rewards`;
