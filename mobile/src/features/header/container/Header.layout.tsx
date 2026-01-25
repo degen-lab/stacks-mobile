@@ -1,13 +1,10 @@
 import type { ImageSource } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-  PointsBadge,
-  Pressable,
-  StreakBadge,
-  Text,
-  View,
-} from "@/components/ui";
+import { InfoBadge, Pressable, Text, View } from "@/components/ui";
+import { BtcLogo } from "@/components/ui/icons/btc-logo";
+import { StreakIcon } from "@/components/ui/icons/streak";
+import { StxCoin } from "@/components/ui/icons/stx-coin";
 import type { StreakDay } from "@/lib/format/date";
 import { Avatar } from "../components/Avatar";
 import { PointsPopover } from "../components/PointsPopover";
@@ -22,6 +19,11 @@ type HeaderLayoutProps = {
   streakDays: StreakDay[];
   loadingStreak: boolean;
   loadingPoints: boolean;
+  btcBalance: number;
+  stxBalance: number;
+  loadingBtc: boolean;
+  loadingStx: boolean;
+  isEarnScreen: boolean;
   avatarSource: ImageSource;
   onPressProfile: () => void;
   onPressPoints: () => void;
@@ -49,6 +51,11 @@ export function HeaderLayout({
   streakDays,
   loadingStreak,
   loadingPoints,
+  btcBalance,
+  stxBalance,
+  loadingBtc,
+  loadingStx,
+  isEarnScreen,
   avatarSource,
   onPressProfile,
   onPressPoints,
@@ -92,24 +99,52 @@ export function HeaderLayout({
         </Pressable>
 
         <View className="flex-row items-center gap-2">
-          <Pressable
-            onPress={onPressStreak}
-            className="active:opacity-90"
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Open streak details"
-          >
-            <StreakBadge streak={streak} loading={loadingStreak} />
-          </Pressable>
-          <Pressable
-            onPress={onPressPoints}
-            className="active:opacity-90"
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Open points details"
-          >
-            <PointsBadge points={points} loading={loadingPoints} />
-          </Pressable>
+          {isEarnScreen ? (
+            <>
+              <InfoBadge
+                icon={<BtcLogo size={18} />}
+                label="BTC"
+                value={btcBalance}
+                loading={loadingBtc}
+              />
+              <InfoBadge
+                icon={<StxCoin size={18} />}
+                label="STX"
+                value={stxBalance}
+                loading={loadingStx}
+              />
+            </>
+          ) : (
+            <>
+              <Pressable
+                onPress={onPressStreak}
+                className="active:opacity-90"
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Open streak details"
+              >
+                <InfoBadge
+                  icon={<StreakIcon size={16} />}
+                  label="Streak"
+                  value={streak}
+                  loading={loadingStreak}
+                />
+              </Pressable>
+              <Pressable
+                onPress={onPressPoints}
+                className="active:opacity-90"
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Open points details"
+              >
+                <InfoBadge
+                  label="Points"
+                  value={points}
+                  loading={loadingPoints}
+                />
+              </Pressable>
+            </>
+          )}
         </View>
       </View>
 

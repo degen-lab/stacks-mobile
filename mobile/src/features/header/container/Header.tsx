@@ -1,19 +1,32 @@
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 
 import { useUserProfile } from "@/api/user";
+import { useBtcBalance } from "@/hooks/use-btc-balance";
+import { useStxBalance } from "@/hooks/use-stx-balance";
 import { calculateStreakDays } from "@/lib/format/date";
 import { signOut as signOutAction, useAuth } from "@/lib/store/auth";
+import { useActiveAccountIndex } from "@/lib/store/settings";
 import { HeaderLayout } from "./Header.layout";
 
 export function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const { userData } = useAuth();
   const { data: userProfile } = useUserProfile();
+  const { activeAccountIndex } = useActiveAccountIndex();
   const [profilePopoverVisible, setProfilePopoverVisible] = useState(false);
   const [pointsPopoverVisible, setPointsPopoverVisible] = useState(false);
   const [streakPopoverVisible, setStreakPopoverVisible] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+
+  // Balance hooks
+  const { balance: btcBalance, isLoading: loadingBtc } = useBtcBalance();
+  const { balance: stxBalance, isLoading: loadingStx } =
+    useStxBalance(activeAccountIndex);
+
+  // Check if we're on the Earn screen
+  const isEarnScreen = pathname === "/(app)/Earn" || pathname === "/Earn";
 
   const avatarSource = useMemo(
     () => (userData?.user.photo ? { uri: userData.user.photo } : {}),
@@ -99,6 +112,11 @@ export function Header() {
       streakDays={streakDays}
       loadingStreak={loadingStreak}
       loadingPoints={loadingPoints}
+      btcBalance={btcBalance}
+      stxBalance={stxBalance}
+      loadingBtc={loadingBtc}
+      loadingStx={loadingStx}
+      isEarnScreen={isEarnScreen}
       avatarSource={avatarSource}
       onPressProfile={handlePressProfile}
       onPressPoints={handlePressPoints}
