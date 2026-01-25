@@ -79,7 +79,10 @@ export function MnemonicWordGrid({
                   className="font-matter-sq-mono text-sm text-primary"
                   style={
                     revealed
-                      ? { letterSpacing: 0.5, color: isInvalid && hasValue ? "#DC2626" : undefined }
+                      ? {
+                          letterSpacing: 0.5,
+                          color: isInvalid && hasValue ? "#DC2626" : undefined,
+                        }
                       : { opacity: 0.5, letterSpacing: 2 }
                   }
                 >

@@ -1,6 +1,7 @@
 // https://docs.expo.dev/guides/using-eslint/
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
+const globals = require('globals');
 
 module.exports = defineConfig([
   expoConfig,
@@ -15,6 +16,12 @@ module.exports = defineConfig([
           project: './tsconfig.json',
         },
       },
+    },
+  },
+  {
+    files: ['**/*.test.{js,jsx,ts,tsx}', 'jest.setup.cjs', '**/__tests__/**'],
+    languageOptions: {
+      globals: globals.jest,
     },
   },
 ]);

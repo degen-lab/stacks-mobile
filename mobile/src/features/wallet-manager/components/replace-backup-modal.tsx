@@ -42,7 +42,12 @@ function validateMnemonicWords(words: string[]): MnemonicValidation {
   const invalidWordIndices: number[] = [];
 
   if (filledCount === 0) {
-    return { isValid: false, wordCount: 0, filledCount: 0, invalidWordIndices: [] };
+    return {
+      isValid: false,
+      wordCount: 0,
+      filledCount: 0,
+      invalidWordIndices: [],
+    };
   }
 
   words.forEach((word, index) => {
@@ -133,26 +138,25 @@ function MnemonicStep({
           words={words}
           editable={true}
           wordCount={24}
-          maxHeight={400}
+          maxHeight={240}
           onWordChange={onWordChange}
           invalidWordIndices={validation.invalidWordIndices}
         />
       </View>
 
-      {validation.filledCount > 0 && (
-        <View className="mb-4 px-1">
-          {validation.isValid && (
+      <View className="mb-4 px-1" style={{ minHeight: 22 }}>
+        {validation.filledCount > 0 ? (
+          validation.isValid ? (
             <Text className="text-sm font-instrument-sans-medium text-green-600 mt-1">
               ✓ Valid mnemonic phrase
             </Text>
-          )}
-          {!validation.isValid && validation.filledCount > 0 && (
+          ) : (
             <Text className="text-sm font-instrument-sans-medium text-red-600 mt-1">
               {validation.error || "Enter 12 or 24 valid words to continue"}
             </Text>
-          )}
-        </View>
-      )}
+          )
+        ) : null}
+      </View>
 
       <Button
         variant="default"
@@ -357,8 +361,21 @@ export const ReplaceBackupModal = forwardRef<
   return (
     <Modal
       ref={ref}
-      snapPoints={["90%"]}
+      snapPoints={["70%"]}
       title="Replace Cloud Backup"
+      headerLeft={
+        step === "password" ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onPress={handleBackToMnemonic}
+            disabled={loading}
+            accessibilityLabel="Go back to recovery phrase entry"
+          >
+            <ArrowLeft size={20} className="text-secondary" />
+          </Button>
+        ) : undefined
+      }
       onAnimate={(from, to) => {
         if (to !== -1 && from === -1) {
           handleModalOpen();
@@ -376,17 +393,6 @@ export const ReplaceBackupModal = forwardRef<
           />
         ) : (
           <View className="gap-4">
-            <View className="mb-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onPress={handleBackToMnemonic}
-                disabled={loading}
-              >
-                <ArrowLeft size={20} className="text-secondary" />
-              </Button>
-            </View>
-
             <WarningLabel label="Warning: This password cannot be reset. Keep it safe." />
 
             <BackupPasswordForm
