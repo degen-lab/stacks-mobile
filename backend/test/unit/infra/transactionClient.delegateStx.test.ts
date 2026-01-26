@@ -55,7 +55,7 @@ describe('TransactionClient - fetchStackingTransactionData with real delegate-st
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue(mockResponse),
-    } as any);
+    });
 
     const result = await transactionClient.fetchStackingTransactionData(
       '0x3bf9dd597116c6a7e5f4f6b984e7f77a63bc47c7d9889a7997e65d7f2d3d5468',
@@ -111,7 +111,7 @@ describe('TransactionClient - fetchStackingTransactionData with real delegate-st
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue(mockResponse),
-    } as any);
+    });
 
     const result =
       await transactionClient.fetchStackingTransactionData('0xtest123');
@@ -159,7 +159,7 @@ describe('TransactionClient - fetchStackingTransactionData with real delegate-st
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue(mockResponse),
-    } as any);
+    });
 
     const result =
       await transactionClient.fetchStackingTransactionData('0xtest456');
