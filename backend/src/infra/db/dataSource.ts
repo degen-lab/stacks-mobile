@@ -41,5 +41,5 @@ export const AppDataSource = new DataSource({
     CryptoPurchase,
   ],
   subscribers: [],
-  migrations: [],
+  migrations: ['src/infra/db/migrations/**/*.ts'],
 });

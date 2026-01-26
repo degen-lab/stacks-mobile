@@ -142,16 +142,33 @@ describe('FastPoolClient', () => {
       expect(result).toBe(0);
     });
 
-    it('should throw error when fetch fails', async () => {
+    it('should return 0 when stacking data file not found (404)', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
         statusText: 'Not Found',
       });
 
+      const result = await fastPoolClient.delegationTotalRewards(
+        testAddress,
+        10,
+        20,
+      );
+
+      // 404 means the address file doesn't exist yet on GitHub (normal for new stacks)
+      expect(result).toBe(0);
+    });
+
+    it('should throw error for non-404 fetch failures', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+      });
+
       await expect(
         fastPoolClient.delegationTotalRewards(testAddress, 10, 20),
-      ).rejects.toThrow('GitHub API error: 404 Not Found');
+      ).rejects.toThrow('GitHub API error: 403 Forbidden');
     });
 
     it('should handle invalid base64 encoding', async () => {

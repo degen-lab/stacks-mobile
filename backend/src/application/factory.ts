@@ -141,7 +141,7 @@ export class ServiceFactory {
   getStackingService(): StackingService {
     if (!this.services.has('stackingService')) {
       this.services.set(
-        'stackingServices',
+        'stackingService',
         new StackingService(
           this.dataSource.createEntityManager(),
           new TransactionClient(),
