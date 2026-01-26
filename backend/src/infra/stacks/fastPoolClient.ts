@@ -4,6 +4,7 @@ import {
   FAST_POOL_REWARDS_COMMITS_URL,
   GITHUB_API_KEY,
 } from '../../shared/constants';
+import { logger } from '../../api/helpers/logger';
 
 export class FastPoolClient implements IStackingPoolClient {
   async delegationTotalRewards(
@@ -11,7 +12,8 @@ export class FastPoolClient implements IStackingPoolClient {
     startCycleId: number,
     endCycleId: number | null,
   ): Promise<number> {
-    const res = await fetch(FAST_POOL_STACKING_DATA_JSON_URL(address), {
+    const url = FAST_POOL_STACKING_DATA_JSON_URL(address);
+    const res = await fetch(url, {
       headers: {
         Accept: 'application/vnd.github+json',
         Authorization: `Bearer ${GITHUB_API_KEY}`,
@@ -20,6 +22,14 @@ export class FastPoolClient implements IStackingPoolClient {
     });
 
     if (!res.ok) {
+      if (res.status === 404) {
+        logger.info({
+          msg: 'No stacking data file found for address on GitHub',
+          address,
+          url,
+        });
+        return 0; // No rewards if file doesn't exist yet
+      }
       throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
     }
 
@@ -32,11 +42,38 @@ export class FastPoolClient implements IStackingPoolClient {
     const maxCycles = endCycleId ?? Number.MAX_SAFE_INTEGER;
 
     for (let i = startCycleId; i < maxCycles; i += 1) {
-      if (!jsonStackingData.cycles[`${i}`]) {
+      const cycle = jsonStackingData.cycles?.[`${i}`];
+      if (!cycle) {
+        logger.info({
+          msg: 'Cycle not found in stacking data, stopping',
+          address,
+          cycleId: i,
+          startCycleId,
+          endCycleId,
+        });
         break;
       }
-      totalStackingRewards += jsonStackingData.cycles[`${i}`].rewards;
+      const rewards = cycle.rewards;
+      if (rewards !== undefined && rewards !== null && !isNaN(rewards)) {
+        totalStackingRewards += rewards;
+      } else {
+        logger.warn({
+          msg: 'Invalid rewards value for cycle',
+          address,
+          cycleId: i,
+          rewards,
+        });
+      }
     }
+
+    logger.info({
+      msg: 'Total stacking rewards calculated',
+      address,
+      startCycleId,
+      endCycleId,
+      totalStackingRewards,
+    });
+
     return totalStackingRewards;
   }
 
