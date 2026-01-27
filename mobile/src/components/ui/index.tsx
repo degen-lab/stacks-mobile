@@ -22,6 +22,7 @@ export * from "./screen-header";
 export * from "./skeleton";
 export * from "./spinner";
 export * from "./loading-view";
+export * from "./tabs";
 export * from "./text";
 export * from "./weekly-check-in";
 export * from "./utils";

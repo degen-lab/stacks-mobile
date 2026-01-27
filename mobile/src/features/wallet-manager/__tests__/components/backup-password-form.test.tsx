@@ -61,7 +61,7 @@ describe("BackupPasswordForm", () => {
     });
 
     it("renders activity indicator when loading", () => {
-      const { getByTestId, queryByText } = render(
+      const { queryByText } = render(
         <BackupPasswordForm {...defaultProps} loading={true} />,
       );
 
@@ -133,8 +133,6 @@ describe("BackupPasswordForm", () => {
         />,
       );
 
-      // Button should be disabled - verify by trying to submit
-      const onSubmit = defaultProps.onSubmit;
       expect(UNSAFE_root).toBeTruthy();
     });
 

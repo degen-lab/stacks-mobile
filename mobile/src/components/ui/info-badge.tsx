@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type InfoBadgeProps = {
   icon?: ReactNode;
-  label: string;
+  label?: string;
   value: number | string | null;
   loading?: boolean;
 };
@@ -28,7 +28,10 @@ export function InfoBadge({
     return value;
   }, [value]);
 
-  const gapClass = icon ? "gap-1.5" : "gap-1";
+  const hasLabel = Boolean(label?.trim());
+  const hasIcon = Boolean(icon);
+  const gapClass =
+    hasIcon && hasLabel ? "gap-1.5" : hasIcon || hasLabel ? "gap-1" : "";
 
   if (loading) {
     return (
@@ -45,9 +48,11 @@ export function InfoBadge({
       className={`flex-row items-center ${gapClass} rounded-lg border-2 border-surface-secondary bg-transparent px-3 py-1.5`}
     >
       {icon}
-      <Text className="font-instrument-sans text-sm text-secondary">
-        {label}
-      </Text>
+      {hasLabel ? (
+        <Text className="font-instrument-sans text-sm text-secondary">
+          {label}
+        </Text>
+      ) : null}
       <Text className="font-instrument-sans text-sm text-primary">
         {displayValue}
       </Text>

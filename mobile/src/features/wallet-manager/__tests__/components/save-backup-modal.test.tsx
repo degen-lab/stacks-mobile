@@ -1,7 +1,6 @@
-import { fireEvent, render, waitFor } from "@/lib/tests";
+import { render, waitFor } from "@/lib/tests";
 import { SaveBackupModal } from "../../components/save-backup-modal";
 import { walletKit } from "@/lib/wallet";
-import { showMessage } from "react-native-flash-message";
 import { useAuth } from "@/lib/store/auth";
 
 jest.mock("@/lib/wallet", () => ({
@@ -85,7 +84,7 @@ describe("SaveBackupModal", () => {
     it("saves backup successfully", async () => {
       (walletKit.backupWallet as jest.Mock).mockResolvedValueOnce(undefined);
 
-      const { getByText, getByPlaceholderText } = render(
+      const { getByText } = render(
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 

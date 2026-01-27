@@ -50,6 +50,12 @@ const button = tv({
         label: "text-black underline dark:text-white",
         indicator: "text-black dark:text-white",
       },
+      iconCircle: {
+        container:
+          "my-0 rounded-full border border-surface-secondary bg-sand-100 active:opacity-90",
+        label: "text-primary font-instrument-sans",
+        indicator: "text-primary",
+      },
       link: {
         container: "bg-transparent",
         label: "text-primary font-instrument-sans text-xs",
@@ -99,6 +105,10 @@ const button = tv({
         label: "text-base",
       },
       icon: { container: "size-9" },
+      iconCircle: {
+        container: "h-14 w-14 items-center justify-center p-0",
+        label: "text-sm",
+      },
     },
     disabled: {
       true: {
@@ -128,6 +138,7 @@ type ButtonVariants = VariantProps<typeof button>;
 interface Props extends ButtonVariants, Omit<PressableProps, "disabled"> {
   label?: string;
   leftIcon?: React.ReactNode;
+  iconOnly?: boolean;
   loading?: boolean;
   className?: string;
   textClassName?: string;
@@ -141,6 +152,7 @@ const ButtonComponent = (
     variant = "default",
     disabled = false,
     size = "default",
+    iconOnly = false,
     className = "",
     testID,
     textClassName = "",
@@ -148,6 +160,9 @@ const ButtonComponent = (
   }: Props,
   ref: React.Ref<View>,
 ) => {
+  const showLabel =
+    !iconOnly && text !== undefined && text !== null && String(text).length > 0;
+
   const styles = React.useMemo(
     () => button({ variant, disabled, size }),
     [variant, disabled, size],
@@ -160,6 +175,9 @@ const ButtonComponent = (
       {...props}
       ref={ref}
       testID={testID}
+      accessibilityLabel={
+        props.accessibilityLabel ?? (text ? String(text) : undefined)
+      }
     >
       {props.children ? (
         props.children
@@ -184,12 +202,14 @@ const ButtonComponent = (
           ) : (
             <RNView className="flex-row items-center justify-center gap-2">
               {leftIcon}
-              <Text
-                testID={testID ? `${testID}-label` : undefined}
-                className={styles.label({ className: textClassName })}
-              >
-                {text}
-              </Text>
+              {showLabel ? (
+                <Text
+                  testID={testID ? `${testID}-label` : undefined}
+                  className={styles.label({ className: textClassName })}
+                >
+                  {text}
+                </Text>
+              ) : null}
             </RNView>
           )}
         </>

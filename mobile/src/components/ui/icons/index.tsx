@@ -12,3 +12,7 @@ export * from "./streak";
 export * from "./telegram-icon";
 export * from "./whatsapp-icon";
 export * from "./x-icon";
+export * from "./swap-action-icon";
+export * from "./bridge-action-icon";
+export * from "./stx-coin";
+export * from "./btc-logo";
