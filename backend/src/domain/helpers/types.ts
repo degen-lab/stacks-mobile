@@ -16,3 +16,15 @@ export enum SubmissionTier {
   Gold,
   RaffleWinner,
 }
+
+export type SwapTxMetadata = {
+  tokenIn: string,
+  tokenOut: string,
+  amount: number,
+}
+
+export type LendingTxMetadata = {}
+
+export type DefiOperationMetadata = 
+  SwapTxMetadata
+  | LendingTxMetadata;

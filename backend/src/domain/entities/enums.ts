@@ -40,3 +40,8 @@ export enum TournamentStatusEnum {
   'DistributionPhase' = 'DistributionPhase',
   'HeadToNextTournament' = 'HeadToNextTournament',
 }
+
+export enum DefiOperationType {
+  Swap = 'Swap',
+  Lending = 'Lending',
+}

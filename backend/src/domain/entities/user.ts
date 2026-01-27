@@ -15,6 +15,8 @@ import { Submission } from './submission';
 import { UniqueItem } from './uniqueItem';
 import { CryptoPurchase } from './cryptoPurchase';
 import { StackingData } from './stackingData';
+import { DefiOperation } from './defiOperation';
+
 @Entity()
 export class User extends BaseAppEntity {
   @Column({ type: 'varchar', unique: true })
@@ -60,6 +62,10 @@ export class User extends BaseAppEntity {
     cascade: true,
   })
   stackingData: StackingData[];
+  @OneToMany(() => DefiOperation, (defiOperation) => defiOperation.user, {
+    cascade: true,
+  })
+  defiOperationList: DefiOperation[];
 
   updateBlacklistStatus() {
     if (!this.fraudAttempts || this.fraudAttempts.length === 0) {

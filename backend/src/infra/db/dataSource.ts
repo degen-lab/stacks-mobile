@@ -18,6 +18,7 @@ import { RewardsDistributionData } from '../../domain/entities/rewardsDistributi
 import { TournamentStatus } from '../../domain/entities/tournamentStatus';
 import { CryptoPurchase } from '../../domain/entities/cryptoPurchase';
 import { StackingData } from '../../domain/entities/stackingData';
+import { DefiOperation } from '../../domain/entities/defiOperation';
 
 export const AppDataSource = new DataSource({
   type: DB_TYPE,
@@ -39,6 +40,7 @@ export const AppDataSource = new DataSource({
     TournamentStatus,
     StackingData,
     CryptoPurchase,
+    DefiOperation,
   ],
   subscribers: [],
   migrations: ['src/infra/db/migrations/**/*.ts'],
