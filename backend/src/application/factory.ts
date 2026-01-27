@@ -3,7 +3,7 @@ import { UserService } from './user/userService';
 import { UserDomainService } from '../domain/service/userDomainService';
 import { GameSessionService } from '../domain/service/gameSessionService';
 import { TransactionService } from './transaction/transactionService';
-import { TransactionClientPort } from '../infra/stacks/transactionClient';
+import { TransactionClient } from '../infra/stacks/transactionClient';
 import { SubmissionDomainService } from '../domain/service/submissionDomainService';
 import { StreakService } from './streaks/streakService';
 import { StreaksDomainService } from '../domain/service/streaksDomainService';
@@ -17,6 +17,8 @@ import { CryptoPurchaseService } from './purchase/cryptoPurchaseService';
 import { CryptoPurchaseDomainService } from '../domain/service/cryptoPurchaseDomainService';
 import { StackingService } from './stacking/stackingService';
 import { FastPoolClient } from '../infra/stacks/fastPoolClient';
+import { DefiService } from './defi/defiService';
+import { bitflowClient } from '../infra/defi/client/bitflowClient';
 
 type ServiceType =
   | UserService
@@ -25,7 +27,8 @@ type ServiceType =
   | GameStoreService
   | RewardsService
   | CryptoPurchaseService
-  | StackingService;
+  | StackingService
+  | DefiService;
 
 type ServiceConstructor<T extends ServiceType> = new (...args: unknown[]) => T;
 
@@ -60,7 +63,7 @@ export class ServiceFactory {
           new UserDomainService(),
           this.getStreakService(),
           new GameSessionService(),
-          new TransactionClientPort(),
+          new TransactionClient(),
           this.dataSource.createEntityManager(),
         ),
       );
@@ -73,7 +76,7 @@ export class ServiceFactory {
       this.services.set(
         'transactionService',
         new TransactionService(
-          new TransactionClientPort(),
+          new TransactionClient(),
           new SubmissionDomainService(),
           this.dataSource.createEntityManager(),
         ),
@@ -115,7 +118,7 @@ export class ServiceFactory {
         'rewardsService',
         new RewardsService(
           new RewardsCalculator(),
-          new TransactionClientPort(),
+          new TransactionClient(),
           this.dataSource.createEntityManager(),
         ),
       );
@@ -144,12 +147,22 @@ export class ServiceFactory {
         'stackingService',
         new StackingService(
           this.dataSource.createEntityManager(),
-          new TransactionClientPort(),
+          new TransactionClient(),
           new FastPoolClient(),
           this.cacheAdapter,
         ),
       );
     }
     return this.services.get('stackingService') as StackingService;
+  }
+
+  getDefiService(): DefiService {
+    if (!this.services.has('defiService')) {
+      this.services.set(
+        'defiService',
+        new DefiService(bitflowClient),
+      );
+    }
+    return this.services.get('defiService') as DefiService;
   }
 }

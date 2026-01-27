@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@bitflowlabs/core-sdk':
+        specifier: ^2.4.0
+        version: 2.4.0
       '@fastify/cors':
         specifier: ^11.1.0
         version: 11.2.0
@@ -299,6 +302,10 @@ packages:
 
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+
+  '@bitflowlabs/core-sdk@2.4.0':
+    resolution: {integrity: sha512-ii9W0/dfRb0tkw0Y44KJ+40VkHnH2a+Wgj+aWvcyCkFU9iE2LlQ3AQMZA+W1MHxTgBzah34ouzEs1+F6xhkSdg==}
+    engines: {node: '>=20.0.0'}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -762,14 +769,26 @@ packages:
   '@stacks/auth@7.3.1':
     resolution: {integrity: sha512-8zjQrnthhymJruSWYuP17IRx+c0k8LrOZYH9DRyaTzjEZ+pbvsRUM9v7hH1aGr2LG94BI9249qXpCtGWorVI+g==}
 
+  '@stacks/common@6.16.0':
+    resolution: {integrity: sha512-PnzvhrdGRMVZvxTulitlYafSK4l02gPCBBoI9QEoTqgSnv62oaOXhYAUUkTMFKxdHW1seVEwZsrahuXiZPIAwg==}
+
   '@stacks/common@7.0.2':
     resolution: {integrity: sha512-+RSecHdkxOtswmE4tDDoZlYEuULpnTQVeDIG5eZ32opK8cFxf4EugAcK9CsIsHx/Se1yTEaQ21WGATmJGK84lQ==}
 
   '@stacks/common@7.3.1':
     resolution: {integrity: sha512-29ANTFcSSlXnGQlgDVWg7OQ74lgQhu3x8JkeN19Q+UE/1lbQrzcctgPHG74XHjWNp8NPBqskUYA8/HLgIKuKNQ==}
 
+  '@stacks/connect-ui@6.6.0':
+    resolution: {integrity: sha512-uc22RH99umYzB94h5LiKPtGu34IBGrwUb3TfijGb2ZMudaMCiv/Fr1jjZKfQW5MRmexnbAEmGZpFlQKinCcsUA==}
+
+  '@stacks/connect@7.10.2':
+    resolution: {integrity: sha512-fQcdayBgq9XZnX4rqQxa//Gx9c0ycrmrZT9dZ01uHDlIr/ZxwU18d5A3hyYv4F7LQYQQkFr9htpVTlH0RSqWUw==}
+
   '@stacks/encryption@7.3.1':
     resolution: {integrity: sha512-hCY61gd4PVr5LUZKOuzWfPLmuPrIGEapd1LkMintToJ+F3R/x0T+iIJVnJf2Y1l0cJsc4Xxq/TWCBeEAfybScg==}
+
+  '@stacks/network@6.17.0':
+    resolution: {integrity: sha512-numHbfKjwco/rbkGPOEz8+FcJ2nBnS/tdJ8R422Q70h3SiA9eqk9RjSzB8p4JP8yW1SZvW+eihADHfMpBuZyfw==}
 
   '@stacks/network@7.2.0':
     resolution: {integrity: sha512-AkLougCF2RLbK97TtISZxAhF3cE757XMXWOGKvEFWNauiQ5/bYyI9W5jZypG3yI/AyYIo04NKoFWWTnpJcn1iA==}
@@ -783,6 +802,9 @@ packages:
   '@stacks/storage@7.3.1':
     resolution: {integrity: sha512-AvbZJkc97LZ0icpIWeZpUgtSQS3Nsd3M16GYAJcHDqsBdsCtlwoSzsEwrcwrxZ1CFsWMnz3Te9xCNqUjoQ+CcA==}
 
+  '@stacks/transactions@6.17.0':
+    resolution: {integrity: sha512-FUah2BRgV66ApLcEXGNGhwyFTRXqX5Zco3LpiM3essw8PF0NQlHwwdPgtDko5RfrJl3LhGXXe/30nwsfNnB3+g==}
+
   '@stacks/transactions@7.3.0':
     resolution: {integrity: sha512-xtIktW0I0z+5VPnQM5ZfXpeTKKBY2XwqvhYZJdIGT5QQ3SvZpJVoP7aod2pms4IUfW53kTyCjyaNm6hFmgWOWw==}
 
@@ -791,6 +813,11 @@ packages:
 
   '@stacks/wallet-sdk@7.2.0':
     resolution: {integrity: sha512-w4UmIaulB03ki0eosWA2ju4vXtF1N+n+nX+/GuV8ZW3rbZ7xeRCv16IzZZL6TspMcaUKyZKTVB2uximqBNbqPQ==}
+
+  '@stencil/core@2.22.3':
+    resolution: {integrity: sha512-kmVA0M/HojwsfkeHsifvHVIYe4l5tin7J5+DLgtl8h6WWfiMClND5K3ifCXXI2ETDNKiEk21p6jql3Fx9o2rng==}
+    engines: {node: '>=12.10.0', npm: '>=6.0.0'}
+    hasBin: true
 
   '@tsconfig/node10@1.0.12':
     resolution: {integrity: sha512-UCYBaeFvM11aU2y3YPZ//O5Rhj+xKyzy7mvcIoAjASbigy8mHMryP5cK7dgjlz2hWxh1g5pLw084E0a/wlUSFQ==}
@@ -819,6 +846,9 @@ packages:
   '@types/babel__traverse@7.28.0':
     resolution: {integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==}
 
+  '@types/bn.js@5.2.0':
+    resolution: {integrity: sha512-DLbJ1BPqxvQhIGbeu8VbUC1DiAiahHtAYvA0ZEAa4P31F7IaArc8z3C3BRQdWX4mtLQuABG4yzp76ZrS02Ui1Q==}
+
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
@@ -836,6 +866,9 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/node@18.19.130':
+    resolution: {integrity: sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==}
 
   '@types/node@24.10.3':
     resolution: {integrity: sha512-gqkrWUsS8hcm0r44yn7/xZeV1ERva/nLgrLxFRUGb7aoNMIJfZJ3AC261zDQuOAKC7MiXai1WCpYc48jAHoShQ==}
@@ -2733,6 +2766,9 @@ packages:
     resolution: {integrity: sha512-xS6+s8e0Xbx++5/0L+yyexukU7pz//Yg6IHg3BKhXotg1JcYtgxVcUctQ0HxLByiJzpAkNFawz1Nz5Xadzo82g==}
     engines: {node: '>=14.0.0'}
 
+  undici-types@5.26.5:
+    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
@@ -3041,6 +3077,15 @@ snapshots:
       '@babel/helper-validator-identifier': 7.28.5
 
   '@bcoe/v8-coverage@0.2.3': {}
+
+  '@bitflowlabs/core-sdk@2.4.0':
+    dependencies:
+      '@stacks/connect': 7.10.2
+      '@stacks/network': 7.3.1
+      '@stacks/transactions': 7.3.1
+      dotenv: 16.6.1
+    transitivePeerDependencies:
+      - encoding
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -3548,9 +3593,32 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  '@stacks/common@6.16.0':
+    dependencies:
+      '@types/bn.js': 5.2.0
+      '@types/node': 18.19.130
+
   '@stacks/common@7.0.2': {}
 
   '@stacks/common@7.3.1': {}
+
+  '@stacks/connect-ui@6.6.0':
+    dependencies:
+      '@stencil/core': 2.22.3
+
+  '@stacks/connect@7.10.2':
+    dependencies:
+      '@stacks/auth': 7.3.1
+      '@stacks/common': 7.3.1
+      '@stacks/connect-ui': 6.6.0
+      '@stacks/network': 7.3.1
+      '@stacks/network-v6': '@stacks/network@6.17.0'
+      '@stacks/profile': 7.3.1
+      '@stacks/transactions': 7.3.1
+      '@stacks/transactions-v6': '@stacks/transactions@6.17.0'
+      jsontokens: 4.0.1
+    transitivePeerDependencies:
+      - encoding
 
   '@stacks/encryption@7.3.1':
     dependencies:
@@ -3562,6 +3630,13 @@ snapshots:
       bs58: 5.0.0
       ripemd160-min: 0.0.6
       varuint-bitcoin: 1.1.2
+
+  '@stacks/network@6.17.0':
+    dependencies:
+      '@stacks/common': 6.16.0
+      cross-fetch: 3.2.0
+    transitivePeerDependencies:
+      - encoding
 
   '@stacks/network@7.2.0':
     dependencies:
@@ -3596,6 +3671,17 @@ snapshots:
       '@stacks/network': 7.3.1
       base64-js: 1.5.1
       jsontokens: 4.0.1
+    transitivePeerDependencies:
+      - encoding
+
+  '@stacks/transactions@6.17.0':
+    dependencies:
+      '@noble/hashes': 1.1.5
+      '@noble/secp256k1': 1.7.1
+      '@stacks/common': 6.16.0
+      '@stacks/network': 6.17.0
+      c32check: 2.0.0
+      lodash.clonedeep: 4.5.0
     transitivePeerDependencies:
       - encoding
 
@@ -3638,6 +3724,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  '@stencil/core@2.22.3': {}
+
   '@tsconfig/node10@1.0.12': {}
 
   '@tsconfig/node12@1.0.11': {}
@@ -3672,6 +3760,10 @@ snapshots:
     dependencies:
       '@babel/types': 7.28.5
 
+  '@types/bn.js@5.2.0':
+    dependencies:
+      '@types/node': 24.10.3
+
   '@types/estree@1.0.8': {}
 
   '@types/istanbul-lib-coverage@2.0.6': {}
@@ -3690,6 +3782,10 @@ snapshots:
       pretty-format: 30.2.0
 
   '@types/json-schema@7.0.15': {}
+
+  '@types/node@18.19.130':
+    dependencies:
+      undici-types: 5.26.5
 
   '@types/node@24.10.3':
     dependencies:
@@ -5718,6 +5814,8 @@ snapshots:
   uint8array-tools@0.0.7: {}
 
   uint8array-tools@0.0.8: {}
+
+  undici-types@5.26.5: {}
 
   undici-types@7.16.0: {}
 
