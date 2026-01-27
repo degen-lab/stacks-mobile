@@ -23,6 +23,8 @@ import purchaseRoutes from './purchase';
 import { CryptoPurchaseService } from '../application/purchase/cryptoPurchaseService';
 import stackingRoutes from './stacking';
 import { StackingService } from '../application/stacking/stackingService';
+import defiRoutes from './defi';
+import { DefiService } from '../application/defi/defiService';
 
 export const buildServer = async (dataSource: DataSource) => {
   const app = Fastify();
@@ -62,7 +64,7 @@ export const buildServer = async (dataSource: DataSource) => {
   const cryptoPurchaseService: CryptoPurchaseService =
     factory.getCryptoPurchaseService();
   const stackingService: StackingService = factory.getStackingService();
-
+  const defiService: DefiService = factory.getDefiService();
   app.register(userRoutes, {
     userService,
     prefix: '/user',
@@ -106,5 +108,9 @@ export const buildServer = async (dataSource: DataSource) => {
     prefix: '/stacking',
   });
 
+  app.register(defiRoutes, {
+    defiService,
+    prefix: '/defi',
+  });
   return app;
 };
