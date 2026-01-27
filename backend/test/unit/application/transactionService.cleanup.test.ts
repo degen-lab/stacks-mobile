@@ -1,5 +1,5 @@
 import { TransactionService } from '../../../src/application/transaction/transactionService';
-import { ITransactionClient } from '../../../src/application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
 import { SubmissionDomainService } from '../../../src/domain/service/submissionDomainService';
 import { EntityManager, FindOperator } from 'typeorm';
 import { Submission } from '../../../src/domain/entities/submission';
@@ -7,7 +7,7 @@ import { TransactionStatus } from '../../../src/domain/entities/enums';
 
 describe('TransactionService - cleanUpUnsuccessfullSubmissions', () => {
   let service: TransactionService;
-  let transactionClientMock: jest.Mocked<ITransactionClient>;
+  let transactionClientMock: jest.Mocked<TransactionClientPort>;
   let submissionDomainServiceMock: jest.Mocked<SubmissionDomainService>;
   let entityManagerMock: jest.Mocked<EntityManager>;
 
@@ -20,7 +20,7 @@ describe('TransactionService - cleanUpUnsuccessfullSubmissions', () => {
       getTransactionStatus: jest.fn(),
       distributeRewards: jest.fn(),
       headToNextTournament: jest.fn(),
-    } as unknown as jest.Mocked<ITransactionClient>;
+    } as unknown as jest.Mocked<TransactionClientPort>;
 
     submissionDomainServiceMock = {
       createSubmission: jest.fn(),

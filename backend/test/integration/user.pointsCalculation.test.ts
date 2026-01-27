@@ -18,7 +18,7 @@ import {
   createTestDataSource,
   getTestDataSource,
 } from './testDataSource';
-import { ITransactionClient } from '../../src/application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../src/application/ports/transactionClient';
 
 describe('User Points Calculation with Streak Boost Integration Tests', () => {
   let userService: UserService;
@@ -27,7 +27,7 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
   let gameSessionService: GameSessionService;
   let cacheAdapter: RedisCacheAdapter;
   let streakService: StreakService;
-  let mockTransactionClient: jest.Mocked<ITransactionClient>;
+  let mockTransactionClient: jest.Mocked<TransactionClientPort>;
   beforeAll(async () => {
     await createTestDataSource();
     dataSource = getTestDataSource();
@@ -35,7 +35,7 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
 
     mockTransactionClient = {
       getTournamentId: jest.fn().mockResolvedValue(1),
-    } as unknown as jest.Mocked<ITransactionClient>;
+    } as unknown as jest.Mocked<TransactionClientPort>;
 
     const userDomainService = new UserDomainService();
     gameSessionService = new GameSessionService();

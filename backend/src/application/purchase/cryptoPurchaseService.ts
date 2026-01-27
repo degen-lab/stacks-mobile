@@ -1,6 +1,6 @@
 import { EntityManager } from 'typeorm';
 import { TransakPurchaseClient } from '../../infra/purchase/transakPurchaseClient';
-import { ICachePort } from '../ports/ICachePort';
+import { CachePort } from '../ports/cachePort';
 import { AppPlatform, TransakAccessToken } from '../../shared/types';
 import { UserNotFoundError } from '../errors/userErrors';
 import { PurchaseNotFoundError } from '../errors/purchaseErrors';
@@ -12,7 +12,7 @@ import { logger } from '../../api/helpers/logger';
 export class CryptoPurchaseService {
   constructor(
     private entityManager: EntityManager,
-    private cacheClient: ICachePort,
+    private cacheClient: CachePort,
     private purchaseClient: TransakPurchaseClient,
     private purchaseDomainService: CryptoPurchaseDomainService,
   ) {}

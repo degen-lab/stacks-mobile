@@ -1,4 +1,4 @@
-export interface IStackingPoolClient {
+export interface StackingPoolClientPort {
   delegationTotalRewards(
     address: string,
     startCycleId: number,

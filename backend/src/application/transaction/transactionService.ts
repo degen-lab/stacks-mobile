@@ -1,6 +1,6 @@
 import { EntityManager, In, LessThan } from 'typeorm';
 import { createVerify } from 'crypto';
-import { ITransactionClient } from '../ports/ITransactionClient';
+import { TransactionClientPort } from '../ports/transactionClient';
 import { UserBlackListedError, UserNotFoundError } from '../errors/userErrors';
 import { User } from '../../domain/entities/user';
 import { SubmissionDomainService } from '../../domain/service/submissionDomainService';
@@ -29,7 +29,7 @@ import { TxBroadcastResult } from '@stacks/transactions';
 
 export class TransactionService {
   constructor(
-    private transactionClient: ITransactionClient,
+    private transactionClient: TransactionClientPort,
     private submissionDomainService: SubmissionDomainService,
     private entityManager: EntityManager,
   ) {}

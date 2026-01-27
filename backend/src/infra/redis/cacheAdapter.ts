@@ -1,7 +1,7 @@
-import { ICachePort } from '../../application/ports/ICachePort';
+import { CachePort } from '../../application/ports/cachePort';
 import { redis } from './redisClient';
 
-export class RedisCacheAdapter implements ICachePort {
+export class RedisCacheAdapter implements CachePort {
   async get<T>(key: string): Promise<T> {
     const response = await redis.get(key);
     if (!response) {

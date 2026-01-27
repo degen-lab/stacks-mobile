@@ -13,7 +13,7 @@ import { StreakService } from '../application/streaks/streakService';
 import gameStoreRoutes from './gameStore';
 import { GameStoreService } from '../application/gameStore/gameStoreService';
 import { ServiceFactory } from '../application/factory';
-import { ICachePort } from '../application/ports/ICachePort';
+import { CachePort } from '../application/ports/cachePort';
 import { RedisCacheAdapter } from '../infra/redis/cacheAdapter';
 import tournamentRoutes from './tournament';
 import { RewardsService } from '../application/rewards/rewardsService';
@@ -48,7 +48,7 @@ export const buildServer = async (dataSource: DataSource) => {
       }),
     }),
   );
-  const cacheAdapter: ICachePort = new RedisCacheAdapter();
+  const cacheAdapter: CachePort = new RedisCacheAdapter();
   const factory: ServiceFactory = ServiceFactory.getInstance(
     dataSource,
     cacheAdapter,

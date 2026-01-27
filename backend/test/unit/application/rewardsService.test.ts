@@ -1,6 +1,6 @@
 import { RewardsService } from '../../../src/application/rewards/rewardsService';
 import { RewardsCalculator } from '../../../src/domain/service/rewardsCalculator';
-import { ITransactionClient } from '../../../src/application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
 import {
   EntityManager,
   Connection,
@@ -23,7 +23,7 @@ import {
 describe('RewardsService application class Unit tests', () => {
   let rewardsService: RewardsService;
   let mockRewardsCalculator: jest.Mocked<RewardsCalculator>;
-  let mockTransactionClient: jest.Mocked<ITransactionClient>;
+  let mockTransactionClient: jest.Mocked<TransactionClientPort>;
   let mockEntityManager: jest.Mocked<EntityManager>;
   let mockConnection: jest.Mocked<Connection>;
 
@@ -37,7 +37,7 @@ describe('RewardsService application class Unit tests', () => {
       distributeRewards: jest.fn(),
       headToNextTournament: jest.fn(),
       getTransactionStatus: jest.fn(),
-    } as unknown as jest.Mocked<ITransactionClient>;
+    } as unknown as jest.Mocked<TransactionClientPort>;
 
     mockConnection = {
       getMetadata: jest.fn(),

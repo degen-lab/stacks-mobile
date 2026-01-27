@@ -1,7 +1,7 @@
 import { EntityManager, In } from 'typeorm';
 import { RewardsCalculator } from '../../domain/service/rewardsCalculator';
 import { Submission } from '../../domain/entities/submission';
-import { ITransactionClient } from '../ports/ITransactionClient';
+import { TransactionClientPort } from '../ports/transactionClient';
 import { BRONZE_TIER_BONUS, SILVER_TIER_BONUS } from '../../shared/constants';
 import { SubmissionTier } from '../../domain/helpers/types';
 import { RewardsDistributionData } from '../../domain/entities/rewardsDistributionData';
@@ -13,7 +13,7 @@ import { TournamentStatusNotFoundError } from '../errors/rewardsErrors';
 export class RewardsService {
   constructor(
     private rewardsCalculator: RewardsCalculator,
-    private transactionClient: ITransactionClient,
+    private transactionClient: TransactionClientPort,
     private entityManager: EntityManager,
   ) {}
 

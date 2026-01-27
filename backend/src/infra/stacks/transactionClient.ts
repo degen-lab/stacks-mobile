@@ -20,7 +20,7 @@ import {
   TxBroadcastResult,
   uintCV,
 } from '@stacks/transactions';
-import { ITransactionClient } from '../../application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../application/ports/transactionClient';
 import { createNetwork, StacksNetwork } from '@stacks/network';
 import {
   ADMIN_ADDRESS,
@@ -54,7 +54,7 @@ function dynamicImport(moduleSpecifier: string) {
   return new Function('specifier', 'return import(specifier)')(moduleSpecifier);
 }
 
-export class TransactionClient implements ITransactionClient {
+export class TransactionClient implements TransactionClientPort {
   private network: StacksNetwork;
   private sponsorNonce: number | null = null;
   private nonceLock: Promise<void> = Promise.resolve();

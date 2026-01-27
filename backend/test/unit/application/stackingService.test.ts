@@ -1,8 +1,8 @@
 import { EntityManager } from 'typeorm';
 import { StackingService } from '../../../src/application/stacking/stackingService';
-import { ITransactionClient } from '../../../src/application/ports/ITransactionClient';
-import { IStackingPoolClient } from '../../../src/application/ports/IStackingPoolClient';
-import { ICachePort } from '../../../src/application/ports/ICachePort';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
+import { StackingPoolClientPort } from '../../../src/application/ports/stackingPoolClient';
+import { CachePort } from '../../../src/application/ports/cachePort';
 import { StackingData } from '../../../src/domain/entities/stackingData';
 import { User } from '../../../src/domain/entities/user';
 import { TransactionStatus } from '../../../src/domain/entities/enums';
@@ -17,9 +17,9 @@ import { FAST_POOL_STX_ADDRESS } from '../../../src/shared/constants';
 describe('StackingService', () => {
   let stackingService: StackingService;
   let mockEntityManager: jest.Mocked<EntityManager>;
-  let mockTransactionClient: jest.Mocked<ITransactionClient>;
-  let mockStackingPoolClient: jest.Mocked<IStackingPoolClient>;
-  let mockCacheClient: jest.Mocked<ICachePort>;
+  let mockTransactionClient: jest.Mocked<TransactionClientPort>;
+  let mockStackingPoolClient: jest.Mocked<StackingPoolClientPort>;
+  let mockCacheClient: jest.Mocked<CachePort>;
 
   beforeEach(() => {
     mockEntityManager = {
@@ -33,17 +33,17 @@ describe('StackingService', () => {
       fetchStackingTransactionData: jest.fn(),
       fetchPoxCycleData: jest.fn(),
       getTransactionStatus: jest.fn(),
-    } as unknown as jest.Mocked<ITransactionClient>;
+    } as unknown as jest.Mocked<TransactionClientPort>;
 
     mockStackingPoolClient = {
       delegationTotalRewards: jest.fn(),
       getRewardFolderRef: jest.fn(),
-    } as unknown as jest.Mocked<IStackingPoolClient>;
+    } as unknown as jest.Mocked<StackingPoolClientPort>;
 
     mockCacheClient = {
       get: jest.fn(),
       set: jest.fn(),
-    } as unknown as jest.Mocked<ICachePort>;
+    } as unknown as jest.Mocked<CachePort>;
 
     stackingService = new StackingService(
       mockEntityManager,
@@ -228,7 +228,7 @@ describe('StackingService', () => {
 
       mockTransactionClient.fetchPoxCycleData.mockResolvedValue({
         cycleId: 20,
-      } as Awaited<ReturnType<ITransactionClient['fetchPoxCycleData']>>);
+      } as Awaited<ReturnType<TransactionClientPort['fetchPoxCycleData']>>);
       mockEntityManager.find.mockResolvedValueOnce(mockDelegations); // First batch
       mockEntityManager.find.mockResolvedValueOnce([]); // Second batch (empty)
       mockStackingPoolClient.delegationTotalRewards.mockResolvedValue(500000);
@@ -262,7 +262,7 @@ describe('StackingService', () => {
 
       mockTransactionClient.fetchPoxCycleData.mockResolvedValue({
         cycleId: 20,
-      } as Awaited<ReturnType<ITransactionClient['fetchPoxCycleData']>>);
+      } as Awaited<ReturnType<TransactionClientPort['fetchPoxCycleData']>>);
       mockEntityManager.find.mockResolvedValueOnce([mockDelegation]);
       mockEntityManager.find.mockResolvedValueOnce([]);
       mockStackingPoolClient.delegationTotalRewards.mockResolvedValue(500000);

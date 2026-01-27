@@ -17,7 +17,7 @@ import { ItemVariant } from '../../src/domain/entities/enums';
 import { GameSessionService } from '../../src/domain/service/gameSessionService';
 import { ADMIN_PRIVATE_KEY } from '../../src/shared/constants';
 import { RedisCacheAdapter } from '../../src/infra/redis/cacheAdapter';
-import { ICachePort } from '../../src/application/ports/ICachePort';
+import { CachePort } from '../../src/application/ports/cachePort';
 import { ServiceFactory } from '../../src/application/factory';
 import { StreakService } from '../../src/application/streaks/streakService';
 
@@ -27,7 +27,7 @@ describe('Game Session Integration Tests', () => {
   const testNickName = 'TestUser';
   let authToken: string;
   let userId: number;
-  let cacheAdapter: ICachePort;
+  let cacheAdapter: CachePort;
   let gameSessionService: GameSessionService;
   let streakService: StreakService;
 

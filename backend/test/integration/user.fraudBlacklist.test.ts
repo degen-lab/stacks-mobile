@@ -20,7 +20,7 @@ import {
   createTestDataSource,
   getTestDataSource,
 } from './testDataSource';
-import { ITransactionClient } from '../../src/application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../src/application/ports/transactionClient';
 
 describe('User Fraud Limits and Blacklisting Integration Tests', () => {
   let userService: UserService;
@@ -29,7 +29,7 @@ describe('User Fraud Limits and Blacklisting Integration Tests', () => {
   let gameSessionService: GameSessionService;
   let cacheAdapter: RedisCacheAdapter;
   let streakService: StreakService;
-  let transactionClientMock: jest.Mocked<ITransactionClient>;
+  let transactionClientMock: jest.Mocked<TransactionClientPort>;
   beforeAll(async () => {
     await createTestDataSource();
     dataSource = getTestDataSource();
@@ -51,7 +51,7 @@ describe('User Fraud Limits and Blacklisting Integration Tests', () => {
       getTransactionStatus: jest.fn(),
       distributeRewards: jest.fn(),
       headToNextTournament: jest.fn(),
-    } as unknown as jest.Mocked<ITransactionClient>;
+    } as unknown as jest.Mocked<TransactionClientPort>;
 
     userService = new UserService(
       userDomainService,

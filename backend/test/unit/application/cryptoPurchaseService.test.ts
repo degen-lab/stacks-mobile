@@ -1,7 +1,7 @@
 import { EntityManager } from 'typeorm';
 import { CryptoPurchaseService } from '../../../src/application/purchase/cryptoPurchaseService';
 import { TransakPurchaseClient } from '../../../src/infra/purchase/transakPurchaseClient';
-import { ICachePort } from '../../../src/application/ports/ICachePort';
+import { CachePort } from '../../../src/application/ports/cachePort';
 import { CryptoPurchaseDomainService } from '../../../src/domain/service/cryptoPurchaseDomainService';
 import { User } from '../../../src/domain/entities/user';
 import { CryptoPurchase } from '../../../src/domain/entities/cryptoPurchase';
@@ -11,7 +11,7 @@ import { AppPlatform, TransakAccessToken } from '../../../src/shared/types';
 describe('CryptoPurchaseService unit test', () => {
   let cryptoPurchaseService: CryptoPurchaseService;
   let mockEntityManager: jest.Mocked<EntityManager>;
-  let mockCacheClient: jest.Mocked<ICachePort>;
+  let mockCacheClient: jest.Mocked<CachePort>;
   let mockPurchaseClient: jest.Mocked<TransakPurchaseClient>;
   let mockPurchaseDomainService: jest.Mocked<CryptoPurchaseDomainService>;
 
@@ -25,7 +25,7 @@ describe('CryptoPurchaseService unit test', () => {
       get: jest.fn(),
       set: jest.fn(),
       delete: jest.fn(),
-    } as unknown as jest.Mocked<ICachePort>;
+    } as unknown as jest.Mocked<CachePort>;
 
     mockPurchaseClient = {
       createWidgetUrl: jest.fn(),

@@ -5,13 +5,13 @@ import {
   SubmissionType,
   TransactionStatus,
 } from '../../../src/domain/entities/enums';
-import { ITransactionClient } from '../../../src/application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
 import { EntityManager } from 'typeorm';
 import { User } from '../../../src/domain/entities/user';
 
 describe('RewardsService - extractRaffleWinners', () => {
   const transactionClientMock: jest.Mocked<
-    Pick<ITransactionClient, 'getTournamentId' | 'distributeRewards'>
+    Pick<TransactionClientPort, 'getTournamentId' | 'distributeRewards'>
   > = {
     getTournamentId: jest.fn(),
     distributeRewards: jest.fn(),
@@ -39,7 +39,7 @@ describe('RewardsService - extractRaffleWinners', () => {
 
     rewardsService = new RewardsService(
       rewardsCalculatorMock,
-      transactionClientMock as unknown as ITransactionClient,
+      transactionClientMock as unknown as TransactionClientPort,
       entityManagerMock,
     );
   });

@@ -1,11 +1,11 @@
-import { TransactionClient } from '../../../src/infra/stacks/transactionClient';
+import { TransactionClientPort } from '../../../src/infra/stacks/transactionClient';
 import { STACKS_NETWORK } from '../../../src/shared/constants';
 
 describe('TransactionClient - fetchStackingTransactionData with real delegate-stx', () => {
-  let transactionClient: TransactionClient;
+  let transactionClient: TransactionClientPort;
 
   beforeEach(() => {
-    transactionClient = new TransactionClient();
+    transactionClient = new TransactionClientPort();
   });
 
   afterEach(() => {

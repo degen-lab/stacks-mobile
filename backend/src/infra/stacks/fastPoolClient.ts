@@ -1,4 +1,4 @@
-import { IStackingPoolClient } from '../../application/ports/IStackingPoolClient';
+import { StackingPoolClientPort } from '../../application/ports/stackingPoolClient';
 import {
   FAST_POOL_STACKING_DATA_JSON_URL,
   FAST_POOL_REWARDS_COMMITS_URL,
@@ -6,7 +6,7 @@ import {
 } from '../../shared/constants';
 import { logger } from '../../api/helpers/logger';
 
-export class FastPoolClient implements IStackingPoolClient {
+export class FastPoolClient implements StackingPoolClientPort {
   async delegationTotalRewards(
     address: string,
     startCycleId: number,

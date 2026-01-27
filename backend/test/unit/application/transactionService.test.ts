@@ -1,5 +1,5 @@
 import { TransactionService } from '../../../src/application/transaction/transactionService';
-import { ITransactionClient } from '../../../src/application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
 import { SubmissionDomainService } from '../../../src/domain/service/submissionDomainService';
 import { EntityManager } from 'typeorm';
 import { User } from '../../../src/domain/entities/user';
@@ -13,7 +13,7 @@ import {
 
 describe('TransactionService application class Unit tests', () => {
   let transactionService: TransactionService;
-  let mockTransactionClient: jest.Mocked<ITransactionClient>;
+  let mockTransactionClient: jest.Mocked<TransactionClientPort>;
   let mockSubmissionDomainService: jest.Mocked<SubmissionDomainService>;
   let mockEntityManager: jest.Mocked<EntityManager>;
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('TransactionService application class Unit tests', () => {
       broadcastSponsoredTransaction: jest.fn(),
       broadcastTransaction: jest.fn(),
       getTournamentId: jest.fn(),
-    } as unknown as jest.Mocked<ITransactionClient>;
+    } as unknown as jest.Mocked<TransactionClientPort>;
     mockSubmissionDomainService = {
       createSubmission: jest.fn(),
     } as unknown as jest.Mocked<SubmissionDomainService>;

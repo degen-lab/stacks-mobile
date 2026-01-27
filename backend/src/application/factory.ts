@@ -3,13 +3,13 @@ import { UserService } from './user/userService';
 import { UserDomainService } from '../domain/service/userDomainService';
 import { GameSessionService } from '../domain/service/gameSessionService';
 import { TransactionService } from './transaction/transactionService';
-import { TransactionClient } from '../infra/stacks/transactionClient';
+import { TransactionClientPort } from '../infra/stacks/transactionClient';
 import { SubmissionDomainService } from '../domain/service/submissionDomainService';
 import { StreakService } from './streaks/streakService';
 import { StreaksDomainService } from '../domain/service/streaksDomainService';
 import { GameStoreService } from './gameStore/gameStoreService';
 import { GameStoreDomainService } from '../domain/service/gameStoreDomainService';
-import { ICachePort } from './ports/ICachePort';
+import { CachePort } from './ports/cachePort';
 import { RewardsService } from './rewards/rewardsService';
 import { RewardsCalculator } from '../domain/service/rewardsCalculator';
 import { TransakPurchaseClient } from '../infra/purchase/transakPurchaseClient';
@@ -31,12 +31,12 @@ type ServiceConstructor<T extends ServiceType> = new (...args: unknown[]) => T;
 
 export class ServiceFactory {
   private static instance: ServiceFactory;
-  private cacheAdapter: ICachePort;
+  private cacheAdapter: CachePort;
   private services: Map<ServiceConstructor<ServiceType> | string, ServiceType> =
     new Map();
   private dataSource: DataSource;
 
-  private constructor(dataSource: DataSource, cacheAdapter: ICachePort) {
+  private constructor(dataSource: DataSource, cacheAdapter: CachePort) {
     this.dataSource = dataSource;
     this.services = new Map();
     this.cacheAdapter = cacheAdapter;
@@ -44,7 +44,7 @@ export class ServiceFactory {
 
   static getInstance(
     dataSource: DataSource,
-    cacheAdapter: ICachePort,
+    cacheAdapter: CachePort,
   ): ServiceFactory {
     if (!ServiceFactory.instance) {
       ServiceFactory.instance = new ServiceFactory(dataSource, cacheAdapter);
@@ -60,7 +60,7 @@ export class ServiceFactory {
           new UserDomainService(),
           this.getStreakService(),
           new GameSessionService(),
-          new TransactionClient(),
+          new TransactionClientPort(),
           this.dataSource.createEntityManager(),
         ),
       );
@@ -73,7 +73,7 @@ export class ServiceFactory {
       this.services.set(
         'transactionService',
         new TransactionService(
-          new TransactionClient(),
+          new TransactionClientPort(),
           new SubmissionDomainService(),
           this.dataSource.createEntityManager(),
         ),
@@ -115,7 +115,7 @@ export class ServiceFactory {
         'rewardsService',
         new RewardsService(
           new RewardsCalculator(),
-          new TransactionClient(),
+          new TransactionClientPort(),
           this.dataSource.createEntityManager(),
         ),
       );
@@ -144,7 +144,7 @@ export class ServiceFactory {
         'stackingService',
         new StackingService(
           this.dataSource.createEntityManager(),
-          new TransactionClient(),
+          new TransactionClientPort(),
           new FastPoolClient(),
           this.cacheAdapter,
         ),

@@ -21,7 +21,7 @@ import {
   NicknameNotProvidedError,
   UserNotFoundError,
 } from '../errors/userErrors';
-import { ITransactionClient } from '../ports/ITransactionClient';
+import { TransactionClientPort } from '../ports/transactionClient';
 import { StreakService } from '../streaks/streakService';
 
 export class UserService {
@@ -29,7 +29,7 @@ export class UserService {
     private userDomainService: UserDomainService,
     private streakService: StreakService,
     private gameSessionService: GameSessionService,
-    private transactionClient: ITransactionClient,
+    private transactionClient: TransactionClientPort,
     private entityManager: EntityManager,
   ) {}
 

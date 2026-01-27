@@ -7,7 +7,7 @@ import {
 import { EntityManager } from 'typeorm';
 import { RewardsService } from '../../src/application/rewards/rewardsService';
 import { RewardsCalculator } from '../../src/domain/service/rewardsCalculator';
-import { ITransactionClient } from '../../src/application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../src/application/ports/transactionClient';
 import { User } from '../../src/domain/entities/user';
 import { Submission } from '../../src/domain/entities/submission';
 import { RewardsDistributionData } from '../../src/domain/entities/rewardsDistributionData';
@@ -22,7 +22,7 @@ describe('Leaderboard Integration Tests', () => {
   let rewardsService: RewardsService;
   let entityManager: EntityManager;
   let dataSource: ReturnType<typeof getTestDataSource>;
-  let mockTransactionClient: jest.Mocked<ITransactionClient>;
+  let mockTransactionClient: jest.Mocked<TransactionClientPort>;
   const testTournamentId = 1;
 
   beforeAll(async () => {
@@ -35,7 +35,7 @@ describe('Leaderboard Integration Tests', () => {
       getTournamentId: jest.fn().mockResolvedValue(testTournamentId),
       distributeRewards: jest.fn(),
       headToNextTournament: jest.fn(),
-    } as unknown as jest.Mocked<ITransactionClient>;
+    } as unknown as jest.Mocked<TransactionClientPort>;
 
     const rewardsCalculator = new RewardsCalculator();
     rewardsService = new RewardsService(

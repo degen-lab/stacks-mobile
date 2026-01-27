@@ -13,14 +13,14 @@ import { StreakService } from '../../src/application/streaks/streakService';
 import { StreaksDomainService } from '../../src/domain/service/streaksDomainService';
 import { RedisCacheAdapter } from '../../src/infra/redis/cacheAdapter';
 import { REFERRAL_BONUS } from '../../src/shared/constants';
-import { ITransactionClient } from '../../src/application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../src/application/ports/transactionClient';
 
 describe('User Referral System Integration Tests', () => {
   let userService: UserService;
   let entityManager: EntityManager;
   let dataSource: ReturnType<typeof getTestDataSource>;
   let streakService: StreakService;
-  let mockTransactionClient: jest.Mocked<ITransactionClient>;
+  let mockTransactionClient: jest.Mocked<TransactionClientPort>;
   beforeAll(async () => {
     await createTestDataSource();
     dataSource = getTestDataSource();
@@ -28,7 +28,7 @@ describe('User Referral System Integration Tests', () => {
 
     mockTransactionClient = {
       getTournamentId: jest.fn().mockResolvedValue(1),
-    } as unknown as jest.Mocked<ITransactionClient>;
+    } as unknown as jest.Mocked<TransactionClientPort>;
 
     const userDomainService = new UserDomainService();
     const gameSessionService = new GameSessionService();

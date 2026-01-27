@@ -20,7 +20,7 @@ import {
   MAX_FRAUD_ATTEMPTS,
 } from '../../../src/shared/constants';
 import { FraudAttempt } from '../../../src/domain/entities/fraudAttempt';
-import { ITransactionClient } from '../../../src/application/ports/ITransactionClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
 
 describe('User Service unit test', () => {
   let userService: UserService;
@@ -29,7 +29,7 @@ describe('User Service unit test', () => {
   let mockUserDomainService: jest.Mocked<UserDomainService>;
   let mockStreakService: jest.Mocked<StreakService>;
   let mockGameSessionService: jest.Mocked<GameSessionService>;
-  let mockTransactionClient: jest.Mocked<ITransactionClient>;
+  let mockTransactionClient: jest.Mocked<TransactionClientPort>;
   // let mockCacheAdapter: jest.Mocked<ICachePort>;
   beforeEach(() => {
     // Mock TypeORM Repository
@@ -83,7 +83,7 @@ describe('User Service unit test', () => {
 
     mockTransactionClient = {
       getTournamentId: jest.fn().mockResolvedValue(1),
-    } as unknown as jest.Mocked<ITransactionClient>;
+    } as unknown as jest.Mocked<TransactionClientPort>;
     userService = new UserService(
       mockUserDomainService,
       mockStreakService,

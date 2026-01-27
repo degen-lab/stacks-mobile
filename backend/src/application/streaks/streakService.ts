@@ -2,14 +2,14 @@ import { EntityManager } from 'typeorm';
 import { StreaksDomainService } from '../../domain/service/streaksDomainService';
 import { DailyStreakChallenge } from '../../shared/types';
 import { DailyStreakChallengeNotFoundError } from '../errors/streakErrors';
-import { ICachePort } from '../ports/ICachePort';
+import { CachePort } from '../ports/cachePort';
 import { User } from '../../domain/entities/user';
 import { dailyChallenges } from '../../domain/helpers/challenges';
 
 export class StreakService {
   constructor(
     private streakDomainService: StreaksDomainService,
-    private cacheManager: ICachePort,
+    private cacheManager: CachePort,
     private entityManager: EntityManager,
   ) {}
 

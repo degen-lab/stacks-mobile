@@ -1,7 +1,7 @@
 import { EntityManager } from 'typeorm';
 import { StreakService } from '../../../src/application/streaks/streakService';
 import { StreaksDomainService } from '../../../src/domain/service/streaksDomainService';
-import { ICachePort } from '../../../src/application/ports/ICachePort';
+import { CachePort } from '../../../src/application/ports/cachePort';
 import { User } from '../../../src/domain/entities/user';
 import { DailyStreakChallengeNotFoundError } from '../../../src/application/errors/streakErrors';
 import { DailyStreakChallenge } from '../../../src/shared/types';
@@ -9,7 +9,7 @@ import { DailyStreakChallenge } from '../../../src/shared/types';
 describe('StreakService unit tests', () => {
   let streakService: StreakService;
   let mockStreaksDomainService: jest.Mocked<StreaksDomainService>;
-  let mockCacheManager: jest.Mocked<ICachePort>;
+  let mockCacheManager: jest.Mocked<CachePort>;
   let mockEntityManager: jest.Mocked<EntityManager>;
 
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('StreakService unit tests', () => {
       get: jest.fn(),
       set: jest.fn(),
       delete: jest.fn(),
-    } as unknown as jest.Mocked<ICachePort>;
+    } as unknown as jest.Mocked<CachePort>;
 
     mockEntityManager = {
       find: jest.fn(),

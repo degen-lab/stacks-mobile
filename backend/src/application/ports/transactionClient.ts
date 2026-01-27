@@ -1,7 +1,7 @@
 import { TxBroadcastResult } from '@stacks/transactions';
 import { StxTransactionData } from '../../shared/types';
 
-export interface ITransactionClient {
+export interface TransactionClientPort {
   createTournamentUnsignedTransaction(
     address: string,
     publicKey: string,

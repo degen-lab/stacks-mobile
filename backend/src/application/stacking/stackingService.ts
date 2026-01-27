@@ -1,5 +1,5 @@
 import { EntityManager, IsNull, LessThan, Or } from 'typeorm';
-import { ITransactionClient } from '../ports/ITransactionClient';
+import { TransactionClientPort } from '../ports/transactionClient';
 import { StackingData } from '../../domain/entities/stackingData';
 import { StxTransactionData } from '../../shared/types';
 import {
@@ -9,17 +9,17 @@ import {
 } from '../errors/stackingDataErrors';
 import { UserNotFoundError } from '../errors/userErrors';
 import { User } from '../../domain/entities/user';
-import { IStackingPoolClient } from '../ports/IStackingPoolClient';
-import { ICachePort } from '../ports/ICachePort';
+import { StackingPoolClientPort } from '../ports/stackingPoolClient';
+import { CachePort } from '../ports/cachePort';
 import { TransactionStatus } from '../../domain/entities/enums';
 import { FAST_POOL_STX_ADDRESS } from '../../shared/constants';
 
 export class StackingService {
   constructor(
     private entityManager: EntityManager,
-    private transactionClient: ITransactionClient,
-    private stackingPoolClient: IStackingPoolClient,
-    private cacheClient: ICachePort,
+    private transactionClient: TransactionClientPort,
+    private stackingPoolClient: StackingPoolClientPort,
+    private cacheClient: CachePort,
   ) {}
 
   async saveStackingData(
