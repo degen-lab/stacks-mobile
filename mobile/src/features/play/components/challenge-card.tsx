@@ -10,8 +10,6 @@ type ChallengeCardProps = {
   currentStreak?: number;
 };
 
-const CARD_BG = colors.neutral[100]; // light, consistent surface
-
 export default function ChallengeCard({
   challengeDescription,
   lastCompletionDate,
@@ -19,10 +17,7 @@ export default function ChallengeCard({
   const completedToday = isToday(lastCompletionDate ?? undefined);
 
   return (
-    <View
-      className="rounded-[16px] px-4 py-6 flex-row items-center border border-surface-secondary"
-      style={{ backgroundColor: CARD_BG }}
-    >
+    <View className="rounded-2xl px-4 py-6 flex-row items-center border border-surface-secondary bg-sand-100">
       {completedToday ? (
         <View
           className="mr-4 h-12 w-12 rounded-full items-center justify-center"

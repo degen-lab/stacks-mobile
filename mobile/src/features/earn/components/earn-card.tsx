@@ -6,13 +6,13 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { Text, View } from "@/components/ui";
+import { colors, Text, View } from "@/components/ui";
 import GradientBorder from "@/components/ui/gradient-border";
 import { Asset } from "expo-asset";
 import { SvgUri } from "react-native-svg";
 import { useSvgAsset } from "@/hooks/use-svg-asset";
 
-type FeaturedEarnCardProps = {
+type EarnCardProps = {
   title: string;
   description: string;
   imageSource: ImageSourcePropType;
@@ -23,7 +23,7 @@ type FeaturedEarnCardProps = {
   onPress?: () => void;
 };
 
-export function FeaturedEarnCard({
+export function EarnCard({
   title,
   description,
   imageSource,
@@ -32,7 +32,7 @@ export function FeaturedEarnCard({
   fillGradient,
   badges,
   onPress,
-}: FeaturedEarnCardProps) {
+}: EarnCardProps) {
   const svgUri = useSvgAsset(
     imageSource && typeof imageSource === "number" ? imageSource : null,
   );
@@ -89,8 +89,9 @@ export function FeaturedEarnCard({
     <GradientBorder
       borderRadius={12}
       gradient={borderGradient}
-      angle={90}
+      angle={70}
       hasShadow={false}
+    // innerBackground={colors.neutral[100]}
     >
       {onPress ? (
         <Pressable className="p-4" onPress={onPress}>

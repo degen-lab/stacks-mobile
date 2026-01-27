@@ -1,5 +1,6 @@
+import { useRouter } from "expo-router";
 import { View, colors } from "@/components/ui";
-import { FeaturedEarnCard } from "./featured-earn-card";
+import { EarnCard } from "./earn-card";
 
 const DEFI_PROTOCOLS = [
   {
@@ -10,7 +11,6 @@ const DEFI_PROTOCOLS = [
     imageSize: { width: 73, height: 40 },
     borderGradient: colors.stacks.bitcoinCardStroke,
     fillGradient: colors.stacks.menuFillBottom,
-    badges: ["~8% APY", "STX Rewards"],
   },
   {
     id: "dual-stacking",
@@ -20,28 +20,32 @@ const DEFI_PROTOCOLS = [
     imageSize: { width: 131, height: 40 },
     borderGradient: colors.stacks.gameCardStroke,
     fillGradient: colors.stacks.gameCardFillRight,
-    badges: ["~5% APY", "sBTC Rewards"],
   },
 ] as const;
 
 export function DeFiProtocolsList() {
+  const router = useRouter();
+
   const handleProtocolPress = (id: string) => {
-    // TODO: Navigate to protocol detail screen
-    console.log(`Protocol pressed: ${id}`);
+    if (id === "stack-stx") {
+      router.push("/stacking");
+    } else {
+      // TODO: Navigate to other protocol screens
+      console.log(`Protocol pressed: ${id}`);
+    }
   };
 
   return (
     <View className="flex-row gap-3 w-full">
       {DEFI_PROTOCOLS.map((protocol) => (
         <View key={protocol.id} style={{ flex: 1 }}>
-          <FeaturedEarnCard
+          <EarnCard
             title={protocol.title}
             description={protocol.description}
             imageSource={protocol.imageSource}
             imageSize={protocol.imageSize}
             borderGradient={protocol.borderGradient}
             fillGradient={protocol.fillGradient}
-            badges={protocol.badges}
             onPress={() => handleProtocolPress(protocol.id)}
           />
         </View>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useSelectedNetwork } from "@/lib/store/settings";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 
 type UseStxBalanceResult = {
   balance: number;

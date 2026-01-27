@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 import { useAuth } from "@/lib/store/auth";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 
 import { useHaptics } from "./use-haptics";
 

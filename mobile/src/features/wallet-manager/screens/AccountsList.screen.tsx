@@ -14,8 +14,8 @@ import {
   useActiveAccountIndex,
   useSelectedNetwork,
 } from "@/lib/store/settings";
-import { getAddressForNetwork } from "@/lib/addresses";
-import { walletKit } from "@/lib/wallet";
+import { getAddressForNetwork } from "@/lib/stacks/addresses";
+import { walletKit } from "@/lib/stacks/wallet";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { showMessage } from "react-native-flash-message";

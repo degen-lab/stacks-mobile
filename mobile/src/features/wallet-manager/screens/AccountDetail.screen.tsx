@@ -1,10 +1,10 @@
 import { Button, ScreenHeader, ScrollView, Text, View } from "@/components/ui";
-import { getAddressForNetwork } from "@/lib/addresses";
+import { getAddressForNetwork } from "@/lib/stacks/addresses";
 import {
   useActiveAccountIndex,
   useSelectedNetwork,
 } from "@/lib/store/settings";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Copy, Wallet, Check, Trash } from "lucide-react-native";

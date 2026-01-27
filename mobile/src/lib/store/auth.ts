@@ -3,7 +3,7 @@ import { create } from "zustand";
 
 import type { UserData as BackendUserData } from "@/api/auth";
 import { getItem, removeItem, setItem } from "@/lib/storage/storage";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 
 const ACCESS_TOKEN_KEY = "auth.accessToken";
 const USER_DATA_KEY = "auth.userData";

@@ -1,7 +1,7 @@
 import { Button, Modal, Text, View } from "@/components/ui";
 import { WarningLabel } from "@/components/warning-label";
 import { useSecurityMethod } from "@/lib/store/settings";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import * as Clipboard from "expo-clipboard";
 import * as LocalAuthentication from "expo-local-authentication";

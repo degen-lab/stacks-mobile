@@ -3,7 +3,7 @@ import { create } from "zustand";
 
 import { Env } from "@/lib/env";
 import { getString, setString } from "@/lib/storage/storage";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 
 const SELECTED_NETWORK_KEY = "settings.network";
 

@@ -1,6 +1,6 @@
 import { Modal, Text, View } from "@/components/ui";
 import { useAuth } from "@/lib/store/auth";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { forwardRef, useCallback, useState } from "react";
 import { showMessage } from "react-native-flash-message";

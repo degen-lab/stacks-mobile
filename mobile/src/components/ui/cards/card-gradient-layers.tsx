@@ -63,7 +63,7 @@ export function CardGradientLayers({
         <Pressable
           onPress={handleCopy}
           disabled={!hasReferralCode}
-          className={`rounded-[16px] bg-sand-100 p-4 active:opacity-90 ${
+          className={`rounded-2xl bg-sand-100 p-4 active:opacity-90 ${
             hasReferralCode ? "" : "opacity-70"
           }`}
         >

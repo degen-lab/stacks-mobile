@@ -1,4 +1,4 @@
-import "../../polyfill";
+import "../../../polyfill";
 
 import { Env } from "@/lib/env";
 import { NetworkType } from "@degenlab/stacks-wallet-kit-core";

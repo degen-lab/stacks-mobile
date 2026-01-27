@@ -2,7 +2,7 @@ import { Button, Modal, ScrollView, Text, View } from "@/components/ui";
 import { WarningLabel } from "@/components/warning-label";
 import { useAuth } from "@/lib/store/auth";
 import { useActiveAccountIndex } from "@/lib/store/settings";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english";

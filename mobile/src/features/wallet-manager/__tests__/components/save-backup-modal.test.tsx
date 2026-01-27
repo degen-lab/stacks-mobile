@@ -1,6 +1,6 @@
 import { render, waitFor } from "@/lib/tests";
 import { SaveBackupModal } from "../../components/save-backup-modal";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 import { useAuth } from "@/lib/store/auth";
 
 jest.mock("@/lib/wallet", () => ({

@@ -23,8 +23,8 @@ import { ContractCallDetailsSheet } from "@/components/contract-call-details-she
 import { TournamentSubmissionSheet } from "@/components/tournament-submission-sheet";
 import { ActivityIndicator, View } from "@/components/ui";
 import { useStxBalance } from "@/hooks/use-stx-balance";
-import { formatAddress } from "@/lib/addresses";
-import { CONTRACTS, SC_FUNCTIONS } from "@/lib/contracts";
+import { formatAddress } from "@/lib/stacks/addresses";
+import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
 import { useAuth } from "@/lib/store/auth";
 import { useGameStore } from "@/lib/store/game";
 import { useSelectedNetwork } from "@/lib/store/settings";
@@ -312,7 +312,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const { consumeDropPoint, consumeRevive } = usePowerUpInventory({
     canUseDropPoint: dropPointAvailable,
     canUseRevive: reviveAvailable,
-    onConsumeDropPoint: () => {},
+    onConsumeDropPoint: () => { },
     onConsumeRevive: consumeRevivePowerUp,
     registerUsedItem,
   });
@@ -624,7 +624,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
           selectedNetwork.charAt(0).toUpperCase() + selectedNetwork.slice(1)
         }
         contractName={(() => {
-          const contract = CONTRACTS[selectedNetwork]?.game?.CONTRACT;
+          const contract = CONTRACTS[selectedNetwork]?.game;
           if (!contract) return "Not configured";
           const [address, contractName] = contract.split(".");
           return address && contractName
