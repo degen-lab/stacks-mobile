@@ -115,7 +115,7 @@ export default function getDefiRoutes(
           amount: number;
           senderAddress: string;
         };
-        const swapParams = await defiService.getSwapParams(
+        const {defiOperation, contractCallParams} = await defiService.getSwapParams(
           user.id,
           tokenInId,
           tokenOutId,
@@ -125,7 +125,10 @@ export default function getDefiRoutes(
         return res.status(200).send({
           success: true,
           message: 'Swap params retrieved successfully',
-          data: swapParams,
+          data: {
+            defiOperation,
+            contractCallParams,
+          },
         });
       } catch (error) {
         logger.error({
