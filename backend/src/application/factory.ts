@@ -163,8 +163,8 @@ export class ServiceFactory {
         new DefiService(
           this.dataSource.createEntityManager(),
           bitflowClient,
-          new TransactionClient()
-        )
+          new TransactionClient(),
+        ),
       );
     }
     return this.services.get('defiService') as DefiService;

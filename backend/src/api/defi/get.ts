@@ -1,16 +1,18 @@
-import { FastifyInstance } from "fastify";
-import { DefiService } from "../../application/defi/defiService";
-import { BaseError } from "../../shared/errors/baseError";
-import { logger } from "../helpers/logger";
-import { rateLimitOptions } from "../config/rateLimitConfig";
-import { UserToken } from "../config/types";
+import { FastifyInstance } from 'fastify';
+import { DefiService } from '../../application/defi/defiService';
+import { BaseError } from '../../shared/errors/baseError';
+import { logger } from '../helpers/logger';
+import { rateLimitOptions } from '../config/rateLimitConfig';
+import { UserToken } from '../config/types';
 
-export default function getDefiRoutes(app: FastifyInstance, {
-  defiService
-}: {
-  defiService: DefiService,
-}) {
-
+export default function getDefiRoutes(
+  app: FastifyInstance,
+  {
+    defiService,
+  }: {
+    defiService: DefiService;
+  },
+) {
   app.get('/token-list', {
     preHandler: app.authenticateUser,
     config: {
@@ -50,7 +52,7 @@ export default function getDefiRoutes(app: FastifyInstance, {
         });
       }
     },
-  })
+  });
 
   app.get<{ Params: { tokenId: string } }>('/possible-pair-list', {
     preHandler: app.authenticateUser,
@@ -89,7 +91,14 @@ export default function getDefiRoutes(app: FastifyInstance, {
     },
   });
 
-  app.get<{ Params: { tokenInId: string, tokenOutId: string, amount: number, senderAddress: string } }>('/swap-params', {
+  app.get<{
+    Params: {
+      tokenInId: string;
+      tokenOutId: string;
+      amount: number;
+      senderAddress: string;
+    };
+  }>('/swap-params', {
     preHandler: app.authenticateUser,
     config: {
       rateLimit: rateLimitOptions({
@@ -100,8 +109,19 @@ export default function getDefiRoutes(app: FastifyInstance, {
     handler: async (req, res) => {
       try {
         const user = req.user as UserToken;
-        const { tokenInId, tokenOutId, amount, senderAddress } = req.params as { tokenInId: string, tokenOutId: string, amount: number, senderAddress: string };
-        const swapParams = await defiService.getSwapParams(user.id, tokenInId, tokenOutId, senderAddress, amount);
+        const { tokenInId, tokenOutId, amount, senderAddress } = req.params as {
+          tokenInId: string;
+          tokenOutId: string;
+          amount: number;
+          senderAddress: string;
+        };
+        const swapParams = await defiService.getSwapParams(
+          user.id,
+          tokenInId,
+          tokenOutId,
+          senderAddress,
+          amount,
+        );
         return res.status(200).send({
           success: true,
           message: 'Swap params retrieved successfully',
@@ -121,7 +141,7 @@ export default function getDefiRoutes(app: FastifyInstance, {
         }
         return res.status(500).send({
           success: false,
-          message: 'An unknown error occurred'
+          message: 'An unknown error occurred',
         });
       }
     },

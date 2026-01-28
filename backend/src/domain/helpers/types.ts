@@ -18,13 +18,11 @@ export enum SubmissionTier {
 }
 
 export type SwapTxMetadata = {
-  tokenIn: string,
-  tokenOut: string,
-  amount: number,
-}
+  tokenIn: string;
+  tokenOut: string;
+  amount: number;
+};
 
-export type LendingTxMetadata = {}
+export type LendingTxMetadata = Record<string, never>;
 
-export type DefiOperationMetadata = 
-  SwapTxMetadata
-  | LendingTxMetadata;
+export type DefiOperationMetadata = SwapTxMetadata | LendingTxMetadata;

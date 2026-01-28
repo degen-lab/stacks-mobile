@@ -1,8 +1,8 @@
-import { BaseAppEntity } from "./baseAppEntity";
-import { Column, Entity, ManyToOne } from "typeorm";
-import { DefiOperationType, TransactionStatus } from "./enums";
-import { User } from "./user";
-import { DefiOperationMetadata } from "../helpers/types";
+import { BaseAppEntity } from './baseAppEntity';
+import { Column, Entity, ManyToOne } from 'typeorm';
+import { DefiOperationType, TransactionStatus } from './enums';
+import { User } from './user';
+import { DefiOperationMetadata } from '../helpers/types';
 @Entity()
 export class DefiOperation extends BaseAppEntity {
   @Column({ type: 'text' })
@@ -15,11 +15,11 @@ export class DefiOperation extends BaseAppEntity {
   operationType: DefiOperationType;
   @Column({ type: 'jsonb', nullable: true })
   metadata: DefiOperationMetadata;
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
   @ManyToOne(() => User, (user) => user.defiOperationList, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  user:User;
+  user: User;
 }
