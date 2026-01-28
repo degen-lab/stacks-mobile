@@ -160,7 +160,11 @@ export class ServiceFactory {
     if (!this.services.has('defiService')) {
       this.services.set(
         'defiService',
-        new DefiService(bitflowClient),
+        new DefiService(
+          this.dataSource.createEntityManager(),
+          bitflowClient,
+          new TransactionClient()
+        )
       );
     }
     return this.services.get('defiService') as DefiService;

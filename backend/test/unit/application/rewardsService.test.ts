@@ -1,6 +1,6 @@
 import { RewardsService } from '../../../src/application/rewards/rewardsService';
 import { RewardsCalculator } from '../../../src/domain/service/rewardsCalculator';
-import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClientPort';
 import {
   EntityManager,
   Connection,

@@ -1,7 +1,7 @@
 import { EntityManager } from 'typeorm';
 import { StackingService } from '../../../src/application/stacking/stackingService';
-import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
-import { StackingPoolClientPort } from '../../../src/application/ports/stackingPoolClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClientPort';
+import { StackingPoolClientPort } from '../../../src/application/ports/stackingPoolClientPort';
 import { CachePort } from '../../../src/application/ports/cachePort';
 import { StackingData } from '../../../src/domain/entities/stackingData';
 import { User } from '../../../src/domain/entities/user';

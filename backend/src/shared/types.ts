@@ -141,7 +141,7 @@ export enum AppPlatform {
   ANDROID,
 }
 
-export type StxTransactionData = {
+export type StackingTransactionData = {
   functionName: string;
   txStatus: string;
   // From smart contract log

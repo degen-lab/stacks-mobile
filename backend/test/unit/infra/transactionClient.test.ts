@@ -1,14 +1,14 @@
-import { TransactionClientPort } from '../../../src/infra/stacks/transactionClient';
+import { TransactionClient } from '../../../src/infra/stacks/transactionClient';
 
 // Mock fetch globally
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
 describe('TransactionClient', () => {
-  let transactionClient: TransactionClientPort;
+  let transactionClient: TransactionClient;
 
   beforeEach(() => {
-    transactionClient = new TransactionClientPort();
+    transactionClient = new TransactionClient();
     jest.clearAllMocks();
   });
 

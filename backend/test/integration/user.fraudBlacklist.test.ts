@@ -20,7 +20,7 @@ import {
   createTestDataSource,
   getTestDataSource,
 } from './testDataSource';
-import { TransactionClientPort } from '../../src/application/ports/transactionClient';
+import { TransactionClientPort } from '../../src/application/ports/transactionClientPort';
 
 describe('User Fraud Limits and Blacklisting Integration Tests', () => {
   let userService: UserService;

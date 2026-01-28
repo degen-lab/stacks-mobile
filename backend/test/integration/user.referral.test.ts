@@ -13,7 +13,7 @@ import { StreakService } from '../../src/application/streaks/streakService';
 import { StreaksDomainService } from '../../src/domain/service/streaksDomainService';
 import { RedisCacheAdapter } from '../../src/infra/redis/cacheAdapter';
 import { REFERRAL_BONUS } from '../../src/shared/constants';
-import { TransactionClientPort } from '../../src/application/ports/transactionClient';
+import { TransactionClientPort } from '../../src/application/ports/transactionClientPort';
 
 describe('User Referral System Integration Tests', () => {
   let userService: UserService;

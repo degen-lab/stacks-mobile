@@ -20,7 +20,7 @@ import {
   TxBroadcastResult,
   uintCV,
 } from '@stacks/transactions';
-import { TransactionClientPort } from '../../application/ports/transactionClient';
+import { TransactionClientPort } from '../../application/ports/transactionClientPort';
 import { createNetwork, StacksNetwork } from '@stacks/network';
 import {
   ADMIN_ADDRESS,
@@ -32,7 +32,7 @@ import {
 } from '../../shared/constants';
 import { ContractFunctions } from '../helpers/types';
 import { logger } from '../../api/helpers/logger';
-import { StxTransactionData } from '../../shared/types';
+import { StackingTransactionData } from '../../shared/types';
 
 // Extended type for broadcast transaction response that may include error fields
 type BroadcastResponse = TxBroadcastResult & {
@@ -597,7 +597,7 @@ export class TransactionClient implements TransactionClientPort {
 
   async fetchStackingTransactionData(
     txId: string,
-  ): Promise<StxTransactionData> {
+  ): Promise<StackingTransactionData> {
     const url = `${this.network.client.baseUrl}/extended/v1/tx/${txId}`;
     logger.info({
       msg: 'Fetching transaction status',
@@ -704,7 +704,7 @@ export class TransactionClient implements TransactionClientPort {
       poxAddress = hashbytesMatch ? hashbytesMatch[1] : null;
     }
 
-    const txData: StxTransactionData = {
+    const txData: StackingTransactionData = {
       functionName: data.contract_call.function_name,
       txStatus: data.tx_status,
       balance,

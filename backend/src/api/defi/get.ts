@@ -3,6 +3,7 @@ import { DefiService } from "../../application/defi/defiService";
 import { BaseError } from "../../shared/errors/baseError";
 import { logger } from "../helpers/logger";
 import { rateLimitOptions } from "../config/rateLimitConfig";
+import { UserToken } from "../config/types";
 
 export default function getDefiRoutes(app: FastifyInstance, {
   defiService
@@ -98,8 +99,9 @@ export default function getDefiRoutes(app: FastifyInstance, {
     },
     handler: async (req, res) => {
       try {
+        const user = req.user as UserToken;
         const { tokenInId, tokenOutId, amount, senderAddress } = req.params as { tokenInId: string, tokenOutId: string, amount: number, senderAddress: string };
-        const swapParams = await defiService.getSwapParams(tokenInId, tokenOutId, senderAddress, amount);
+        const swapParams = await defiService.getSwapParams(user.id, tokenInId, tokenOutId, senderAddress, amount);
         return res.status(200).send({
           success: true,
           message: 'Swap params retrieved successfully',

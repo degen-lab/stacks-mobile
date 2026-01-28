@@ -1,7 +1,7 @@
 import { EntityManager, IsNull, LessThan, Or } from 'typeorm';
-import { TransactionClientPort } from '../ports/transactionClient';
+import { TransactionClientPort } from '../ports/transactionClientPort';
 import { StackingData } from '../../domain/entities/stackingData';
-import { StxTransactionData } from '../../shared/types';
+import { StackingTransactionData } from '../../shared/types';
 import {
   RewardFolderRefNotCached,
   WrongStackingFunctionError,
@@ -9,7 +9,7 @@ import {
 } from '../errors/stackingDataErrors';
 import { UserNotFoundError } from '../errors/userErrors';
 import { User } from '../../domain/entities/user';
-import { StackingPoolClientPort } from '../ports/stackingPoolClient';
+import { StackingPoolClientPort } from '../ports/stackingPoolClientPort';
 import { CachePort } from '../ports/cachePort';
 import { TransactionStatus } from '../../domain/entities/enums';
 import { FAST_POOL_STX_ADDRESS } from '../../shared/constants';
@@ -36,7 +36,7 @@ export class StackingService {
       throw new UserNotFoundError(`User with id ${userId} not found`);
     }
     const parsedTxId = txId.slice(0, 2) !== '0x' ? '0x'.concat(txId) : txId;
-    const transactionData: StxTransactionData =
+    const transactionData: StackingTransactionData =
       await this.transactionClient.fetchStackingTransactionData(parsedTxId);
     if (transactionData.functionName !== 'delegate-stx') {
       throw new WrongStackingFunctionError(

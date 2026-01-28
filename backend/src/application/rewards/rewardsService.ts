@@ -1,7 +1,7 @@
 import { EntityManager, In } from 'typeorm';
 import { RewardsCalculator } from '../../domain/service/rewardsCalculator';
 import { Submission } from '../../domain/entities/submission';
-import { TransactionClientPort } from '../ports/transactionClient';
+import { TransactionClientPort } from '../ports/transactionClientPort';
 import { BRONZE_TIER_BONUS, SILVER_TIER_BONUS } from '../../shared/constants';
 import { SubmissionTier } from '../../domain/helpers/types';
 import { RewardsDistributionData } from '../../domain/entities/rewardsDistributionData';

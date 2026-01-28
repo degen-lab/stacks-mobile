@@ -5,7 +5,7 @@ import {
   SubmissionType,
   TransactionStatus,
 } from '../../../src/domain/entities/enums';
-import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClientPort';
 import { EntityManager } from 'typeorm';
 import { User } from '../../../src/domain/entities/user';
 

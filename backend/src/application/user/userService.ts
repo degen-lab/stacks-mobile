@@ -21,7 +21,7 @@ import {
   NicknameNotProvidedError,
   UserNotFoundError,
 } from '../errors/userErrors';
-import { TransactionClientPort } from '../ports/transactionClient';
+import { TransactionClientPort } from '../ports/transactionClientPort';
 import { StreakService } from '../streaks/streakService';
 
 export class UserService {

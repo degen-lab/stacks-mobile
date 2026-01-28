@@ -1,5 +1,5 @@
 import { TxBroadcastResult } from '@stacks/transactions';
-import { StxTransactionData } from '../../shared/types';
+import { StackingTransactionData } from '../../shared/types';
 
 export interface TransactionClientPort {
   createTournamentUnsignedTransaction(
@@ -14,7 +14,7 @@ export interface TransactionClientPort {
   headToNextTournament(): Promise<string>;
   getTransactionStatus(txId: string): Promise<string>;
   broadcastTransaction(serializedTx: string): Promise<TxBroadcastResult>;
-  fetchStackingTransactionData(txId: string): Promise<StxTransactionData>;
+  fetchStackingTransactionData(txId: string): Promise<StackingTransactionData>;
   fetchPoxCycleData(): Promise<{
     cycleId: number;
   }>;

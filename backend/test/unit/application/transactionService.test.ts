@@ -1,5 +1,5 @@
 import { TransactionService } from '../../../src/application/transaction/transactionService';
-import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClientPort';
 import { SubmissionDomainService } from '../../../src/domain/service/submissionDomainService';
 import { EntityManager } from 'typeorm';
 import { User } from '../../../src/domain/entities/user';

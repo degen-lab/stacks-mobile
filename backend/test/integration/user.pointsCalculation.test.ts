@@ -18,7 +18,7 @@ import {
   createTestDataSource,
   getTestDataSource,
 } from './testDataSource';
-import { TransactionClientPort } from '../../src/application/ports/transactionClient';
+import { TransactionClientPort } from '../../src/application/ports/transactionClientPort';
 
 describe('User Points Calculation with Streak Boost Integration Tests', () => {
   let userService: UserService;

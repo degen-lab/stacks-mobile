@@ -20,7 +20,7 @@ import {
   MAX_FRAUD_ATTEMPTS,
 } from '../../../src/shared/constants';
 import { FraudAttempt } from '../../../src/domain/entities/fraudAttempt';
-import { TransactionClientPort } from '../../../src/application/ports/transactionClient';
+import { TransactionClientPort } from '../../../src/application/ports/transactionClientPort';
 
 describe('User Service unit test', () => {
   let userService: UserService;

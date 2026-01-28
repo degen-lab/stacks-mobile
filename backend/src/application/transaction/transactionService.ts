@@ -1,6 +1,6 @@
 import { EntityManager, In, LessThan } from 'typeorm';
 import { createVerify } from 'crypto';
-import { TransactionClientPort } from '../ports/transactionClient';
+import { TransactionClientPort } from '../ports/transactionClientPort';
 import { UserBlackListedError, UserNotFoundError } from '../errors/userErrors';
 import { User } from '../../domain/entities/user';
 import { SubmissionDomainService } from '../../domain/service/submissionDomainService';

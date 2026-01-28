@@ -171,3 +171,5 @@ export const KEEPER_API_HOST: string = configParser(
 );
 
 export const SWAP_SLIPPAGE_TOLLERANCE: number = 0.01;
+
+export const READONLY_CALL_API_KEY = configParser('READONLY_CALL_API_KEY')

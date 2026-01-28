@@ -1,4 +1,4 @@
-import { StackingPoolClientPort } from '../../application/ports/stackingPoolClient';
+import { StackingPoolClientPort } from '../../application/ports/stackingPoolClientPort';
 import {
   FAST_POOL_STACKING_DATA_JSON_URL,
   FAST_POOL_REWARDS_COMMITS_URL,
