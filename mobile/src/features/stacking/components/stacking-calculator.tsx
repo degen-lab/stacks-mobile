@@ -1,19 +1,26 @@
 import { useState, useEffect } from "react";
 import { TextInput, Pressable, ScrollView } from "react-native";
-import { View, Text, colors } from "@/components/ui";
+import { View, Text, colors, Button } from "@/components/ui";
 import { StxCoin } from "@/components/ui/icons/stx-coin";
-import { useStacking } from "../hooks/use-stacking";
 import GradientBorder from "@/components/ui/gradient-border";
 import { SvgUri } from "react-native-svg";
 import { useSvgAsset } from "@/hooks/use-svg-asset";
 import { LinearGradient } from "expo-linear-gradient";
-import { Button } from "@/components/ui";
 import { CustomPeriodModal } from "./custom-period-modal";
 import type { StackingPosition } from "../types";
 
 type Props = {
   availableBalance?: number;
   activePosition?: StackingPosition;
+  calculate: (
+    amount: number,
+    cycles: number,
+  ) => {
+    daily: number;
+    monthly: number;
+    yearly: number;
+  } | null;
+  price: number;
   onUpdateChange?: (
     hasChanges: boolean,
     valid: boolean,
@@ -34,10 +41,10 @@ const LOCK_PERIODS = [
 export function StackingCalculator({
   availableBalance = 0,
   activePosition,
+  calculate,
+  price,
   onUpdateChange,
 }: Props) {
-  const { calculate, stackingInfo } = useStacking();
-
   // Initialize state with active position if available, else defaults
   const [stxAmount, setStxAmount] = useState(
     activePosition ? activePosition.lockedAmount.toString() : "40",
@@ -52,19 +59,23 @@ export function StackingCalculator({
   const stacksCoinsUri = useSvgAsset(
     require("@/assets/images/stacks-coins.svg"),
   );
-  const price = stackingInfo.price || 0;
 
   // Notify parent component of changes
   useEffect(() => {
-    if (activePosition && onUpdateChange) {
+    if (!onUpdateChange) return;
+
+    const newAmount = Number(stxAmount) || 0;
+
+    if (activePosition) {
+      // User has active position - check for changes
       const currentAmount = activePosition.lockedAmount;
-      const currentDuration = activePosition.lockDuration;
-      const newAmount = Number(stxAmount) || 0;
-
       const hasChange = newAmount !== currentAmount;
-      // Validation logic can be expanded here (e.g., min amount, balance check)
       const isValid = newAmount >= 40;
-
+      onUpdateChange(hasChange, isValid, newAmount);
+    } else {
+      // User is stacking for the first time
+      const hasChange = false; // No existing position to compare
+      const isValid = newAmount >= 40;
       onUpdateChange(hasChange, isValid, newAmount);
     }
   }, [stxAmount, activePosition, onUpdateChange]);
@@ -75,18 +86,18 @@ export function StackingCalculator({
   const usdValue = Number(stxAmount)
     ? (Number(stxAmount) * price).toFixed(2)
     : "0.00";
-  const totalEarnings = results ? results.daily * (weeks * 7) * price : 0;
+  const totalEarningsStx = results ? results.daily * (weeks * 7) : 0;
+  const totalEarningsUsd = totalEarningsStx * price;
 
   // Current Earnings (for comparison over the same selected period)
   const currentResults = activePosition
     ? calculate(activePosition.lockedAmount, weeks / 2)
     : null;
-  const currentTotalEarnings =
-    currentResults && activePosition
-      ? currentResults.daily * (weeks * 7) * price
-      : 0;
+  const currentTotalEarningsStx =
+    currentResults && activePosition ? currentResults.daily * (weeks * 7) : 0;
+  const currentTotalEarningsUsd = currentTotalEarningsStx * price;
 
-  const earningsDelta = totalEarnings - currentTotalEarnings;
+  const earningsDeltaUsd = totalEarningsUsd - currentTotalEarningsUsd;
 
   const handleMax = () => {
     // If active, Max means adding all available balance to the locked amount?
@@ -181,10 +192,11 @@ export function StackingCalculator({
               <Pressable
                 key={index}
                 onPress={() => handlePeriodSelect(period)}
-                className={`rounded-full px-4 py-2 border ${isSelected
-                  ? "border-sand-600 bg-sand-900"
-                  : "border-sand-300 bg-sand-100"
-                  }`}
+                className={`rounded-full px-4 py-2 border ${
+                  isSelected
+                    ? "border-sand-600 bg-sand-900"
+                    : "border-sand-300 bg-sand-100"
+                }`}
               >
                 <Text
                   className={`text-sm font-instrument-sans-medium ${isSelected ? "text-white" : "text-primary"}`}
@@ -250,33 +262,27 @@ export function StackingCalculator({
                 <Text className="text-sm font-instrument-sans text-secondary">
                   Estimated Earnings
                 </Text>
-                {activePosition && (
-                  <View
-                    className={`rounded-full px-2 py-1 ${activePosition && earningsDelta !== 0
-                      ? earningsDelta > 0
-                        ? "bg-green-500/10"
-                        : "bg-red-500/10"
-                      : "bg-sand-200/60"
-                      }`}
-                  >
-                    <Text
-                      className={`text-xs font-instrument-sans-semibold ${activePosition && earningsDelta !== 0
-                        ? earningsDelta > 0
-                          ? "text-green-600"
-                          : "text-red-600"
-                        : "text-secondary"
-                        }`}
-                    >
-                      {activePosition && earningsDelta !== 0
-                        ? `${earningsDelta > 0 ? "+" : "-"}$${Math.abs(earningsDelta).toFixed(2)}`
-                        : "+$0.00"}
+                <View className="rounded-full bg-sand-200/80 px-2 py-1">
+                  <View className="flex-row items-baseline gap-1.5">
+                    <Text className="text-sm font-instrument-sans-semibold text-secondary">
+                      ${totalEarningsUsd.toFixed(2)}
                     </Text>
+                    {activePosition && earningsDeltaUsd !== 0 && (
+                      <Text
+                        className={`text-sm font-instrument-sans-semibold ${earningsDeltaUsd > 0 ? "text-green-600" : "text-red-600"}`}
+                      >
+                        ({earningsDeltaUsd > 0 ? "+" : "-"}$
+                        {Math.abs(earningsDeltaUsd).toFixed(2)})
+                      </Text>
+                    )}
                   </View>
-                )}
+                </View>
               </View>
-              <Text className="font-matter text-4xl text-primary">
-                ${totalEarnings.toFixed(2)}
-              </Text>
+              <View className="flex-row flex-wrap items-baseline gap-2">
+                <Text className="font-matter text-3xl text-primary">
+                  {totalEarningsStx.toFixed(2)} STX
+                </Text>
+              </View>
             </View>
           ) : (
             <View>
@@ -284,20 +290,20 @@ export function StackingCalculator({
                 <Text className="text-sm font-instrument-sans text-secondary">
                   Estimated Earnings
                 </Text>
-                {activePosition && (
-                  <View className="rounded-full bg-sand-200/60 px-2 py-1">
-                    <Text className="text-xs font-instrument-sans-semibold text-secondary">
-                      +$0.00
-                    </Text>
-                  </View>
-                )}
+                <View className="rounded-full bg-sand-200/60 px-2 py-1">
+                  <Text className="text-sm font-instrument-sans-semibold text-secondary">
+                    $0.00
+                  </Text>
+                </View>
               </View>
-              <Text
-                className="font-matter text-4xl text-secondary"
-                style={{ opacity: 0.6 }}
-              >
-                $0.00
-              </Text>
+              <View className="flex-row flex-wrap items-baseline gap-2">
+                <Text
+                  className="font-matter text-3xl text-secondary"
+                  style={{ opacity: 0.6 }}
+                >
+                  0.00 STX
+                </Text>
+              </View>
             </View>
           )}
         </View>
@@ -308,6 +314,6 @@ export function StackingCalculator({
         onClose={() => setShowCustomModal(false)}
         onApply={handleApplyCustomPeriod}
       />
-    </View >
+    </View>
   );
 }

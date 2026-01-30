@@ -1,7 +1,7 @@
 import type { AxiosError } from "axios";
 import { createMutation } from "react-query-kit";
 
-import { client, queryClient } from "../common";
+import { gameClient, queryClient } from "../../common";
 import type {
   BroadcastTransactionRequest,
   BroadcastTransactionResponse,
@@ -16,7 +16,7 @@ export const useBroadcastSponsoredTransactionMutation = createMutation<
   AxiosError
 >({
   mutationFn: async (variables) =>
-    client({
+    gameClient({
       url: "transaction/broadcast-sponsored",
       method: "POST",
       data: variables,

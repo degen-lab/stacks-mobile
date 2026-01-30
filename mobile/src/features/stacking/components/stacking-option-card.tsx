@@ -145,29 +145,29 @@ export function StackingOptionCard({
           {/* Pool Details */}
           {registrationClosesIn && registrationStatus === "open" && (
             <View className="flex-row items-center justify-between">
-              <Text className="text-xs font-instrument-sans text-secondary">
+              <Text className="text-sm font-instrument-sans text-secondary">
                 Registration closes
               </Text>
-              <Text className="text-xs font-instrument-sans-medium text-primary">
+              <Text className="text-sm font-instrument-sans-medium text-primary">
                 {registrationClosesIn}
               </Text>
             </View>
           )}
 
           <View className="flex-row items-center justify-between">
-            <Text className="text-xs font-instrument-sans text-secondary">
+            <Text className="text-sm font-instrument-sans text-secondary">
               Lock period
             </Text>
-            <Text className="text-xs font-instrument-sans-medium text-primary">
+            <Text className="text-sm font-instrument-sans-medium text-primary">
               {lockingTime}
             </Text>
           </View>
 
           <View className="flex-row items-center justify-between">
-            <Text className="text-xs font-instrument-sans text-secondary">
+            <Text className="text-sm font-instrument-sans text-secondary">
               Minimum
             </Text>
-            <Text className="text-xs font-instrument-sans-medium text-primary">
+            <Text className="text-sm font-instrument-sans-medium text-primary">
               {minimumStx} STX
             </Text>
           </View>

@@ -2,11 +2,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { HelpCircle } from "lucide-react-native";
 import { RefObject } from "react";
 
-import {
-  colors,
-  ScreenHeader,
-  useModal,
-} from "@/components/ui";
+import { colors, ScreenHeader, useModal } from "@/components/ui";
 import { StackingGuideModal } from "./stacking-guide-modal";
 
 export function StackingHeader() {
@@ -22,7 +18,9 @@ export function StackingHeader() {
         }}
       />
 
-      <StackingGuideModal modalRef={helpModalRef as RefObject<BottomSheetModal>} />
+      <StackingGuideModal
+        modalRef={helpModalRef as RefObject<BottomSheetModal>}
+      />
     </>
   );
 }

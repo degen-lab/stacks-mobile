@@ -1,6 +1,6 @@
-import { useStoreItems } from "@/api/store";
-import type { StoreItem } from "@/api/store/types";
-import { mapNumericTypeToItemType } from "@/api/store/types";
+import { useStoreItems } from "@/api/game/store";
+import type { StoreItem } from "@/api/game/store/types";
+import { mapNumericTypeToItemType } from "@/api/game/store/types";
 import { Text } from "@/components/ui";
 import { ItemType } from "@/lib/enums";
 import { Asset } from "expo-asset";

@@ -5,14 +5,18 @@ import React from "react";
 
 type ContractCallDetailsSheetProps = {
   title?: string;
+  description?: string;
   network?: string;
   contractName?: string;
   functionName?: string;
   argsSummary?: string;
   feeLabel?: string;
   txHex?: string;
+  confirmLabel?: string;
+  onConfirm?: () => void;
   onClose?: () => void;
   snapPoints?: string[];
+  isLoading?: boolean;
 };
 
 export const ContractCallDetailsSheet = React.forwardRef<
@@ -22,14 +26,18 @@ export const ContractCallDetailsSheet = React.forwardRef<
   (
     {
       title = "Contract Call Details",
+      description,
       network,
       contractName,
       functionName,
       argsSummary,
       feeLabel,
       txHex,
+      confirmLabel,
+      onConfirm,
       onClose,
       snapPoints = ["55%"],
+      isLoading = false,
     },
     ref,
   ) => {
@@ -47,6 +55,12 @@ export const ContractCallDetailsSheet = React.forwardRef<
         onDismiss={onClose}
       >
         <View className="px-6 pb-6">
+          {description ? (
+            <Text className="mb-4 text-sm font-instrument-sans leading-relaxed text-secondary dark:text-neutral-300">
+              {description}
+            </Text>
+          ) : null}
+
           <View className="rounded-xl border border-sand-200 bg-sand-100 p-4 dark:border-neutral-700 dark:bg-neutral-800">
             {network ? <InfoRow label="Network" value={network} /> : null}
             {contractName ? (
@@ -62,13 +76,33 @@ export const ContractCallDetailsSheet = React.forwardRef<
             {txHex ? <InfoRow label="Tx Hex" value={txHex} /> : null}
           </View>
 
-          <Button
-            label="Close"
-            variant="secondary"
-            size="game"
-            onPress={onClose}
-            className="mt-6"
-          />
+          {confirmLabel && onConfirm ? (
+            <>
+              <Button
+                label={isLoading ? "Processing..." : confirmLabel}
+                variant="gamePrimary"
+                size="lg"
+                onPress={onConfirm}
+                className="mt-6"
+                disabled={isLoading}
+              />
+              <Button
+                label="Cancel"
+                variant="secondary"
+                size="lg"
+                onPress={onClose}
+                className="mt-3"
+              />
+            </>
+          ) : (
+            <Button
+              label="Close"
+              variant="secondary"
+              size="game"
+              onPress={onClose}
+              className="mt-6"
+            />
+          )}
           {/* TODO: Add copy-to-clipboard and external explorer links. */}
         </View>
       </Modal>

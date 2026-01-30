@@ -1,7 +1,7 @@
 import type { AxiosError } from "axios";
 import { createMutation } from "react-query-kit";
 
-import { client } from "../common";
+import { gameClient } from "../../common";
 import type {
   CreateTransactionRequest,
   CreateTransactionResponse,
@@ -16,7 +16,7 @@ export const useCreateTransactionMutation = createMutation<
   AxiosError
 >({
   mutationFn: async (variables) =>
-    client({
+    gameClient({
       url: "transaction/create",
       method: "POST",
       data: variables,

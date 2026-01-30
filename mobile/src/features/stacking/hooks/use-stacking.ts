@@ -1,82 +1,55 @@
 import { useMemo } from "react";
 import { useStacksPrice } from "@/api/market/use-stacks-price";
 import { useStxBalance } from "@/hooks/use-stx-balance";
-import type {
-  StackingInfo,
-  UserStackingStats,
-  CalculatorResults,
-} from "../types";
+import { usePoxData } from "@/api/stacks/use-stacks-api";
+import { useTimeTillRewards } from "./use-time-till-rewards";
 
-const MOCK_STACKING_INFO: StackingInfo = {
-  currentCycle: 77,
-  apy: 0.1,
-  price: 0.31,
-  nextCycleStart: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-};
+const DEFAULT_APY = 0.1;
+const AVERAGE_BLOCK_TIME_SECONDS = 10 * 60;
 
 export function useStacking() {
-  const { balance, isLoading: isBalanceLoading } = useStxBalance();
-  const { data: stxPrice, isLoading: isPriceLoading } = useStacksPrice();
+  const { balance } = useStxBalance();
+  const { data: stxPrice } = useStacksPrice();
+  const { data: poxInfo, isLoading: isLoadingPox } = usePoxData();
+  const { nextCycleDate, timeTillNextCycle } = useTimeTillRewards(poxInfo);
 
-  const stackingInfo: StackingInfo = useMemo(
+  const daysPerCycle = useMemo(() => {
+    if (!poxInfo) return 0;
+    return Math.round(
+      (poxInfo.reward_cycle_length * AVERAGE_BLOCK_TIME_SECONDS) / (24 * 3600),
+    );
+  }, [poxInfo]);
+
+  const stackingInfo = useMemo(
     () => ({
-      ...MOCK_STACKING_INFO,
-      price: stxPrice ? stxPrice : MOCK_STACKING_INFO.price,
+      currentCycle: poxInfo?.current_cycle.id ?? 0,
+      apy: DEFAULT_APY,
+      price: stxPrice ?? 0,
+      nextCycleStart: nextCycleDate ?? new Date(),
+      timeTillNextCycle,
     }),
-    [stxPrice],
+    [poxInfo, stxPrice, nextCycleDate, timeTillNextCycle],
   );
-
-  const userStats: UserStackingStats = useMemo(
-    () => ({
-      liquidBalance: balance,
-      lockedAmount: 0, // Mock value
-      lockedAmountUsd: 0,
-      nextUnlockCycle: 79,
-      nextUnlockDays: 28,
-      lifetimeEarnings: 0,
-      activePosition: {
-        isActive: true,
-        lockedAmount: 60, // 40 STX locked
-        lockDuration: 12, // 12 weeks
-        lockStartAt: new Date(),
-        lockEndAt: new Date(Date.now() + 12 * 7 * 24 * 60 * 60 * 1000),
-        nextUnlockCycle: 79,
-        nextUnlockDays: 28,
-        lifetimeEarnings: 0.0012,
-        status: "ACTIVE",
-        capabilities: {
-          canIncrease: true,
-          canDecrease: false, // Decreasing unsupported in preview
-          canExtend: true,
-          canShorten: false, // Shortening unsupported
-          canLeave: false,
-        },
-      },
-    }),
-    [balance],
-  );
-
-  const isStacking = !!userStats?.activePosition?.isActive;
 
   const calculate = useMemo(
-    () =>
-      (amount: number, cycles: number): CalculatorResults | null => {
-        if (!amount || amount < 40) return null;
+    () => (amount: number) => {
+      if (!amount) return null;
 
-        const apy = stackingInfo.apy;
-        return {
-          daily: (amount * apy) / 365,
-          monthly: ((amount * apy) / 365) * 30,
-          yearly: amount * apy,
-        };
-      },
-    [stackingInfo],
+      const apy = stackingInfo.apy;
+      return {
+        daily: (amount * apy) / 365,
+        monthly: ((amount * apy) / 365) * 30,
+        yearly: amount * apy,
+      };
+    },
+    [stackingInfo.apy],
   );
 
   return {
+    balance,
     stackingInfo,
-    userStats,
-    isStacking,
+    daysPerCycle,
     calculate,
+    isLoading: isLoadingPox,
   };
 }

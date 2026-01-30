@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import {
   useBroadcastTransactionMutation,
   useCreateTransactionMutation,
-} from "@/api/transaction";
+} from "@/api/game/transaction";
 import type { UserProfile } from "@/api/user/types";
 import { useSignTransaction } from "@/hooks/use-sign-transaction";
 import { CONTRACTS } from "@/lib/stacks/contracts";

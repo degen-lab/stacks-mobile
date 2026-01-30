@@ -6,7 +6,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { colors, Text, View } from "@/components/ui";
+import { Text, View } from "@/components/ui";
 import GradientBorder from "@/components/ui/gradient-border";
 import { Asset } from "expo-asset";
 import { SvgUri } from "react-native-svg";
@@ -91,7 +91,7 @@ export function EarnCard({
       gradient={borderGradient}
       angle={70}
       hasShadow={false}
-    // innerBackground={colors.neutral[100]}
+      // innerBackground={colors.neutral[100]}
     >
       {onPress ? (
         <Pressable className="p-4" onPress={onPress}>

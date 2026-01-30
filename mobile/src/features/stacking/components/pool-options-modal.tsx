@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, Modal, TextInput, Linking } from "react-native";
+import { View, Text, Pressable, Modal } from "react-native";
 import { Button, colors } from "@/components/ui";
 import {
   X,
@@ -9,10 +9,10 @@ import {
   List,
   QrCode,
   ExternalLink,
+  Copy,
 } from "lucide-react-native";
 import { Input } from "@/components/ui/input";
 import type { StackingPosition } from "../types";
-import { Copy } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
 
 type Props = {
@@ -33,11 +33,11 @@ export function PoolOptionsModal({ visible, onClose, activePosition }: Props) {
     onClose();
   };
 
-  const handleSupport = () => {
-    // Determine pool specific URL if possible, for now generic or fast pool
-    Linking.openURL("https://fastpool.org"); // Example for Fast Pool
-    handleClose();
-  };
+  // const handleSupport = () => {
+  //   // Determine pool specific URL if possible, for now generic or fast pool
+  //   Linking.openURL("https://fastpool.org"); // Example for Fast Pool
+  //   handleClose();
+  // };
 
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);

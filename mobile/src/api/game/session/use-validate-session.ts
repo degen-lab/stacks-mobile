@@ -1,7 +1,7 @@
 import type { AxiosError } from "axios";
 import { createMutation } from "react-query-kit";
 
-import { client } from "../../common";
+import { gameClient } from "../../common";
 import { queryClient } from "../../common/api-provider";
 import type { UserProfile } from "../../user/types";
 import type {
@@ -18,7 +18,7 @@ export const useValidateSessionMutation = createMutation<
   AxiosError
 >({
   mutationFn: async (variables) =>
-    client({
+    gameClient({
       url: "session/validate",
       method: "POST",
       data: variables,

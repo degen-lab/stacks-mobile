@@ -1,9 +1,9 @@
-import { useBroadcastSponsoredTransactionMutation } from "@/api/transaction";
+import { useBroadcastSponsoredTransactionMutation } from "@/api/game/transaction";
 import {
   useCurrentTournamentSubmissions,
   useTournamentData,
   useTournamentLeaderboard,
-} from "@/api/tournament";
+} from "@/api/";
 import { useSponsoredSubmissionsLeft, useUserProfile } from "@/api/user";
 import { getItemVariant } from "@/api/user/types";
 import { ItemVariant, TournamentStatusEnum } from "@/lib/enums";
@@ -312,7 +312,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const { consumeDropPoint, consumeRevive } = usePowerUpInventory({
     canUseDropPoint: dropPointAvailable,
     canUseRevive: reviveAvailable,
-    onConsumeDropPoint: () => { },
+    onConsumeDropPoint: () => {},
     onConsumeRevive: consumeRevivePowerUp,
     registerUsedItem,
   });

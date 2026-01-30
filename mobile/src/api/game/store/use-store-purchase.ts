@@ -2,7 +2,7 @@ import type { AxiosError } from "axios";
 import { createMutation } from "react-query-kit";
 
 import { ItemType } from "@/lib/enums";
-import { client } from "../common";
+import { gameClient } from "../../common";
 import type { StorePurchaseRequest, StorePurchaseResponse } from "./types";
 
 type Variables = StorePurchaseRequest;
@@ -20,7 +20,7 @@ export const useStorePurchaseMutation = createMutation<
   AxiosError
 >({
   mutationFn: async (variables) =>
-    client({
+    gameClient({
       url: "store/purchase",
       method: "POST",
       data: {

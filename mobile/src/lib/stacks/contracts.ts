@@ -1,16 +1,18 @@
-import type { NetworkType } from "@degenlab/stacks-wallet-kit-core";
-
 export const CONTRACTS = {
   mainnet: {
     game: "",
-    stackingFastPool: "SP21YTSM60CAY6D011EZVEVNKXVW8FVZE198XEFFP.pox4-fast-pool-v3",
+    pox: "SP000000000000000000002Q6VF78.pox-4",
+    stackingFastPool:
+      "SP21YTSM60CAY6D011EZVEVNKXVW8FVZE198XEFFP.pox4-fast-pool-v3",
   },
   testnet: {
     game: "ST13XJ4G348VGDRT5Z791J8GBTB9Z0ESPNCRAPN4E.game-1_0_0",
+    pox: "",
     stackingFastPool: "",
   },
   devnet: {
     game: "",
+    pox: "",
     stackingFastPool: "",
   },
 } as const;
@@ -30,7 +32,6 @@ export const SC_FUNCTIONS = {
       CURRENT_POX_REWARD_CYCLE: "current-pox-reward-cycle",
       CAN_LOCK_NOW: "can-lock-now",
       GET_POOL_POX_ADDRESS: "get-pool-pox-address",
-      CHECK_CALLER_ALLOWED: "check-caller-allowed",
       GET_ALLOWANCE_CONTRACT_CALLERS: "get-allowance-contract-callers",
     },
     publicFunctions: {
@@ -38,6 +39,11 @@ export const SC_FUNCTIONS = {
 
       ALLOW_CONTRACT_CALLER: "allow-contract-caller",
       DISALLOW_CONTRACT_CALLER: "disallow-contract-caller",
+    },
+  },
+  pox: {
+    publicFunctions: {
+      REVOKE_DELEGATE_STX: "revoke-delegate-stx",
     },
   },
 } as const;

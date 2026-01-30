@@ -1,11 +1,11 @@
 import type { AxiosError } from "axios";
 import { createQuery } from "react-query-kit";
 
-import { client } from "../common";
+import { gameClient } from "../common";
 import type {
   CurrentTournamentSubmissions,
   CurrentTournamentSubmissionsResponse,
-} from "../tournament/types";
+} from "../game/tournament/types";
 
 type Response = CurrentTournamentSubmissions;
 type Variables = void;
@@ -17,7 +17,7 @@ export const useCurrentTournamentSubmissions = createQuery<
 >({
   queryKey: ["current-tournament-submissions"],
   fetcher: async () => {
-    const response = await client.get<CurrentTournamentSubmissionsResponse>(
+    const response = await gameClient.get<CurrentTournamentSubmissionsResponse>(
       "user/current-tournament-submissions",
     );
     return response.data.data;

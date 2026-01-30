@@ -1,5 +1,5 @@
-import type { StoreItem, StorePurchasedItem } from "@/api/store/types";
-import { mapNumericTypeToItemType } from "@/api/store/types";
+import type { StoreItem, StorePurchasedItem } from "@/api/game/store/types";
+import { mapNumericTypeToItemType } from "@/api/game/store/types";
 import type { UserItem } from "@/api/user/types";
 import { getItemVariant } from "@/api/user/types";
 import { HeartIcon } from "@/components/ui/icons/heart";

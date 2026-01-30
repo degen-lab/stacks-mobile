@@ -1,7 +1,7 @@
 import type { AxiosError } from "axios";
 import { createQuery } from "react-query-kit";
 
-import { client } from "../common";
+import { gameClient } from "../common";
 import type {
   SponsoredSubmissionsLeft,
   SponsoredSubmissionsLeftApiResponse,
@@ -17,7 +17,7 @@ export const useSponsoredSubmissionsLeft = createQuery<
 >({
   queryKey: ["sponsored-submissions-left"],
   fetcher: async () => {
-    const response = await client.get<SponsoredSubmissionsLeftApiResponse>(
+    const response = await gameClient.get<SponsoredSubmissionsLeftApiResponse>(
       "user/sponsored-submissions-left",
     );
     return response.data.data;

@@ -1,4 +1,4 @@
-import type { StoreItem, StorePurchaseResponse } from "@/api/store/types";
+import type { StoreItem, StorePurchaseResponse } from "@/api/game/store/types";
 import type { UserItem } from "@/api/user/types";
 import { ItemType, ItemVariant, PurchaseType } from "@/lib/enums";
 import { act, render, waitFor } from "@/lib/tests";
