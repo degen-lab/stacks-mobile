@@ -50,6 +50,8 @@ export const REFERRAL_BONUS: number = parseInt(
   configParser('REFERRAL_BONUS', isTest ? '100' : undefined),
 );
 
+export const GITHUB_API_KEY: string = configParser('GITHUB_API_KEY');
+
 export const STACKS_NETWORK: string = configParser('STACKS_NETWORK', 'testnet');
 
 export const GAME_CONTRACT_ADDRESS: string = configParser(
@@ -136,3 +138,10 @@ export const IOS_REFERRER_DOMAIN: string = configParser(
   'IOS_REFERRER_DOMAIN',
   isTest ? 'ios.dev' : undefined,
 );
+
+export const FAST_POOL_STACKING_DATA_JSON_URL = (address: string): string =>
+  `https://api.github.com/repos/friedger/stacking/contents/packages/home/data/users/${address}.json`;
+
+export const FAST_POOL_REWARDS_COMMITS_URL = `https://api.github.com/repos/friedger/stacking/commits?path=packages/home/data/rewards`;
+
+export const FAST_POOL_STX_ADDRESS = `SP21YTSM60CAY6D011EZVEVNKXVW8FVZE198XEFFP.pox4-fast-pool-v3`;

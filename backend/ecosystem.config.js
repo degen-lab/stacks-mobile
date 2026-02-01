@@ -35,5 +35,12 @@ module.exports = {
       interpreter: 'node',
       exec_mode: 'fork',
     },
+    {
+      name: 'stacking-worker',
+      script: 'dist/src/infra/workers/stacking/index.js',
+      instances: 1,
+      interpreter: 'node',
+      exec_mode: 'fork',
+    },
   ],
 };

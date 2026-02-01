@@ -16,3 +16,11 @@ export const transactionQueue = new Queue('transactions', {
 export const submissionsCleanupQueue = new Queue('submissions-cleanup', {
   connection: redis,
 });
+
+export const stackingQueue = new Queue('stacking', {
+  connection: redis,
+  defaultJobOptions: {
+    removeOnComplete: false,
+    removeOnFail: false,
+  },
+});

@@ -143,8 +143,8 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        testPurchase.id.toString(),
-        testPurchase.id.toString(),
+        testUser.id.toString(), // partnerCustomerId = user ID
+        testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
       );
     });
@@ -177,20 +177,21 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        testPurchase.id.toString(),
-        testPurchase.id.toString(),
+        testUser.id.toString(), // partnerCustomerId = user ID
+        testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
       );
     });
 
     it('should refresh access token when cached token is expired', async () => {
+      const nowInSeconds = Math.floor(Date.now() / 1000);
       const expiredToken: TransakAccessToken = {
         accessToken: 'expired-token',
-        expiresAt: Date.now() - 1000, // expired 1 second ago
+        expiresAt: nowInSeconds - 1, // expired 1 second ago (in seconds)
       };
       const newToken: TransakAccessToken = {
         accessToken: 'new-fresh-token',
-        expiresAt: Date.now() + 3600000,
+        expiresAt: nowInSeconds + 3600, // expires in 1 hour (in seconds)
       };
 
       mockEntityManager.findOne.mockResolvedValue(testUser);
@@ -216,8 +217,8 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        testPurchase.id.toString(),
-        testPurchase.id.toString(),
+        testUser.id.toString(), // partnerCustomerId = user ID
+        testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
       );
     });
@@ -251,13 +252,13 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        testPurchase.id.toString(),
-        testPurchase.id.toString(),
+        testUser.id.toString(), // partnerCustomerId = user ID
+        testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
       );
     });
 
-    it('should pass correct partnerCustomerId (purchase id) to widget url', async () => {
+    it('should pass correct partnerCustomerId (user id) and partnerOrderId (purchase id) to widget url', async () => {
       const cachedToken: TransakAccessToken = {
         accessToken: 'valid-token',
         expiresAt: Date.now() + 3600000,
@@ -283,8 +284,8 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        '12345', // partnerCustomerId should be the saved purchase id as string
-        testPurchase.id.toString(), // partnerOrderId from original purchase object
+        testUser.id.toString(), // partnerCustomerId = user ID
+        '12345', // partnerOrderId = saved purchase ID
         AppPlatform.ANDROID,
       );
     });
@@ -320,8 +321,8 @@ describe('CryptoPurchaseService unit test', () => {
         'BTC',
         'EUR',
         500,
-        testPurchase.id.toString(),
-        testPurchase.id.toString(),
+        testUser.id.toString(), // partnerCustomerId = user ID
+        testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
       );
     });

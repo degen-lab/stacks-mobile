@@ -140,3 +140,20 @@ export enum AppPlatform {
   IOS,
   ANDROID,
 }
+
+export type StxTransactionData = {
+  functionName: string;
+  txStatus: string;
+  // From smart contract log
+  balance: number;
+  burnchainUnlockHeight: number;
+  locked: number;
+  stacker: string;
+  // From data tuple
+  amountUstx: number;
+  delegateTo: string;
+  startCycleId: number;
+  endCycleId: number | null;
+  unlockBurnHeight: number | null;
+  poxAddress: string | null;
+};

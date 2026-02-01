@@ -32,6 +32,7 @@ import {
 } from '../../shared/constants';
 import { ContractFunctions } from '../helpers/types';
 import { logger } from '../../api/helpers/logger';
+import { StxTransactionData } from '../../shared/types';
 
 // Extended type for broadcast transaction response that may include error fields
 type BroadcastResponse = TxBroadcastResult & {
@@ -65,6 +66,23 @@ export class TransactionClient implements ITransactionClient {
         : STACKS_NETWORK === 'testnet'
           ? createNetwork('testnet')
           : createNetwork('devnet');
+  }
+  async fetchPoxCycleData(): Promise<{ cycleId: number }> {
+    const url = `${this.network.client.baseUrl}/v2/pox`;
+
+    const result = await fetch(url);
+
+    if (!result.ok) {
+      logger.error({
+        msg: 'Failed to fetch pox data',
+      });
+      throw new Error('Failed to fetch pox data');
+    }
+    const data = await result.json();
+    const cycleId = data.current_cycle.id;
+    return {
+      cycleId,
+    };
   }
   async broadcastTransaction(serializedTx: string): Promise<TxBroadcastResult> {
     const transaction = deserializeTransaction(serializedTx);
@@ -577,7 +595,9 @@ export class TransactionClient implements ITransactionClient {
     return hexToBytes(r + s + v);
   }
 
-  private async fetchTransactionStatus(txId: string): Promise<boolean> {
+  async fetchStackingTransactionData(
+    txId: string,
+  ): Promise<StxTransactionData> {
     const url = `${this.network.client.baseUrl}/extended/v1/tx/${txId}`;
     logger.info({
       msg: 'Fetching transaction status',
@@ -593,7 +613,7 @@ export class TransactionClient implements ITransactionClient {
         status: response.status,
         statusText: response.statusText,
       });
-      return false;
+      throw new Error('Error: failed to fetch transaction data');
     }
 
     const data = await response.json();
@@ -614,7 +634,82 @@ export class TransactionClient implements ITransactionClient {
       });
     }
 
-    return isSuccess;
+    // Parse from smart contract log event repr (delegate-stx always has one log event)
+    const scLogEvent = data.events?.[0];
+    if (!scLogEvent?.contract_log?.value?.repr) {
+      throw new Error(
+        'Error: smart contract log event not found in transaction',
+      );
+    }
+
+    const repr = scLogEvent.contract_log.value.repr;
+
+    // Helper to extract uint value: "u12345" -> 12345
+    const extractUint = (pattern: RegExp): number | null => {
+      const match = repr.match(pattern);
+      if (match && match[1] !== 'none') {
+        return Number(match[1]);
+      }
+      return null;
+    };
+
+    // Helper to extract optional uint: "none" or "u12345"
+    const extractOptionalUint = (pattern: RegExp): number | null => {
+      const match = repr.match(pattern);
+      if (match) {
+        if (match[1] === 'none') return null;
+        // Handle "(some uXXX)" format - extract just the number
+        const numMatch = match[1].match(/u(\d+)/);
+        return numMatch ? Number(numMatch[1]) : null;
+      }
+      return null;
+    };
+
+    // Helper to extract principal: "'ST..." -> "ST..."
+    const extractPrincipal = (pattern: RegExp): string => {
+      const match = repr.match(pattern);
+      if (match && match[1]) {
+        return match[1].startsWith("'") ? match[1].slice(1) : match[1];
+      }
+      return '';
+    };
+
+    // Parse top-level fields
+    const balance = extractUint(/\(balance u(\d+)\)/) ?? 0;
+    const burnchainUnlockHeight =
+      extractUint(/\(burnchain-unlock-height u(\d+)\)/) ?? 0;
+    const locked = extractUint(/\(locked u(\d+)\)/) ?? 0;
+    const stacker = extractPrincipal(/\(stacker ('S[A-Z0-9]+)\)/);
+
+    // Parse data tuple fields
+    const amountUstx = extractUint(/\(amount-ustx u(\d+)\)/) ?? 0;
+    const delegateTo = extractPrincipal(/\(delegate-to ('S[A-Z0-9]+)\)/);
+    const startCycleId = extractUint(/\(start-cycle-id u(\d+)\)/) ?? 0;
+    const endCycleId = extractOptionalUint(/\(end-cycle-id (none|[^)]+)\)/);
+    const unlockBurnHeight = extractOptionalUint(
+      /\(unlock-burn-height (none|[^)]+)\)/,
+    );
+
+    // Parse pox-addr - can be none or a tuple
+    const poxAddrMatch = repr.match(/\(pox-addr (none|\(tuple[^)]+\))\)/);
+    const poxAddress =
+      poxAddrMatch && poxAddrMatch[1] !== 'none' ? poxAddrMatch[1] : null;
+
+    const txData: StxTransactionData = {
+      functionName: data.contract_call.function_name,
+      txStatus: data.tx_status,
+      balance,
+      burnchainUnlockHeight,
+      locked,
+      stacker,
+      amountUstx,
+      delegateTo,
+      startCycleId,
+      endCycleId,
+      unlockBurnHeight,
+      poxAddress,
+    };
+    return txData;
   }
 
   async getTransactionStatus(txId: string): Promise<string> {

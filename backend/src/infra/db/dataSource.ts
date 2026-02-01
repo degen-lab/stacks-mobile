@@ -17,6 +17,7 @@ import { FraudAttempt } from '../../domain/entities/fraudAttempt';
 import { RewardsDistributionData } from '../../domain/entities/rewardsDistributionData';
 import { TournamentStatus } from '../../domain/entities/tournamentStatus';
 import { CryptoPurchase } from '../../domain/entities/cryptoPurchase';
+import { StackingData } from '../../domain/entities/stackingData';
 
 export const AppDataSource = new DataSource({
   type: DB_TYPE,
@@ -36,6 +37,7 @@ export const AppDataSource = new DataSource({
     FraudAttempt,
     RewardsDistributionData,
     TournamentStatus,
+    StackingData,
     CryptoPurchase,
   ],
   subscribers: [],
