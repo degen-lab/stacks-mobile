@@ -13,6 +13,7 @@ export const endpoints = {
     "/extended/v2/smart-contracts/status?contract_id={contractId}",
   CONTRACT_VARIABLE:
     "/v2/data_var/{contractAddress}/{contractName}/{variableName}?proof=0",
+  FEE_TRANSACTION: "/v2/fees/transaction",
 } as const;
 
 export const constructUrl = (
