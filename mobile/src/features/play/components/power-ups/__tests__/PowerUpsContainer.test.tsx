@@ -19,7 +19,7 @@ jest.mock("@/api/common/api-provider", () => ({
   },
 }));
 
-jest.mock("@/api/store", () => ({
+jest.mock("@/api/game/store", () => ({
   useStoreItems: (...args: any[]) => mockUseStoreItems(...args),
   useStorePurchaseMutation: (...args: any[]) =>
     mockUseStorePurchaseMutation(...args),

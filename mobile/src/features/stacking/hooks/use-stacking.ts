@@ -1,22 +1,28 @@
 import { useMemo } from "react";
 import { useStacksPrice } from "@/api/market/use-stacks-price";
-import { useStxBalance } from "@/hooks/use-stx-balance";
 import { usePoxData } from "@/api/stacks/use-stacks-api";
-import { useTimeTillRewards } from "./use-time-till-rewards";
+import { useTimeTillRewards } from "./use-cycle-time";
+import { AVERAGE_BLOCK_DURATION_SECONDS } from "@/lib/format/date";
 
-const DEFAULT_APY = 0.1;
-const AVERAGE_BLOCK_TIME_SECONDS = 10 * 60;
+const DEFAULT_APY = 0.07;
 
 export function useStacking() {
-  const { balance } = useStxBalance();
   const { data: stxPrice } = useStacksPrice();
   const { data: poxInfo, isLoading: isLoadingPox } = usePoxData();
-  const { nextCycleDate, timeTillNextCycle } = useTimeTillRewards(poxInfo);
+  const {
+    nextCycleDate,
+    timeTillNextCycle,
+    nextRewardPhaseDate,
+    timeTillRewardPhase,
+    inPreparePhase,
+    timeTillPreparePhase,
+  } = useTimeTillRewards(poxInfo);
 
   const daysPerCycle = useMemo(() => {
     if (!poxInfo) return 0;
     return Math.round(
-      (poxInfo.reward_cycle_length * AVERAGE_BLOCK_TIME_SECONDS) / (24 * 3600),
+      (poxInfo.reward_cycle_length * AVERAGE_BLOCK_DURATION_SECONDS) /
+        (24 * 3600),
     );
   }, [poxInfo]);
 
@@ -27,8 +33,21 @@ export function useStacking() {
       price: stxPrice ?? 0,
       nextCycleStart: nextCycleDate ?? new Date(),
       timeTillNextCycle,
+      nextRewardPhaseDate,
+      timeTillRewardPhase,
+      inPreparePhase,
+      timeTillPreparePhase,
     }),
-    [poxInfo, stxPrice, nextCycleDate, timeTillNextCycle],
+    [
+      poxInfo,
+      stxPrice,
+      nextCycleDate,
+      timeTillNextCycle,
+      nextRewardPhaseDate,
+      timeTillRewardPhase,
+      inPreparePhase,
+      timeTillPreparePhase,
+    ],
   );
 
   const calculate = useMemo(
@@ -38,6 +57,7 @@ export function useStacking() {
       const apy = stackingInfo.apy;
       return {
         daily: (amount * apy) / 365,
+        weekly: ((amount * apy) / 365) * 7,
         monthly: ((amount * apy) / 365) * 30,
         yearly: amount * apy,
       };
@@ -46,7 +66,6 @@ export function useStacking() {
   );
 
   return {
-    balance,
     stackingInfo,
     daysPerCycle,
     calculate,

@@ -47,7 +47,7 @@ export function StackingCalculator({
 }: Props) {
   // Initialize state with active position if available, else defaults
   const [stxAmount, setStxAmount] = useState(
-    activePosition ? activePosition.lockedAmount.toString() : "40",
+    activePosition ? String(activePosition.lockedAmount) : "40",
   );
   const [weeks, setWeeks] = useState(
     activePosition ? activePosition.lockDuration : 12,
@@ -60,17 +60,28 @@ export function StackingCalculator({
     require("@/assets/images/stacks-coins.svg"),
   );
 
+  useEffect(() => {
+    if (activePosition?.lockedAmount) {
+      setStxAmount(String(activePosition.lockedAmount));
+    } else {
+      setStxAmount("40");
+    }
+  }, [activePosition?.lockedAmount]);
+
+  const inputAmount = Number(stxAmount) || 0;
+  // Input now represents the total amount, not the delta
+  const effectiveAmount = Math.max(0, inputAmount);
+
   // Notify parent component of changes
   useEffect(() => {
     if (!onUpdateChange) return;
 
-    const newAmount = Number(stxAmount) || 0;
+    const newAmount = inputAmount;
 
     if (activePosition) {
       // User has active position - check for changes
-      const currentAmount = activePosition.lockedAmount;
-      const hasChange = newAmount !== currentAmount;
-      const isValid = newAmount >= 40;
+      const hasChange = newAmount !== activePosition.lockedAmount;
+      const isValid = newAmount >= activePosition.lockedAmount;
       onUpdateChange(hasChange, isValid, newAmount);
     } else {
       // User is stacking for the first time
@@ -78,13 +89,13 @@ export function StackingCalculator({
       const isValid = newAmount >= 40;
       onUpdateChange(hasChange, isValid, newAmount);
     }
-  }, [stxAmount, activePosition, onUpdateChange]);
+  }, [inputAmount, activePosition, onUpdateChange]);
 
   const cycles = weeks / 2;
 
-  const results = calculate(Number(stxAmount) || 0, cycles);
-  const usdValue = Number(stxAmount)
-    ? (Number(stxAmount) * price).toFixed(2)
+  const results = calculate(effectiveAmount, cycles);
+  const usdValue = effectiveAmount
+    ? (effectiveAmount * price).toFixed(2)
     : "0.00";
   const totalEarningsStx = results ? results.daily * (weeks * 7) : 0;
   const totalEarningsUsd = totalEarningsStx * price;
@@ -100,11 +111,7 @@ export function StackingCalculator({
   const earningsDeltaUsd = totalEarningsUsd - currentTotalEarningsUsd;
 
   const handleMax = () => {
-    // If active, Max means adding all available balance to the locked amount?
-    // Or just setting input to Total Available + Locked?
-    // Assuming: New Total = Currently Locked + Available Liquid
-    const currentLocked = activePosition ? activePosition.lockedAmount : 0;
-    setStxAmount((availableBalance + currentLocked).toFixed(2));
+    setStxAmount(availableBalance.toFixed(2));
   };
 
   const handlePeriodSelect = (period: (typeof LOCK_PERIODS)[number]) => {
@@ -133,7 +140,11 @@ export function StackingCalculator({
       {/* Amount Input */}
       <View className="mb-3">
         <Text className="font-matter text-xl text-primary">
-          Stacking amount
+          {activePosition
+            ? inputAmount === activePosition.lockedAmount
+              ? "Your stacking amount"
+              : "New stacking amount"
+            : "Stacking amount"}
         </Text>
       </View>
       <View className="mb-4 rounded-2xl border border-surface-secondary bg-sand-100 p-4">

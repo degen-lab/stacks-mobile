@@ -58,14 +58,13 @@ export class FastPoolService implements IPoolService {
   }
 
   async isCallerAllowed(userAddress: string): Promise<boolean> {
-    const { address, name } = this.getContractDetails(this.fastPoolContract);
+    const { address, name } = this.getContractDetails(this.poxContract);
 
     try {
       const allowance = await fetchReadOnly<ContractCallerAllowance>(
         address,
         name,
-        SC_FUNCTIONS.stackingFastPool.readOnlyFunctions
-          .GET_ALLOWANCE_CONTRACT_CALLERS,
+        SC_FUNCTIONS.pox.readOnlyFunctions.GET_ALLOWANCE_CONTRACT_CALLERS,
         [principalCV(userAddress), principalCV(this.fastPoolContract)],
       );
       if (allowance === null) return false;
@@ -76,16 +75,21 @@ export class FastPoolService implements IPoolService {
       const burnHeight = await this.getBurnBlockHeight();
       return burnHeight < untilBurnHt;
     } catch (error) {
-      console.warn("[FastPool] Failed to check caller allowance:", error);
+      console.warn("[FastPool] Failed to fetch allowance:", error);
       return false;
     }
   }
-  async delegate(amountMicroStx: number): Promise<string> {
+
+  async delegate(
+    amountMicroStx: number,
+    feeMicroStx?: number,
+  ): Promise<string> {
     return this.walletKit.makeContractCall(
       this.fastPoolContract,
       SC_FUNCTIONS.stackingFastPool.publicFunctions.DELEGATE_STX,
-      [uintCV(amountMicroStx)],
+      getDelegateArgs(amountMicroStx),
       PostConditionMode.Allow,
+      feeMicroStx,
     );
   }
   async revoke(): Promise<string> {
@@ -96,21 +100,31 @@ export class FastPoolService implements IPoolService {
       PostConditionMode.Allow,
     );
   }
-  async allowContractCaller(): Promise<string> {
+
+  async allowContractCaller(feeMicroStx?: number): Promise<string> {
     return this.walletKit.makeContractCall(
-      this.fastPoolContract,
-      SC_FUNCTIONS.stackingFastPool.publicFunctions.ALLOW_CONTRACT_CALLER,
-      [principalCV(this.fastPoolContract), noneCV()],
+      this.poxContract,
+      SC_FUNCTIONS.pox.publicFunctions.ALLOW_CONTRACT_CALLER,
+      getAllowanceArgs(this.fastPoolContract),
       PostConditionMode.Allow,
+      feeMicroStx,
     );
   }
 
   async disallowContractCaller(): Promise<string> {
     return this.walletKit.makeContractCall(
-      this.fastPoolContract,
-      SC_FUNCTIONS.stackingFastPool.publicFunctions.DISALLOW_CONTRACT_CALLER,
+      this.poxContract,
+      SC_FUNCTIONS.pox.publicFunctions.DISALLOW_CONTRACT_CALLER,
       [],
       PostConditionMode.Allow,
     );
   }
 }
+
+export const getDelegateArgs = (amountMicroStx: number) => {
+  return [uintCV(amountMicroStx)];
+};
+
+export const getAllowanceArgs = (poolContractAddress: string) => {
+  return [principalCV(poolContractAddress), noneCV()];
+};

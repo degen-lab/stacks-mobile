@@ -1,4 +1,5 @@
 const MS_PER_DAY = 86_400_000;
+export const AVERAGE_BLOCK_DURATION_SECONDS = 600; // 10 minutes per Bitcoin block
 
 type DateOptions = {
   locale?: string;

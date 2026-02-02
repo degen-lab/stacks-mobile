@@ -14,9 +14,9 @@ type Props = {
   lockingTime?: string;
   minimumStx?: number;
   onMenuPress?: () => void;
-  // Active position
   activePosition?: StackingPosition;
   price?: number;
+  timeTillRewardPhase?: string;
 };
 
 export function StackingOptionCard({
@@ -32,15 +32,14 @@ export function StackingOptionCard({
   onMenuPress,
   activePosition,
   price = 0,
+  timeTillRewardPhase,
 }: Props) {
   const isActive = !!activePosition;
 
   const usdValue = activePosition
     ? (activePosition.lockedAmount * price).toFixed(2)
     : "0.00";
-  // Rewards ETA: should be calculated as (current cycle end - now) + pool payout window (Fast Pool commonly ~1 day).
-  // TODO: replace placeholder with real value from stacking info once available.
-  const rewardsInCopy = "~X days";
+
   // Unlock ETA is only relevant when the user has revoked but funds are still locked until the current cycle settles.
   // TODO: derive this from delegation status + next cycle end timestamp (e.g., nextUnlockDays or cycleEnd + ~1 day buffer).
   const isRevoking = activePosition?.status === "UNLOCKING";
@@ -108,22 +107,12 @@ export function StackingOptionCard({
         <View className="gap-3 pt-4 mt-4 border-t border-surface-secondary/40">
           <View className="flex-row items-center justify-between">
             <Text className="text-sm font-instrument-sans text-secondary">
-              Stacked amount
-            </Text>
-            <Text className="text-sm font-instrument-sans text-primary">
-              (${usdValue}) • {activePosition.lockedAmount.toLocaleString()} STX
-            </Text>
-          </View>
-
-          <View className="flex-row items-center justify-between">
-            <Text className="text-sm font-instrument-sans text-secondary">
-              Receive rewards in
+              Rewards phase starts in
             </Text>
             <Text className="text-sm font-matter text-primary">
-              {rewardsInCopy}
+              {timeTillRewardPhase || "~X days"}
             </Text>
           </View>
-          {/* Show unlock timing only when the user has revoked but the cycle is still active. */}
           {isRevoking && (
             <View className="flex-row items-center justify-between">
               <Text className="text-sm font-instrument-sans text-secondary">
@@ -134,11 +123,14 @@ export function StackingOptionCard({
               </Text>
             </View>
           )}
-          {/* Copy/logic notes:
-              - Rewards: (current cycle end + pool payout window) from stacking info.
-              - Unlocks: only render when status === "UNLOCKING"; derive from nextUnlockDays or (cycle end + ~1 day). */}
-
-          {/* Removed duplicated rewards row to avoid redundancy with calculator */}
+          <View className="flex-row items-center justify-between">
+            <Text className="text-sm font-instrument-sans text-secondary">
+              Stacked amount
+            </Text>
+            <Text className="text-sm font-instrument-sans text-primary">
+              {activePosition.lockedAmount.toLocaleString()} STX • ${usdValue}
+            </Text>
+          </View>
         </View>
       ) : (
         <View className="gap-2.5 pt-4 mt-4 border-t border-surface-secondary/40">
@@ -150,6 +142,17 @@ export function StackingOptionCard({
               </Text>
               <Text className="text-sm font-instrument-sans-medium text-primary">
                 {registrationClosesIn}
+              </Text>
+            </View>
+          )}
+
+          {timeTillRewardPhase && (
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-instrument-sans text-secondary">
+                Rewards start in
+              </Text>
+              <Text className="text-sm font-instrument-sans-medium text-primary">
+                {timeTillRewardPhase}
               </Text>
             </View>
           )}

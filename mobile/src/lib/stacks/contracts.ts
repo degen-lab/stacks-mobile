@@ -32,18 +32,25 @@ export const SC_FUNCTIONS = {
       CURRENT_POX_REWARD_CYCLE: "current-pox-reward-cycle",
       CAN_LOCK_NOW: "can-lock-now",
       GET_POOL_POX_ADDRESS: "get-pool-pox-address",
+      // TODO: used to check if user allowed the fast pool to delegate for him
       GET_ALLOWANCE_CONTRACT_CALLERS: "get-allowance-contract-callers",
     },
     publicFunctions: {
       DELEGATE_STX: "delegate-stx",
 
+      // TODO: used for automation
       ALLOW_CONTRACT_CALLER: "allow-contract-caller",
       DISALLOW_CONTRACT_CALLER: "disallow-contract-caller",
     },
   },
   pox: {
+    readOnlyFunctions: {
+      GET_ALLOWANCE_CONTRACT_CALLERS: "get-allowance-contract-callers",
+    },
     publicFunctions: {
       REVOKE_DELEGATE_STX: "revoke-delegate-stx",
+      ALLOW_CONTRACT_CALLER: "allow-contract-caller",
+      DISALLOW_CONTRACT_CALLER: "disallow-contract-caller",
     },
   },
 } as const;

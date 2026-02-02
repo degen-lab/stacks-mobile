@@ -8,7 +8,7 @@ jest.mock("../use-skin-selector", () => ({
   useSkinSelector: jest.fn(),
 }));
 
-jest.mock("@/api/store", () => ({
+jest.mock("@/api/game/store", () => ({
   useStoreItems: jest.fn(),
 }));
 

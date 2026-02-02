@@ -16,17 +16,22 @@ export const useFastPool = (userAddress?: string) => {
     queryKey: ["stacking", "allowance", userAddress, network],
     queryFn: () => service.isCallerAllowed(userAddress!),
     enabled: !!userAddress,
+    refetchInterval: 30000, // Only refetch every 30 seconds
+    staleTime: 20000, // Consider data fresh for 20 seconds
+    retry: 2, // Only retry twice on failure
+    retryDelay: 1000, // Wait 1 second between retries
   });
 
   const delegateMutation = useMutation({
-    mutationFn: (amount: number) => service.delegate(amount),
+    mutationFn: ({ amount, fee }: { amount: number; fee?: number }) =>
+      service.delegate(amount, fee),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stacking"] });
     },
   });
 
   const approveMutation = useMutation({
-    mutationFn: () => service.allowContractCaller(),
+    mutationFn: (fee?: number) => service.allowContractCaller(fee),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stacking", "allowance"] });
     },

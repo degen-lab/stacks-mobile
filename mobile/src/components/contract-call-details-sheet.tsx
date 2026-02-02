@@ -2,21 +2,29 @@ import { Button, Modal, Text, View, colors } from "@/components/ui";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import React from "react";
+import { ActivityIndicator, ScrollView } from "react-native";
+import {
+  ContractTxDetails,
+  type ContractArgument,
+} from "./contract-tx-details";
 
 type ContractCallDetailsSheetProps = {
   title?: string;
   description?: string;
   network?: string;
-  contractName?: string;
+  contractAddress?: string;
   functionName?: string;
-  argsSummary?: string;
-  feeLabel?: string;
-  txHex?: string;
+  contractArgs?: ContractArgument[];
   confirmLabel?: string;
   onConfirm?: () => void;
   onClose?: () => void;
+  extraContent?: React.ReactNode;
   snapPoints?: string[];
   isLoading?: boolean;
+  confirmDisabled?: boolean;
+  showSuccess?: boolean;
+  successMessage?: string;
+  txId?: string;
 };
 
 export const ContractCallDetailsSheet = React.forwardRef<
@@ -28,21 +36,28 @@ export const ContractCallDetailsSheet = React.forwardRef<
       title = "Contract Call Details",
       description,
       network,
-      contractName,
+      contractAddress,
       functionName,
-      argsSummary,
-      feeLabel,
-      txHex,
+      contractArgs,
       confirmLabel,
       onConfirm,
       onClose,
-      snapPoints = ["55%"],
+      extraContent,
+      snapPoints = ["65%"],
       isLoading = false,
+      confirmDisabled = false,
+      showSuccess = false,
+      successMessage,
+      txId,
     },
     ref,
   ) => {
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === "dark";
+    const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
+
+    const displayAddress = contractAddress || "";
+    const displayFunction = functionName || "";
 
     return (
       <Modal
@@ -54,78 +69,105 @@ export const ContractCallDetailsSheet = React.forwardRef<
         }}
         onDismiss={onClose}
       >
-        <View className="px-6 pb-6">
-          {description ? (
-            <Text className="mb-4 text-sm font-instrument-sans leading-relaxed text-secondary dark:text-neutral-300">
-              {description}
-            </Text>
-          ) : null}
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="pb-6"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="px-6">
+            {showSuccess ? (
+              <View className="items-center py-8">
+                <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                  <Text className="text-4xl">✓</Text>
+                </View>
+                <Text className="text-center text-lg font-matter text-primary">
+                  {successMessage || "Transaction Confirmed!"}
+                </Text>
+                <Text className="mt-2 text-center text-sm font-instrument-sans text-secondary">
+                  Your transaction has been successfully broadcasted.
+                </Text>
+                <Button
+                  label="Done"
+                  variant="gamePrimary"
+                  size="lg"
+                  onPress={onClose}
+                  className="mt-6 w-full"
+                />
+              </View>
+            ) : (
+              <>
+                {/* Description - Hidden when advanced mode is active */}
+                {description && !showAdvancedOnly && (
+                  <Text className="mb-6 text-center text-sm font-instrument-sans leading-relaxed text-secondary">
+                    {description}
+                  </Text>
+                )}
 
-          <View className="rounded-xl border border-sand-200 bg-sand-100 p-4 dark:border-neutral-700 dark:bg-neutral-800">
-            {network ? <InfoRow label="Network" value={network} /> : null}
-            {contractName ? (
-              <InfoRow label="Contract" value={contractName} />
-            ) : null}
-            {functionName ? (
-              <InfoRow label="Function" value={functionName} />
-            ) : null}
-            {argsSummary ? (
-              <InfoRow label="Arguments" value={argsSummary} />
-            ) : null}
-            {feeLabel ? <InfoRow label="Fee" value={feeLabel} /> : null}
-            {txHex ? <InfoRow label="Tx Hex" value={txHex} /> : null}
+                {/* Contract Details - Uses shared component */}
+                <ContractTxDetails
+                  network={network || ""}
+                  contractAddress={displayAddress}
+                  functionName={displayFunction}
+                  contractArgs={contractArgs}
+                  onAdvancedToggle={setShowAdvancedOnly}
+                  txId={txId}
+                />
+
+                {/* Extra Content - Hidden when advanced mode is active */}
+                {extraContent && !showAdvancedOnly && (
+                  <View>{extraContent}</View>
+                )}
+
+                {/* Action Buttons - Hidden when advanced mode is active */}
+                {!showAdvancedOnly && (
+                  <>
+                    {confirmLabel && onConfirm ? (
+                      <View className="mt-6 gap-3">
+                        <Button
+                          // @ts-expect-error - Button label should accept ReactNode but types say string
+                          label={
+                            isLoading ? (
+                              <View className="flex-row items-center justify-center gap-2">
+                                <ActivityIndicator size="small" color="#fff" />
+                                <Text className="font-matter text-base text-white">
+                                  Processing...
+                                </Text>
+                              </View>
+                            ) : (
+                              confirmLabel
+                            )
+                          }
+                          variant="gamePrimary"
+                          size="lg"
+                          onPress={onConfirm}
+                          disabled={isLoading || confirmDisabled}
+                        />
+                        <Button
+                          label="Cancel"
+                          variant="secondary"
+                          size="lg"
+                          onPress={onClose}
+                          disabled={isLoading}
+                        />
+                      </View>
+                    ) : (
+                      <Button
+                        label="Close"
+                        variant="secondary"
+                        size="lg"
+                        onPress={onClose}
+                        className="mt-6"
+                      />
+                    )}
+                  </>
+                )}
+              </>
+            )}
           </View>
-
-          {confirmLabel && onConfirm ? (
-            <>
-              <Button
-                label={isLoading ? "Processing..." : confirmLabel}
-                variant="gamePrimary"
-                size="lg"
-                onPress={onConfirm}
-                className="mt-6"
-                disabled={isLoading}
-              />
-              <Button
-                label="Cancel"
-                variant="secondary"
-                size="lg"
-                onPress={onClose}
-                className="mt-3"
-              />
-            </>
-          ) : (
-            <Button
-              label="Close"
-              variant="secondary"
-              size="game"
-              onPress={onClose}
-              className="mt-6"
-            />
-          )}
-          {/* TODO: Add copy-to-clipboard and external explorer links. */}
-        </View>
+        </ScrollView>
       </Modal>
     );
   },
 );
 
 ContractCallDetailsSheet.displayName = "ContractCallDetailsSheet";
-
-type InfoRowProps = {
-  label: string;
-  value: string;
-};
-
-const InfoRow = ({ label, value }: InfoRowProps) => {
-  return (
-    <View className="flex-row items-center justify-between py-1">
-      <Text className="text-xs font-instrument-sans text-secondary dark:text-neutral-300">
-        {label}
-      </Text>
-      <Text className="text-sm font-instrument-sans text-primary dark:text-white">
-        {value}
-      </Text>
-    </View>
-  );
-};

@@ -4,10 +4,10 @@ export interface PoolLockStatus {
 }
 
 export interface IPoolService {
-  allowContractCaller?(): Promise<string>;
+  allowContractCaller?(feeMicroStx?: number): Promise<string>;
   disallowContractCaller?(): Promise<string>;
   isCallerAllowed?(userAddress: string): Promise<boolean>;
-  delegate(amountMicroStx: number): Promise<string>;
+  delegate(amountMicroStx: number, feeMicroStx?: number): Promise<string>;
   revoke(): Promise<string>;
   getLockStatus(userAddress: string): Promise<PoolLockStatus>;
 }

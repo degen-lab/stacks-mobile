@@ -1,3 +1,7 @@
+export const USTX_DECIMALS = 6;
+export const SATS_DECIMALS = 8;
+export const MICRO_STX = Math.pow(10, USTX_DECIMALS);
+
 const formatCurrency = (amount: number) => {
   const formatted = amount.toLocaleString("en-US", {
     style: "currency",
@@ -12,6 +16,12 @@ const formatCurrency = (amount: number) => {
   const cents = formatted.substring(decimalIndex);
 
   return { dollars, cents };
+};
+
+export const formatMicroStx = (amountInMicroStx: number) => {
+  return (amountInMicroStx / MICRO_STX).toLocaleString("en-US", {
+    maximumFractionDigits: USTX_DECIMALS,
+  });
 };
 
 export default formatCurrency;
