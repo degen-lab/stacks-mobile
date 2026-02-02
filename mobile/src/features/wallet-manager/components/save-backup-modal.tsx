@@ -1,5 +1,4 @@
 import { Modal, Text, View } from "@/components/ui";
-import { useAuth } from "@/lib/store/auth";
 import { walletKit } from "@/lib/stacks/wallet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { forwardRef, useCallback, useState } from "react";
@@ -23,7 +22,6 @@ export const SaveBackupModal = forwardRef<
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { setHasBackup } = useAuth();
 
   const validation = validateBackupPasswords(password, confirmPassword);
 
@@ -47,7 +45,6 @@ export const SaveBackupModal = forwardRef<
     try {
       setLoading(true);
       await walletKit.backupWallet(password);
-      setHasBackup(true);
       showMessage({
         message: "Cloud backup saved successfully",
         type: "success",
@@ -56,7 +53,6 @@ export const SaveBackupModal = forwardRef<
     } catch (error: any) {
       console.error("Failed to save backup:", error);
       if (error?.code === "BACKUP_ALREADY_EXISTS") {
-        setHasBackup(true);
         showMessage({
           message: "A cloud backup already exists",
           type: "info",
@@ -71,7 +67,7 @@ export const SaveBackupModal = forwardRef<
     } finally {
       setLoading(false);
     }
-  }, [password, validation.isValid, setHasBackup, onSuccess]);
+  }, [password, validation.isValid, onSuccess]);
 
   return (
     <Modal

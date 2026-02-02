@@ -1,9 +1,8 @@
 import { render, waitFor } from "@/lib/tests";
 import { SaveBackupModal } from "../../components/save-backup-modal";
 import { walletKit } from "@/lib/stacks/wallet";
-import { useAuth } from "@/lib/store/auth";
 
-jest.mock("@/lib/wallet", () => ({
+jest.mock("@/lib/stacks/wallet", () => ({
   walletKit: {
     backupWallet: jest.fn(),
   },
@@ -11,10 +10,6 @@ jest.mock("@/lib/wallet", () => ({
 
 jest.mock("react-native-flash-message", () => ({
   showMessage: jest.fn(),
-}));
-
-jest.mock("@/lib/store/auth", () => ({
-  useAuth: jest.fn(),
 }));
 
 jest.mock("@/lib/password-strength", () => ({
@@ -35,15 +30,11 @@ jest.mock("@/lib/password-strength", () => ({
 }));
 
 describe("SaveBackupModal", () => {
-  const mockSetHasBackup = jest.fn();
   const mockOnSuccess = jest.fn();
   const mockRef = { current: null };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useAuth as jest.Mock).mockReturnValue({
-      setHasBackup: mockSetHasBackup,
-    });
   });
 
   describe("Rendering", () => {

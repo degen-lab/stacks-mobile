@@ -1,6 +1,5 @@
 import { Button, Modal, ScrollView, Text, View } from "@/components/ui";
 import { WarningLabel } from "@/components/warning-label";
-import { useAuth } from "@/lib/store/auth";
 import { useActiveAccountIndex } from "@/lib/store/settings";
 import { walletKit } from "@/lib/stacks/wallet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -182,7 +181,6 @@ export const ReplaceBackupModal = forwardRef<
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { setHasBackup } = useAuth();
   const { setActiveAccountIndex } = useActiveAccountIndex();
 
   const mnemonicValidation = useMemo(
@@ -314,7 +312,6 @@ export const ReplaceBackupModal = forwardRef<
 
               // Create new backup
               await walletKit.backupWallet(password);
-              setHasBackup(true);
 
               showMessage({
                 message: "Wallet replaced and backed up successfully",
@@ -326,7 +323,6 @@ export const ReplaceBackupModal = forwardRef<
             } catch (error: any) {
               console.error("Failed to replace wallet:", error);
               if (error?.code === "BACKUP_ALREADY_EXISTS") {
-                setHasBackup(true);
                 showMessage({
                   message:
                     "Backup already exists. Wallet was replaced locally.",
@@ -354,7 +350,6 @@ export const ReplaceBackupModal = forwardRef<
     passwordValidation,
     onSuccess,
     onWalletReplaced,
-    setHasBackup,
     setActiveAccountIndex,
   ]);
 

@@ -9,7 +9,6 @@ import {
 } from "@/components/ui";
 import { WarningSheet } from "@/components/warning-sheet";
 import { useDeleteGoogleBackup } from "@/hooks/use-create-wallet";
-import { useAuth } from "@/lib/store/auth";
 import {
   useActiveAccountIndex,
   useSelectedNetwork,
@@ -37,7 +36,7 @@ export default function AccountsListScreen() {
   const router = useRouter();
   const { selectedNetwork } = useSelectedNetwork();
   const { activeAccountIndex, setActiveAccountIndex } = useActiveAccountIndex();
-  const { hasBackup } = useAuth();
+  const [hasBackup, setHasBackup] = useState(false);
   const [accounts, setAccounts] = useState<WalletAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
@@ -53,7 +52,6 @@ export default function AccountsListScreen() {
   const [deleteBackupError, setDeleteBackupError] = useState<string | null>(
     null,
   );
-  const { setHasBackup } = useAuth();
   const { deleteBackupWithoutPassword } = useDeleteGoogleBackup();
 
   const loadAccounts = useCallback(
@@ -79,6 +77,15 @@ export default function AccountsListScreen() {
     },
     [],
   );
+
+  const refreshBackupStatus = useCallback(async () => {
+    try {
+      const backupStatus = await walletKit.hasBackup();
+      setHasBackup(backupStatus);
+    } catch (error) {
+      console.error("Failed to check backup status:", error);
+    }
+  }, []);
 
   const handleWalletReplaced = useCallback(async () => {
     await setActiveAccountIndex(0);
@@ -122,7 +129,8 @@ export default function AccountsListScreen() {
 
   useEffect(() => {
     loadAccounts();
-  }, [loadAccounts]);
+    refreshBackupStatus();
+  }, [loadAccounts, refreshBackupStatus]);
 
   useFocusEffect(
     useCallback(() => {
@@ -131,7 +139,8 @@ export default function AccountsListScreen() {
         return;
       }
       loadAccounts({ useLoading: false });
-    }, [loadAccounts]),
+      refreshBackupStatus();
+    }, [loadAccounts, refreshBackupStatus]),
   );
 
   const scrollToAccountsEnd = useCallback(() => {
@@ -332,12 +341,18 @@ export default function AccountsListScreen() {
       />
       <ReplaceBackupModal
         ref={replaceBackupModal.ref}
-        onSuccess={replaceBackupModal.dismiss}
+        onSuccess={() => {
+          replaceBackupModal.dismiss();
+          refreshBackupStatus();
+        }}
         onWalletReplaced={handleWalletReplaced}
       />
       <SaveBackupModal
         ref={saveBackupModal.ref}
-        onSuccess={saveBackupModal.dismiss}
+        onSuccess={() => {
+          saveBackupModal.dismiss();
+          refreshBackupStatus();
+        }}
       />
     </View>
   );
