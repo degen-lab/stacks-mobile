@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@degenlab/stacks-wallet-kit-core':
-        specifier: 1.3.0
-        version: 1.3.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
+        specifier: 1.4.0
+        version: 1.4.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
       '@degenlab/stacks-wallet-kit-mobile':
-        specifier: 1.3.0
-        version: 1.3.0(@stacks/transactions@7.3.0)(expo@54.0.26)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+        specifier: 1.4.0
+        version: 1.4.0(@stacks/transactions@7.3.0)(expo@54.0.26)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@dev-plugins/react-query':
         specifier: ^0.4.0
         version: 0.4.0(@tanstack/react-query@5.90.12(react@19.1.0))(expo@54.0.26)(react@19.1.0)
@@ -743,13 +743,13 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
-  '@degenlab/stacks-wallet-kit-core@1.3.0':
-    resolution: {integrity: sha512-Pz67DZOZgt9UwHBNK/H2uvoMqTkuWOFzwEWO5oL/xN3lmmdnqNg6GwPgu18XfWDjkNUv79aP9JMyvEG8zCQsdw==}
+  '@degenlab/stacks-wallet-kit-core@1.4.0':
+    resolution: {integrity: sha512-7ESX7uYG/+ndcDafxmaC4Yx/gT7EexGUQ3N9YqbRox8aDo03yHgwmgmRVX1kMpBZ4idvJ/GEcNjgRDP8ctkuNQ==}
     peerDependencies:
       '@stacks/transactions': ^7.3.0
 
-  '@degenlab/stacks-wallet-kit-mobile@1.3.0':
-    resolution: {integrity: sha512-8RibIS4LNvR4+g4l3xGaCzR6Xmcbd2jVf8XyBtg6aAOrUcniMxnl/udnJz9r7H7Pq/bkDAiEgXO4PAuksywsvA==}
+  '@degenlab/stacks-wallet-kit-mobile@1.4.0':
+    resolution: {integrity: sha512-TgnkzIG0NKjMusRCpqK41l71B4gJrLO0IPxKjcWoMqF+echylUVj1rl28Rtf9B758/YtUHwyve+qfhstNjYtaw==}
 
   '@dev-plugins/react-query@0.4.0':
     resolution: {integrity: sha512-/8M2a7DlVTjcdhb4D/E+aHUCOqSS6s53y3fFrOoCyLPxhhhkMujS91pARH6XbF/GRr6p6RBNBJQpWasI6uj7GA==}
@@ -6473,7 +6473,7 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
-  '@degenlab/stacks-wallet-kit-core@1.3.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))':
+  '@degenlab/stacks-wallet-kit-core@1.4.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))':
     dependencies:
       '@noble/ciphers': 2.0.1
       '@noble/hashes': 2.0.1
@@ -6493,9 +6493,9 @@ snapshots:
       - encoding
       - react-native
 
-  '@degenlab/stacks-wallet-kit-mobile@1.3.0(@stacks/transactions@7.3.0)(expo@54.0.26)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
+  '@degenlab/stacks-wallet-kit-mobile@1.4.0(@stacks/transactions@7.3.0)(expo@54.0.26)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@degenlab/stacks-wallet-kit-core': 1.3.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
+      '@degenlab/stacks-wallet-kit-core': 1.4.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
       '@noble/ciphers': 2.0.1
       '@react-native-async-storage/async-storage': 2.2.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
       '@react-native-google-signin/google-signin': 16.0.0(expo@54.0.26)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
