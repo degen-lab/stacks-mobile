@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { DefiService } from '../../application/defi/defiService';
 import { BaseError } from '../../shared/errors/baseError';
+import { serializeBigInt } from '../../shared/utils';
 import { logger } from '../helpers/logger';
 import { rateLimitOptions } from '../config/rateLimitConfig';
 import { UserToken } from '../config/types';
@@ -92,10 +93,10 @@ export default function getDefiRoutes(
   });
 
   app.get<{
-    Params: {
+    Querystring: {
       tokenInId: string;
       tokenOutId: string;
-      amount: number;
+      amount: string;
       senderAddress: string;
     };
   }>('/swap-params', {
@@ -109,12 +110,13 @@ export default function getDefiRoutes(
     handler: async (req, res) => {
       try {
         const user = req.user as UserToken;
-        const { tokenInId, tokenOutId, amount, senderAddress } = req.params as {
+        const { tokenInId, tokenOutId, amount: amountStr, senderAddress } = req.query as {
           tokenInId: string;
           tokenOutId: string;
-          amount: number;
+          amount: string;
           senderAddress: string;
         };
+        const amount = parseFloat(amountStr);
         const {defiOperation, contractCallParams} = await defiService.getSwapParams(
           user.id,
           tokenInId,
@@ -127,7 +129,7 @@ export default function getDefiRoutes(
           message: 'Swap params retrieved successfully',
           data: {
             defiOperation,
-            contractCallParams,
+            contractCallParams: serializeBigInt(contractCallParams),
           },
         });
       } catch (error) {
