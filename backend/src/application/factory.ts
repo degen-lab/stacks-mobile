@@ -19,6 +19,7 @@ import { StackingService } from './stacking/stackingService';
 import { FastPoolClient } from '../infra/stacks/fastPoolClient';
 import { DefiService } from './defi/defiService';
 import { bitflowClient } from '../infra/defi/client/bitflowClient';
+import { ZestLendingClient } from '../infra/defi/client/zestLendingClient';
 
 type ServiceType =
   | UserService
@@ -164,6 +165,7 @@ export class ServiceFactory {
           this.dataSource.createEntityManager(),
           bitflowClient,
           new TransactionClient(),
+          new ZestLendingClient(),
         ),
       );
     }

@@ -151,4 +151,40 @@ export default function getDefiRoutes(
       }
     },
   });
+
+  app.get('/lending-assets', {
+    preHandler: app.authenticateUser,
+    config: {
+      rateLimit: rateLimitOptions({
+        max: 10,
+        timeWindow: '60000',
+      }),
+    },
+    handler: async (req, res) => {
+      try {
+        const assets = await defiService.getLendingAssets();
+        return res.status(200).send({
+          success: true,
+          message: 'Lending assets retrieved successfully',
+          data: assets,
+        });
+      } catch (error) {
+        logger.error({
+          msg: 'Error in GET /lending-assets route',
+          method: req.method,
+          err: error,
+        });
+        if (error instanceof BaseError) {
+          return res.status(400).send({
+            success: false,
+            message: error.message,
+          });
+        }
+        return res.status(500).send({
+          success: false,
+          message: 'An unknown error occurred',
+        });
+      }
+    },
+  });
 }

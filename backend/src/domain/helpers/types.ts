@@ -23,6 +23,10 @@ export type SwapTxMetadata = {
   amount: number;
 };
 
-export type LendingTxMetadata = Record<string, never>;
+export type LendingTxMetadata = {
+  assetId: string;
+  assetContract: string,
+  amount: number
+}
 
 export type DefiOperationMetadata = SwapTxMetadata | LendingTxMetadata;

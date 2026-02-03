@@ -21,13 +21,15 @@ import {
 import { User } from '../../domain/entities/user';
 import { UserNotFoundError } from '../errors/userErrors';
 import { DefiOperation } from '../../domain/entities/defiOperation';
-import { DefiOperationMetadata } from '../../domain/helpers/types';
+import { DefiOperationMetadata, LendingTxMetadata } from '../../domain/helpers/types';
+import { LendingClientPort } from '../ports/LendingClientPort';
 
 export class DefiService {
   constructor(
     private entityManager: EntityManager,
     private bitflowClient: BitflowSDK,
     private transactionClient: TransactionClientPort,
+    private lendingClient: LendingClientPort,
   ) {}
 
   async getTokenList(): Promise<Token[]> {
@@ -137,5 +139,53 @@ export class DefiService {
     defiOperation.status = txStatus;
     defiOperation.txId = txId;
     await this.entityManager.save(defiOperation);
+  }
+
+   getLendingAssets(): Object {
+    return this.lendingClient.getAssetsToSupply();
+  }
+
+  async saveLendingOperation(
+    userId: number,
+    txId: string,
+    senderAddress: string,
+    amount: number,
+    assetId: string,
+    assetContract: string,
+  ): Promise<DefiOperation> {
+    return await this.entityManager.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: {
+          id: userId,
+        },
+      });
+
+      if (!user) {
+        throw new UserNotFoundError(`User with id ${userId} not found`);
+      }
+
+      const transactionStatus =
+        await this.transactionClient.getTransactionStatus(txId);
+      const txStatus =
+        transactionStatus === 'success'
+          ? TransactionStatus.Success
+          : transactionStatus === 'pending'
+            ? TransactionStatus.Pending
+            : TransactionStatus.Failed;
+
+      const lendingOperationMetadata: LendingTxMetadata = {
+        assetId,
+        assetContract,
+        amount,
+      };
+      const defiOperation = new DefiOperation();
+      defiOperation.txId = txId;
+      defiOperation.status = txStatus;
+      defiOperation.operationType = DefiOperationType.Lending;
+      defiOperation.user = user;
+      defiOperation.senderAddress = senderAddress;
+      defiOperation.metadata = lendingOperationMetadata;
+      return await manager.save(defiOperation);
+    });
   }
 }
