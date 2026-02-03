@@ -21,7 +21,10 @@ import {
 import { User } from '../../domain/entities/user';
 import { UserNotFoundError } from '../errors/userErrors';
 import { DefiOperation } from '../../domain/entities/defiOperation';
-import { DefiOperationMetadata, LendingTxMetadata } from '../../domain/helpers/types';
+import {
+  DefiOperationMetadata,
+  LendingTxMetadata,
+} from '../../domain/helpers/types';
 import { LendingClientPort } from '../ports/LendingClientPort';
 
 export class DefiService {
@@ -141,7 +144,7 @@ export class DefiService {
     await this.entityManager.save(defiOperation);
   }
 
-   getLendingAssets(): Object {
+  getLendingAssets(): object {
     return this.lendingClient.getAssetsToSupply();
   }
 

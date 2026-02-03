@@ -110,20 +110,26 @@ export default function getDefiRoutes(
     handler: async (req, res) => {
       try {
         const user = req.user as UserToken;
-        const { tokenInId, tokenOutId, amount: amountStr, senderAddress } = req.query as {
+        const {
+          tokenInId,
+          tokenOutId,
+          amount: amountStr,
+          senderAddress,
+        } = req.query as {
           tokenInId: string;
           tokenOutId: string;
           amount: string;
           senderAddress: string;
         };
         const amount = parseFloat(amountStr);
-        const {defiOperation, contractCallParams} = await defiService.getSwapParams(
-          user.id,
-          tokenInId,
-          tokenOutId,
-          senderAddress,
-          amount,
-        );
+        const { defiOperation, contractCallParams } =
+          await defiService.getSwapParams(
+            user.id,
+            tokenInId,
+            tokenOutId,
+            senderAddress,
+            amount,
+          );
         return res.status(200).send({
           success: true,
           message: 'Swap params retrieved successfully',

@@ -25,8 +25,8 @@ export type SwapTxMetadata = {
 
 export type LendingTxMetadata = {
   assetId: string;
-  assetContract: string,
-  amount: number
-}
+  assetContract: string;
+  amount: number;
+};
 
 export type DefiOperationMetadata = SwapTxMetadata | LendingTxMetadata;

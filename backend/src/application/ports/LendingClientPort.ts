@@ -1,3 +1,3 @@
 export interface LendingClientPort {
-  getAssetsToSupply(): Object;
+  getAssetsToSupply(): object;
 }
