@@ -33,6 +33,7 @@ export class DefiService {
     private bitflowClient: BitflowSDK,
     private transactionClient: TransactionClientPort,
     private lendingClient: LendingClientPort,
+    private lendingClient: LendingClientPort,
   ) {}
 
   async getTokenList(): Promise<Token[]> {
