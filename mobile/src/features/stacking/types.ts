@@ -3,4 +3,7 @@ export type StackingPosition = {
   lockDuration: number;
   nextUnlockDays?: number;
   status: "ACTIVE" | "PENDING" | "UNLOCKING" | "ENDED";
+  // Backend details
+  poolName?: string;
+  rewardedStxAmount?: number | null;
 };

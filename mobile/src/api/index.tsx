@@ -3,3 +3,4 @@ export * from "./common";
 export * from "./game";
 export * from "./market";
 export * from "./referrals";
+export * from "./stacking";
