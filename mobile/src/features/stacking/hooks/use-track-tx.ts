@@ -6,27 +6,56 @@ type Props = {
   txId: string | null;
   onSuccess?: () => void;
   onFailure?: (status: string, repr?: string) => void;
+  invalidateQueries?: unknown[][]; // Array of query keys to invalidate on success
 };
 
-export function useTrackTx({ txId, onSuccess, onFailure }: Props) {
+export function useTrackTx({
+  txId,
+  onSuccess,
+  onFailure,
+  invalidateQueries,
+}: Props) {
   const queryClient = useQueryClient();
   const { data } = useTxById({
     variables: { txId: txId ?? "" },
     enabled: !!txId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.tx_status;
+      if (
+        status === "success" ||
+        (status && ["failed", "abort_by_response", "rejected"].includes(status))
+      ) {
+        return false;
+      }
+      return 3000;
+    },
   });
-  const status = data?.tx_status as string | undefined;
+  const status = data?.tx_status;
 
   useEffect(() => {
     if (!txId || !status) return;
 
     if (status === "success") {
-      // Invalidate stacking queries to refetch isAllowed status
-      queryClient.invalidateQueries({ queryKey: ["stacking"] });
+      if (invalidateQueries && invalidateQueries.length > 0) {
+        invalidateQueries.forEach((queryKey) => {
+          queryClient.invalidateQueries({ queryKey });
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["stacking"] });
+      }
       onSuccess?.();
     } else if (["failed", "abort_by_response", "rejected"].includes(status)) {
       onFailure?.(status, (data as any)?.tx_result?.repr);
     }
-  }, [txId, status, data, onSuccess, onFailure, queryClient]);
+  }, [
+    txId,
+    status,
+    data,
+    onSuccess,
+    onFailure,
+    queryClient,
+    invalidateQueries,
+  ]);
 
   const isPending =
     !!txId &&

@@ -15,10 +15,11 @@ import { useFeeEstimation } from "@/api/stacks/use-fee";
 import { FeeOption } from "../components/fee-selector";
 import { StackingScreenLayout } from "./Stacking.layout";
 import { useStxBalance } from "@/hooks/use-stx-balance";
+import { useSaveStackingDataMutation } from "@/api/stacking";
 
 export function StackingScreen() {
   const { stackingInfo, daysPerCycle, calculate } = useStacking();
-  const { balance: stxBalance } = useStxBalance();
+  const { balance: stxBalance, lockedBalance } = useStxBalance();
   const [address, setAddress] = useState<string>();
   const { selectedNetwork } = useSelectedNetwork();
 
@@ -40,19 +41,22 @@ export function StackingScreen() {
     isAllowed,
     approveAsync,
     delegateAsync,
+    revokeAsync,
   } = useFastPool(address);
 
-  const lockedStx = Number(poolStatus?.lockedAmountMicroStx ?? 0) / MICRO_STX;
   const isStacking = poolStatus?.isLocked ?? false;
 
   const activePosition = isStacking
     ? {
-        lockedAmount: lockedStx,
+        lockedAmount: lockedBalance,
         lockDuration: 1,
         nextUnlockDays: daysPerCycle,
         status: "ACTIVE" as const,
+        poolName: "Fast Pool",
       }
     : undefined;
+
+  const saveStackingData = useSaveStackingDataMutation();
 
   const [hasChanges, setHasChanges] = useState(false);
   const [isValidUpdate, setIsValidUpdate] = useState(false);
@@ -79,9 +83,8 @@ export function StackingScreen() {
 
   const currentLockedStx = activePosition?.lockedAmount ?? 0;
   const pendingAmountStx = pendingAmount ?? 0;
-  const totalStackingAmount = activePosition
-    ? currentLockedStx + pendingAmountStx
-    : pendingAmountStx;
+  // pendingAmount from calculator already represents the TOTAL desired amount
+  const totalStackingAmount = pendingAmountStx || currentLockedStx;
   const totalAmountMicroStx =
     totalStackingAmount > 0 ? Math.floor(totalStackingAmount * MICRO_STX) : 0;
 
@@ -146,6 +149,7 @@ export function StackingScreen() {
 
   const { isPending: isApprovalPending } = useTrackTx({
     txId: approvalTxId,
+    invalidateQueries: [["stacking-allowance"]],
     onSuccess: () => {
       setApprovalTxId(null);
       approvalSheetRef.current?.dismiss();
@@ -160,7 +164,15 @@ export function StackingScreen() {
 
   const { isPending: isDelegatePending } = useTrackTx({
     txId: delegateTxId,
+    invalidateQueries: [["stacking-status"], ["stacking-allowance"]],
     onSuccess: () => {
+      // Save stacking data to backend after successful delegation
+      if (delegateTxId) {
+        saveStackingData.mutate({
+          txId: delegateTxId,
+          poolName: "Fast Pool",
+        });
+      }
       setDelegateTxId(null);
       delegateSheetRef.current?.dismiss();
       setIsProcessing(false);
@@ -239,47 +251,71 @@ export function StackingScreen() {
     setPendingAmount(newAmount);
   };
 
+  const handleRevoke = async () => {
+    try {
+      await revokeAsync();
+    } catch (error) {
+      console.error("Failed to revoke delegation:", error);
+    }
+  };
+
+  const poolState = {
+    stxBalance,
+    activePosition,
+    stackingInfo,
+    isMainnet,
+    selectedNetwork,
+    isLoadingPool,
+    poolContract,
+  };
+
+  const formState = {
+    hasChanges,
+    isValidUpdate,
+    pendingAmount,
+    hasSufficientFunds,
+    calculate,
+  };
+
+  const feeState = {
+    feeLabel,
+    selectedFeeOption,
+    customFee,
+    isFeeValid,
+    isLoadingFees,
+    feeMicroStx,
+  };
+
+  const uiState = {
+    showPoolOptions,
+    showReceiveSheet,
+    isProcessing: isProcessing || isDelegatePending,
+    isApprovalPending,
+    isDelegatePending,
+    approvalSheetRef,
+    delegateSheetRef,
+  };
+
+  const actions = {
+    onUpdateChange: handleCalculatorUpdate,
+    onStackOrIncrease: handleStackOrIncrease,
+    onConfirmApproval: handleConfirmApproval,
+    onConfirmDelegate: handleConfirmDelegate,
+    onSheetClose: handleSheetClose,
+    onSelectFee: setSelectedFeeOption,
+    onCustomFeeChange: setCustomFee,
+    setShowPoolOptions,
+    setShowReceiveSheet,
+    onRevoke: handleRevoke,
+  };
+
   return (
     <StackingScreenLayout
-      // Pool State
-      stxBalance={stxBalance}
-      activePosition={activePosition}
-      stackingInfo={stackingInfo}
-      isMainnet={isMainnet}
-      selectedNetwork={selectedNetwork}
-      isLoadingPool={isLoadingPool}
-      poolContract={poolContract}
-      // Form State
-      hasChanges={hasChanges}
-      isValidUpdate={isValidUpdate}
-      pendingAmount={pendingAmount}
-      hasSufficientFunds={hasSufficientFunds}
-      calculate={calculate}
-      // Fee State
-      feeLabel={feeLabel}
-      selectedFeeOption={selectedFeeOption}
-      customFee={customFee}
-      isFeeValid={isFeeValid}
-      estimations={estimations}
-      isLoadingFees={isLoadingFees}
-      feeMicroStx={feeMicroStx}
-      // UI State
-      showPoolOptions={showPoolOptions}
-      showReceiveSheet={showReceiveSheet}
-      isProcessing={isProcessing || isDelegatePending}
-      isApprovalPending={isApprovalPending}
-      approvalSheetRef={approvalSheetRef}
-      delegateSheetRef={delegateSheetRef}
-      // Actions
-      onUpdateChange={handleCalculatorUpdate}
-      onStackOrIncrease={handleStackOrIncrease}
-      onConfirmApproval={handleConfirmApproval}
-      onConfirmDelegate={handleConfirmDelegate}
-      onSheetClose={handleSheetClose}
-      onSelectFee={setSelectedFeeOption}
-      onCustomFeeChange={setCustomFee}
-      setShowPoolOptions={setShowPoolOptions}
-      setShowReceiveSheet={setShowReceiveSheet}
+      poolState={poolState}
+      formState={formState}
+      feeState={feeState}
+      uiState={uiState}
+      actions={actions}
     />
   );
 }
