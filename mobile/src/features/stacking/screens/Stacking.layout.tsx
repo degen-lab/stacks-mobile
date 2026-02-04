@@ -8,22 +8,23 @@ import { PoolOptionsModal } from "../components/pool-options-modal";
 import { ReceiveSheet } from "@/features/earn/components/receive-sheet";
 import { ApprovePoolSheet } from "../components/approve-pool-sheet";
 import { StackStxSheet } from "../components/stack-stx-sheet";
+import { TransactionLoadingOverlay } from "@/components/transaction-loading-overlay";
 import { FeeOption } from "../components/fee-selector";
-import { FeeEstimation } from "@/api/stacks/types/fee";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 
-interface StackingScreenLayoutProps {
-  // Pool State
+interface PoolState {
   stxBalance: number;
   activePosition?: {
     lockedAmount: number;
     lockDuration: number;
     nextUnlockDays: number;
     status: "ACTIVE";
+    poolName: string;
   };
   stackingInfo: {
     apy: number;
     price: number;
+    currentCycle: number;
     timeTillNextCycle?: string;
     timeTillRewardPhase?: string;
     inPreparePhase?: boolean;
@@ -33,8 +34,9 @@ interface StackingScreenLayoutProps {
   selectedNetwork: string;
   isLoadingPool: boolean;
   poolContract: string;
+}
 
-  // Form State
+interface FormState {
   hasChanges: boolean;
   isValidUpdate: boolean;
   pendingAmount?: number;
@@ -45,25 +47,28 @@ interface StackingScreenLayoutProps {
     monthly: number;
     yearly: number;
   } | null;
+}
 
-  // Fee State
+interface FeeState {
   feeLabel: string;
   selectedFeeOption: FeeOption;
   customFee: string;
   isFeeValid: boolean;
-  estimations: FeeEstimation[];
   isLoadingFees: boolean;
   feeMicroStx?: number;
+}
 
-  // UI State
+interface UiState {
   showPoolOptions: boolean;
   showReceiveSheet: boolean;
   isProcessing: boolean;
   isApprovalPending: boolean;
+  isDelegatePending: boolean;
   approvalSheetRef: React.RefObject<BottomSheetModal | null>;
   delegateSheetRef: React.RefObject<BottomSheetModal | null>;
+}
 
-  // Actions
+interface Actions {
   onUpdateChange: (
     changed: boolean,
     valid: boolean,
@@ -77,44 +82,73 @@ interface StackingScreenLayoutProps {
   onCustomFeeChange: (value: string) => void;
   setShowPoolOptions: (show: boolean) => void;
   setShowReceiveSheet: (show: boolean) => void;
+  onRevoke?: () => void;
+}
+
+interface StackingScreenLayoutProps {
+  poolState: PoolState;
+  formState: FormState;
+  feeState: FeeState;
+  uiState: UiState;
+  actions: Actions;
 }
 
 export function StackingScreenLayout({
-  stxBalance,
-  activePosition,
-  stackingInfo,
-  isMainnet,
-  selectedNetwork,
-  isLoadingPool,
-  poolContract,
-  hasChanges,
-  isValidUpdate,
-  pendingAmount,
-  hasSufficientFunds,
-  calculate,
-  feeLabel,
-  selectedFeeOption,
-  customFee,
-  isFeeValid,
-  estimations,
-  isLoadingFees,
-  feeMicroStx,
-  showPoolOptions,
-  showReceiveSheet,
-  isProcessing,
-  isApprovalPending,
-  approvalSheetRef,
-  delegateSheetRef,
-  onUpdateChange,
-  onStackOrIncrease,
-  onConfirmApproval,
-  onConfirmDelegate,
-  onSheetClose,
-  onSelectFee,
-  onCustomFeeChange,
-  setShowPoolOptions,
-  setShowReceiveSheet,
+  poolState,
+  formState,
+  feeState,
+  uiState,
+  actions,
 }: StackingScreenLayoutProps) {
+  const {
+    stxBalance,
+    activePosition,
+    stackingInfo,
+    isMainnet,
+    selectedNetwork,
+    isLoadingPool,
+    poolContract,
+  } = poolState;
+
+  const {
+    hasChanges,
+    isValidUpdate,
+    pendingAmount,
+    hasSufficientFunds,
+    calculate,
+  } = formState;
+
+  const {
+    feeLabel,
+    selectedFeeOption,
+    customFee,
+    isFeeValid,
+    isLoadingFees,
+    feeMicroStx,
+  } = feeState;
+
+  const {
+    showPoolOptions,
+    showReceiveSheet,
+    isProcessing,
+    isApprovalPending,
+    isDelegatePending,
+    approvalSheetRef,
+    delegateSheetRef,
+  } = uiState;
+
+  const {
+    onUpdateChange,
+    onStackOrIncrease,
+    onConfirmApproval,
+    onConfirmDelegate,
+    onSheetClose,
+    onSelectFee,
+    onCustomFeeChange,
+    setShowPoolOptions,
+    setShowReceiveSheet,
+    onRevoke,
+  } = actions;
   const getCtaLabel = () => {
     if (!hasSufficientFunds) return "Add Funds";
     if (!activePosition) return "Start Stacking";
@@ -220,6 +254,7 @@ export function StackingScreenLayout({
         visible={showPoolOptions}
         onClose={() => setShowPoolOptions(false)}
         activePosition={activePosition}
+        onRevoke={onRevoke}
       />
 
       <ApprovePoolSheet
@@ -254,7 +289,6 @@ export function StackingScreenLayout({
         customFee={customFee}
         onCustomFeeChange={onCustomFeeChange}
         isFeeValid={isFeeValid}
-        estimations={estimations}
         isLoadingFees={isLoadingFees}
         feeMicroStx={feeMicroStx}
         onConfirm={onConfirmDelegate}
@@ -266,6 +300,15 @@ export function StackingScreenLayout({
       <ReceiveSheet
         open={showReceiveSheet}
         onClose={() => setShowReceiveSheet(false)}
+      />
+
+      <TransactionLoadingOverlay
+        visible={isApprovalPending || isDelegatePending}
+        message={
+          isApprovalPending
+            ? "Approving Pool Access"
+            : "Broadcasting Delegation"
+        }
       />
     </KeyboardAvoidingView>
   );

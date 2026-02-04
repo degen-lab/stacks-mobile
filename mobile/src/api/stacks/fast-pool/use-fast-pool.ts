@@ -8,12 +8,12 @@ export const useFastPool = (userAddress?: string) => {
   const network = useSelectedNetwork();
   const service = new FastPoolService(walletKit, network.selectedNetwork);
   const statusQuery = useQuery({
-    queryKey: ["stacking", "status", userAddress, network],
+    queryKey: ["stacking-status"],
     queryFn: () => service.getLockStatus(userAddress!),
     enabled: !!userAddress,
   });
   const allowanceQuery = useQuery({
-    queryKey: ["stacking", "allowance", userAddress, network],
+    queryKey: ["stacking-allowance"],
     queryFn: () => service.isCallerAllowed(userAddress!),
     enabled: !!userAddress,
     refetchInterval: 30000, // Only refetch every 30 seconds
@@ -26,14 +26,23 @@ export const useFastPool = (userAddress?: string) => {
     mutationFn: ({ amount, fee }: { amount: number; fee?: number }) =>
       service.delegate(amount, fee),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stacking"] });
+      queryClient.invalidateQueries({ queryKey: ["stacking-status"] });
+      queryClient.invalidateQueries({ queryKey: ["stacking-allowance"] });
     },
   });
 
   const approveMutation = useMutation({
     mutationFn: (fee?: number) => service.allowContractCaller(fee),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stacking", "allowance"] });
+      queryClient.invalidateQueries({ queryKey: ["stacking-allowance"] });
+    },
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: () => service.revoke(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stacking-status"] });
+      queryClient.invalidateQueries({ queryKey: ["stacking-allowance"] });
     },
   });
 
@@ -45,5 +54,7 @@ export const useFastPool = (userAddress?: string) => {
     delegateAsync: delegateMutation.mutateAsync,
     approve: approveMutation.mutate,
     approveAsync: approveMutation.mutateAsync,
+    revoke: revokeMutation.mutate,
+    revokeAsync: revokeMutation.mutateAsync,
   };
 };

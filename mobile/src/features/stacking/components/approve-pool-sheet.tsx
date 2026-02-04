@@ -57,14 +57,9 @@ export function ApprovePoolSheet({
     >
       <ScrollView className="flex-1" contentContainerClassName="pb-6">
         <View className="px-6">
-          {/* Title */}
-          <Text className="mb-4 text-xl font-matter text-primary dark:text-white">
-            Approve Pool
-          </Text>
-
-          {/* Contract & Fee Details */}
           <ContractTxDetails
             network={network}
+            title="Approve Pool"
             contractAddress={poolAddress}
             functionName="allow-contract-caller"
             contractArgs={[
@@ -91,7 +86,7 @@ export function ApprovePoolSheet({
           />
 
           <Text className="mb-4 font-instrument-sans text-sm leading-relaxed text-secondary">
-            To stake with Fast Pool, approve it to lock your STX. This is a{" "}
+            To stake with Fast Pool, approve it to lock your STX. This is an{" "}
             <Text className="font-instrument-sans-medium text-primary">
               one-time action
             </Text>

@@ -5,7 +5,6 @@ import { WarningLabel } from "@/components/warning-label";
 import { FeeSelector, FeeOption } from "../components/fee-selector";
 import { ContractTxDetails } from "@/components/contract-tx-details";
 import { formatMicroStx, MICRO_STX } from "@/lib/format/currency";
-import { FeeResponse } from "@/api/stacks/types/fee";
 import { useColorScheme } from "nativewind";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 
@@ -23,7 +22,6 @@ interface StackStxSheetProps {
   customFee: string;
   onCustomFeeChange: (value: string) => void;
   isFeeValid: boolean;
-  estimations: FeeResponse["estimations"];
   isLoadingFees: boolean;
   feeMicroStx?: number;
   onConfirm: () => void;
@@ -45,7 +43,6 @@ export function StackStxSheet({
   customFee,
   onCustomFeeChange,
   isFeeValid,
-  estimations,
   isLoadingFees,
   feeMicroStx,
   onConfirm,
@@ -57,7 +54,6 @@ export function StackStxSheet({
   const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
   const [showFeeSelector, setShowFeeSelector] = React.useState(false);
 
-  // Calculate estimated unlock date (2 weeks from now)
   const estimatedUnlockDate = React.useMemo(() => {
     const date = new Date();
     date.setDate(date.getDate() + 14);
@@ -112,7 +108,6 @@ export function StackStxSheet({
             onAdvancedToggle={setShowAdvancedOnly}
           />
 
-          {/* Hide all other content when Transaction Settings is active */}
           {!showAdvancedOnly && (
             <>
               <View className="mb-4 flex-row items-center justify-between rounded-xl border border-surface-secondary bg-sand-50 p-4 dark:bg-sand-900/30">
@@ -152,15 +147,6 @@ export function StackStxSheet({
                     2 week cycles (auto-renews)
                   </Text>
                 </View>
-
-                {/* Conditional prepare phase warning for increases */}
-                {isStacking && !inPreparePhase && timeTillPreparePhase && (
-                  <View className="mt-3 pt-3 border-t border-border-secondary">
-                    <Text className="text-center text-sm font-instrument-sans text-secondary">
-                      ⏰ Left {timeTillPreparePhase} to increase for this cycle.
-                    </Text>
-                  </View>
-                )}
               </View>
 
               <View className="mb-6 rounded-xl bg-sand-50 px-4 py-3 dark:bg-sand-900/30">
@@ -169,30 +155,24 @@ export function StackStxSheet({
                     <Text className="font-instrument-sans text-sm text-secondary">
                       Network fee
                     </Text>
-                    <View className="mt-0.5">
+                    {selectedFeeOption === "custom" && showFeeSelector ? (
                       <Input
-                        placeholder={`$${((feeMicroStx ? feeMicroStx / MICRO_STX : 0) * stackingPrice).toFixed(3)} • ${formatMicroStx(feeMicroStx || 0)} STX`}
+                        placeholder={`${formatMicroStx(feeMicroStx || 0)} STX`}
                         keyboardType="decimal-pad"
-                        value={
-                          selectedFeeOption === "custom" && showFeeSelector
-                            ? customFee
-                            : ""
-                        }
+                        value={customFee}
                         onChangeText={onCustomFeeChange}
-                        editable={
-                          selectedFeeOption === "custom" && showFeeSelector
-                        }
-                        className={`h-auto border-0 bg-transparent p-0 pb-1 font-instrument-sans-medium text-base text-primary ${
-                          selectedFeeOption === "custom" && showFeeSelector
-                            ? "border-b border-surface-secondary"
-                            : ""
-                        }`}
-                        placeholderTextColor="rgb(var(--color-text-primary))"
-                        autoFocus={
-                          selectedFeeOption === "custom" && showFeeSelector
-                        }
+                        className="mt-0.5 h-6 border-0 border-b border-surface-secondary bg-transparent p-0 font-instrument-sans-medium text-base leading-6 text-primary"
+                        autoFocus={true}
                       />
-                    </View>
+                    ) : (
+                      <Text className="mt-0.5 font-instrument-sans-medium text-base leading-6 text-primary">
+                        {formatMicroStx(feeMicroStx || 0)} STX • $
+                        {(
+                          (feeMicroStx ? feeMicroStx / MICRO_STX : 0) *
+                          stackingPrice
+                        ).toFixed(3)}
+                      </Text>
+                    )}
                   </View>
                   <Button
                     label={showFeeSelector ? "Done" : "Edit"}
@@ -214,7 +194,11 @@ export function StackStxSheet({
 
               <View className="my-4">
                 <WarningLabel
-                  label={`This action will lock your funds until ~${estimatedUnlockDate}.`}
+                  label={
+                    isStacking && !inPreparePhase && timeTillPreparePhase
+                      ? `Only ${timeTillPreparePhase} left to increase for the next cycle`
+                      : `This action will lock your funds until ~${estimatedUnlockDate}.`
+                  }
                 />
               </View>
 

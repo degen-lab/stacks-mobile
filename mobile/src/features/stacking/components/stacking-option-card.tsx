@@ -146,17 +146,6 @@ export function StackingOptionCard({
             </View>
           )}
 
-          {timeTillRewardPhase && (
-            <View className="flex-row items-center justify-between">
-              <Text className="text-sm font-instrument-sans text-secondary">
-                Rewards start in
-              </Text>
-              <Text className="text-sm font-instrument-sans-medium text-primary">
-                {timeTillRewardPhase}
-              </Text>
-            </View>
-          )}
-
           <View className="flex-row items-center justify-between">
             <Text className="text-sm font-instrument-sans text-secondary">
               Lock period

@@ -2,6 +2,8 @@ import { createQuery } from "react-query-kit";
 
 import { endpoints, fetchFromStacksApi } from "@/api/stacks/stacks-api";
 import { PoxInfo } from "@/api/stacks/types/pox-info";
+import { UserBalances } from "@/api/stacks/types/user-balances";
+import { Transaction } from "@/api/stacks/types/transaction";
 
 type StacksApiResponse = Record<string, unknown>;
 
@@ -22,10 +24,10 @@ export const usePoxData = createQuery<PoxInfo, void>({
   fetcher: () => fetchFromStacksApi<PoxInfo>(endpoints.POX),
 });
 
-export const useUserBalances = createQuery<StacksApiResponse, AddressVars>({
+export const useUserBalances = createQuery<UserBalances, AddressVars>({
   queryKey: ["stacks-user-balances"],
   fetcher: ({ address }) =>
-    fetchFromStacksApi(endpoints.USER_BALANCES, { address }),
+    fetchFromStacksApi<UserBalances>(endpoints.USER_BALANCES, { address }),
 });
 
 export const useBurnchainRewards = createQuery<
@@ -43,10 +45,10 @@ export const useTransactions = createQuery<StacksApiResponse, AddressVars>({
     fetchFromStacksApi(endpoints.TRANSACTIONS, { address }),
 });
 
-export const useTxById = createQuery<StacksApiResponse, TxIdVars>({
+export const useTxById = createQuery<Transaction, TxIdVars>({
   queryKey: ["stacks-tx-by-id"],
   fetcher: ({ txId }) =>
-    fetchFromStacksApi(endpoints.TX_BY_ID, { tx_id: txId }),
+    fetchFromStacksApi<Transaction>(endpoints.TX_BY_ID, { tx_id: txId }),
 });
 
 export const useTotalRewardsForAddress = createQuery<

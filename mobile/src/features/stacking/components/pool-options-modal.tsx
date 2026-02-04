@@ -5,25 +5,27 @@ import {
   X,
   ChevronRight,
   AlertTriangle,
-  Wallet,
   List,
   QrCode,
-  ExternalLink,
-  Copy,
 } from "lucide-react-native";
 import { Input } from "@/components/ui/input";
 import type { StackingPosition } from "../types";
-import * as Clipboard from "expo-clipboard";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   activePosition: StackingPosition | undefined;
+  onRevoke?: () => void;
 };
 
 type ViewState = "main" | "advanced" | "change_address" | "leave_pool";
 
-export function PoolOptionsModal({ visible, onClose, activePosition }: Props) {
+export function PoolOptionsModal({
+  visible,
+  onClose,
+  activePosition,
+  onRevoke,
+}: Props) {
   const [currentView, setCurrentView] = useState<ViewState>("main");
   const [newRewardAddress, setNewRewardAddress] = useState("");
 
@@ -38,10 +40,6 @@ export function PoolOptionsModal({ visible, onClose, activePosition }: Props) {
   //   Linking.openURL("https://fastpool.org"); // Example for Fast Pool
   //   handleClose();
   // };
-
-  const copyToClipboard = async (text: string) => {
-    await Clipboard.setStringAsync(text);
-  };
 
   const renderMainView = () => (
     <View className="gap-2">
@@ -58,7 +56,7 @@ export function PoolOptionsModal({ visible, onClose, activePosition }: Props) {
         <ChevronRight size={20} color={colors.neutral[400]} />
       </Pressable>
 
-      <Pressable
+      {/* <Pressable
         onPress={() => setCurrentView("change_address")}
         className="flex-row items-center justify-between rounded-xl bg-surface-primary p-4 active:bg-surface-secondary"
       >
@@ -69,7 +67,7 @@ export function PoolOptionsModal({ visible, onClose, activePosition }: Props) {
           </Text>
         </View>
         <ChevronRight size={20} color={colors.neutral[400]} />
-      </Pressable>
+      </Pressable> */}
 
       <Pressable
         onPress={() => setCurrentView("leave_pool")}
@@ -89,48 +87,54 @@ export function PoolOptionsModal({ visible, onClose, activePosition }: Props) {
   const renderAdvancedView = () => (
     <View className="gap-4">
       <Text className="text-sm font-instrument-sans text-secondary">
-        Technical details about your current stacking delegation.
+        Details about your current stacking delegation.
       </Text>
 
       <View className="rounded-2xl border border-surface-secondary bg-bg-primary p-4">
         <View className="mb-4 flex-row items-center justify-between border-b border-surface-secondary pb-4">
           <Text className="text-sm font-instrument-sans text-secondary">
-            Current Cycle
+            Pool Name
           </Text>
-          <Text className="font-matter text-primary">#77</Text>
+          <Text className="font-matter text-primary">
+            {activePosition?.poolName || "Fast Pool"}
+          </Text>
         </View>
         <View className="mb-4 flex-row items-center justify-between border-b border-surface-secondary pb-4">
           <Text className="text-sm font-instrument-sans text-secondary">
             Delegated Amount
           </Text>
           <Text className="font-matter text-primary">
-            {activePosition?.lockedAmount} STX
+            {activePosition?.lockedAmount.toFixed(6)} STX
           </Text>
         </View>
-        <View className="mb-4">
-          <Text className="mb-1 text-sm font-instrument-sans text-secondary">
-            Reward Address
+        <View className="mb-4 flex-row items-center justify-between border-b border-surface-secondary pb-4">
+          <Text className="text-sm font-instrument-sans text-secondary">
+            Lock Duration
           </Text>
-          <View className="flex-row items-center justify-between">
-            <Text className="font-mono text-xs text-primary">
-              bc1qxy2...89a
-            </Text>
-            <Pressable onPress={() => copyToClipboard("bc1qxy2...89a")}>
-              <Copy size={16} color={colors.neutral[400]} />
-            </Pressable>
-          </View>
-        </View>
-        <View>
-          <Text className="mb-1 text-sm font-instrument-sans text-secondary">
-            Transaction ID
+          <Text className="font-matter text-primary">
+            {activePosition?.lockDuration} cycle
+            {activePosition?.lockDuration !== 1 ? "s" : ""}
           </Text>
-          <View className="flex-row items-center justify-between">
-            <Text className="font-mono text-xs text-primary">0x123...abc</Text>
-            <Pressable onPress={() => copyToClipboard("0x123...abc")}>
-              <ExternalLink size={16} color={colors.neutral[400]} />
-            </Pressable>
-          </View>
         </View>
+        <View className="mb-4 flex-row items-center justify-between border-b border-surface-secondary pb-4">
+          <Text className="text-sm font-instrument-sans text-secondary">
+            Next Unlock
+          </Text>
+          <Text className="font-matter text-primary">
+            ~{activePosition?.nextUnlockDays} days
+          </Text>
+        </View>
+        {activePosition?.rewardedStxAmount !== undefined &&
+          activePosition?.rewardedStxAmount !== null && (
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-instrument-sans text-secondary">
+                Total Rewards Earned
+              </Text>
+              <Text className="font-matter text-lg text-primary">
+                {activePosition.rewardedStxAmount.toFixed(6)} STX
+              </Text>
+            </View>
+          )}
       </View>
     </View>
   );
@@ -185,7 +189,9 @@ export function PoolOptionsModal({ visible, onClose, activePosition }: Props) {
         label="Revoke Delegation"
         variant="destructive"
         onPress={() => {
-          // Implement revoke logic
+          if (onRevoke) {
+            onRevoke();
+          }
           handleClose();
         }}
       />
