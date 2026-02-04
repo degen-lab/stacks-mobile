@@ -17,6 +17,7 @@ import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
 import { fontConfig } from "@/lib/fonts";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";
 import { StackingHeader } from "@/features/stacking/components/stacking-header";
+import { TransakProvider } from "@/features/transak/context/transak-context";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -88,7 +89,7 @@ function Providers({ children }: { children: React.ReactNode }) {
         <ThemeProvider value={theme}>
           <APIProvider>
             <BottomSheetModalProvider>
-              {children}
+              <TransakProvider>{children}</TransakProvider>
               <FlashMessage position="top" />
             </BottomSheetModalProvider>
           </APIProvider>

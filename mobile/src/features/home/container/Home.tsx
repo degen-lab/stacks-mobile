@@ -4,6 +4,7 @@ import { RelativePathString, useRouter } from "expo-router";
 import HomeScreenLayout from "./Home.layout";
 import { useModal } from "@/components/ui";
 import { useActiveAccountIndex } from "@/lib/store/settings";
+import { useTransak } from "@/features/transak/context/transak-context";
 
 export default function HomeScreen() {
   const { activeAccountIndex } = useActiveAccountIndex();
@@ -11,6 +12,7 @@ export default function HomeScreen() {
   const { data: stxPriceUsd } = useStacksPrice();
   const usdBalance = stxPriceUsd ? stxBalance * stxPriceUsd : 0;
   const emptyWalletModal = useModal();
+  const { openTransak } = useTransak();
   const router = useRouter();
 
   const navigateToPortfolio = () => {
@@ -29,6 +31,11 @@ export default function HomeScreen() {
     router.push("/referral" as RelativePathString);
   };
 
+  const navigateToBuy = () => {
+    emptyWalletModal.dismiss();
+    openTransak("STX", "buy");
+  };
+
   return (
     <HomeScreenLayout
       usdBalance={usdBalance}
@@ -36,7 +43,7 @@ export default function HomeScreen() {
       navigateToPlay={navigateToPlay}
       navigateToReferral={navigateToReferral}
       emptyWalletModalRef={emptyWalletModal.ref}
-      onBuyCrypto={emptyWalletModal.dismiss}
+      onBuyCrypto={navigateToBuy}
       onDepositCrypto={emptyWalletModal.dismiss}
     />
   );

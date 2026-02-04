@@ -11,6 +11,7 @@ import { StackStxSheet } from "../components/stack-stx-sheet";
 import { TransactionLoadingOverlay } from "@/components/transaction-loading-overlay";
 import { FeeOption } from "../components/fee-selector";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { WarningLabel } from "@/components/warning-label";
 
 interface PoolState {
   stxBalance: number;
@@ -192,11 +193,8 @@ export function StackingScreenLayout({
         >
           <View className="p-4">
             {!isMainnet && (
-              <View className="mb-4 rounded-xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
-                <Text className="text-sm font-instrument-sans text-orange-900 dark:text-orange-100">
-                  ⚠️ Stacking is only available on mainnet. Please switch
-                  networks to stack.
-                </Text>
+              <View className="my-2">
+                <WarningLabel label="Stacking is only available on mainnet." />
               </View>
             )}
 

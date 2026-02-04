@@ -1,6 +1,7 @@
 export const USTX_DECIMALS = 6;
 export const SATS_DECIMALS = 8;
 export const MICRO_STX = Math.pow(10, USTX_DECIMALS);
+export const SATS_PER_BTC = Math.pow(10, SATS_DECIMALS);
 
 const formatCurrency = (amount: number) => {
   const formatted = amount.toLocaleString("en-US", {
@@ -23,5 +24,10 @@ export const formatMicroStx = (amountInMicroStx: number) => {
     maximumFractionDigits: USTX_DECIMALS,
   });
 };
+
+export const toSats = (amountBtc: number) =>
+  Math.round(amountBtc * SATS_PER_BTC);
+
+export const fromSatsToBTC = (sats: number) => sats / SATS_PER_BTC;
 
 export default formatCurrency;

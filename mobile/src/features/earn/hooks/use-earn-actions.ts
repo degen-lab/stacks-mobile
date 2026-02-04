@@ -1,18 +1,18 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useTransak } from "@/features/transak/context/transak-context";
 
 export function useEarnActions() {
   const [receiveSheetOpen, setReceiveSheetOpen] = useState(false);
   const [bridgeSheetOpen, setBridgeSheetOpen] = useState(false);
+  const { openTransak } = useTransak();
 
-  const handleBuy = () => {
-    // TODO: Navigate to buy crypto screen
-    console.log("Buy action");
-  };
+  const handleBuy = useCallback(() => {
+    openTransak("STX", "buy");
+  }, [openTransak]);
 
-  const handleSell = () => {
-    // TODO: Navigate to sell crypto screen
-    console.log("Sell action");
-  };
+  const handleSell = useCallback(() => {
+    openTransak("STX", "sell");
+  }, [openTransak]);
 
   const handleReceive = () => {
     setReceiveSheetOpen(true);

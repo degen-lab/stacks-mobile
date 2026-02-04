@@ -19,15 +19,47 @@ export class TransakPurchaseClient {
     accessToken: string,
     cryptoCurrencyCode: string,
     fiatCurrency: string,
-    fiatAmount: number,
+    fiatAmount: number | undefined,
+    cryptoAmount: number | undefined,
     partnerCustomerId: string,
     partnerOrderId: string,
     platform: AppPlatform,
+    productsAvailed: string,
+    walletAddress?: string,
   ): Promise<string> {
     const referrerDomain =
       platform === AppPlatform.IOS
         ? IOS_REFERRER_DOMAIN
         : ANDROID_REFERRER_DOMAIN;
+
+    const getNetwork = (code: string): string => {
+      switch (code.toUpperCase()) {
+        case 'BTC':
+          return 'bitcoin';
+        case 'STX':
+          return 'stacks';
+        default:
+          return 'mainnet';
+      }
+    };
+
+    const isSell = productsAvailed === 'SELL';
+    const widgetParams = {
+      apiKey: TRANSAK_API_KEY,
+      referrerDomain,
+      cryptoCurrencyCode,
+      fiatCurrency,
+      network: getNetwork(cryptoCurrencyCode),
+      productsAvailed,
+      ...(fiatAmount != null ? { fiatAmount } : {}),
+      ...(cryptoAmount != null ? { cryptoAmount } : {}),
+      partnerCustomerId,
+      partnerOrderId,
+      ...(walletAddress && !isSell
+        ? { walletAddress, disableWalletAddressForm: true }
+        : {}),
+      ...(isSell ? { walletRedirection: true } : {}),
+    };
     const options = {
       method: 'POST',
       headers: {
@@ -36,15 +68,7 @@ export class TransakPurchaseClient {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        widgetParams: {
-          apiKey: TRANSAK_API_KEY,
-          referrerDomain,
-          cryptoCurrencyCode,
-          fiatCurrency,
-          fiatAmount,
-          partnerCustomerId,
-          partnerOrderId,
-        },
+        widgetParams,
       }),
     };
 
