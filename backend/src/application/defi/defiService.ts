@@ -33,7 +33,6 @@ export class DefiService {
     private bitflowClient: BitflowSDK,
     private transactionClient: TransactionClientPort,
     private lendingClient: LendingClientPort,
-    private lendingClient: LendingClientPort,
   ) {}
 
   async getTokenList(): Promise<Token[]> {
@@ -145,8 +144,8 @@ export class DefiService {
     await this.entityManager.save(defiOperation);
   }
 
-  getLendingAssets(): object {
-    return this.lendingClient.getAssetsToSupply();
+  async getLendingAssets(): Promise<object> {
+    return await this.lendingClient.getAssetsToSupply();
   }
 
   async saveLendingOperation(
