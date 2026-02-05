@@ -25,6 +25,7 @@ import {
   useSelectedNetwork,
 } from "@/lib/store/settings";
 import { useStxBalance } from "@/hooks/use-stx-balance";
+import { useI18nSettings } from "@/hooks/use-i18n-settings";
 import {
   BottomSheetModal,
   BottomSheetFooter,
@@ -62,6 +63,7 @@ export function TransakDrawer({ drawerRef }: Props) {
   const [step, setStep] = useState<"form" | "checkout">("form");
   const { selectedNetwork } = useSelectedNetwork();
   const { activeAccountIndex } = useActiveAccountIndex();
+  const { countryCode } = useI18nSettings();
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [quoteLimits, setQuoteLimits] = useState<Record<string, QuoteLimit>>(
@@ -140,6 +142,7 @@ export function TransakDrawer({ drawerRef }: Props) {
       ...(isSell ? { cryptoAmount: amountValue } : { fiatAmount: amountValue }),
       cryptoCurrency: asset,
       isBuyOrSell: isSell ? "SELL" : "BUY",
+      countryCode,
     },
     enabled:
       !isNaN(numericAmount) &&

@@ -3,6 +3,7 @@ import type { NetworkType } from "@degenlab/stacks-wallet-kit-core";
 import { HDKey } from "@scure/bip32";
 import { walletKit } from "@/lib/stacks/wallet";
 
+// TODO: replace from stacks-wallet-kit
 interface WalletStorage {
   privateKey: string;
 }
@@ -13,7 +14,6 @@ async function getWalletPrivateKey(): Promise<string> {
   if (!storageManager?.getItem) {
     throw new Error("Wallet storage not available");
   }
-  // @ts-expect-error internal wallet shape
   const wallet: WalletStorage | null = await storageManager.getItem("wallet");
   if (!wallet?.privateKey) {
     throw new Error("Wallet private key not found");

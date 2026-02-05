@@ -1,111 +1,23 @@
 import { createQuery } from "react-query-kit";
+import { Env } from "@/lib/env";
+import {
+  TransakQuoteError,
+  type TransakQuoteResponse,
+  type TransakQuoteVariables,
+  type TransakQuoteErrorKind,
+} from "./types";
+import { parseTransakError } from "./utils";
 
-export type TransakFeeBreakdown = {
-  name: string;
-  value: number;
-  id: string;
-  ids: string[];
-};
-
-export type TransakQuoteResponse = {
-  conversionPrice: number;
-  marketConversionPrice: number;
-  slippage: number;
-  fiatCurrency: string;
-  cryptoCurrency: string;
-  paymentMethod: string;
-  fiatAmount: number;
-  cryptoAmount: number;
-  isBuyOrSell: string;
-  network: string;
-  feeDecimal: number;
-  totalFee: number;
-  feeBreakdown: TransakFeeBreakdown[];
-  nonce: number;
-};
-
-export type TransakQuoteErrorKind = "min" | "max" | "feature" | "unknown";
-
-export class TransakQuoteError extends Error {
-  kind: TransakQuoteErrorKind;
-  minAmount?: number;
-  maxAmount?: number;
-  unit?: string;
-
-  constructor(
-    message: string,
-    kind: TransakQuoteErrorKind,
-    details?: { minAmount?: number; maxAmount?: number; unit?: string },
-  ) {
-    super(message);
-    this.name = "TransakQuoteError";
-    this.kind = kind;
-    this.minAmount = details?.minAmount;
-    this.maxAmount = details?.maxAmount;
-    this.unit = details?.unit;
-  }
-}
-
-type Variables = {
-  fiatAmount?: number;
-  cryptoAmount?: number;
-  cryptoCurrency: string;
-  fiatCurrency?: string;
-  paymentMethod?: string;
-  isBuyOrSell?: "BUY" | "SELL";
-};
+export { TransakQuoteError };
+export type { TransakQuoteErrorKind };
 
 const TRANSAK_API_URL =
   "https://api-stg.transak.com/api/v1/pricing/public/quotes";
 const DEFAULT_FIAT = "USD";
 const DEFAULT_PAYMENT = "credit_debit_card";
-const STAGING_API_KEY = "f29b1664-87eb-46f5-8c23-90c45e721608"; // Public Staging Key
+const DEFAULT_COUNTRY = "US";
 
-const extractUnit = (message: string): string | undefined => {
-  const matches = message.match(/\b[A-Z]{2,6}\b/g);
-  return matches ? matches[matches.length - 1] : undefined;
-};
-
-const parseTransakError = (message: string) => {
-  if (message.includes("feature is not enabled")) {
-    return { kind: "feature" as const };
-  }
-
-  // Network fee exceeds amount (essentially a minimum amount error)
-  if (message.includes("network fee is more than the source amount")) {
-    return {
-      kind: "min" as const,
-      minAmount: undefined, // Transak doesn't provide exact minimum in this error
-      unit: extractUnit(message),
-    };
-  }
-
-  const minMatch = message.match(
-    /minimum .*?(?:more than or equal to|>=)\s*([0-9]*\.?[0-9]+)/i,
-  );
-  if (minMatch) {
-    return {
-      kind: "min" as const,
-      minAmount: Number(minMatch[1]),
-      unit: extractUnit(message),
-    };
-  }
-
-  const maxMatch = message.match(
-    /less than (?:or equal to )?([0-9]*\.?[0-9]+)/i,
-  );
-  if (maxMatch) {
-    return {
-      kind: "max" as const,
-      maxAmount: Number(maxMatch[1]),
-      unit: extractUnit(message),
-    };
-  }
-
-  return { kind: "unknown" as const };
-};
-
-export const useTransakQuote = createQuery<TransakQuoteResponse, Variables>({
+export const useTransakQuote = createQuery<TransakQuoteResponse, TransakQuoteVariables>({
   queryKey: ["transak-quote"],
   fetcher: async ({
     fiatAmount,
@@ -114,6 +26,7 @@ export const useTransakQuote = createQuery<TransakQuoteResponse, Variables>({
     isBuyOrSell = "BUY",
     fiatCurrency = DEFAULT_FIAT,
     paymentMethod = DEFAULT_PAYMENT,
+    countryCode,
   }) => {
     if (
       (!fiatAmount || fiatAmount <= 0) &&
@@ -127,9 +40,9 @@ export const useTransakQuote = createQuery<TransakQuoteResponse, Variables>({
       cryptoCurrency,
       paymentMethod,
       isBuyOrSell,
-      partnerApiKey: STAGING_API_KEY,
+      partnerApiKey: Env.TRANSAK_STAGING_API_KEY,
       network: "mainnet",
-      quoteCountryCode: "RO",
+      quoteCountryCode: countryCode || DEFAULT_COUNTRY,
     });
 
     if (cryptoAmount) {

@@ -5,9 +5,11 @@ export function useI18nSettings() {
   const calendars = useCalendars();
 
   const timeZone = calendars[0]?.timeZone ?? undefined;
+  const countryCode = locales[0]?.regionCode ?? "US";
 
   return {
     locale: locales[0]?.languageTag ?? "en-US",
     timeZone,
+    countryCode,
   };
 }
