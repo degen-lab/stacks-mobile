@@ -5,7 +5,7 @@ import {
   useSelectedNetwork,
 } from "@/lib/store/settings";
 import { walletKit } from "@/lib/stacks/wallet";
-import * as Clipboard from "expo-clipboard";
+import { copyToClipboard } from "@/lib/clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Copy, Wallet, Check, Trash } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
@@ -52,11 +52,7 @@ export default function AccountDetailScreen() {
   const handleCopyAddress = async () => {
     if (account) {
       const address = getAddressForNetwork(account, selectedNetwork);
-      await Clipboard.setStringAsync(address);
-      showMessage({
-        message: "Address copied to clipboard",
-        type: "success",
-      });
+      await copyToClipboard(address, "Address copied to clipboard");
     }
   };
 
