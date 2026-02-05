@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode } from "react";
-import { Pressable, View as RNView } from "react-native";
-import { Text, View } from "@/components/ui";
+import { Pressable, View, View as RNView } from "react-native";
+import { Text } from "./text";
 
 type TabsContextValue = {
   value: string;

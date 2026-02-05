@@ -1,8 +1,10 @@
-import { Pressable, Text, View, colors } from "@/components/ui";
+import { Pressable, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "./text";
+import colors from "./colors";
 
 type ScreenHeaderProps = {
   title: string;

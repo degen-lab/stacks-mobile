@@ -1,7 +1,7 @@
 import { Copy } from "lucide-react-native";
-import { StyleProp, ViewStyle } from "react-native";
+import { Pressable, StyleProp, View, ViewStyle } from "react-native";
 
-import { Pressable, Text, View } from "@/components/ui";
+import { Text } from "../text";
 import { GradientBorderMultiple } from "@/components/ui/gradient-border-multiple";
 import { copyToClipboard } from "@/lib/clipboard";
 

@@ -1,7 +1,8 @@
 import { ReactNode, useMemo } from "react";
+import { View } from "react-native";
 
-import { Text, View } from "@/components/ui";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Text } from "./text";
+import { Skeleton } from "./skeleton";
 
 type InfoBadgeProps = {
   icon?: ReactNode;

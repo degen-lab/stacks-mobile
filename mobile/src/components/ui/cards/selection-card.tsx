@@ -1,7 +1,7 @@
 import { View, Pressable } from "react-native";
-import { Text } from "@/components/ui";
 import * as Haptics from "expo-haptics";
 import type { ReactNode } from "react";
+import { Text } from "../text";
 
 type SelectionCardProps = {
   /** Icon to display on the left */

@@ -1,5 +1,6 @@
-import { colors, View } from "@/components/ui";
+import { View } from "react-native";
 import Svg, { Circle, G, Path, Rect } from "react-native-svg";
+import colors from "./colors";
 
 const DEFAULT_BG = colors.neutral[100];
 

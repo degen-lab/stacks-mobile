@@ -1,7 +1,7 @@
-import { Text, View } from "@/components/ui";
-import colors from "../colors";
+import { ColorValue, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { ColorValue } from "react-native";
+import { Text } from "../text";
+import colors from "../colors";
 
 type Gradient = "blood-orange" | "bitcoin";
 type LabelPosition = "top" | "bottom";
