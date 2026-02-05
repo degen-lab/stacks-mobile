@@ -32,6 +32,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { getAddressForNetwork } from "@/lib/stacks/addresses";
 import { walletKit } from "@/lib/stacks/wallet";
+import { getBitcoinAddressForAccount } from "@/lib/bitcoin/addresses";
 import type { AssetOption, TransakDrawerRef } from "../types";
 import { TransakDrawerLayout } from "./TransakDrawer.layout";
 
@@ -62,6 +63,7 @@ export function TransakDrawer({ drawerRef }: Props) {
   const { selectedNetwork } = useSelectedNetwork();
   const { activeAccountIndex } = useActiveAccountIndex();
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [quoteLimits, setQuoteLimits] = useState<Record<string, QuoteLimit>>(
     {},
   );
@@ -82,9 +84,19 @@ export function TransakDrawer({ drawerRef }: Props) {
           ? getAddressForNetwork(account, selectedNetwork)
           : null;
         if (mounted) setWalletAddress(address);
+
+        // Load Bitcoin address
+        const btcAddr = await getBitcoinAddressForAccount(
+          activeAccountIndex,
+          selectedNetwork,
+        );
+        if (mounted) setBtcAddress(btcAddr);
       } catch (e) {
         console.error("Failed to load wallet address", e);
-        if (mounted) setWalletAddress(null);
+        if (mounted) {
+          setWalletAddress(null);
+          setBtcAddress(null);
+        }
       }
     };
     loadAddress();
@@ -141,7 +153,7 @@ export function TransakDrawer({ drawerRef }: Props) {
 
     setQuoteLimits((prev) => {
       const existing = prev[limitKey] ?? {};
-      
+
       if (quoteError.kind === "min") {
         return {
           ...prev,
@@ -157,7 +169,7 @@ export function TransakDrawer({ drawerRef }: Props) {
           },
         };
       }
-      
+
       if (quoteError.kind === "max") {
         return {
           ...prev,
@@ -168,7 +180,7 @@ export function TransakDrawer({ drawerRef }: Props) {
           },
         };
       }
-      
+
       if (quoteError.kind === "feature") {
         return {
           ...prev,
@@ -179,7 +191,7 @@ export function TransakDrawer({ drawerRef }: Props) {
           },
         };
       }
-      
+
       return prev;
     });
   }, [quoteError, limitKey]);
@@ -223,10 +235,13 @@ export function TransakDrawer({ drawerRef }: Props) {
       fiatCurrency,
       cryptoCurrencyCode: asset,
       productsAvailed: (isSellFlow ? "SELL" : "BUY") as "BUY" | "SELL",
-      walletAddress:
-        !isSellFlow && asset === "STX"
+      walletAddress: !isSellFlow
+        ? asset === "STX"
           ? (walletAddress ?? undefined)
-          : undefined,
+          : asset === "BTC"
+            ? (btcAddress ?? undefined)
+            : undefined
+        : undefined,
     };
     createWidgetUrl(payload, {
       onSuccess: (url) => {
@@ -245,6 +260,7 @@ export function TransakDrawer({ drawerRef }: Props) {
     numericAmount,
     asset,
     walletAddress,
+    btcAddress,
     createWidgetUrl,
     fiatCurrency,
   ]);
