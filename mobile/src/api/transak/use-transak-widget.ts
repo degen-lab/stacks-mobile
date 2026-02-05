@@ -1,10 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { gameClient } from "@/api/common/backend-client";
 import { Platform } from "react-native";
-import type {
-  CreateWidgetUrlRequest,
-  CreateWidgetUrlResponse,
-} from "./types";
+import type { CreateWidgetUrlRequest, CreateWidgetUrlResponse } from "./types";
 
 export const useCreateTransakWidgetUrl = () => {
   return useMutation<string, Error, Omit<CreateWidgetUrlRequest, "platform">>({

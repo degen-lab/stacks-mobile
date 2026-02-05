@@ -7,6 +7,7 @@ export * from "./button";
 export * from "./cards";
 export * from "./checkbox";
 export { colors };
+export * from "./cards/selection-card";
 export * from "./focus-aware-status-bar";
 export * from "./image";
 export * from "./input";

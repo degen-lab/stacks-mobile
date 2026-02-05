@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { formatMicroStx, MICRO_STX } from "@/lib/format/currency";
 import { useStacking } from "../hooks/use-stacking";
@@ -8,32 +8,23 @@ import {
   getDelegateArgs,
 } from "@/api/stacks/fast-pool/fast-pool";
 import { useTrackTx } from "../hooks/use-track-tx";
-import { walletKit } from "@/lib/stacks/wallet";
-import { useSelectedNetwork } from "@/lib/store/settings";
 import { CONTRACTS } from "@/lib/stacks/contracts";
 import { useFeeEstimation } from "@/api/stacks/use-fee";
 import { FeeOption } from "../components/fee-selector";
 import { StackingScreenLayout } from "./Stacking.layout";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useSaveStackingDataMutation } from "@/api/stacking";
+import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
+import { useSelectedNetwork } from "@/lib/store/settings";
 
 export function StackingScreen() {
   const { stackingInfo, daysPerCycle, calculate } = useStacking();
   const { balance: stxBalance, lockedBalance } = useStxBalance();
-  const [address, setAddress] = useState<string>();
+  const { stxAddress: address } = useWalletAddresses();
   const { selectedNetwork } = useSelectedNetwork();
 
   const approvalSheetRef = useRef<BottomSheetModal>(null);
   const delegateSheetRef = useRef<BottomSheetModal>(null);
-
-  useEffect(() => {
-    walletKit.getWalletAccounts().then((accounts) => {
-      const networkKey = selectedNetwork as "mainnet" | "testnet";
-      if (accounts?.[0]?.addresses?.[networkKey]) {
-        setAddress(accounts[0].addresses[networkKey]);
-      }
-    });
-  }, [selectedNetwork]);
 
   const {
     status: poolStatus,
@@ -42,7 +33,7 @@ export function StackingScreen() {
     approveAsync,
     delegateAsync,
     revokeAsync,
-  } = useFastPool(address);
+  } = useFastPool(address ?? undefined);
 
   const isStacking = poolStatus?.isLocked ?? false;
 
@@ -61,7 +52,7 @@ export function StackingScreen() {
   const [hasChanges, setHasChanges] = useState(false);
   const [isValidUpdate, setIsValidUpdate] = useState(false);
   const [showPoolOptions, setShowPoolOptions] = useState(false);
-  const [showReceiveSheet, setShowReceiveSheet] = useState(false);
+  const [showTransferSheet, setShowTransferSheet] = useState(false);
   const [pendingAmount, setPendingAmount] = useState<number | undefined>(
     undefined,
   );
@@ -219,7 +210,7 @@ export function StackingScreen() {
 
   const handleStackOrIncrease = async () => {
     if (!hasSufficientFunds) {
-      setShowReceiveSheet(true);
+      setShowTransferSheet(true);
       return;
     }
 
@@ -288,7 +279,7 @@ export function StackingScreen() {
 
   const uiState = {
     showPoolOptions,
-    showReceiveSheet,
+    showTransferSheet,
     isProcessing: isProcessing || isDelegatePending,
     isApprovalPending,
     isDelegatePending,
@@ -305,7 +296,7 @@ export function StackingScreen() {
     onSelectFee: setSelectedFeeOption,
     onCustomFeeChange: setCustomFee,
     setShowPoolOptions,
-    setShowReceiveSheet,
+    setShowTransferSheet,
     onRevoke: handleRevoke,
   };
 

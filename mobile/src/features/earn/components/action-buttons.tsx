@@ -1,5 +1,9 @@
 import { Text, View, Button } from "@/components/ui";
-import { ArrowDownLeft, ArrowUpLeft, Plus } from "lucide-react-native";
+import {
+  ArrowDownLeft,
+  ArrowUpLeft,
+  ArrowLeftRight,
+} from "lucide-react-native";
 import { SwapActionIcon, BridgeActionIcon } from "@/components/ui/icons";
 import { EarnActions } from "../hooks/use-earn-actions";
 
@@ -15,9 +19,9 @@ const ACTIONS = [
     handler: (actions: EarnActions) => actions.handleSell,
   },
   {
-    label: "Receive",
-    icon: <Plus size={16} color="#0B0A0F" />,
-    handler: (actions: EarnActions) => actions.handleReceive,
+    label: "Transfer",
+    icon: <ArrowLeftRight size={16} color="#0B0A0F" />,
+    handler: (actions: EarnActions) => actions.handleTransfer,
   },
   {
     label: "Swap",

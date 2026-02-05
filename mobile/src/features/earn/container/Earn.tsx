@@ -5,7 +5,7 @@ import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useActiveAccountIndex } from "@/lib/store/settings";
 import formatCurrency from "@/lib/format/currency";
 import { useEarnActions } from "../hooks/use-earn-actions";
-import { ReceiveSheet } from "../components/receive-sheet";
+import { TransferSheet } from "@/features/transfer";
 import { BridgeSheet } from "../components/bridge-sheet";
 
 import EarnLayout from "./Earn.layout";
@@ -28,7 +28,6 @@ export default function EarnScreen() {
     const { dollars, cents } = formatCurrency(totalBalanceUsd);
     return `${dollars}${cents}`;
   }, [totalBalanceUsd]);
-  // Hide in-game points here; show $0 until real earnings data is available
   const totalEarnings = 0;
 
   return (
@@ -40,9 +39,9 @@ export default function EarnScreen() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
-      <ReceiveSheet
-        open={actions.receiveSheetOpen}
-        onClose={() => actions.setReceiveSheetOpen(false)}
+      <TransferSheet
+        open={actions.transferSheetOpen}
+        onClose={() => actions.setTransferSheetOpen(false)}
       />
       <BridgeSheet
         open={actions.bridgeSheetOpen}

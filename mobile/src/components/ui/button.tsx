@@ -85,6 +85,11 @@ const button = tv({
           "text-primary dark:text-white font-semibold font-instrument-sans",
         indicator: "text-primary dark:text-white",
       },
+      iconSquare: {
+        container: "my-0 bg-neutral-100 border border-neutral-300 rounded-xl",
+        label: "text-primary font-instrument-sans-medium text-sm",
+        indicator: "text-primary",
+      },
     },
     size: {
       default: {
@@ -107,6 +112,10 @@ const button = tv({
       icon: { container: "size-9" },
       iconCircle: {
         container: "h-14 w-14 items-center justify-center p-0",
+        label: "text-sm",
+      },
+      iconSquare: {
+        container: "w-9 h-9 items-center justify-center p-0",
         label: "text-sm",
       },
     },
@@ -201,11 +210,12 @@ const ButtonComponent = (
             </RNView>
           ) : (
             <RNView className="flex-row items-center justify-center gap-2">
-              {leftIcon}
+              {leftIcon && <RNView pointerEvents="none">{leftIcon}</RNView>}
               {showLabel ? (
                 <Text
                   testID={testID ? `${testID}-label` : undefined}
                   className={styles.label({ className: textClassName })}
+                  pointerEvents="none"
                 >
                   {text}
                 </Text>

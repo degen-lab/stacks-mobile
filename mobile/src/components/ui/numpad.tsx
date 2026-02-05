@@ -120,7 +120,10 @@ interface NumpadKeyProps {
 function NumpadKey({ element, label, onPress, onLongPress }: NumpadKeyProps) {
   return (
     <Pressable
-      className="h-full w-full items-center justify-center active:opacity-50"
+      className="h-full w-full items-center justify-center"
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.5 : 1,
+      })}
       accessibilityLabel={label}
       onPress={() => {
         Haptics.selectionAsync();
@@ -176,7 +179,7 @@ export function Numpad({
   }
 
   return (
-    <View className="flex-row flex-wrap gap-y-3">
+    <View className="flex-row flex-wrap gap-y-3" pointerEvents="box-none">
       {getLayout(mode, decimalSeparator).map((keyItem, index) => {
         return (
           <View
@@ -197,3 +200,5 @@ export function Numpad({
     </View>
   );
 }
+
+export default Numpad;

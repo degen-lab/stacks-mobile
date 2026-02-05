@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useTransak } from "@/features/transak/context/transak-context";
 
 export function useEarnActions() {
-  const [receiveSheetOpen, setReceiveSheetOpen] = useState(false);
+  const [transferSheetOpen, setTransferSheetOpen] = useState(false);
   const [bridgeSheetOpen, setBridgeSheetOpen] = useState(false);
   const { openTransak } = useTransak();
 
@@ -14,8 +14,8 @@ export function useEarnActions() {
     openTransak("STX", "sell");
   }, [openTransak]);
 
-  const handleReceive = () => {
-    setReceiveSheetOpen(true);
+  const handleTransfer = () => {
+    setTransferSheetOpen(true);
   };
 
   const handleSwap = () => {
@@ -30,11 +30,11 @@ export function useEarnActions() {
   return {
     handleBuy,
     handleSell,
-    handleReceive,
+    handleTransfer,
     handleSwap,
     handleBridge,
-    receiveSheetOpen,
-    setReceiveSheetOpen,
+    transferSheetOpen,
+    setTransferSheetOpen,
     bridgeSheetOpen,
     setBridgeSheetOpen,
   };

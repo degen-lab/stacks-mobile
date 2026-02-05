@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { useUserBalances } from "@/api/stacks/use-stacks-api";
-import { useSelectedNetwork } from "@/lib/store/settings";
-import { walletKit } from "@/lib/stacks/wallet";
 import { MICRO_STX } from "@/lib/format/currency";
+import { useWalletAddresses } from "./use-wallet-addresses";
 
 type UseStxBalanceResult = {
   balance: number;
@@ -15,16 +14,7 @@ type UseStxBalanceResult = {
 };
 
 export const useStxBalance = (accountIndex = 0): UseStxBalanceResult => {
-  const { selectedNetwork } = useSelectedNetwork();
-  const [address, setAddress] = useState<string | null>(null);
-
-  useEffect(() => {
-    walletKit.getWalletAccounts().then((accounts) => {
-      const networkKey = selectedNetwork as "mainnet" | "testnet";
-      const addr = accounts[accountIndex]?.addresses?.[networkKey];
-      setAddress(addr || null);
-    });
-  }, [accountIndex, selectedNetwork]);
+  const { stxAddress: address } = useWalletAddresses({ accountIndex });
 
   const { data, isLoading, error, refetch } = useUserBalances({
     variables: { address: address ?? "" },

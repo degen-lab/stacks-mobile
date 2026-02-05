@@ -17,7 +17,10 @@ const DEFAULT_FIAT = "USD";
 const DEFAULT_PAYMENT = "credit_debit_card";
 const DEFAULT_COUNTRY = "US";
 
-export const useTransakQuote = createQuery<TransakQuoteResponse, TransakQuoteVariables>({
+export const useTransakQuote = createQuery<
+  TransakQuoteResponse,
+  TransakQuoteVariables
+>({
   queryKey: ["transak-quote"],
   fetcher: async ({
     fiatAmount,

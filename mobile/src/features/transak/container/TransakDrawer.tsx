@@ -20,20 +20,15 @@ import {
   type TransakConfig,
   type OnTransakEvent,
 } from "@transak/ui-expo-sdk";
-import {
-  useActiveAccountIndex,
-  useSelectedNetwork,
-} from "@/lib/store/settings";
+import { useActiveAccountIndex } from "@/lib/store/settings";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useI18nSettings } from "@/hooks/use-i18n-settings";
+import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import {
   BottomSheetModal,
   BottomSheetFooter,
   BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
-import { getAddressForNetwork } from "@/lib/stacks/addresses";
-import { walletKit } from "@/lib/stacks/wallet";
-import { getBitcoinAddressForAccount } from "@/lib/bitcoin/addresses";
 import type { AssetOption, TransakDrawerRef } from "../types";
 import { TransakDrawerLayout } from "./TransakDrawer.layout";
 
@@ -61,11 +56,8 @@ export function TransakDrawer({ drawerRef }: Props) {
   const [action, setAction] = useState<"buy" | "sell">("buy");
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [step, setStep] = useState<"form" | "checkout">("form");
-  const { selectedNetwork } = useSelectedNetwork();
   const { activeAccountIndex } = useActiveAccountIndex();
   const { countryCode } = useI18nSettings();
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [quoteLimits, setQuoteLimits] = useState<Record<string, QuoteLimit>>(
     {},
   );
@@ -73,39 +65,11 @@ export function TransakDrawer({ drawerRef }: Props) {
   const isSell = action === "sell";
 
   const { availableBalance } = useStxBalance(activeAccountIndex);
+  const { stxAddress: walletAddress, btcAddress } = useWalletAddresses({
+    accountIndex: activeAccountIndex,
+  });
   const snapPoints = useMemo(() => ["85%", "85%"], []);
   const isCheckout = step === "checkout";
-
-  useEffect(() => {
-    let mounted = true;
-    const loadAddress = async () => {
-      try {
-        const accounts = await walletKit.getWalletAccounts();
-        const account = accounts[activeAccountIndex];
-        const address = account
-          ? getAddressForNetwork(account, selectedNetwork)
-          : null;
-        if (mounted) setWalletAddress(address);
-
-        // Load Bitcoin address
-        const btcAddr = await getBitcoinAddressForAccount(
-          activeAccountIndex,
-          selectedNetwork,
-        );
-        if (mounted) setBtcAddress(btcAddr);
-      } catch (e) {
-        console.error("Failed to load wallet address", e);
-        if (mounted) {
-          setWalletAddress(null);
-          setBtcAddress(null);
-        }
-      }
-    };
-    loadAddress();
-    return () => {
-      mounted = false;
-    };
-  }, [activeAccountIndex, selectedNetwork]);
 
   const debouncedAmount = useDebounce(amount, 500);
   const numericAmount = parseFloat(debouncedAmount);
