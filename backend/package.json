@@ -17,7 +17,9 @@
     "check:leaderboard": "tsx scripts/check-leaderboard.ts",
     "migration:generate": "npx typeorm-ts-node-commonjs migration:generate -d ./src/infra/db/dataSource.ts",
     "migration:run": "npx typeorm-ts-node-commonjs migration:run -d ./src/infra/db/dataSource.ts",
-    "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d ./src/infra/db/dataSource.ts"
+    "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d ./src/infra/db/dataSource.ts",
+    "load:authentication": "npx artillery run test/load/authentication.yml"
+
   },
   "author": "",
   "license": "ISC",
@@ -51,6 +53,7 @@
     "@stacks/network": "^7.2.0",
     "@stacks/transactions": "^7.3.0",
     "@stacks/wallet-sdk": "^7.2.0",
+    "artillery": "^2.0.30",
     "bip32": "^5.0.0",
     "bullmq": "^5.66.0",
     "dotenv": "^17.2.3",
@@ -67,5 +70,6 @@
     "tiny-secp256k1": "^2.2.4",
     "typeorm": "^0.3.28",
     "zod": "^4.1.13"
-  }
+  },
+  "packageManager": "pnpm@10.28.2+sha512.41872f037ad22f7348e3b1debbaf7e867cfd448f2726d9cf74c08f19507c31d2c8e7a11525b983febc2df640b5438dee6023ebb1f84ed43cc2d654d2bc326264"
 }
