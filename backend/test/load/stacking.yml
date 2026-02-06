@@ -1,0 +1,27 @@
+config:
+  target: "http://localhost:7070"
+  processor: "./helpers.js"
+  phases:
+    - duration: 8
+      arrivalRate: 11
+scenarios:
+    - name: "Stacking flow"
+      flow:
+        - post:
+            url: "/user/auth"
+            json:
+              googleId: "load_test_user_at_least_21_characters{{ $randomString(32) }}"
+              nickName: 'Nick_name'
+            capture:
+              - json: "$.token"
+                as: "token"
+              - json: "$.data.id"
+                as: "userId"
+        - function: "loadTxId"
+        - post:
+            url: "/stacking/save"
+            headers:
+              Authorization: "Bearer {{ token }}"
+            json:
+              txId: "{{ txId }}"
+              poolName: 'FastPool'

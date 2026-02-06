@@ -12,7 +12,7 @@ import { User } from '../../domain/entities/user';
 import { StackingPoolClientPort } from '../ports/stackingPoolClientPort';
 import { CachePort } from '../ports/cachePort';
 import { TransactionStatus } from '../../domain/entities/enums';
-import { FAST_POOL_STX_ADDRESS } from '../../shared/constants';
+import { FAST_POOL_STX_ADDRESS, NODE_ENV } from '../../shared/constants';
 
 export class StackingService {
   constructor(
@@ -38,12 +38,12 @@ export class StackingService {
     const parsedTxId = txId.slice(0, 2) !== '0x' ? '0x'.concat(txId) : txId;
     const transactionData: StackingTransactionData =
       await this.transactionClient.fetchStackingTransactionData(parsedTxId);
-    if (transactionData.functionName !== 'delegate-stx') {
+    if (NODE_ENV === "production" && transactionData.functionName !== 'delegate-stx') {
       throw new WrongStackingFunctionError(
         'Wrong contract call! the right pool stacking contract call should be: delegate-stx',
       );
     }
-    if (transactionData.delegateTo !== FAST_POOL_STX_ADDRESS) {
+    if (NODE_ENV === "production" && transactionData.delegateTo !== FAST_POOL_STX_ADDRESS) {
       throw new WrongStackingPoolError(
         `Error: Wrong Pool please use fast pool for a better tracking of your stacking data, address: ${FAST_POOL_STX_ADDRESS}`,
       );

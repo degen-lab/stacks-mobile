@@ -605,7 +605,11 @@ export class TransactionClient implements TransactionClientPort {
       url,
     });
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        "high-limit": "true",
+      }
+    });
     if (!response.ok) {
       logger.error({
         msg: 'Failed to fetch transaction status',

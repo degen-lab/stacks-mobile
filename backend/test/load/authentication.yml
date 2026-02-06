@@ -9,5 +9,5 @@ scenarios:
         - post:
             url: "/user/auth"
             json:
-              googleId: "load_test_user_at_least_21_characters{{ $randomNumber() }}"
+              googleId: "load_test_user_at_least_21_characters{{ $randomString(32) }}"
               nickName: 'Nick_name'
