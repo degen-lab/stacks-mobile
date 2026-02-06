@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { REFERRAL_BONUS } from '../../shared/constants';
 import { User } from '../entities/user';
 
@@ -13,7 +14,7 @@ export class UserDomainService {
     user.googleId = googleId;
     user.nickName = nickName;
     user.referrer = referrer;
-    user.referralCode = this.generateReferralCode(googleId);
+    user.referralCode = this.generateReferralCode();
     user.photoUri = photoUri;
     return user;
   }
@@ -32,8 +33,8 @@ export class UserDomainService {
     referrer.incrementPoints(REFERRAL_BONUS);
   }
 
-  private generateReferralCode(value: string) {
-    return Buffer.from(value).toString('hex').slice(0, 8).toUpperCase();
+  private generateReferralCode() {
+    return randomBytes(4).toString('hex').toUpperCase();
   }
 
   private scoreToPoints(score: number) {
