@@ -1,5 +1,5 @@
 import { cvToHex, ClarityValue } from "@stacks/transactions";
-import { stacksApiClient } from "../common/stacks-client";
+import { hiroApiClient, stacksApiDegenClient } from "../common/stacks-client";
 import { transformClarityValue } from "@/lib/stacks/transform-clarity-value";
 
 export const fetchReadOnly = async <T>(
@@ -8,11 +8,13 @@ export const fetchReadOnly = async <T>(
   functionName: string,
   functionArgs: ClarityValue[] = [],
   senderAddress: string = contractAddress,
+  useDegenApi: boolean = false, // Use DegenLab Stacks API instead of Hiro API
 ): Promise<T> => {
   const endpoint = `/v2/contracts/call-read/${contractAddress}/${contractName}/${functionName}`;
+  const apiClient = useDegenApi ? stacksApiDegenClient : hiroApiClient;
 
   try {
-    const response = await stacksApiClient.post(endpoint, {
+    const response = await apiClient.post(endpoint, {
       sender: senderAddress,
       arguments: functionArgs.map((arg) => cvToHex(arg)),
     });

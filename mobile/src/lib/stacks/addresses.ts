@@ -2,6 +2,7 @@ import type {
   NetworkType,
   WalletAccount,
 } from "@degenlab/stacks-wallet-kit-core";
+import { cvToHex, principalCV } from "@stacks/transactions";
 
 /**
  * Gets the appropriate address for a wallet account based on the network type.
@@ -33,3 +34,9 @@ export const formatAddress = (address: string): string => {
 
   return `${first4}...${last4}`;
 };
+
+export const principalHexFromAddress = (address: string | null): string =>
+  address ? cvToHex(principalCV(address)) : "";
+
+export const principalArgFromAddress = (address: string | null) =>
+  address ? [principalCV(address)] : [];

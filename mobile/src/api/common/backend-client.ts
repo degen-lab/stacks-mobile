@@ -69,6 +69,5 @@ export const createBackendClient = (
 
 export const gameClient = createBackendClient("game", { withAuth: true });
 export const defiClient = createBackendClient("defi");
-export const stackingClient = createBackendClient("dual-stacking");
+export const dualStackingClient = createBackendClient("dual-stacking");
 export const coinPricesClient = createBackendClient("coin-prices");
-export const projectRewardsClient = createBackendClient("project-rewards");

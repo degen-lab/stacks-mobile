@@ -10,7 +10,6 @@ export type BackendServiceType =
   | "dual-stacking"
   | "defi"
   | "coin-prices"
-  | "project-rewards"
   | "game";
 
 const getCurrentEnv = (): AppEnv => Env.APP_ENV as AppEnv;
@@ -58,7 +57,7 @@ const explorerUrlConfig: ExplorerUrl = {
   devnet: ["http://localhost:8000", "testnet"],
 };
 
-export const apiUrl: Record<AppEnv, ApiUrl> = {
+export const hiroApi: Record<AppEnv, ApiUrl> = {
   development: {
     mainnet: validateUrl("https://api.mainnet.hiro.so", "mainnet"),
     testnet: validateUrl("https://api.testnet.hiro.so", "testnet"),
@@ -76,10 +75,33 @@ export const apiUrl: Record<AppEnv, ApiUrl> = {
   },
 };
 
-export const getStacksApiBase = (
+export const getHiroApiBase = (
   network: NetworkType = getCurrentNetwork(),
   env: AppEnv = getCurrentEnv(),
-) => apiUrl[env][network];
+) => hiroApi[env][network];
+
+export const stacksDegenApi: Record<AppEnv, ApiUrl> = {
+  development: {
+    mainnet: validateUrl("https://stacks-api.degenlab.io", "mainnet"),
+    testnet: validateUrl("https://stacks-api.degenlab.io", "testnet"),
+    devnet: validateUrl("https://stacks-api.degenlab.io", "devnet"),
+  },
+  staging: {
+    mainnet: validateUrl("https://stacks-api.degenlab.io", "mainnet"),
+    testnet: validateUrl("https://stacks-api.degenlab.io", "testnet"),
+    devnet: validateUrl("https://stacks-api.degenlab.io", "devnet"),
+  },
+  production: {
+    mainnet: validateUrl("https://stacks-api.degenlab.io", "mainnet"),
+    testnet: validateUrl("https://stacks-api.degenlab.io", "testnet"),
+    devnet: validateUrl("https://stacks-api.degenlab.io", "devnet"),
+  },
+};
+
+export const getStacksDegenApiBase = (
+  network: NetworkType = getCurrentNetwork(),
+  env: AppEnv = getCurrentEnv(),
+) => stacksDegenApi[env][network];
 
 export const btcExploreUrl = (network: NetworkType, btcAddress: string) => {
   if (network === "mainnet") {
@@ -97,22 +119,19 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
       "dual-stacking":
         "https://dual-stacking-v2-server.degenlab.io/dual-stacking-server",
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
-      "coin-prices": "https://dual-stacking-server.degenlab.io/coin-prices",
-      "project-rewards": "https://testnet-services.degenlab.io/mocked-mainnet",
+      "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
       game: Env.API_URL || "http://localhost:7070",
     },
     testnet: {
-      "dual-stacking": "http://localhost:8080",
+      "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
       defi: "http://localhost:8081",
-      "coin-prices": "http://localhost:8082",
-      "project-rewards": "https://testnet-services.degenlab.io/mocked-mainnet",
+      "coin-prices": "https://testnet-services.degenlab.io",
       game: Env.API_URL || "http://localhost:7070",
     },
     devnet: {
       "dual-stacking": "http://localhost:8080",
       defi: "http://localhost:8081",
       "coin-prices": "http://localhost:8082",
-      "project-rewards": "https://testnet-services.degenlab.io/mocked-mainnet",
       game: Env.API_URL || "http://localhost:7070",
     },
   },
@@ -121,23 +140,21 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
       "dual-stacking":
         "https://dual-stacking-v2-server.degenlab.io/dual-stacking-server",
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
-      "coin-prices": "https://dual-stacking-server.degenlab.io/coin-prices",
-      "project-rewards": "https://testnet-services.degenlab.io/mocked-mainnet",
+      "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
       // TODO: Update with real staging URL
       game: "https://staging-api.blokx.com",
     },
     testnet: {
-      "dual-stacking": "https://testnet-services.degenlab.io/yield-server",
+      "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
       defi: "https://testnet-services.degenlab.io/defi-server",
-      "coin-prices": "https://testnet-services.degenlab.io/coin-prices",
-      "project-rewards": "https://testnet-services.degenlab.io/mocked-mainnet",
+      "coin-prices": "https://testnet-services.degenlab.io",
       // TODO: Update with real staging URL
       game: "https://staging-api.blokx.com",
     },
     devnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/yield-server",
       defi: "https://testnet-services.degenlab.io/defi-server",
-      "coin-prices": "https://testnet-services.degenlab.io/coin-prices",
+      "coin-prices": "https://testnet-services.degenlab.io",
       game: "https://staging-api.blokx.com",
     },
   },
@@ -146,21 +163,20 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
       "dual-stacking":
         "https://dual-stacking-v2-server.degenlab.io/dual-stacking-server",
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
-      "coin-prices": "https://dual-stacking-server.degenlab.io/coin-prices",
-      "project-rewards": "https://testnet-services.degenlab.io/mocked-mainnet",
+      "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
       // TODO: Update with real prod URL
       game: "https://api.blokx.com",
     },
     testnet: {
-      "dual-stacking": "https://testnet-services.degenlab.io/yield-server",
+      "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
       defi: "https://testnet-services.degenlab.io/defi-server",
-      "coin-prices": "https://testnet-services.degenlab.io/coin-prices",
+      "coin-prices": "https://testnet-services.degenlab.io",
       game: "https://api.blokx.com",
     },
     devnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/yield-server",
       defi: "https://testnet-services.degenlab.io/defi-server",
-      "coin-prices": "https://testnet-services.degenlab.io/coin-prices",
+      "coin-prices": "https://testnet-services.degenlab.io",
       game: "https://api.blokx.com",
     },
   },
@@ -191,7 +207,7 @@ export const getChain = (network: NetworkType) => {
 export const transactionUrl: TransactionMapping = (txId: string) => {
   const env = getCurrentEnv();
   const network = getCurrentNetwork();
-  const apiBase = apiUrl[env][network];
+  const apiBase = hiroApi[env][network];
   const [explorerBase, chainType] = explorerUrlConfig[network];
 
   return {
@@ -203,7 +219,7 @@ export const transactionUrl: TransactionMapping = (txId: string) => {
 export const getExplorerUrl: ExplorerUserAddressUrl = (userAddress) => {
   const env = getCurrentEnv();
   const network = getCurrentNetwork();
-  const apiBase = apiUrl[env][network];
+  const apiBase = hiroApi[env][network];
   const [explorerBase, chainType] = explorerUrlConfig[network];
 
   return {

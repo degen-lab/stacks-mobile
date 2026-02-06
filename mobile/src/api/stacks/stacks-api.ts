@@ -1,4 +1,4 @@
-import { stacksApiClient } from "@/api/common/stacks-client";
+import { hiroApiClient } from "@/api/common/stacks-client";
 
 export const endpoints = {
   INFO: "/v2/info",
@@ -32,7 +32,7 @@ export const fetchFromStacksApi = async <T = unknown>(
   data?: unknown,
 ): Promise<T> => {
   const url = constructUrl(endpoint, params);
-  const response = await stacksApiClient({
+  const response = await hiroApiClient({
     url,
     method,
     data,

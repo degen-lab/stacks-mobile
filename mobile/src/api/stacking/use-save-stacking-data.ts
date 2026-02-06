@@ -1,13 +1,11 @@
 import type { AxiosError } from "axios";
 import { createMutation } from "react-query-kit";
 
-import { createBackendClient } from "../common/backend-client";
 import type {
   SaveStackingDataRequest,
   SaveStackingDataResponse,
 } from "./types";
-
-const stackingClient = createBackendClient("dual-stacking", { withAuth: true });
+import { gameClient } from "../common";
 
 type Variables = SaveStackingDataRequest;
 type Response = SaveStackingDataResponse;
@@ -18,7 +16,7 @@ export const useSaveStackingDataMutation = createMutation<
   AxiosError
 >({
   mutationFn: async (variables) =>
-    stackingClient({
+    gameClient({
       url: "stacking/save",
       method: "POST",
       data: variables,

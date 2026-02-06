@@ -2,7 +2,7 @@ import { createQuery } from "react-query-kit";
 
 import { endpoints, fetchFromStacksApi } from "@/api/stacks/stacks-api";
 import { PoxInfo } from "@/api/stacks/types/pox-info";
-import { UserBalances } from "@/api/stacks/types/user-balances";
+import { AddressBalanceResponse } from "@/api/stacks/types/user-balances";
 import { Transaction } from "@/api/stacks/types/transaction";
 
 type StacksApiResponse = Record<string, unknown>;
@@ -24,11 +24,15 @@ export const usePoxData = createQuery<PoxInfo, void>({
   fetcher: () => fetchFromStacksApi<PoxInfo>(endpoints.POX),
 });
 
-export const useUserBalances = createQuery<UserBalances, AddressVars>({
-  queryKey: ["stacks-user-balances"],
-  fetcher: ({ address }) =>
-    fetchFromStacksApi<UserBalances>(endpoints.USER_BALANCES, { address }),
-});
+export const useUserBalances = createQuery<AddressBalanceResponse, AddressVars>(
+  {
+    queryKey: ["stacks-user-balances"],
+    fetcher: ({ address }) =>
+      fetchFromStacksApi<AddressBalanceResponse>(endpoints.USER_BALANCES, {
+        address,
+      }),
+  },
+);
 
 export const useBurnchainRewards = createQuery<
   StacksApiResponse,
