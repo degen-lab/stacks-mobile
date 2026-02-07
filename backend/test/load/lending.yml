@@ -1,0 +1,45 @@
+config:
+  target: "http://localhost:7070"
+  processor: "./helpers.js"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+scenarios:
+  - name: "DeFi lending flow"
+    flow:
+      - post:
+          url: "/user/auth"
+          json:
+            googleId: "load_test_user_at_least_21_characters{{ $randomString(32) }}"
+            nickName: 'Nick_name'
+          capture:
+            - json: "$.token"
+              as: "token"
+            - json: "$.data.id"
+              as: "userId"
+      
+      # Step 1: Get lending assets and capture first asset
+      - get:
+          url: "/defi/lending-assets"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            - json: "$.data.STX.asset"
+              as: "assetId"
+            - json: "$.data.STX.poolReserve"
+              as: "assetContract"
+      
+      # Step 2: Generate fake txId for load testing
+      - function: "generateFakeTxId"
+      
+      # Step 3: Save lending operation (will fail validation but tests endpoint under load)
+      - post:
+          url: "/defi/save-lending-operation"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            txId: "{{ fakeTxId }}"
+            senderAddress: "SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7"
+            amount: 1000000
+            assetId: "{{ assetId }}"
+            assetContract: "{{ assetContract }}"

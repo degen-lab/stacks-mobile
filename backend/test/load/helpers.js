@@ -24,5 +24,17 @@ module.exports = {
       }
     }
     return done();
+  },
+  
+  generateFakeTxId: function(context, events, done) {
+    // Generate a fake txId for load testing (0x + 64 hex chars)
+    // Format: 0x + 64 random hex characters
+    const hexChars = '0123456789abcdef';
+    let txId = '0x';
+    for (let i = 0; i < 64; i++) {
+      txId += hexChars[Math.floor(Math.random() * hexChars.length)];
+    }
+    context.vars.fakeTxId = txId;
+    return done();
   }
 };
