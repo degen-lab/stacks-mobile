@@ -1,0 +1,51 @@
+config:
+  target: "http://localhost:7070"
+  processor: "./helpers.js"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+scenarios:
+  - name: "DeFi swap flow"
+    flow:
+      - post:
+          url: "/user/auth"
+          json:
+            googleId: "load_test_user_at_least_21_characters{{ $randomString(32) }}"
+            nickName: 'Nick_name'
+          capture:
+            - json: "$.token"
+              as: "token"
+            - json: "$.data.id"
+              as: "userId"
+      
+      # Step 1: Get token list and capture first tokenId
+      - get:
+          url: "/defi/token-list"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            - json: "$.data[0].token-id"
+              as: "tokenId"
+      
+      # Step 2: Get possible pairs for that token and capture a tokenOutId
+      - get:
+          url: "/defi/possible-pair-list"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          qs:
+            tokenId: "token-stx"
+          capture:
+            - json: "$.data"
+              as: "possiblePairs"
+      - function: "extractTokenOutId"
+      
+      # Step 3: Get swap params using the pair from step 2
+      - get:
+          url: "/defi/swap-params"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          qs:
+            tokenInId: "{{ tokenId }}"
+            tokenOutId: "{{ tokenOutId }}"
+            amount: "1000000"   # 1 STX in micro-STX
+            senderAddress: "SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7"  # Test address

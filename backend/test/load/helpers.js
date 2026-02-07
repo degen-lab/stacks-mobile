@@ -11,5 +11,18 @@ module.exports = {
     const randomIndex = Math.floor(Math.random() * txIds.length);
     context.vars.txId = txIds[randomIndex].txId;
     return done();
+  },
+  
+  extractTokenOutId: function(context, events, done) {
+    // Extract first tokenOutId from possible pairs response
+    // Response structure: { "token-xrp": [...], "token-abc": [...] }
+    const possiblePairs = context.vars.possiblePairs;
+    if (possiblePairs && typeof possiblePairs === 'object') {
+      const keys = Object.keys(possiblePairs);
+      if (keys.length > 0) {
+        context.vars.tokenOutId = keys[0]; // Get first available token
+      }
+    }
+    return done();
   }
 };

@@ -55,7 +55,7 @@ export default function getDefiRoutes(
     },
   });
 
-  app.get<{ Params: { tokenId: string } }>('/possible-pair-list', {
+  app.get<{ Querystring: { tokenId: string } }>('/possible-pair-list', {
     preHandler: app.authenticateUser,
     config: {
       rateLimit: rateLimitOptions({
@@ -65,8 +65,12 @@ export default function getDefiRoutes(
     },
     handler: async (req, res) => {
       try {
-        const { tokenId } = req.params as { tokenId: string };
+        const { tokenId } = req.query as { tokenId: string };
         const possiblePairList = await defiService.getPossiblePairList(tokenId);
+        logger.info({
+          msg: 'Possible pair list retrieved successfully',
+          data: possiblePairList,
+        })
         return res.status(200).send({
           success: true,
           message: 'Possible pair list retrieved successfully',
@@ -130,6 +134,13 @@ export default function getDefiRoutes(
             senderAddress,
             amount,
           );
+        logger.info({
+          msg: 'Swap params retrieved successfully',
+          data: {
+            defiOperation,
+            contractCallParams: serializeBigInt(contractCallParams),
+          },
+        })
         return res.status(200).send({
           success: true,
           message: 'Swap params retrieved successfully',
