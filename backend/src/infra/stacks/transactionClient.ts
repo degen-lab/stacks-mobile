@@ -20,6 +20,7 @@ import {
   TxBroadcastResult,
   uintCV,
 } from '@stacks/transactions';
+import { CachePort } from '../../application/ports/cachePort';
 import { TransactionClientPort } from '../../application/ports/transactionClientPort';
 import { createNetwork, StacksNetwork } from '@stacks/network';
 import {
@@ -58,14 +59,18 @@ export class TransactionClient implements TransactionClientPort {
   private network: StacksNetwork;
   private sponsorNonce: number | null = null;
   private nonceLock: Promise<void> = Promise.resolve();
+  private cacheClient?: CachePort;
+  private readonly TOURNAMENT_ID_CACHE_KEY = 'tournament:id';
+  private readonly TOURNAMENT_ID_CACHE_TTL = 60; // Cache for 60 seconds
 
-  constructor() {
+  constructor(cacheClient?: CachePort) {
     this.network =
       STACKS_NETWORK === 'mainnet'
         ? createNetwork('mainnet')
         : STACKS_NETWORK === 'testnet'
           ? createNetwork('testnet')
           : createNetwork('devnet');
+    this.cacheClient = cacheClient;
   }
   async fetchPoxCycleData(): Promise<{ cycleId: number }> {
     const url = `${this.network.client.baseUrl}/v2/pox`;
@@ -513,6 +518,28 @@ export class TransactionClient implements TransactionClientPort {
   }
 
   async getTournamentId(): Promise<number> {
+    // Try to get from cache first
+    if (this.cacheClient) {
+      try {
+        const cachedTournamentId = await this.cacheClient.get<number>(
+          this.TOURNAMENT_ID_CACHE_KEY,
+        );
+        if (cachedTournamentId !== undefined) {
+          logger.debug({
+            msg: 'Tournament ID retrieved from cache',
+            tournamentId: cachedTournamentId,
+          });
+          return cachedTournamentId;
+        }
+      } catch (error) {
+        // Cache miss or error - continue to fetch from blockchain
+        logger.debug({
+          msg: 'Tournament ID not found in cache, fetching from blockchain',
+        });
+      }
+    }
+
+    // Fetch from blockchain
     const [contractAddress, contractName] = GAME_CONTRACT_ADDRESS.split('.');
     const result = await fetchCallReadOnlyFunction({
       contractName,
@@ -522,9 +549,39 @@ export class TransactionClient implements TransactionClientPort {
       senderAddress: ADMIN_ADDRESS,
       network: this.network,
     });
-    return Number(cvToValue(result));
+    const tournamentId = Number(cvToValue(result));
+
+    // Cache the result
+    if (this.cacheClient) {
+      try {
+        await this.cacheClient.set(
+          this.TOURNAMENT_ID_CACHE_KEY,
+          tournamentId,
+          this.TOURNAMENT_ID_CACHE_TTL,
+        );
+        logger.debug({
+          msg: 'Tournament ID cached',
+          tournamentId,
+          ttl: this.TOURNAMENT_ID_CACHE_TTL,
+        });
+      } catch (error) {
+        // Log but don't fail if caching fails
+        logger.warn({
+          msg: 'Failed to cache tournament ID',
+          err: error,
+        });
+      }
+    }
+
+    return tournamentId;
   }
 
+  /**
+   * Get message hash from game contract (same as contract's make-message-hash).
+   * Must match game.clar: sha256(DOMAIN || user || tournament-id || score || nonce).
+   * Reference: smart-contracts/tests/signature.test.ts (getContractMessageHash),
+   * smart-contracts/index.js - we call the contract instead of recomputing in JS.
+   */
   private async getContractMessageHash(
     address: string,
     tournamentId: number,

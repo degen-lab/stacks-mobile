@@ -62,6 +62,22 @@ export class TransactionService {
         user.canSubmitSponsoredWeeklyContestSubmission();
       }
     }
+
+    const existingPending = await this.entityManager.find(Submission, {
+      where: {
+        user: { id: userId },
+        transactionStatus: In([
+          TransactionStatus.Pending,
+          TransactionStatus.Processing,
+        ]),
+      },
+    });
+    if (existingPending.length > 0) {
+      throw new TransactionAlreadySubmittedError(
+        `Can't create a new submission while you have a pending or processing transaction`,
+      );
+    }
+
     const tournamentId = await this.transactionClient.getTournamentId();
     const submission = this.submissionDomainService.createSubmission(
       address,

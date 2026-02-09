@@ -15,13 +15,15 @@
     "submit-scores": "tsx scripts/submit-scores-loop.ts",
     "seed:leaderboard": "tsx scripts/seed-leaderboard.ts",
     "check:leaderboard": "tsx scripts/check-leaderboard.ts",
+    "deploy:contracts": "tsx scripts/deploy-contracts.ts",
     "migration:generate": "npx typeorm-ts-node-commonjs migration:generate -d ./src/infra/db/dataSource.ts",
     "migration:run": "npx typeorm-ts-node-commonjs migration:run -d ./src/infra/db/dataSource.ts",
     "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d ./src/infra/db/dataSource.ts",
     "load:authentication": "npx artillery run test/load/authentication.yml",
     "load:stacking": "npx artillery run test/load/stacking.yml",
     "load:swap": "npx artillery run test/load/swap.yml",
-    "load:lending": "npx artillery run test/load/lending.yml"
+    "load:lending": "npx artillery run test/load/lending.yml",
+    "load:reward-distribution": "npx artillery run test/load/reward-distribution.yml"
 
 
   },

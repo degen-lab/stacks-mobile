@@ -10,9 +10,13 @@ export class RedisCacheAdapter implements CachePort {
     const parsedData: T = JSON.parse(response);
     return parsedData;
   }
-  async set<T>(key: string, value: T): Promise<void> {
+  async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
     const parsedValue = JSON.stringify(value);
-    await redis.set(key, parsedValue);
+    if (ttlSeconds) {
+      await redis.set(key, parsedValue, 'EX', ttlSeconds);
+    } else {
+      await redis.set(key, parsedValue);
+    }
   }
   async delete(key: string): Promise<void> {
     await redis.del(key);

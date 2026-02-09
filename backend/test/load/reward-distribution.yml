@@ -1,0 +1,64 @@
+config:
+  target: "http://localhost:7070"
+  processor: "./helpers.js"
+  phases:
+    # 30 test accounts; each VU gets account by (userId % 30). For no user-nonce conflicts use ≤30 VUs:
+    - duration: 60
+      arrivalCount: 30
+    # - duration: 60
+    #   arrivalRate: 10
+scenarios:
+  - name: "Reward distribution - Create and broadcast transaction"
+    flow:
+      # Step 1: Authenticate user
+      - post:
+          url: "/user/auth"
+          json:
+            googleId: "load_test_user_at_least_21_characters{{ $randomString(32) }}"
+            nickName: 'Nick_name'
+          capture:
+            - json: "$.token"
+              as: "token"
+            - json: "$.data.id"
+              as: "userId"
+      
+      # Step 2: Load Stacks account (address, private key, and derive public key)
+      - function: "loadStacksAccount"
+      
+      # Step 3: Request seed (mirrors app: seed is requested before a run; we use /create for tx, not validate)
+      - post:
+          url: "/session/generate-seed"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json: {}
+          capture:
+            - json: "$.data.seed"
+              as: "seed"
+            - json: "$.data.signature"
+              as: "signature"
+      
+      # Step 4: Build create-transaction body and get unsigned tx (testing endpoint; no minigame play)
+      - function: "buildCreateTransactionBody"
+      - post:
+          url: "/transaction/create"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json: "{{ createTransactionBody }}"
+          capture:
+            - json: "$.data.unsignedTransaction.serializedTx"
+              as: "unsignedTransaction"
+            - json: "$.data.unsignedTransaction.submission.id"
+              as: "submissionId"
+      
+      # Step 5: Sign the transaction
+      - function: "signTransaction"
+      
+      # Step 6: Build broadcast body (ensures submissionId is a number)
+      - function: "buildBroadcastBody"
+      
+      # Step 7: Broadcast the signed transaction (sponsored)
+      - post:
+          url: "/transaction/broadcast-sponsored"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json: "{{ broadcastBody }}"

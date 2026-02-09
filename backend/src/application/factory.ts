@@ -64,7 +64,7 @@ export class ServiceFactory {
           new UserDomainService(),
           this.getStreakService(),
           new GameSessionService(),
-          new TransactionClient(),
+          new TransactionClient(this.cacheAdapter),
           this.dataSource.createEntityManager(),
         ),
       );
@@ -77,7 +77,7 @@ export class ServiceFactory {
       this.services.set(
         'transactionService',
         new TransactionService(
-          new TransactionClient(),
+          new TransactionClient(this.cacheAdapter),
           new SubmissionDomainService(),
           this.dataSource.createEntityManager(),
         ),
@@ -119,7 +119,7 @@ export class ServiceFactory {
         'rewardsService',
         new RewardsService(
           new RewardsCalculator(),
-          new TransactionClient(),
+          new TransactionClient(this.cacheAdapter),
           this.dataSource.createEntityManager(),
         ),
       );
@@ -148,7 +148,7 @@ export class ServiceFactory {
         'stackingService',
         new StackingService(
           this.dataSource.createEntityManager(),
-          new TransactionClient(),
+          new TransactionClient(this.cacheAdapter),
           new FastPoolClient(),
           this.cacheAdapter,
         ),
@@ -164,7 +164,7 @@ export class ServiceFactory {
         new DefiService(
           this.dataSource.createEntityManager(),
           bitflowClient,
-          new TransactionClient(),
+          new TransactionClient(this.cacheAdapter),
           new ZestLendingClient(),
         ),
       );
