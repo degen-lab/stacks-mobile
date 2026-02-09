@@ -15,6 +15,10 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import { WarningLabel } from "./warning-label";
+import {
+  ContractTxDetails,
+  type ContractArgument,
+} from "./contract-tx-details";
 
 type SheetState = "initial" | "submitting" | "error";
 type SubmissionMethod = "sponsored" | "wallet";
@@ -39,12 +43,16 @@ type TournamentSubmissionSheetProps = {
   walletHasEnoughBalance?: boolean;
   onAddFunds?: () => void;
   showRankChange?: boolean;
-  onOpenContractDetails?: () => void;
   snapPoints?: string[];
   resetKey?: string | number;
   sponsoredSubmissionsLeft?: number;
   weeklyContestSubmissionsLeft?: number;
   raffleSubmissionsLeft?: number;
+  // Transaction details
+  network?: string;
+  contractAddress?: string;
+  functionName?: string;
+  contractArgs?: ContractArgument[];
 };
 
 export const TournamentSubmissionSheet = React.forwardRef<
@@ -66,7 +74,6 @@ export const TournamentSubmissionSheet = React.forwardRef<
       walletHasEnoughBalance,
       onAddFunds,
       showRankChange = true,
-      onOpenContractDetails,
       snapPoints,
       resetKey,
       estimatedFee,
@@ -75,6 +82,10 @@ export const TournamentSubmissionSheet = React.forwardRef<
       sponsoredSubmissionsLeft,
       weeklyContestSubmissionsLeft,
       raffleSubmissionsLeft,
+      network,
+      contractAddress,
+      functionName,
+      contractArgs,
     },
     ref,
   ) => {
@@ -85,6 +96,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
       null,
     );
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+    const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
 
     const resetState = React.useCallback(() => {
       setSheetState("initial");
@@ -211,80 +223,83 @@ export const TournamentSubmissionSheet = React.forwardRef<
         <View className="px-6 ">
           {sheetState === "initial" ? (
             <>
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xl font-matter text-primary dark:text-white">
-                  {title}
-                </Text>
-
-                <Button
-                  label="Transaction Settings"
-                  onPress={onOpenContractDetails}
-                  variant="link"
-                  size="sm"
+              {/* Transaction Details */}
+              {network && contractAddress && functionName && (
+                <ContractTxDetails
+                  title={title}
+                  network={network}
+                  contractAddress={contractAddress}
+                  functionName={functionName}
+                  contractArgs={contractArgs}
+                  onAdvancedToggle={setShowAdvancedOnly}
                 />
-              </View>
+              )}
 
-              {showRankChange ? (
+              {!showAdvancedOnly && (
                 <>
-                  {estimatedFee && cappedFee > 0 && (
-                    <View className="my-2">
-                      <WarningLabel
-                        label={`We are using blockchain to ensure transparency. \n Transaction fee:  ~${cappedFee} STX.`}
+                  {showRankChange ? (
+                    <>
+                      {estimatedFee && cappedFee > 0 && (
+                        <View className="my-2">
+                          <WarningLabel
+                            label={`We are using blockchain to ensure transparency. \n Transaction fee:  ~${cappedFee} STX.`}
+                          />
+                        </View>
+                      )}
+                      <WeeklyTournamentPreview
+                        projectedUser={projectedUser ?? undefined}
+                        avatarFallback={fallbackAvatar}
                       />
+                    </>
+                  ) : (
+                    <View className="mt-2 mb-4">
+                      <View className="mb-4">
+                        <WarningLabel
+                          label={`We are using blockchain to ensure transparency. \n Transaction fee:  ~${cappedFee} STX.`}
+                        />
+                      </View>
+                      <View className="flex-row items-center justify-center gap-2 my-4">
+                        {Array.from({ length: 3 }).map((_, index) => (
+                          <ClassicTicket
+                            key={index}
+                            active={index < (sponsoredSubmissionsLeft ?? 0)}
+                            backgroundColor={colors.neutral[50]}
+                          />
+                        ))}
+                      </View>
+                      <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
+                        Higher scores = increased chance of winning
+                      </Text>
+                      <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
+                        More submissions = increased chance of winning
+                      </Text>
                     </View>
                   )}
-                  <WeeklyTournamentPreview
-                    projectedUser={projectedUser ?? undefined}
-                    avatarFallback={fallbackAvatar}
-                  />
-                </>
-              ) : (
-                <>
-                  <View className="mt-2 mb-4">
-                    <View className="mb-4">
-                      <WarningLabel
-                        label={`We are using blockchain to ensure transparency. \n Transaction fee:  ~${cappedFee} STX.`}
-                      />
-                    </View>
-                    <View className="flex-row items-center justify-center gap-2 my-4">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <ClassicTicket
-                          key={index}
-                          active={index < (sponsoredSubmissionsLeft ?? 0)}
-                          backgroundColor={colors.neutral[50]}
-                        />
-                      ))}
-                    </View>
-                    <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
-                      Higher scores = increased chance of winning
-                    </Text>
-                    <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
-                      More submissions = increased chance of winning
-                    </Text>
-                  </View>
                 </>
               )}
 
-              <View className="mt-8 gap-6">
-                <Button
-                  label={sponsoredLabel}
-                  onPress={() => handleSubmit("sponsored")}
-                  disabled={!canUseSponsoredButton}
-                  variant="gamePrimary"
-                  size="game"
-                  testID={`tournament-submit-sponsored-${tournamentId}`}
-                />
-                <OrDivider />
-                <Button
-                  label={walletCtaLabel}
-                  onPress={handleWalletPress}
-                  disabled={!canSubmit}
-                  variant="gameOutline"
-                  className="rounded-none"
-                  size="game"
-                  testID={`tournament-submit-wallet-${tournamentId}`}
-                />
-              </View>
+              {!showAdvancedOnly && (
+                <View className="mt-8 gap-6">
+                  <Button
+                    label={sponsoredLabel}
+                    onPress={() => handleSubmit("sponsored")}
+                    disabled={!canUseSponsoredButton}
+                    variant="gamePrimary"
+                    size="game"
+                    testID={`tournament-submit-sponsored-${tournamentId}`}
+                  />
+                  <OrDivider />
+                  <Button
+                    label={walletCtaLabel}
+                    onPress={handleWalletPress}
+                    disabled={!canSubmit}
+                    variant="gameOutline"
+                    className="rounded-none"
+                    size="game"
+                    testID={`tournament-submit-wallet-${tournamentId}`}
+                  />
+                </View>
+              )}
             </>
           ) : null}
 

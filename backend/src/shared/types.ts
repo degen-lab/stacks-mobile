@@ -137,8 +137,8 @@ export type TransakAccessToken = {
 };
 
 export enum AppPlatform {
-  IOS,
-  ANDROID,
+  IOS = 'IOS',
+  ANDROID = 'ANDROID',
 }
 
 export type StxTransactionData = {

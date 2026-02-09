@@ -6,7 +6,7 @@ import Animated, {
 import { Skin } from "./types";
 import { Pressable, View } from "react-native";
 import { LockIcon } from "lucide-react-native";
-import { colors } from "@/components/ui";
+import colors from "@/components/ui/colors";
 import { SKIN_ITEM_SIZE } from "./skin-selector";
 
 type SkinItemProps = {

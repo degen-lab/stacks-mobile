@@ -4,12 +4,12 @@ import { useCallback } from "react";
 import {
   useBroadcastTransactionMutation,
   useCreateTransactionMutation,
-} from "@/api/transaction";
+} from "@/api/game/transaction";
 import type { UserProfile } from "@/api/user/types";
 import { useSignTransaction } from "@/hooks/use-sign-transaction";
-import { CONTRACTS } from "@/lib/contracts";
+import { CONTRACTS } from "@/lib/stacks/contracts";
 import { SubmissionType } from "@/lib/enums";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 
 import type { SubmissionContext } from "./useSubmissionSheet";
 import type { RunSummary } from "../utils/runSummary";
@@ -158,7 +158,7 @@ export const useSubmissionActions = ({
         ? SubmissionType.Lottery
         : SubmissionType.WeeklyContest;
     const [address, contractName] =
-      CONTRACTS[selectedNetwork]?.game?.CONTRACT?.split(".") ?? [];
+      CONTRACTS[selectedNetwork]?.game?.split(".") ?? [];
     if (!address || !contractName) {
       throw new Error("Invalid contract address or name.");
     }

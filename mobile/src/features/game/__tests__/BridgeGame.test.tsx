@@ -77,6 +77,14 @@ const mockConsumeRevive = jest.fn();
 
 // --- MOCKS SETUP ---
 
+jest.mock("@/lib/env", () => ({
+  Env: {
+    APP_ENV: "development",
+    NETWORK: "testnet",
+    API_URL: "http://localhost:7070",
+  },
+}));
+
 jest.mock("../engine", () => ({
   StacksBridgeEngine: jest.fn(() => mockEngine),
 }));
@@ -99,16 +107,24 @@ jest.mock("@/api/user", () => ({
   useSponsoredSubmissionsLeft: () => mockSponsoredSubmissionsLeft(),
 }));
 
-jest.mock("@/api/tournament", () => ({
+jest.mock("@/api/game/tournament", () => ({
   useTournamentLeaderboard: () => mockTournamentLeaderboard(),
   useTournamentData: () => mockTournamentData(),
   useCurrentTournamentSubmissions: () => mockCurrentTournamentSubmissions(),
 }));
 
-jest.mock("@/api/transaction", () => ({
+jest.mock("@/api/game/transaction", () => ({
   useBroadcastSponsoredTransactionMutation: () => ({
     mutateAsync: mockBroadcastSponsoredTransaction,
   }),
+}));
+
+// Mock the barrel export @/api to ensure mocks are used
+jest.mock("@/api", () => ({
+  ...jest.requireActual("@/api"),
+  useTournamentLeaderboard: () => mockTournamentLeaderboard(),
+  useTournamentData: () => mockTournamentData(),
+  useCurrentTournamentSubmissions: () => mockCurrentTournamentSubmissions(),
 }));
 
 jest.mock("@/hooks/use-stx-balance", () => ({
@@ -123,6 +139,9 @@ jest.mock("@/lib/store/auth", () => ({
 
 jest.mock("@/lib/store/settings", () => ({
   useSelectedNetwork: () => ({ selectedNetwork: "testnet" }),
+  useSettingsStore: {
+    getState: () => ({ network: "testnet" }),
+  },
 }));
 
 jest.mock("../hooks/useAutoStart", () => ({

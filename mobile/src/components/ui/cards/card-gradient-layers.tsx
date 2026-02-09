@@ -1,10 +1,9 @@
-import * as Clipboard from "expo-clipboard";
 import { Copy } from "lucide-react-native";
-import { StyleProp, ViewStyle } from "react-native";
-import { showMessage } from "react-native-flash-message";
+import { Pressable, StyleProp, View, ViewStyle } from "react-native";
 
-import { Pressable, Text, View } from "@/components/ui";
+import { Text } from "../text";
 import { GradientBorderMultiple } from "@/components/ui/gradient-border-multiple";
+import { copyToClipboard } from "@/lib/clipboard";
 
 type ReferralCodeCardProps = {
   referralCode?: string;
@@ -38,13 +37,8 @@ export function CardGradientLayers({
 }: ReferralCodeCardProps) {
   const handleCopy = async () => {
     if (!hasReferralCode) return;
-    try {
-      await Clipboard.setStringAsync(referralCode);
-      showMessage({ message: "Code copied!", type: "success", duration: 1500 });
-      onCopied?.();
-    } catch {
-      showMessage({ message: "Failed to copy", type: "danger" });
-    }
+    await copyToClipboard(referralCode, "Code copied!");
+    onCopied?.();
   };
 
   return (
@@ -63,7 +57,7 @@ export function CardGradientLayers({
         <Pressable
           onPress={handleCopy}
           disabled={!hasReferralCode}
-          className={`rounded-[16px] bg-sand-100 p-4 active:opacity-90 ${
+          className={`rounded-2xl bg-sand-100 p-4 active:opacity-90 ${
             hasReferralCode ? "" : "opacity-70"
           }`}
         >

@@ -32,7 +32,8 @@ module.exports = {
         },
         surface: {
           tertiary: '#F7F6F5',
-          secondary: '#D5D3D1'
+          secondary: '#D5D3D1',
+          primary: '#EAE8E6',
         },
         feedback: {
           yellow: {
@@ -42,12 +43,26 @@ module.exports = {
           green: {
             DEFAULT: '#22C55E',
             100: '#F0FDF4',
+            150: '#C2E7D0',
             700: '#15803D'
           }
         },
         stacks: {
           'blood-orange': '#FC6432',
           'accent-400': '#FF8A64',
+        },
+        bitcoin: {
+          DEFAULT: '#F7931A',
+          50: '#FEF7EC',
+          100: '#FCEFD9',
+          200: '#F9DFB3',
+          300: '#F7CF8D',
+          400: '#F4BF67',
+          500: '#F7931A',
+          600: '#E08516',
+          700: '#C97713',
+          800: '#B26910',
+          900: '#9B5B0D',
         },
         border: {
           primary: '#BFBDBA',

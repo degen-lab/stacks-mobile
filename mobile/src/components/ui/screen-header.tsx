@@ -1,8 +1,10 @@
-import { Pressable, Text, View, colors } from "@/components/ui";
+import { Pressable, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "./text";
+import colors from "./colors";
 
 type ScreenHeaderProps = {
   title: string;
@@ -35,8 +37,8 @@ export function ScreenHeader({
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="bg-surface-tertiary">
-      <View className="flex-row items-center px-5 py-4 border-b border-surface-secondary">
+    <SafeAreaView edges={[]} className="bg-surface-tertiary">
+      <View className="flex-row items-center px-4 py-4 border-b border-surface-secondary">
         <Pressable
           onPress={handleBack}
           className="w-10 h-10 items-center justify-center"

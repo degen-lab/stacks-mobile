@@ -1,4 +1,4 @@
-import type { StoreItem, StorePurchaseResponse } from "@/api/store/types";
+import type { StoreItem, StorePurchaseResponse } from "@/api/game/store/types";
 import type { UserItem } from "@/api/user/types";
 import { ItemType, ItemVariant, PurchaseType } from "@/lib/enums";
 import { act, render, waitFor } from "@/lib/tests";
@@ -19,7 +19,7 @@ jest.mock("@/api/common/api-provider", () => ({
   },
 }));
 
-jest.mock("@/api/store", () => ({
+jest.mock("@/api/game/store", () => ({
   useStoreItems: (...args: any[]) => mockUseStoreItems(...args),
   useStorePurchaseMutation: (...args: any[]) =>
     mockUseStorePurchaseMutation(...args),

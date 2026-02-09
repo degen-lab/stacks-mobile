@@ -77,7 +77,7 @@ export default function RaffleSubmission({
         <Pressable
           onPress={canSubmit ? onSubmit : undefined}
           disabled={!canSubmit}
-          className={`rounded-[16px] bg-sand-100 p-5 dark:bg-neutral-900/90 ${
+          className={`rounded-2xl bg-sand-100 p-5 dark:bg-neutral-900/90 ${
             canSubmit
               ? "active:bg-white dark:active:bg-neutral-800"
               : "opacity-80"

@@ -1,5 +1,5 @@
 import { queryClient } from "@/api/common/api-provider";
-import { useStoreItems, useStorePurchaseMutation } from "@/api/store";
+import { useStoreItems, useStorePurchaseMutation } from "@/api/game/store";
 import type { UserProfile } from "@/api/user/types";
 import { useUserProfile } from "@/api/user";
 import { ItemType, ItemVariant } from "@/lib/enums";

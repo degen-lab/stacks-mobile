@@ -1,14 +1,14 @@
-import type { StoreItem } from "@/api/store/types";
+import type { StoreItem } from "@/api/game/store/types";
 import { ItemVariant } from "@/lib/enums";
 import { render, screen } from "@/lib/tests";
-import { useStoreItems } from "@/api/store";
+import { useStoreItems } from "@/api/game/store";
 import { buildAvailableSkins, SkinSelectorLayout } from "../skin-selector";
 
 jest.mock("../use-skin-selector", () => ({
   useSkinSelector: jest.fn(),
 }));
 
-jest.mock("@/api/store", () => ({
+jest.mock("@/api/game/store", () => ({
   useStoreItems: jest.fn(),
 }));
 

@@ -88,6 +88,7 @@ const client = z.object({
   ANDROID_ADMOB_APP_ID: z.string().min(1),
   IOS_ADMOB_APP_ID: z.string().optional(),
   ANDROID_REWARDS_AD_MOBIN_KEY: z.string().min(1),
+  TRANSAK_STAGING_API_KEY: z.string().min(1),
 });
 
 const buildTime = z.object({
@@ -115,6 +116,7 @@ const _clientEnv = {
   ANDROID_ADMOB_APP_ID: process.env.ANDROID_ADMOB_APP_ID,
   IOS_ADMOB_APP_ID: process.env.IOS_ADMOB_APP_ID,
   ANDROID_REWARDS_AD_MOBIN_KEY: process.env.ANDROID_REWARDS_AD_MOBIN_KEY,
+  TRANSAK_STAGING_API_KEY: process.env.TRANSAK_STAGING_API_KEY,
 };
 
 /**

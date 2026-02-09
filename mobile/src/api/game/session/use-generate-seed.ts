@@ -1,7 +1,7 @@
 import type { AxiosError } from "axios";
 import { createMutation } from "react-query-kit";
 
-import { client } from "../../common";
+import { gameClient } from "../../common";
 import type { GenerateSeedResponse } from "./types";
 
 type Variables = void;
@@ -13,7 +13,7 @@ export const useGenerateSeedMutation = createMutation<
   AxiosError
 >({
   mutationFn: async (variables) =>
-    client({
+    gameClient({
       url: "session/generate-seed",
       method: "POST",
       data: variables,

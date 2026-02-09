@@ -311,7 +311,7 @@ export class GameSessionService {
 
       const nextPlatform = platforms[currentPlatformIndex + 1];
 
-      const landingTimeMs = move.startTime + move.duration;
+      const landingTimeMs = Math.floor(move.startTime + move.duration);
 
       const scaledSpeed = nextPlatform.baseSpeed;
 

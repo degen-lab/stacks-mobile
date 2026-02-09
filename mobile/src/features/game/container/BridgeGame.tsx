@@ -1,9 +1,9 @@
-import { useBroadcastSponsoredTransactionMutation } from "@/api/transaction";
+import { useBroadcastSponsoredTransactionMutation } from "@/api/game/transaction";
 import {
   useCurrentTournamentSubmissions,
   useTournamentData,
   useTournamentLeaderboard,
-} from "@/api/tournament";
+} from "@/api/";
 import { useSponsoredSubmissionsLeft, useUserProfile } from "@/api/user";
 import { getItemVariant } from "@/api/user/types";
 import { ItemVariant, TournamentStatusEnum } from "@/lib/enums";
@@ -19,16 +19,13 @@ import { useRunSummary } from "../hooks/useRunSummary";
 import { useSubmissionActions } from "../hooks/useSubmissionActions";
 import { useSubmissionSheet } from "../hooks/useSubmissionSheet";
 
-import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
 import { TournamentSubmissionSheet } from "@/components/tournament-submission-sheet";
 import { ActivityIndicator, View } from "@/components/ui";
 import { useStxBalance } from "@/hooks/use-stx-balance";
-import { formatAddress } from "@/lib/addresses";
-import { CONTRACTS, SC_FUNCTIONS } from "@/lib/contracts";
+import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
 import { useAuth } from "@/lib/store/auth";
 import { useGameStore } from "@/lib/store/game";
 import { useSelectedNetwork } from "@/lib/store/settings";
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { StacksBridgeEngine } from "../engine";
 import type {
   BridgeOverlayState,
@@ -189,7 +186,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   }, [userProfile?.items]);
 
   const engineRef = useRef(new StacksBridgeEngine());
-  const contractDetailsSheetRef = useRef<BottomSheetModal>(null);
 
   const {
     submissionContext,
@@ -512,10 +508,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     void startGameWithLoading();
   }, [cancelPendingStart, resetSession, startGameWithLoading]);
 
-  const handleOpenContractDetails = useCallback(() => {
-    contractDetailsSheetRef.current?.present();
-  }, []);
-
   useEffect(() => {
     void hydrateHighscore();
   }, [hydrateHighscore]);
@@ -611,27 +603,26 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
         onCancel={handleSubmissionCancel}
         onSuccess={handleSubmissionSuccess}
         canSubmit={canSubmitTournament}
-        onOpenContractDetails={handleOpenContractDetails}
         snapPoints={["60%"]}
         resetKey={submissionOpenCount}
         weeklyContestSubmissionsLeft={weeklyContestSubmissionsLeft}
         raffleSubmissionsLeft={raffleSubmissionsLeft}
-      />
-      <ContractCallDetailsSheet
-        ref={contractDetailsSheetRef}
-        onClose={() => contractDetailsSheetRef.current?.dismiss()}
         network={
           selectedNetwork.charAt(0).toUpperCase() + selectedNetwork.slice(1)
         }
-        contractName={(() => {
-          const contract = CONTRACTS[selectedNetwork]?.game?.CONTRACT;
-          if (!contract) return "Not configured";
-          const [address, contractName] = contract.split(".");
-          return address && contractName
-            ? `${formatAddress(address)}.${contractName}`
-            : "Not configured";
-        })()}
+        contractAddress={CONTRACTS[selectedNetwork]?.game || "Not configured"}
         functionName={SC_FUNCTIONS.game.publicFunctions.SUBMIT_SCORE}
+        contractArgs={[
+          {
+            name: "score",
+            value: score.toString(),
+            type: "uint",
+          },
+          {
+            name: "tournament-id",
+            value: tournamentId,
+          },
+        ]}
       />
     </>
   );

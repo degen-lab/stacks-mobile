@@ -1,47 +1,50 @@
-import { useCallback, useEffect, useState } from "react";
+import { useMemo } from "react";
 
-import { useSelectedNetwork } from "@/lib/store/settings";
-import { walletKit } from "@/lib/wallet";
+import { useUserBalances } from "@/api/stacks/use-stacks-api";
+import { MICRO_STX } from "@/lib/format/currency";
+import { useWalletAddresses } from "./use-wallet-addresses";
 
 type UseStxBalanceResult = {
   balance: number;
+  lockedBalance: number;
+  availableBalance: number;
   isLoading: boolean;
   error: string | null;
-  refresh: () => Promise<void>;
+  refresh: () => void;
 };
 
 export const useStxBalance = (accountIndex = 0): UseStxBalanceResult => {
-  const { selectedNetwork } = useSelectedNetwork();
-  const [balance, setBalance] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { stxAddress: address } = useWalletAddresses({ accountIndex });
 
-  const refresh = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const accounts = await walletKit.getWalletAccounts();
-      const account = accounts[accountIndex];
+  const { data, isLoading, error, refetch } = useUserBalances({
+    variables: { address: address ?? "" },
+    enabled: !!address,
+  });
 
-      if (!account) {
-        console.warn("[Balance] No account found at index", accountIndex);
-        setBalance(0);
-        return;
-      }
-
-      const stacksBalance = await walletKit.getBalance(account);
-      setBalance(stacksBalance);
-    } catch (err) {
-      console.error("[Balance] Failed to load", err);
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsLoading(false);
+  const balanceData = useMemo(() => {
+    if (!data?.stx) {
+      return {
+        balance: 0,
+        lockedBalance: 0,
+        availableBalance: 0,
+      };
     }
-  }, [accountIndex]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh, selectedNetwork]);
+    const balance = Number(data.stx.balance) / MICRO_STX;
+    const locked = Number(data.stx.locked) / MICRO_STX;
+    const available = balance - locked;
 
-  return { balance, isLoading, error, refresh };
+    return {
+      balance,
+      lockedBalance: locked,
+      availableBalance: available,
+    };
+  }, [data]);
+
+  return {
+    ...balanceData,
+    isLoading,
+    error: error?.message ?? null,
+    refresh: refetch,
+  };
 };

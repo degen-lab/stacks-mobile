@@ -17,6 +17,8 @@ import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
 import { fontConfig } from "@/lib/fonts";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";
 
+import { TransakProvider } from "@/features/transak/context/transak-context";
+
 export { ErrorBoundary } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
@@ -42,7 +44,11 @@ export default function RootLayout() {
         <Stack.Screen name="wallet-restore" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen
-          name="settings/accounts"
+          name="settings/accounts/index"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="settings/accounts/[id]"
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -76,7 +82,7 @@ function Providers({ children }: { children: React.ReactNode }) {
         <ThemeProvider value={theme}>
           <APIProvider>
             <BottomSheetModalProvider>
-              {children}
+              <TransakProvider>{children}</TransakProvider>
               <FlashMessage position="top" />
             </BottomSheetModalProvider>
           </APIProvider>
