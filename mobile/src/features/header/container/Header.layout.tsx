@@ -24,6 +24,14 @@ type HeaderLayoutProps = {
   loadingBtc: boolean;
   loadingStx: boolean;
   isEarnScreen: boolean;
+  breadcrumb: {
+    parent: string;
+    current: string;
+    parentPath: string;
+    helpIcon?: React.ReactNode;
+    onHelpPress?: () => void;
+  } | null;
+  onBreadcrumbPress: () => void;
   avatarSource: ImageSource;
   onPressProfile: () => void;
   onPressPoints: () => void;
@@ -56,6 +64,8 @@ export function HeaderLayout({
   loadingBtc,
   loadingStx,
   isEarnScreen,
+  breadcrumb,
+  onBreadcrumbPress,
   avatarSource,
   onPressProfile,
   onPressPoints,
@@ -147,6 +157,40 @@ export function HeaderLayout({
           )}
         </View>
       </View>
+
+      {breadcrumb && (
+        <View className="mx-4 py-2 border-b border-surface-secondary flex-row items-center">
+          <Pressable
+            onPress={onBreadcrumbPress}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={`Go back to ${breadcrumb.parent}`}
+          >
+            <View className="flex-row items-center gap-1.5">
+              <Text className="font-matter text-sm text-secondary">
+                {breadcrumb.parent}
+              </Text>
+              <Text className="font-matter text-sm text-secondary">{">"}</Text>
+              <Text className="font-matter text-sm text-primary font-medium">
+                {breadcrumb.current}
+              </Text>
+            </View>
+          </Pressable>
+
+          {breadcrumb.onHelpPress && (
+            <Pressable
+              onPress={breadcrumb.onHelpPress}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Help"
+            >
+              <View className="w-8 h-8 items-center justify-center">
+                {breadcrumb.helpIcon}
+              </View>
+            </Pressable>
+          )}
+        </View>
+      )}
 
       <ProfilePopover
         visible={profilePopoverVisible}

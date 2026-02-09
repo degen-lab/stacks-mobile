@@ -33,6 +33,9 @@ const attachDevLogger = (instance: AxiosInstance, serviceName: string) => {
     (response) => {
       console.log(
         `[${serviceName.toUpperCase()} Res] ${response.status} ${response.config.url}`,
+        {
+          data: response.data,
+        },
       );
       return response;
     },

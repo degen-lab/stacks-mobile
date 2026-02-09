@@ -16,7 +16,7 @@ import { ReferralHeader } from "@/features/referral/components/referral-header";
 import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
 import { fontConfig } from "@/lib/fonts";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";
-import { StackingHeader } from "@/features/stacking/components/stacking-header";
+
 import { TransakProvider } from "@/features/transak/context/transak-context";
 
 export { ErrorBoundary } from "expo-router";
@@ -67,13 +67,6 @@ export default function RootLayout() {
           name="leaderboard"
           options={{
             headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="stacking"
-          options={{
-            header: () => <StackingHeader />,
-            headerShown: true,
           }}
         />
       </Stack>

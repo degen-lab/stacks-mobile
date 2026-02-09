@@ -199,7 +199,9 @@ export function StackingScreenLayout({
 
             <View className="mb-4">
               <Text className="mb-3 font-matter text-xl text-primary">
-                {activePosition ? "Your stacking pool" : "Available pools"}
+                {activePosition
+                  ? "Your stacking pool"
+                  : "Available stacking pools"}
               </Text>
               <StackingOptionCard
                 title="Fast Pool"

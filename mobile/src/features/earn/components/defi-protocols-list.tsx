@@ -28,10 +28,9 @@ export function DeFiProtocolsList() {
 
   const handleProtocolPress = (id: string) => {
     if (id === "stack-stx") {
-      router.push("/stacking");
+      router.push("/Earn/stacking");
     } else {
-      // TODO: Navigate to other protocol screens
-      console.log(`Protocol pressed: ${id}`);
+      router.push("/Earn/dual-stacking");
     }
   };
 
