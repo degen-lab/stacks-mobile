@@ -1,11 +1,9 @@
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { HelpCircle } from "lucide-react-native";
-import { RefObject } from "react";
 
 import { colors, ScreenHeader, useModal } from "@/components/ui";
 
 export function DualStackingHeader() {
-  const { ref: helpModalRef, present: presentHelpModal } = useModal();
+  const { present: presentHelpModal } = useModal();
   return (
     <>
       <ScreenHeader
