@@ -5,7 +5,7 @@ import { User } from './user';
 
 @Entity()
 export class StackingData extends BaseAppEntity {
-  @Column({ type: 'integer' })
+  @Column({ type: 'int' })
   startCycleId: number;
   @Column({ type: 'text' })
   poolName: string;
@@ -13,7 +13,7 @@ export class StackingData extends BaseAppEntity {
   poolStxAddress: string;
   @Column({ type: 'text' })
   userStxAddress: string;
-  @Column({ type: 'integer' })
+  @Column({ type: 'decimal', precision: 20, scale: 6 })
   amountOfStxStacked: number;
   @Column({ type: 'int', nullable: true })
   endCycleId: number | null;
@@ -27,7 +27,7 @@ export class StackingData extends BaseAppEntity {
     default: TransactionStatus.Pending,
   })
   txStatus: TransactionStatus;
-  @Column({ type: 'integer', nullable: true })
+  @Column({ type: 'bigint', nullable: true })
   rewardedStxAmount: number | null;
   @ManyToOne(() => User, (user) => user.stackingData, {
     onDelete: 'CASCADE',

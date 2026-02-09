@@ -14,7 +14,10 @@
     "stop": "pm2 delete all",
     "submit-scores": "tsx scripts/submit-scores-loop.ts",
     "seed:leaderboard": "tsx scripts/seed-leaderboard.ts",
-    "check:leaderboard": "tsx scripts/check-leaderboard.ts"
+    "check:leaderboard": "tsx scripts/check-leaderboard.ts",
+    "migration:generate": "npx typeorm-ts-node-commonjs migration:generate -d ./src/infra/db/dataSource.ts",
+    "migration:run": "npx typeorm-ts-node-commonjs migration:run -d ./src/infra/db/dataSource.ts",
+    "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d ./src/infra/db/dataSource.ts"
   },
   "author": "",
   "license": "ISC",

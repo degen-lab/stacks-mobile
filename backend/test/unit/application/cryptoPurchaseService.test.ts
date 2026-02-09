@@ -150,7 +150,6 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        undefined,
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
@@ -189,7 +188,6 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        undefined,
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
@@ -234,7 +232,6 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        undefined,
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
@@ -274,7 +271,6 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        undefined,
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
@@ -311,7 +307,6 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
-        undefined,
         testUser.id.toString(), // partnerCustomerId = user ID
         '12345', // partnerOrderId = saved purchase ID
         AppPlatform.ANDROID,
@@ -354,7 +349,6 @@ describe('CryptoPurchaseService unit test', () => {
         'BTC',
         'EUR',
         500,
-        undefined,
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,

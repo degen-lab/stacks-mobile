@@ -665,7 +665,7 @@ export class TransactionClient implements ITransactionClient {
       return null;
     };
 
-    // Helper to extract principal: "'ST..." -> "ST..."
+    // Helper to extract principal: "'ST..." -> "ST..." (handles contract addresses too)
     const extractPrincipal = (pattern: RegExp): string => {
       const match = repr.match(pattern);
       if (match && match[1]) {
@@ -683,17 +683,26 @@ export class TransactionClient implements ITransactionClient {
 
     // Parse data tuple fields
     const amountUstx = extractUint(/\(amount-ustx u(\d+)\)/) ?? 0;
-    const delegateTo = extractPrincipal(/\(delegate-to ('S[A-Z0-9]+)\)/);
+    // delegate-to can be either just a principal or principal.contract-name
+    const delegateTo = extractPrincipal(
+      /\(delegate-to ('S[A-Z0-9]+(?:\.[a-z0-9-]+)?)\)/,
+    );
     const startCycleId = extractUint(/\(start-cycle-id u(\d+)\)/) ?? 0;
     const endCycleId = extractOptionalUint(/\(end-cycle-id (none|[^)]+)\)/);
     const unlockBurnHeight = extractOptionalUint(
       /\(unlock-burn-height (none|[^)]+)\)/,
     );
 
-    // Parse pox-addr - can be none or a tuple
-    const poxAddrMatch = repr.match(/\(pox-addr (none|\(tuple[^)]+\))\)/);
-    const poxAddress =
-      poxAddrMatch && poxAddrMatch[1] !== 'none' ? poxAddrMatch[1] : null;
+    // Parse pox-addr - can be none or a tuple with hashbytes
+    let poxAddress: string | null = null;
+    const poxAddrCheck = repr.match(/\(pox-addr none\)/);
+    if (!poxAddrCheck) {
+      // Try to extract hashbytes from pox-addr tuple
+      const hashbytesMatch = repr.match(
+        /\(pox-addr \(tuple[^}]+hashbytes (0x[a-fA-F0-9]+)\)/,
+      );
+      poxAddress = hashbytesMatch ? hashbytesMatch[1] : null;
+    }
 
     const txData: StxTransactionData = {
       functionName: data.contract_call.function_name,
@@ -709,6 +718,10 @@ export class TransactionClient implements ITransactionClient {
       unlockBurnHeight,
       poxAddress,
     };
+    logger.info({
+      msg: 'Transaction data fetched',
+      txData,
+    });
     return txData;
   }
 

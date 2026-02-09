@@ -144,4 +144,9 @@ export const FAST_POOL_STACKING_DATA_JSON_URL = (address: string): string =>
 
 export const FAST_POOL_REWARDS_COMMITS_URL = `https://api.github.com/repos/friedger/stacking/commits?path=packages/home/data/rewards`;
 
-export const FAST_POOL_STX_ADDRESS = `SP21YTSM60CAY6D011EZVEVNKXVW8FVZE198XEFFP.pox4-fast-pool-v3`;
+export const FAST_POOL_STX_ADDRESS: string = configParser(
+  'FAST_POOL_STX_ADDRESS',
+  isTest
+    ? 'SP21YTSM60CAY6D011EZVEVNKXVW8FVZE198XEFFP.pox4-fast-pool-v3'
+    : undefined,
+);

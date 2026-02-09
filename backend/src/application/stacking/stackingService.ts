@@ -59,7 +59,27 @@ export class StackingService {
     stackingData.amountOfStxStacked = transactionData.amountUstx / 1000000;
     stackingData.poolName = poolName;
     stackingData.user = user;
+    stackingData.txStatus =
+      transactionData.txStatus === 'success'
+        ? TransactionStatus.Success
+        : transactionData.txStatus === 'pending'
+          ? TransactionStatus.Pending
+          : TransactionStatus.Failed;
     return await this.entityManager.save(stackingData);
+  }
+
+  async getUserStackingData(userId: number): Promise<StackingData[]> {
+    const user = await this.entityManager.findOne(User, {
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new UserNotFoundError(`User with id ${userId} not found`);
+    }
+
+    return await this.entityManager.find(StackingData, {
+      where: { user: { id: userId } },
+      order: { startCycleId: 'DESC' },
+    });
   }
 
   async updateRewardData(): Promise<void> {
@@ -92,7 +112,10 @@ export class StackingService {
               delegation.startCycleId,
               delegation.endCycleId,
             );
-          delegation.rewardedStxAmount = rewardedAmount;
+          // Ensure we don't save NaN to database
+          delegation.rewardedStxAmount = isNaN(rewardedAmount)
+            ? null
+            : rewardedAmount;
           await manager.save(delegation);
         }
 
