@@ -1,7 +1,7 @@
 export const MAX_APR = 4.5;
 export const BASE_APR = MAX_APR * 0.1; // this should also come from project rewards cause can be different
 
-export const CURRENT_MIGRATION_ID = 1;
+export const CURRENT_MIGRATION_ID = 2;
 export const FUTURE_MIGRATION_ID = 2;
 
 export const getContractTypeForCycle = (

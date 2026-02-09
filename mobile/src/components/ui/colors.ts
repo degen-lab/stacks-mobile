@@ -44,6 +44,7 @@ const colors = {
     800: "#CC5600",
     900: "#B24C00",
   },
+  secondary: "#595754",
   success: {
     50: "#F0FDF4",
     100: "#DCFCE7",

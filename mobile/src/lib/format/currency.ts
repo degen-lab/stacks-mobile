@@ -28,6 +28,13 @@ export const formatMicroStx = (amountInMicroStx: number) => {
 export const toSats = (amountBtc: number) =>
   Math.round(amountBtc * SATS_PER_BTC);
 
-export const fromSatsToBTC = (sats: number) => sats / SATS_PER_BTC;
+export const fromSatsToBtc = (v: number | string | bigint | null | undefined) =>
+  Number(v ?? 0) / SATS_PER_BTC;
+export const fromBtcToSats = (v: number | string | bigint | null | undefined) =>
+  Math.round(Number(v ?? 0) * SATS_PER_BTC);
+export const fromStxToUstx = (v: string | number | null | undefined) =>
+  Number(v ?? 0) * MICRO_STX;
+export const fromUstxToStx = (v: string | number | null | undefined) =>
+  Number(v ?? 0) / MICRO_STX;
 
 export default formatCurrency;

@@ -16,3 +16,5 @@ export * from "./swap-action-icon";
 export * from "./bridge-action-icon";
 export * from "./stx-coin";
 export * from "./btc-logo";
+export * from "./usdc-logo";
+export * from "./seal-check";

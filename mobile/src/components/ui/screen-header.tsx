@@ -37,8 +37,8 @@ export function ScreenHeader({
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="bg-surface-tertiary">
-      <View className="flex-row items-center px-5 py-4 border-b border-surface-secondary">
+    <SafeAreaView edges={[]} className="bg-surface-tertiary">
+      <View className="flex-row items-center px-4 py-4 border-b border-surface-secondary">
         <Pressable
           onPress={handleBack}
           className="w-10 h-10 items-center justify-center"

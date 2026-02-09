@@ -32,7 +32,8 @@ module.exports = {
         },
         surface: {
           tertiary: '#F7F6F5',
-          secondary: '#D5D3D1'
+          secondary: '#D5D3D1',
+          primary: '#EAE8E6',
         },
         feedback: {
           yellow: {
@@ -42,6 +43,7 @@ module.exports = {
           green: {
             DEFAULT: '#22C55E',
             100: '#F0FDF4',
+            150: '#C2E7D0',
             700: '#15803D'
           }
         },
