@@ -25,9 +25,40 @@ import stackingRoutes from './stacking';
 import { StackingService } from '../application/stacking/stackingService';
 import defiRoutes from './defi';
 import { DefiService } from '../application/defi/defiService';
+import { httpRequestCounter, httpRequestDuration } from '../infra/monitoring/metrics';
 
 export const buildServer = async (dataSource: DataSource) => {
   const app = Fastify();
+
+  app.addHook('onRequest', async (request) => {
+    request.startTime = process.hrtime();
+  });
+
+  app.addHook('onResponse', async (request, reply) => {
+    const startTime = request.startTime;
+
+    if (!startTime) return;
+
+    const diff = process.hrtime(startTime);
+    const durationInSeconds = diff[0] + diff[1] / 1e9;
+
+    const route = request.routeOptions?.url ?? request.url;
+
+    httpRequestCounter.inc({
+      method: request.method,
+      route,
+      status_code: reply.statusCode,
+    });
+
+    httpRequestDuration.observe(
+      {
+        method: request.method,
+        route,
+        status_code: reply.statusCode,
+      },
+      durationInSeconds,
+    );
+  });
 
   app.register(fastifyRawBody, {
     field: 'rawBody',

@@ -26,6 +26,7 @@ import { TournamentStatusNotFoundError } from '../errors/rewardsErrors';
 import { TournamentStatus } from '../../domain/entities/tournamentStatus';
 import { NODE_ENV } from '../../shared/constants';
 import { TxBroadcastResult } from '@stacks/transactions';
+import { DefiOperation } from '../../domain/entities/defiOperation';
 
 export class TransactionService {
   constructor(
@@ -185,6 +186,18 @@ export class TransactionService {
       where: { transactionStatus: TransactionStatus.Pending },
     });
     return pendingSubmissions.length;
+  }
+
+  private async checkDbPendingDefiTransactionsCount(): Promise<number> {
+    const pendingDefiOperations = await this.entityManager.find(DefiOperation, {
+      where: {
+        status: In([TransactionStatus.Pending, TransactionStatus.Processing]),
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+    return pendingDefiOperations.length;
   }
 
   /**
@@ -389,6 +402,33 @@ export class TransactionService {
         submission.transactionId = txId;
         submission.transactionStatus = TransactionStatus.Pending;
         await this.entityManager.save(submission);
+      }
+    }
+    pendingCount = await this.checkDbPendingDefiTransactionsCount();
+    logger.info({
+      msg: 'Step 4: Updating DeFi pending transactions',
+      pendingCount,
+    });
+    const defiOperation = await this.entityManager.find(DefiOperation, {
+      where: {
+        status: In([TransactionStatus.Pending, TransactionStatus.Processing]),
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+    for (const operation of defiOperation) {
+      if (operation.txId) {
+        const transactionStatus =
+          await this.transactionClient.getTransactionStatus(operation.txId);
+        const txStatus =
+          transactionStatus === 'success'
+            ? TransactionStatus.Success
+            : transactionStatus === 'pending'
+              ? TransactionStatus.Pending
+              : TransactionStatus.Failed;
+        operation.status = txStatus;
+        await this.entityManager.save(operation);
       }
     }
   }

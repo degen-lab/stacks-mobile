@@ -10,7 +10,7 @@
     "lint": "eslint '{src,test}/**/*.{ts,tsx}'",
     "build": "tsc",
     "start": "tsx src/index.ts",
-    "start:prod": "pm2 start ecosystem.config.js",
+    "start:prod": "tsc && pm2 start ecosystem.config.js",
     "stop": "pm2 delete all",
     "submit-scores": "tsx scripts/submit-scores-loop.ts",
     "seed:leaderboard": "tsx scripts/seed-leaderboard.ts",
@@ -24,8 +24,6 @@
     "load:swap": "npx artillery run test/load/swap.yml",
     "load:lending": "npx artillery run test/load/lending.yml",
     "load:reward-distribution": "npx artillery run test/load/reward-distribution.yml"
-
-
   },
   "author": "",
   "license": "ISC",
@@ -43,6 +41,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.5.0",
     "jest": "^30.2.0",
+    "pm2": "^6.0.14",
     "prettier": "^3.7.4",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
