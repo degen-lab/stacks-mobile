@@ -6,6 +6,7 @@ import TopSectionContainer from "../components/cards/container/TopSection";
 import EarnBtcContainer from "../components/earn-btc/EarnBtc";
 import { Calculator } from "../components/calculator";
 import { PortfolioPerformanceCardContainer } from "../components/rewards/portfolio/container";
+import { CompositionCardContainer } from "../components/rewards/pie-chart/container";
 
 export default function DualStackingLayout() {
   return (
@@ -21,6 +22,8 @@ export default function DualStackingLayout() {
         <Calculator />
 
         <PortfolioPerformanceCardContainer />
+
+        <CompositionCardContainer />
 
         <View className="py-4" />
       </ScrollView>
