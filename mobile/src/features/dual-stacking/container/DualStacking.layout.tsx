@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { View } from "@/components/ui";
 import TopSectionContainer from "../components/cards/container/TopSection";
+import EarnBtcContainer from "../components/earn-btc/EarnBtc";
 
 export default function DualStackingLayout() {
   return (
@@ -13,7 +14,9 @@ export default function DualStackingLayout() {
       >
         <TopSectionContainer />
 
-        <View className="py-4"></View>
+        <EarnBtcContainer />
+
+        <View className="py-4" />
       </ScrollView>
     </SafeAreaView>
   );

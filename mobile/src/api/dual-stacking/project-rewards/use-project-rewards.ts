@@ -10,15 +10,16 @@ type Variables = ProjectRewardsParams;
 export const useProjectRewards = createQuery<Response, Variables, AxiosError>({
   queryKey: ["project-rewards"],
   fetcher: async (variables) => {
-    // FIX: Always send balance params (API requires them, defaults to 0)
     const params: Record<string, string> = {
       address: variables.address,
       max_apr: String(variables.maxApr),
-      stx: String(variables.stx ?? 0),
-      sbtc_wallet: String(variables.sbtcWallet ?? 0),
-      sbtc_defi: String(variables.sbtcDefi ?? 0),
     };
 
+    if (variables.stx !== undefined) params.stx = String(variables.stx);
+    if (variables.sbtcWallet !== undefined)
+      params.sbtc_wallet = String(variables.sbtcWallet);
+    if (variables.sbtcDefi !== undefined)
+      params.sbtc_defi = String(variables.sbtcDefi);
     if (variables.whitelisted !== undefined)
       params.whitelisted = String(variables.whitelisted);
 

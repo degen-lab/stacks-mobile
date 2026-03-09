@@ -1,5 +1,5 @@
 import { useUserBalances } from "@/api/stacks/use-stacks-api";
-import { mapApyStatus, Status } from "@/features/dual-stacking/types/status";
+import { mapApyStatus } from "@/features/dual-stacking/types/status";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { fromSatsToBtc, fromUstxToStx } from "@/lib/format/currency";
 import { Loadable } from "../shared/loadable";
@@ -27,6 +27,7 @@ const TopSectionContainer = () => {
     enrolledNextCycle,
     enrolledCurrentCycle,
     isLoading: isEnrollmentLoading,
+    isError: isEnrollmentError,
   } = useEnrollmentStatus();
   const { maxAPR } = useAprConstants();
   const {
@@ -39,8 +40,12 @@ const TopSectionContainer = () => {
     isError,
     isLoading,
   } = useAprComputation();
-
-  const { data: balances } = useUserBalances({
+  console.log(expectedTotalApr, totalApr);
+  const {
+    data: balances,
+    isLoading: isBalancesLoading,
+    isError: isBalancesError,
+  } = useUserBalances({
     variables: { address: stxAddress ?? "" },
     enabled: !!stxAddress,
   });
@@ -57,9 +62,10 @@ const TopSectionContainer = () => {
   const isStacking = Boolean(stxStacked > 0);
   const isDeFiParticipant = Boolean(totalSbtcInDefi > 0);
   const isMobile = true;
-  const shouldCollapseCards =
-    isMobile &&
-    (isEnrollmentLoading || enrolledNextCycle || status === Status.Enrolled);
+  const isSectionLoading =
+    isLoading || isEnrollmentLoading || isBalancesLoading;
+  const isSectionError = isError || isEnrollmentError || isBalancesError;
+  const shouldCollapseCards = isMobile && Boolean(enrolledNextCycle);
   const apyStatus = mapApyStatus({
     enrolledCurrentCycle,
     enrolledNextCycle,
@@ -71,8 +77,8 @@ const TopSectionContainer = () => {
   return (
     <View className="grid grid-cols-1 gap-2 min-[1420px]:grid-cols-4 lg:max-[1420px]:grid-cols-2 xl:gap-2">
       <Loadable
-        isLoading={isLoading} // TODO: we should call each hook used isLoading property for async loading? and add error fallbacks
-        isError={isError}
+        isLoading={isSectionLoading}
+        isError={isSectionError}
         errorFallback={<BalanceCardSkeleton />}
         fallback={<BalanceCardSkeleton />}
       >
@@ -88,8 +94,8 @@ const TopSectionContainer = () => {
       <Loadable
         fallback={<PositionCardSkeleton />}
         errorFallback={<PositionCardSkeleton />}
-        isLoading={isLoading}
-        isError={isError}
+        isLoading={isSectionLoading}
+        isError={isSectionError}
       >
         <PositionCard
           title="sBTC in DeFi"
@@ -102,8 +108,8 @@ const TopSectionContainer = () => {
       <Loadable
         fallback={<StackingCardSkeleton />}
         errorFallback={<StackingCardSkeleton />}
-        isLoading={isLoading}
-        isError={isError}
+        isLoading={isSectionLoading}
+        isError={isSectionError}
       >
         <StackingCard
           title="STX Stacked"
@@ -115,8 +121,8 @@ const TopSectionContainer = () => {
       </Loadable>
       <Loadable
         fallback={<APYCardSkeleton />}
-        isLoading={isLoading}
-        isError={isError}
+        isLoading={isSectionLoading}
+        isError={isSectionError}
         errorFallback={<APYCardSkeleton />}
       >
         <APYCard apy={expectedTotalApr} status={apyStatus} maxApy={maxAPR} />

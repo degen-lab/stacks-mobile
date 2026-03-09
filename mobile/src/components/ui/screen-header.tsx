@@ -46,7 +46,11 @@ export function ScreenHeader({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ArrowLeft size={20} color={colors.neutral[900]} pointerEvents="none" />
+          <ArrowLeft
+            size={20}
+            color={colors.neutral[900]}
+            pointerEvents="none"
+          />
         </Pressable>
 
         <Text className="text-xl font-matter text-primary flex-1 text-center">

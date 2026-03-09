@@ -33,14 +33,19 @@ export function useAprConstants() {
   const { data: sbtcBalance } = useSbtcInWallet(principal);
   const { data: totalSbtcDefi } = useUserTotalSbtcInDefi(principal);
   const { data: stxStacked } = useAmountStackedNow(principal);
-  const shouldQueryRewards = !!stxAddress;
+  const hasRewardBalances =
+    sbtcBalance !== undefined &&
+    totalSbtcDefi !== undefined &&
+    stxStacked !== undefined;
+  const shouldQueryRewards =
+    !!stxAddress && (!enrolledNextCycle || hasRewardBalances);
 
   const rewardsParams = useMemo(
     () => ({
       address: stxAddress as string,
       maxApr: dynamicMaxAPR,
       ...(enrolledNextCycle &&
-        sbtcBalance !== undefined && {
+        hasRewardBalances && {
           sbtcWallet: Number(sbtcBalance || 0),
           sbtcDefi: Number(totalSbtcDefi || 0),
           stx: Number(stxStacked || 0),
@@ -53,6 +58,7 @@ export function useAprConstants() {
       totalSbtcDefi,
       stxStacked,
       dynamicMaxAPR,
+      hasRewardBalances,
     ],
   );
 

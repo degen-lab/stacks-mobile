@@ -47,6 +47,10 @@ export function useAprComputation() {
   const { cycle: latestCycleId } = useDualStackingDataWithLatestCycle();
 
   const userBalancesForProjection = enrolledNextCycle && !enrolledCurrentCycle;
+  const hasProjectionBalances =
+    stxStacked !== undefined &&
+    totalSbtcDefi !== undefined &&
+    sbtcBalance !== undefined;
 
   const latestStat = useMemo(() => {
     if (!Array.isArray(userStats)) return undefined;
@@ -57,11 +61,12 @@ export function useAprComputation() {
     () => ({
       address: stxAddress as string,
       maxApr: maxAPR,
-      ...(userBalancesForProjection && {
-        sbtcWallet: Number(sbtcBalance || 0),
-        sbtcDefi: Number(totalSbtcDefi || 0),
-        stx: Number(stxStacked || 0),
-      }),
+      ...(userBalancesForProjection &&
+        hasProjectionBalances && {
+          sbtcWallet: Number(sbtcBalance || 0),
+          sbtcDefi: Number(totalSbtcDefi || 0),
+          stx: Number(stxStacked || 0),
+        }),
     }),
     [
       stxAddress,
@@ -70,10 +75,14 @@ export function useAprComputation() {
       sbtcBalance,
       stxStacked,
       maxAPR,
+      hasProjectionBalances,
     ],
   );
 
-  const shouldQueryRewards = !!stxAddress && enrolledNextCycle && !stxLoading;
+  const shouldQueryRewards =
+    !!stxAddress &&
+    enrolledNextCycle &&
+    (!userBalancesForProjection || hasProjectionBalances);
   const { data: projectedReward } = useProjectRewards({
     variables: projectedRewardsParams,
     enabled: shouldQueryRewards,
