@@ -73,6 +73,7 @@
     "react-query-kit": "^3.3.2",
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",
+    "victory-native": "^41.20.2",
     "zustand": "^5.0.9",
     "zxcvbn": "^4.4.2"
   },

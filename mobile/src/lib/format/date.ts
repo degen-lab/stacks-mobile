@@ -1,5 +1,16 @@
-const MS_PER_DAY = 86_400_000;
+export const MS_PER_DAY = 86_400_000;
 export const AVERAGE_BLOCK_DURATION_SECONDS = 600; // 10 minutes per Bitcoin block
+const MINUTES_PER_BLOCK = 10;
+
+export function calculateBlockEndTime(
+  currentHeight: number,
+  targetHeight: number,
+): number {
+  const blocksLeft = targetHeight - currentHeight;
+  if (blocksLeft <= 0) return Date.now();
+  const msRemaining = blocksLeft * MINUTES_PER_BLOCK * 60 * 1000;
+  return Date.now() + msRemaining;
+}
 
 type DateOptions = {
   locale?: string;

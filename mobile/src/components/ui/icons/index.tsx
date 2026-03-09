@@ -22,3 +22,5 @@ export * from "./usdc-logo";
 export * from "./seal-check";
 export * from "./sbtc-icon";
 export * from "./stacks-icon";
+export * from "./balance-btc-icon";
+export * from "./currency-btc-icon";
