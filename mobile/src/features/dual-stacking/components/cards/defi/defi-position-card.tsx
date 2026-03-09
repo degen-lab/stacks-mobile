@@ -40,7 +40,7 @@ export function PositionCard({
         onToggleCollapse={() => setIsCollapsed((prev) => !prev)}
         showTooltip
         tooltipContent={
-          <Text className="font-instrument-sans text-xs font-medium text-neutral-sand-50">
+          <Text className="font-instrument-sans text-xs font-medium text-sand-100">
             Boost your sBTC rewards by 10x by{"\n"}deploying sBTC into Stacks
             DeFi apps.
           </Text>
