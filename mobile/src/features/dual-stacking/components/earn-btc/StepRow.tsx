@@ -92,7 +92,7 @@ export default function StepRow({
           >
             <View className="flex-row items-center gap-1">
               <Text
-                className={`font-instrument-sans-medium text-xs ${CTA_BUTTON_TEXT_COLOR[cta.variant]}`}
+                className={`font-instrument-sans-medium text-sm ${CTA_BUTTON_TEXT_COLOR[cta.variant]}`}
               >
                 {cta.text}
               </Text>
@@ -111,8 +111,8 @@ export default function StepRow({
           </Button>
         ) : (
           <Pressable onPress={onPress} className="self-start">
-            <View className="flex-row items-center gap-1 border-b border-sand-300 pb-0.5">
-              <Text className="font-instrument-sans text-xs text-primary">
+            <View className="flex-row items-center gap-1 border-b-2 border-sand-300 pb-0.5">
+              <Text className="font-instrument-sans text-sm text-primary">
                 {cta.text}
               </Text>
               {cta.hasArrow ? (

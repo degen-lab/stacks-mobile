@@ -82,3 +82,28 @@ export const rewardsCompositionPercentages = (
 
 export const isPositiveNumber = (value: number): boolean =>
   Number.isFinite(value) && value > 0;
+
+/**
+ * Compute a value-weighted APR for two assets.
+ * Example: blend sBTC APR with STX stacking APR using their USD values.
+ *
+ * @param primaryValue  USD value of the primary asset (e.g., sBTC)
+ * @param primaryApr    APR of the primary asset (percent)
+ * @param secondaryValue USD value of the secondary asset (e.g., STX)
+ * @param secondaryApr   APR of the secondary asset (percent)
+ * @returns Blended APR in percent.
+ */
+export function computeBlendedApr(
+  primaryValue: number,
+  primaryApr: number,
+  secondaryValue: number,
+  secondaryApr: number,
+): number {
+  const totalValue = primaryValue + secondaryValue;
+
+  if (!Number.isFinite(totalValue) || totalValue <= 0) return primaryApr;
+
+  return (
+    (primaryValue * primaryApr + secondaryValue * secondaryApr) / totalValue
+  );
+}

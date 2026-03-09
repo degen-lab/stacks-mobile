@@ -21,6 +21,7 @@ export * from "./icons";
 export * from "./info-badge";
 export * from "./screen-header";
 export * from "./skeleton";
+export * from "./slider-value";
 export * from "./spinner";
 export * from "./loading-view";
 export * from "./tabs";
