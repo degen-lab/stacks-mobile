@@ -37,7 +37,7 @@ export function ScreenHeader({
   };
 
   return (
-    <SafeAreaView edges={[]} className="bg-surface-tertiary">
+    <SafeAreaView edges={["top"]} className="bg-surface-tertiary">
       <View className="flex-row items-center px-4 py-4 border-b border-surface-secondary">
         <Pressable
           onPress={handleBack}
@@ -46,7 +46,7 @@ export function ScreenHeader({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ArrowLeft size={20} color={colors.neutral[900]} />
+          <ArrowLeft size={20} color={colors.neutral[900]} pointerEvents="none" />
         </Pressable>
 
         <Text className="text-xl font-matter text-primary flex-1 text-center">
