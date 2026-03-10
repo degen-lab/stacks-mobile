@@ -101,6 +101,7 @@ export const useAmountStackedNow = createQueryHook(
     requiresArgs: true, // Requires user address
     refetchInterval: 30_000,
     staleTime: 10_000,
+    useDegenApi: true,
   },
 );
 

@@ -10,6 +10,7 @@ import { calculateStreakDays } from "@/lib/format/date";
 import { signOut as signOutAction, useAuth } from "@/lib/store/auth";
 import { useActiveAccountIndex } from "@/lib/store/settings";
 import { colors, useModal } from "@/components/ui";
+import ConnectWallet from "@/features/dual-stacking/components/wallet/wallet-connected";
 import { StackingGuideModal } from "@/features/stacking/components/stacking-guide-modal";
 import { HeaderLayout } from "./Header.layout";
 
@@ -36,6 +37,9 @@ export function Header() {
   // Check if we're on the Earn screen
   const isEarnScreen =
     pathname.startsWith("/(app)/Earn") || pathname.startsWith("/Earn");
+  const isDualStackingScreen =
+    pathname.includes("/Earn/dual-stacking") ||
+    pathname.includes("/(app)/Earn/dual-stacking");
 
   // Breadcrumb navigation for nested Earn routes
   const breadcrumb = useMemo(() => {
@@ -53,9 +57,6 @@ export function Header() {
         parent: "Earn",
         current: "Dual Stacking",
         parentPath: "/Earn",
-        helpIcon: <HelpCircle size={14} color={colors.secondary} />,
-        onHelpPress: presentStackingHelp,
-        // TODO: Add dual stacking help modal when ready
       };
     }
     return null;
@@ -147,6 +148,9 @@ export function Header() {
         loadingStx={loadingStx}
         isEarnScreen={isEarnScreen}
         breadcrumb={breadcrumb}
+        breadcrumbRightAccessory={
+          isDualStackingScreen ? <ConnectWallet /> : null
+        }
         onBreadcrumbPress={() =>
           breadcrumb && router.push(breadcrumb.parentPath as any)
         }

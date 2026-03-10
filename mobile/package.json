@@ -13,7 +13,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\""
   },
   "dependencies": {
-    "@degenlab/stacks-wallet-kit-core": "1.4.0",
+    "@degenlab/stacks-wallet-kit-core": "1.5.0",
     "@degenlab/stacks-wallet-kit-mobile": "1.4.0",
     "@dev-plugins/react-query": "^0.4.0",
     "@expo/vector-icons": "^15.0.3",

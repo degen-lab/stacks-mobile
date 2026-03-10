@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { walletKit } from "@/lib/stacks/wallet";
-import { useSelectedNetwork } from "@/lib/store/settings";
+import {
+  useActiveAccountIndex,
+  useSelectedNetwork,
+} from "@/lib/store/settings";
 import { NetworkType } from "@degenlab/stacks-wallet-kit-core";
 import { getAddressForNetwork } from "@/lib/stacks/addresses";
 import { getBitcoinAddressForAccount } from "@/lib/bitcoin/addresses";
@@ -10,8 +13,10 @@ type UseWalletAddressesOptions = {
 };
 
 export function useWalletAddresses(options: UseWalletAddressesOptions = {}) {
-  const { accountIndex = 0 } = options;
+  const { accountIndex: requestedAccountIndex } = options;
   const { selectedNetwork } = useSelectedNetwork();
+  const { activeAccountIndex } = useActiveAccountIndex();
+  const accountIndex = requestedAccountIndex ?? activeAccountIndex;
   const [stxAddress, setStxAddress] = useState<string | null>(null);
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);

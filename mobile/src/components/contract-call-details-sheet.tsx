@@ -1,8 +1,10 @@
 import { Button, Modal, Text, View, colors } from "@/components/ui";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import type { ClarityValue } from "@stacks/transactions";
+import { useContractCallFee } from "@/hooks/use-contract-call-fee";
 import { useColorScheme } from "nativewind";
 import React from "react";
-import { ActivityIndicator, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
 import {
   ContractTxDetails,
   type ContractArgument,
@@ -15,8 +17,11 @@ type ContractCallDetailsSheetProps = {
   contractAddress?: string;
   functionName?: string;
   contractArgs?: ContractArgument[];
+  showFeeSelector?: boolean;
+  feeFunctionArgs?: ClarityValue[];
+  stackingPrice?: number;
   confirmLabel?: string;
-  onConfirm?: () => void;
+  onConfirm?: (feeMicroStx?: number) => void | Promise<void>;
   onClose?: () => void;
   extraContent?: React.ReactNode;
   snapPoints?: string[];
@@ -39,6 +44,9 @@ export const ContractCallDetailsSheet = React.forwardRef<
       contractAddress,
       functionName,
       contractArgs,
+      showFeeSelector = false,
+      feeFunctionArgs = [],
+      stackingPrice = 0,
       confirmLabel,
       onConfirm,
       onClose,
@@ -58,16 +66,51 @@ export const ContractCallDetailsSheet = React.forwardRef<
 
     const displayAddress = contractAddress || "";
     const displayFunction = functionName || "";
+    const {
+      selectedFeeOption,
+      setSelectedFeeOption,
+      customFee,
+      setCustomFee,
+      feeMicroStx,
+      isFeeValid,
+      isLoadingFees,
+      resetFeeState,
+    } = useContractCallFee({
+      contractId: displayAddress,
+      functionName: displayFunction,
+      functionArgs: feeFunctionArgs,
+      enabled:
+        showFeeSelector &&
+        Boolean(displayAddress) &&
+        Boolean(displayFunction) &&
+        !showSuccess,
+    });
+
+    const handleClose = React.useCallback(() => {
+      setShowAdvancedOnly(false);
+      if (showFeeSelector) {
+        resetFeeState();
+      }
+      onClose?.();
+    }, [onClose, resetFeeState, showFeeSelector]);
+
+    const handleConfirm = React.useCallback(() => {
+      onConfirm?.(showFeeSelector ? feeMicroStx : undefined);
+    }, [feeMicroStx, onConfirm, showFeeSelector]);
+
+    const isConfirmDisabled =
+      confirmDisabled ||
+      isLoading ||
+      (showFeeSelector && (!isFeeValid || isLoadingFees));
 
     return (
       <Modal
         ref={ref}
-        title={title}
         snapPoints={snapPoints}
         backgroundStyle={{
           backgroundColor: isDark ? colors.charcoal[850] : colors.white,
         }}
-        onDismiss={onClose}
+        onDismiss={handleClose}
       >
         <ScrollView
           className="flex-1"
@@ -90,7 +133,7 @@ export const ContractCallDetailsSheet = React.forwardRef<
                   label="Done"
                   variant="gamePrimary"
                   size="lg"
-                  onPress={onClose}
+                  onPress={handleClose}
                   className="mt-6 w-full"
                 />
               </View>
@@ -105,10 +148,20 @@ export const ContractCallDetailsSheet = React.forwardRef<
 
                 {/* Contract Details - Uses shared component */}
                 <ContractTxDetails
+                  title={title}
                   network={network || ""}
                   contractAddress={displayAddress}
                   functionName={displayFunction}
                   contractArgs={contractArgs}
+                  showFeeSelector={showFeeSelector}
+                  selectedFeeOption={selectedFeeOption}
+                  onSelectFee={setSelectedFeeOption}
+                  customFee={customFee}
+                  onCustomFeeChange={setCustomFee}
+                  feeMicroStx={feeMicroStx}
+                  stackingPrice={stackingPrice}
+                  isLoadingFees={isLoadingFees}
+                  isFeeValid={isFeeValid}
                   onAdvancedToggle={setShowAdvancedOnly}
                   txId={txId}
                 />
@@ -124,29 +177,18 @@ export const ContractCallDetailsSheet = React.forwardRef<
                     {confirmLabel && onConfirm ? (
                       <View className="mt-6 gap-3">
                         <Button
-                          // @ts-expect-error - Button label should accept ReactNode but types say string
-                          label={
-                            isLoading ? (
-                              <View className="flex-row items-center justify-center gap-2">
-                                <ActivityIndicator size="small" color="#fff" />
-                                <Text className="font-matter text-base text-white">
-                                  Processing...
-                                </Text>
-                              </View>
-                            ) : (
-                              confirmLabel
-                            )
-                          }
+                          label={confirmLabel}
+                          loading={isLoading}
                           variant="gamePrimary"
                           size="lg"
-                          onPress={onConfirm}
-                          disabled={isLoading || confirmDisabled}
+                          onPress={handleConfirm}
+                          disabled={isConfirmDisabled}
                         />
                         <Button
                           label="Cancel"
                           variant="secondary"
                           size="lg"
-                          onPress={onClose}
+                          onPress={handleClose}
                           disabled={isLoading}
                         />
                       </View>
@@ -155,7 +197,7 @@ export const ContractCallDetailsSheet = React.forwardRef<
                         label="Close"
                         variant="secondary"
                         size="lg"
-                        onPress={onClose}
+                        onPress={handleClose}
                         className="mt-6"
                       />
                     )}

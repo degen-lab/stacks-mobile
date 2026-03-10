@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from "react";
-import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
 import { showMessage } from "react-native-flash-message";
 
 import { EarnBtcLayout } from "./EarnBtc.layout";
@@ -9,7 +8,7 @@ import { MintSbtcSheet } from "../layout/MintSbtcSheet";
 import { StackingPoolSheet } from "../layout/StackingPoolSheet";
 import { TermsAndConditionsSheet } from "../layout/TermsAndConditionsSheet";
 import { TermsDetailsSheet } from "../layout/TermsDetailsSheet";
-import { useFeeEstimation } from "@/api/stacks/use-fee";
+import { useContractCallFee } from "@/hooks/use-contract-call-fee";
 import { useTrackEnrollTx } from "@/features/dual-stacking/hooks/use-track-enroll-tx";
 import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/useEnrollmentStatus";
 import { useAprComputation } from "@/features/dual-stacking/hooks/useAprComputation";
@@ -17,13 +16,13 @@ import { useMinHoldForEnrollment } from "@/api/dual-stacking/contract/hooks";
 import { useCheckTerms } from "@/api/dual-stacking/enrollment/use-check-terms";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useStxBalance } from "@/hooks/use-stx-balance";
-import { fromSatsToBtc, MICRO_STX } from "@/lib/format/currency";
+import { fromSatsToBtc } from "@/lib/format/currency";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
-import { getExplorerTxUrl } from "@/lib/stacks/network";
 import { walletKit } from "@/lib/stacks/wallet";
-import { useSelectedNetwork } from "@/lib/store/settings";
-import { FeeOption } from "@/features/stacking/components/fee-selector";
+import { getExplorerTxUrl } from "@/lib/stacks/network";
+import { useSelectedNetwork, useSettingsStore } from "@/lib/store/settings";
 import { PostConditionMode } from "@stacks/transactions";
+import { TransactionLoadingOverlay } from "@/components/transaction-loading-overlay";
 
 type EarnBtcContainerProps = {
   onExploreApps?: () => void;
@@ -32,7 +31,6 @@ type EarnBtcContainerProps = {
 export default function EarnBtcContainer({
   onExploreApps,
 }: EarnBtcContainerProps) {
-  const router = useRouter();
   const { stxAddress } = useWalletAddresses();
   const { selectedNetwork } = useSelectedNetwork();
   const [isSubmittingEnroll, setIsSubmittingEnroll] = useState(false);
@@ -43,9 +41,6 @@ export default function EarnBtcContainer({
   const [isStackingPoolSheetOpen, setIsStackingPoolSheetOpen] = useState(false);
   const [isTermsSheetOpen, setIsTermsSheetOpen] = useState(false);
   const [isTermsDetailsSheetOpen, setIsTermsDetailsSheetOpen] = useState(false);
-  const [selectedFeeOption, setSelectedFeeOption] =
-    useState<FeeOption>("standard");
-  const [customFee, setCustomFee] = useState("");
 
   const {
     enrolledNextCycle,
@@ -79,18 +74,21 @@ export default function EarnBtcContainer({
 
   const contractId = CONTRACTS[selectedNetwork].yieldV2;
   const enrollFunctionName = SC_FUNCTIONS.yieldV2.publicFunctions.ENROLL;
-  const [contractAddress = "", contractName = ""] = contractId.split(".");
 
-  const { data: feeEstimations = [], isLoading: isLoadingFees } =
-    useFeeEstimation({
-      contractAddress,
-      contractName,
-      functionName: enrollFunctionName,
-      functionArgs: [],
-      network: selectedNetwork,
-      enabled:
-        isEnrollSheetOpen && Boolean(contractAddress) && Boolean(contractName),
-    });
+  const {
+    selectedFeeOption,
+    setSelectedFeeOption,
+    customFee,
+    setCustomFee,
+    feeMicroStx,
+    isFeeValid,
+    isLoadingFees,
+  } = useContractCallFee({
+    contractId,
+    functionName: enrollFunctionName,
+    functionArgs: [],
+    enabled: isEnrollSheetOpen,
+  });
 
   const isLoading =
     isEnrollmentLoading ||
@@ -116,31 +114,7 @@ export default function EarnBtcContainer({
     ? getExplorerTxUrl(enrollTxId).explorerUrl
     : undefined;
 
-  const feeMicroStx = useMemo(() => {
-    if (selectedFeeOption === "custom") {
-      const parsed = parseFloat(customFee) * MICRO_STX;
-      return Number.isNaN(parsed) ? undefined : parsed;
-    }
-
-    if (feeEstimations.length === 0) return undefined;
-
-    if (selectedFeeOption === "low") return feeEstimations[0]?.fee;
-    if (selectedFeeOption === "standard")
-      return feeEstimations[1]?.fee ?? feeEstimations[0]?.fee;
-    if (selectedFeeOption === "high")
-      return feeEstimations[2]?.fee ?? feeEstimations[1]?.fee;
-
-    return feeEstimations[1]?.fee;
-  }, [customFee, feeEstimations, selectedFeeOption]);
-
-  const isFeeValid =
-    selectedFeeOption !== "custom" && feeMicroStx !== undefined
-      ? true
-      : selectedFeeOption === "custom" &&
-        feeMicroStx !== undefined &&
-        feeMicroStx > 0;
-
-  useTrackEnrollTx({
+  const { isPending: isEnrollPending } = useTrackEnrollTx({
     txId: enrollTxId,
     onSuccess: () => {
       setIsSubmittingEnroll(false);
@@ -190,7 +164,7 @@ export default function EarnBtcContainer({
       return;
     }
 
-    if (!contractId || !contractAddress || !contractName) {
+    if (!contractId) {
       showMessage({
         message: "Enrollment unavailable",
         description:
@@ -215,6 +189,7 @@ export default function EarnBtcContainer({
         [],
         PostConditionMode.Allow,
         feeMicroStx,
+        useSettingsStore.getState().activeAccountIndex,
       );
 
       if (txId) {
@@ -249,11 +224,7 @@ export default function EarnBtcContainer({
     }
 
     if (stepId === 4) {
-      if (onExploreApps) {
-        onExploreApps();
-      } else {
-        router.push("/(app)/Earn" as any);
-      }
+      onExploreApps?.();
       return;
     }
 
@@ -310,6 +281,10 @@ export default function EarnBtcContainer({
       <TermsDetailsSheet
         open={isTermsDetailsSheetOpen}
         onOpenChange={setIsTermsDetailsSheetOpen}
+      />
+      <TransactionLoadingOverlay
+        visible={isEnrollPending}
+        message="Broadcasting Enrollment"
       />
     </>
   );

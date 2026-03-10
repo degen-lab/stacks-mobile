@@ -4,6 +4,7 @@ export * from "./home-icon";
 export * from "./play-icon";
 export * from "./stack";
 export * from "./star";
+export * from "./sparkle";
 export * from "./bitflow-icon";
 export * from "./zest-icon";
 export * from "./granite-icon";

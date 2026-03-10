@@ -31,6 +31,7 @@ type HeaderLayoutProps = {
     helpIcon?: React.ReactNode;
     onHelpPress?: () => void;
   } | null;
+  breadcrumbRightAccessory?: React.ReactNode;
   onBreadcrumbPress: () => void;
   avatarSource: ImageSource;
   onPressProfile: () => void;
@@ -65,6 +66,7 @@ export function HeaderLayout({
   loadingStx,
   isEarnScreen,
   breadcrumb,
+  breadcrumbRightAccessory,
   onBreadcrumbPress,
   avatarSource,
   onPressProfile,
@@ -159,9 +161,10 @@ export function HeaderLayout({
       </View>
 
       {breadcrumb && (
-        <View className="mx-4 py-2 border-b border-surface-secondary flex-row items-center">
+        <View className="mx-4 flex-row items-center justify-between gap-3 border-b border-surface-secondary py-2">
           <Pressable
             onPress={onBreadcrumbPress}
+            className="flex-1"
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={`Go back to ${breadcrumb.parent}`}
@@ -177,17 +180,22 @@ export function HeaderLayout({
             </View>
           </Pressable>
 
-          {breadcrumb.onHelpPress && (
-            <Pressable
-              onPress={breadcrumb.onHelpPress}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Help"
-            >
-              <View className="w-8 h-8 items-center justify-center">
-                {breadcrumb.helpIcon}
-              </View>
-            </Pressable>
+          {(breadcrumb.onHelpPress || breadcrumbRightAccessory) && (
+            <View className="flex-row items-center gap-1">
+              {breadcrumb.onHelpPress && (
+                <Pressable
+                  onPress={breadcrumb.onHelpPress}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Help"
+                >
+                  <View className="w-8 h-8 items-center justify-center">
+                    {breadcrumb.helpIcon}
+                  </View>
+                </Pressable>
+              )}
+              {breadcrumbRightAccessory}
+            </View>
           )}
         </View>
       )}

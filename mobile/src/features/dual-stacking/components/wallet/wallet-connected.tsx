@@ -1,0 +1,137 @@
+import {
+  ArrowUpRight,
+  ChevronDown,
+  Copy,
+  Edit3,
+  XCircle,
+} from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable } from "react-native";
+
+import { Text, View, colors } from "@/components/ui";
+import { useAuth } from "@/lib/store/auth";
+import { formatAddress } from "@/lib/stacks/addresses";
+import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
+import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/useEnrollmentStatus";
+
+import { ChangeRewardAddressSheet } from "../layout/modals/change-reward-address-sheet";
+import { UnenrollSheet } from "../layout/modals/unenroll-sheet";
+import { useWalletActions } from "../../hooks/use-wallet-actions";
+import { WalletActionSheet } from "../layout/modals/wallet-action-sheet";
+
+export default function ConnectWallet() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const { stxAddress, isLoading } = useWalletAddresses();
+  const { enrolledNextCycle } = useEnrollmentStatus();
+  const { openInExplorer, copyAddress, optOut, changeRewardAddress } =
+    useWalletActions();
+
+  const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
+  const [isChangeAddressOpen, setIsChangeAddressOpen] = useState(false);
+  const [isUnenrollOpen, setIsUnenrollOpen] = useState(false);
+
+  const isConnected = isAuthenticated && Boolean(stxAddress);
+  const buttonLabel = isLoading
+    ? "Loading..."
+    : isConnected && stxAddress
+      ? formatAddress(stxAddress)
+      : "Connect";
+
+  const handlePrimaryPress = () => {
+    if (!isConnected) {
+      router.push("/login");
+      return;
+    }
+
+    setIsActionSheetOpen(true);
+  };
+
+  return (
+    <>
+      <Pressable
+        onPress={handlePrimaryPress}
+        disabled={isLoading}
+        className="flex-row items-center gap-1 rounded-lg border-2 border-surface-secondary bg-neutral-100 px-3 py-1.5 active:opacity-80"
+        accessibilityRole="button"
+        accessibilityLabel={
+          isConnected ? "Open connected wallet actions" : "Connect wallet"
+        }
+      >
+        <Text className="font-instrument-sans text-xs font-semibold text-primary">
+          {buttonLabel}
+        </Text>
+        {isConnected && (
+          <View pointerEvents="none">
+            <ChevronDown size={14} color={colors.neutral[700]} />
+          </View>
+        )}
+      </Pressable>
+
+      <WalletActionSheet
+        open={isActionSheetOpen}
+        onOpenChange={setIsActionSheetOpen}
+        address={stxAddress}
+        actions={[
+          {
+            label: "Open in Explorer",
+            icon: ArrowUpRight,
+            onPress: () => {
+              setIsActionSheetOpen(false);
+              void openInExplorer();
+            },
+          },
+          {
+            label: "Copy address",
+            icon: Copy,
+            onPress: () => {
+              setIsActionSheetOpen(false);
+              void copyAddress();
+            },
+          },
+          ...(enrolledNextCycle
+            ? [
+                {
+                  label: "Change Reward Address",
+                  icon: Edit3,
+                  onPress: () => {
+                    setIsActionSheetOpen(false);
+                    setIsChangeAddressOpen(true);
+                  },
+                },
+              ]
+            : []),
+          ...(enrolledNextCycle
+            ? [
+                {
+                  label: "Unenroll this account",
+                  icon: XCircle,
+                  destructive: true,
+                  onPress: () => {
+                    setIsActionSheetOpen(false);
+                    setIsUnenrollOpen(true);
+                  },
+                },
+              ]
+            : []),
+        ]}
+      />
+
+      <ChangeRewardAddressSheet
+        open={isChangeAddressOpen}
+        onOpenChange={setIsChangeAddressOpen}
+        onChangeRewardAddress={changeRewardAddress}
+      />
+
+      <UnenrollSheet
+        open={isUnenrollOpen}
+        onOpenChange={setIsUnenrollOpen}
+        onGoBack={() => setIsActionSheetOpen(true)}
+        onConfirm={({ reasons, feeMicroStx }) =>
+          optOut({ reasons, feeMicroStx })
+        }
+      />
+    </>
+  );
+}

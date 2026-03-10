@@ -1,5 +1,8 @@
 import { useEffect } from "react";
-import { Linking } from "react-native";
+import {
+  openBrowserAsync,
+  WebBrowserPresentationStyle,
+} from "expo-web-browser";
 
 import { Image, Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
@@ -31,6 +34,7 @@ export function MintSbtcSheet({ open, onOpenChange }: Props) {
           source={require("@/assets/images/modals/mint-sbtc.svg")}
           style={{ width: 191, height: 97 }}
           contentFit="contain"
+          className="mx-auto"
         />
         <Text className="font-instrument-sans text-sm text-secondary leading-5">
           You&apos;re being directed to the sBTC Bridge, where you can peg in
@@ -44,7 +48,9 @@ export function MintSbtcSheet({ open, onOpenChange }: Props) {
           className="mt-3"
           onPress={() => {
             onOpenChange(false);
-            Linking.openURL("https://sbtc.stacks.co/");
+            void openBrowserAsync("https://sbtc.stacks.co/", {
+              presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
+            });
           }}
         />
       </View>

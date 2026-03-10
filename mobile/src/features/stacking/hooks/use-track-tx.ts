@@ -16,7 +16,7 @@ export function useTrackTx({
   invalidateQueries,
 }: Props) {
   const queryClient = useQueryClient();
-  const { data } = useTxById({
+  const { data, error, isError, failureCount } = useTxById({
     variables: { txId: txId ?? "" },
     enabled: !!txId,
     refetchInterval: (query) => {
@@ -27,13 +27,34 @@ export function useTrackTx({
       ) {
         return false;
       }
+      if (query.state.error && query.state.fetchFailureCount >= 5) {
+        return false;
+      }
       return 3000;
     },
   });
   const status = data?.tx_status;
 
   useEffect(() => {
-    if (!txId || !status) return;
+    if (!txId) return;
+
+    if (isError && failureCount >= 5) {
+      const httpStatus = (error as any)?.response?.status;
+      if (httpStatus === 404) {
+        onFailure?.(
+          "not_found",
+          "Transaction not found on the selected network.",
+        );
+      } else {
+        onFailure?.(
+          "lookup_failed",
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+      return;
+    }
+
+    if (!status) return;
 
     if (status === "success") {
       if (invalidateQueries && invalidateQueries.length > 0) {
@@ -51,17 +72,20 @@ export function useTrackTx({
     txId,
     status,
     data,
+    error,
+    isError,
+    failureCount,
     onSuccess,
     onFailure,
     queryClient,
     invalidateQueries,
   ]);
 
-  const isPending =
-    !!txId &&
-    (!status ||
-      (status !== "success" &&
-        !["failed", "abort_by_response", "rejected"].includes(status)));
+  const hasLookupFailure = isError && failureCount >= 5;
+  const hasTerminalStatus =
+    status === "success" ||
+    ["failed", "abort_by_response", "rejected"].includes(status ?? "");
+  const isPending = !!txId && !hasTerminalStatus && !hasLookupFailure;
 
   return {
     status,

@@ -5,11 +5,12 @@ import {
   noneCV,
 } from "@stacks/transactions";
 import { NetworkType } from "@degenlab/stacks-wallet-kit-core";
-import { MobileClient } from "@degenlab/stacks-wallet-kit-mobile";
 import { IPoolService, PoolLockStatus } from "./types";
 import { fetchReadOnly } from "@/api/stacks/read-only";
 import { endpoints, fetchFromStacksApi } from "@/api/stacks/stacks-api";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
+import { MobileClient } from "@degenlab/stacks-wallet-kit-mobile";
+import { useSettingsStore } from "@/lib/store/settings";
 
 type ContractCallerAllowance = null | { "until-burn-ht": null | bigint };
 type StacksApiInfo = { burn_block_height: number };
@@ -26,6 +27,11 @@ export class FastPoolService implements IPoolService {
   private get poxContract() {
     return CONTRACTS[this.network].pox;
   }
+
+  private get activeAccountIndex() {
+    return useSettingsStore.getState().activeAccountIndex;
+  }
+
   private getContractDetails(contractId: string) {
     const [address, name] = contractId.split(".");
     return { address, name };
@@ -90,14 +96,18 @@ export class FastPoolService implements IPoolService {
       getDelegateArgs(amountMicroStx),
       PostConditionMode.Allow,
       feeMicroStx,
+      this.activeAccountIndex,
     );
   }
-  async revoke(): Promise<string> {
+
+  async revoke(feeMicroStx?: number): Promise<string> {
     return this.walletKit.makeContractCall(
       this.poxContract,
       SC_FUNCTIONS.pox.publicFunctions.REVOKE_DELEGATE_STX,
       [],
       PostConditionMode.Allow,
+      feeMicroStx,
+      this.activeAccountIndex,
     );
   }
 
@@ -108,15 +118,18 @@ export class FastPoolService implements IPoolService {
       getAllowanceArgs(this.fastPoolContract),
       PostConditionMode.Allow,
       feeMicroStx,
+      this.activeAccountIndex,
     );
   }
 
-  async disallowContractCaller(): Promise<string> {
+  async disallowContractCaller(feeMicroStx?: number): Promise<string> {
     return this.walletKit.makeContractCall(
       this.poxContract,
       SC_FUNCTIONS.pox.publicFunctions.DISALLOW_CONTRACT_CALLER,
       [],
       PostConditionMode.Allow,
+      feeMicroStx,
+      this.activeAccountIndex,
     );
   }
 }

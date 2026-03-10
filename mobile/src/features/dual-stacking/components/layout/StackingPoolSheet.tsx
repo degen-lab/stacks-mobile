@@ -1,5 +1,8 @@
 import { useEffect } from "react";
-import { Linking } from "react-native";
+import {
+  openBrowserAsync,
+  WebBrowserPresentationStyle,
+} from "expo-web-browser";
 
 import { Image, Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
@@ -48,7 +51,9 @@ export function StackingPoolSheet({ open, onOpenChange }: Props) {
           className="mt-1"
           onPress={() => {
             onOpenChange(false);
-            Linking.openURL("https://app.leather.io/stacking");
+            void openBrowserAsync("https://app.leather.io/stacking", {
+              presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
+            });
           }}
         />
         <Button
@@ -57,7 +62,9 @@ export function StackingPoolSheet({ open, onOpenChange }: Props) {
           size="lg"
           onPress={() => {
             onOpenChange(false);
-            Linking.openURL("https://app.stackingdao.com/");
+            void openBrowserAsync("https://app.stackingdao.com/", {
+              presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
+            });
           }}
         />
       </View>

@@ -40,3 +40,15 @@ export const principalHexFromAddress = (address: string | null): string =>
 
 export const principalArgFromAddress = (address: string | null) =>
   address ? [principalCV(address)] : [];
+
+export const isValidPrincipal = (address: string | null | undefined) => {
+  const value = address?.trim();
+  if (!value) return false;
+
+  try {
+    principalCV(value);
+    return true;
+  } catch {
+    return false;
+  }
+};

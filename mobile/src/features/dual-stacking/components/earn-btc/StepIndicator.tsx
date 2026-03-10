@@ -20,7 +20,7 @@ export function StepIndicator({ step }: { step: Step }) {
 
   if (step.status === "completed") {
     const circleBg = step.id === 1 ? "bg-bitcoin-200" : "bg-feedback-green-150";
-    const iconColor = step.id === 1 ? "#E08516" : "#22C55E";
+    const iconColor = step.id === 1 ? "#e17c18" : "#22C55E";
     return (
       <View className="w-8 h-8 shrink-0 items-center justify-center rounded-full bg-sand-200">
         <View

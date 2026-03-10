@@ -1,7 +1,7 @@
 import type { UserProfile } from "@/api/user/types";
 import { ScrollView, Text } from "@/components/ui";
 import { StackIcon } from "@/components/ui/icons/stack";
-import { StarIcon } from "@/components/ui/icons/star";
+import { SparkleIcon } from "@/components/ui/icons/sparkle";
 import { LeaderboardList } from "@/features/leaderboard/components/leaderboard-list";
 import { Podium } from "@/features/leaderboard/components/podium";
 import type { LeaderboardUser } from "@/features/leaderboard/types";
@@ -68,7 +68,7 @@ export function PlayLayout({
         <View className="flex-1">
           <MenuButton
             label="Power-ups"
-            icon={StarIcon}
+            icon={SparkleIcon}
             onPress={onOpenPowerUps}
           />
         </View>

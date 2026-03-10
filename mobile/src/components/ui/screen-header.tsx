@@ -14,12 +14,14 @@ type ScreenHeaderProps = {
     onPress: () => void;
     accessibilityLabel: string;
   };
+  rightSlot?: React.ReactNode;
 };
 
 export function ScreenHeader({
   title,
   onBack,
   rightAction,
+  rightSlot,
 }: ScreenHeaderProps) {
   const router = useRouter();
   const navigation = useNavigation();
@@ -57,7 +59,9 @@ export function ScreenHeader({
           {title}
         </Text>
 
-        {rightAction ? (
+        {rightSlot ? (
+          <View className="items-end justify-center">{rightSlot}</View>
+        ) : rightAction ? (
           <Pressable
             onPress={rightAction.onPress}
             className="w-10 h-10 items-center justify-center"
