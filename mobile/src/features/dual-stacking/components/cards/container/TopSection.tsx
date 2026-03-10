@@ -21,7 +21,7 @@ import { APYCardSkeleton } from "../apy/apy-card.skeleton";
 import { APYCard } from "../apy/apy-card";
 
 const TopSectionContainer = () => {
-  const { stxAddress } = useWalletAddresses();
+  const { stxAddress, isLoading: isWalletLoading } = useWalletAddresses();
   const {
     status,
     enrolledNextCycle,
@@ -36,11 +36,9 @@ const TopSectionContainer = () => {
     stxStacked: stxStackedUstx,
     totalSbtcDefi: totalSbtcDefiSats,
     sbtcBalance: sbtcBalanceSats,
-
     isError,
     isLoading,
   } = useAprComputation();
-  console.log(expectedTotalApr, totalApr);
   const {
     data: balances,
     isLoading: isBalancesLoading,
@@ -50,27 +48,22 @@ const TopSectionContainer = () => {
     enabled: !!stxAddress,
   });
 
-  const totalSbtcInDefi = fromSatsToBtc(totalSbtcDefiSats) / divisorNetwork;
   const sbtcBalance = fromSatsToBtc(sbtcBalanceSats);
+  const totalSbtcInDefi = fromSatsToBtc(totalSbtcDefiSats) / divisorNetwork;
   const stxStacked = fromUstxToStx(stxStackedUstx);
-
   const stxBalance = balances ? fromUstxToStx(balances.stx.balance) : 0;
   const lockedBalance = balances ? fromUstxToStx(balances.stx.locked) : 0;
-  const unlockedBalance = stxBalance - lockedBalance;
-  const stxTotalBalance = stxStacked + unlockedBalance;
+  const stxTotalBalance = stxStacked + (stxBalance - lockedBalance);
 
-  const isStacking = Boolean(stxStacked > 0);
-  const isDeFiParticipant = Boolean(totalSbtcInDefi > 0);
-  const isMobile = true;
   const isSectionLoading =
-    isLoading || isEnrollmentLoading || isBalancesLoading;
+    isWalletLoading || isLoading || isEnrollmentLoading || isBalancesLoading;
   const isSectionError = isError || isEnrollmentError || isBalancesError;
-  const shouldCollapseCards = isMobile && Boolean(enrolledNextCycle);
+  const shouldCollapseCards = !isSectionLoading && Boolean(enrolledNextCycle);
   const apyStatus = mapApyStatus({
     enrolledCurrentCycle,
     enrolledNextCycle,
-    isStacking,
-    isDeFiParticipant,
+    isStacking: stxStacked > 0,
+    isDeFiParticipant: totalSbtcInDefi > 0,
     totalApr: totalApr > 0 ? totalApr : expectedTotalApr,
     maxApr: maxAPR,
   });

@@ -164,9 +164,9 @@ export function useAprComputation() {
     sbtcTotalAvg: sbtcWalletAvg + sbtcDeFiAvg,
     stxAvg,
     stackingAprCoinPrices,
-    totalSbtcDefi: Number(totalSbtcDefi),
-    sbtcBalance: Number(sbtcBalance),
-    stxStacked: Number(stxStacked),
+    totalSbtcDefi: Number(totalSbtcDefi ?? 0),
+    sbtcBalance: Number(sbtcBalance ?? 0),
+    stxStacked: Number(stxStacked ?? 0),
     isLoading: stxLoading || defiLoading || sbtcLoading,
     isError: stxError || defiError || sbtcError,
   };
