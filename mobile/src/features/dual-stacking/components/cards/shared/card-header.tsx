@@ -30,7 +30,7 @@ export function CardHeader({
 
   return (
     <View className="flex-row w-full items-center justify-between">
-      <Text className="font-instrument-sans text-secondary text-sm font-medium">
+      <Text className="font-instrument-sans-medium text-secondary text-sm">
         {title}
       </Text>
 

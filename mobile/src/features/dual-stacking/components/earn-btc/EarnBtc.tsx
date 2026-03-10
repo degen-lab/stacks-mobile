@@ -25,7 +25,13 @@ import { useSelectedNetwork } from "@/lib/store/settings";
 import { FeeOption } from "@/features/stacking/components/fee-selector";
 import { PostConditionMode } from "@stacks/transactions";
 
-export default function EarnBtcContainer() {
+type EarnBtcContainerProps = {
+  onExploreApps?: () => void;
+};
+
+export default function EarnBtcContainer({
+  onExploreApps,
+}: EarnBtcContainerProps) {
   const router = useRouter();
   const { stxAddress } = useWalletAddresses();
   const { selectedNetwork } = useSelectedNetwork();
@@ -242,6 +248,15 @@ export default function EarnBtcContainer() {
       return;
     }
 
+    if (stepId === 4) {
+      if (onExploreApps) {
+        onExploreApps();
+      } else {
+        router.push("/(app)/Earn" as any);
+      }
+      return;
+    }
+
     if (step.cta.kind === "link") {
       return;
     }
@@ -249,9 +264,6 @@ export default function EarnBtcContainer() {
     switch (stepId) {
       case 2:
         handleOpenEnroll();
-        break;
-      case 4:
-        router.push("/(app)/Earn" as any);
         break;
     }
   };
