@@ -8,7 +8,7 @@ import { DeFiCard, type DeFiAppCard } from "./DeFiCard";
 
 type DeFiAppsLayoutProps = {
   title: string;
-  cards: readonly DeFiAppCard[];
+  cards: DeFiAppCard[];
   onLayout?: (event: LayoutChangeEvent) => void;
 };
 

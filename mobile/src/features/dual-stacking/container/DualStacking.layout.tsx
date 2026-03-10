@@ -5,7 +5,7 @@ import { View } from "@/components/ui";
 import { useSectionScroll } from "@/lib/utils/use-section-scroll";
 import TopSectionContainer from "../components/cards/container/TopSection";
 import EarnBtcContainer from "../components/earn-btc/EarnBtc";
-import DeFiApps from "../components/defi-apps-native/DeFiApps";
+import DeFiApps from "../components/defi-apps/DeFiApps";
 import { Calculator } from "../components/calculator";
 import { PortfolioPerformanceCardContainer } from "../components/rewards/portfolio/container";
 import { CompositionCardContainer } from "../components/rewards/pie-chart/container";

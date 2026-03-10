@@ -22,7 +22,7 @@ export const DEFI_APP_TITLES = {
   default: "Stacks Ecosystem DeFi Apps",
 } as const;
 
-export const CARDS: readonly DeFiAppCard[] = [
+export const CARDS: DeFiAppCard[] = [
   {
     id: "bitflow",
     variant: "defi",
