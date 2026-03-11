@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { Skeleton } from "@/components/ui";
 import EarnBtcIcon from "@/components/ui/icons/earn-btc-icon";
 import BoostYieldIcon from "@/components/ui/icons/boost-yield-icon";
-import Section from "../layout/Section";
+import SectionHeader from "../layout/section-header";
 import StepRow from "./StepRow";
 import { EarnBtcSkeleton } from "./EarnBtc.skeleton";
 import { Step } from "./model";
@@ -41,7 +41,7 @@ export function EarnBtcLayout({
   const icon = model.enrolled ? <BoostYieldIcon /> : <EarnBtcIcon />;
 
   return (
-    <Section icon={icon} title={title}>
+    <SectionHeader icon={icon} title={title}>
       <Loadable
         isLoading={false}
         isError={isError}
@@ -61,6 +61,6 @@ export function EarnBtcLayout({
           </View>
         </View>
       </Loadable>
-    </Section>
+    </SectionHeader>
   );
 }

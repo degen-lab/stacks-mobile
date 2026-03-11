@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useWindowDimensions } from "react-native";
 
-import Section from "@/features/dual-stacking/components/layout/Section";
+import SectionHeader from "@/features/dual-stacking/components/layout/section-header";
 import { ValueSlider } from "@/components/ui/slider-value";
 import { View } from "@/components/ui";
 import {
@@ -136,7 +136,7 @@ export function CalculatorLayout({
   );
 
   return (
-    <Section
+    <SectionHeader
       icon={<CircleThreePlusFilled width={17} height={17} />}
       title="Dual Stacking calculator"
     >
@@ -222,6 +222,6 @@ export function CalculatorLayout({
           isError={isRewardsError}
         />
       </View>
-    </Section>
+    </SectionHeader>
   );
 }

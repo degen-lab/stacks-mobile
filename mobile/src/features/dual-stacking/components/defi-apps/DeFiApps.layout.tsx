@@ -3,7 +3,7 @@ import { useWindowDimensions } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 
 import { StarIcon, View } from "@/components/ui";
-import Section from "../layout/Section";
+import SectionHeader from "../layout/section-header";
 import { DeFiCard, type DeFiAppCard } from "./DeFiCard";
 
 type DeFiAppsLayoutProps = {
@@ -33,7 +33,7 @@ export function DeFiAppsLayout({
 
   return (
     <View onLayout={onLayout}>
-      <Section icon={<StarIcon />} title={title}>
+      <SectionHeader icon={<StarIcon />} title={title}>
         <View className="relative overflow-visible" testID="defi-apps-section">
           <Carousel
             testID="defi-apps-carousel"
@@ -53,7 +53,7 @@ export function DeFiAppsLayout({
             )}
           />
         </View>
-      </Section>
+      </SectionHeader>
     </View>
   );
 }

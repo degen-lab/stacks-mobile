@@ -3,7 +3,7 @@ import { RewardsCycleCardContainer } from "../container";
 
 const mockCard = jest.fn(() => null);
 
-jest.mock("@/features/dual-stacking/hooks/useDualStackingData", () => ({
+jest.mock("@/features/dual-stacking/hooks/use-dual-stacking-data", () => ({
   useDualStackingDataWithLatestCycle: jest.fn(),
 }));
 
@@ -16,11 +16,11 @@ jest.mock("@/api/dual-stacking", () => ({
   useTotalSbtcEnrolled: jest.fn(),
 }));
 
-jest.mock("@/features/dual-stacking/hooks/useCoinPricesForYield", () => ({
+jest.mock("@/features/dual-stacking/hooks/use-coin-prices-for-yield", () => ({
   useCoinPricesForYield: jest.fn(),
 }));
 
-jest.mock("@/features/dual-stacking/hooks/useDaysUntilCycleStarts", () => ({
+jest.mock("@/features/dual-stacking/hooks/use-days-until-cycle-starts", () => ({
   useDaysUntilCycleStarts: jest.fn(),
 }));
 
@@ -33,17 +33,17 @@ jest.mock("../RewardsCycleCard.skeleton", () => ({
 }));
 
 const { useDualStackingDataWithLatestCycle } = jest.requireMock(
-  "@/features/dual-stacking/hooks/useDualStackingData",
+  "@/features/dual-stacking/hooks/use-dual-stacking-data",
 );
 const { useCurrentBitcoinBlockHeight, useIsContractActive } = jest.requireMock(
   "@/api/dual-stacking/contract/hooks",
 );
 const { useTotalSbtcEnrolled } = jest.requireMock("@/api/dual-stacking");
 const { useCoinPricesForYield } = jest.requireMock(
-  "@/features/dual-stacking/hooks/useCoinPricesForYield",
+  "@/features/dual-stacking/hooks/use-coin-prices-for-yield",
 );
 const { useDaysUntilCycleStarts } = jest.requireMock(
-  "@/features/dual-stacking/hooks/useDaysUntilCycleStarts",
+  "@/features/dual-stacking/hooks/use-days-until-cycle-starts",
 );
 
 describe("RewardsCycleCardContainer", () => {

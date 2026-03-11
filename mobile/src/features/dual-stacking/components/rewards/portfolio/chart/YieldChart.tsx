@@ -17,7 +17,7 @@ import Animated, {
 
 import { Text } from "@/components/ui/text";
 import colors from "@/components/ui/colors";
-import type { YieldChartPoint } from "@/features/dual-stacking/hooks/useYieldChartData";
+import type { YieldChartPoint } from "@/features/dual-stacking/hooks/use-yield-chart-data";
 import type { Unit } from "./UnitToggle";
 
 const COLOR_MAP = {

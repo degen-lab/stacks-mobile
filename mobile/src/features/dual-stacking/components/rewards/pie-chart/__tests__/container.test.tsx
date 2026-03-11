@@ -3,7 +3,7 @@ import { CompositionCardContainer } from "../container";
 
 const mockCard = jest.fn(() => null);
 
-jest.mock("@/features/dual-stacking/hooks/useAprComputation", () => ({
+jest.mock("@/features/dual-stacking/hooks/use-apr-computation", () => ({
   useAprComputation: jest.fn(),
 }));
 
@@ -16,7 +16,7 @@ jest.mock("../CompositionCard.skeleton", () => ({
 }));
 
 const { useAprComputation } = jest.requireMock(
-  "@/features/dual-stacking/hooks/useAprComputation",
+  "@/features/dual-stacking/hooks/use-apr-computation",
 );
 
 describe("CompositionCardContainer", () => {

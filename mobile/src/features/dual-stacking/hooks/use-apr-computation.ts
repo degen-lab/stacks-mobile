@@ -1,18 +1,18 @@
 import { useMemo } from "react";
-import { useAprConstants } from "./useAprConstants";
+import { useAprConstants } from "./use-apr-constants";
 import {
   useAmountStackedNow,
   useSbtcInWallet,
   useUserTotalSbtcInDefi,
 } from "@/api/dual-stacking/contract/hooks";
-import { useEnrollmentStatus } from "./useEnrollmentStatus";
-import { useDualStackingDataWithLatestCycle } from "./useDualStackingData";
+import { useEnrollmentStatus } from "./use-enrollment-status";
+import { useDualStackingDataWithLatestCycle } from "./use-dual-stacking-data";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { principalArgFromAddress } from "@/lib/stacks/addresses";
 import { useDualStackingStats, useProjectRewards } from "@/api/dual-stacking";
 import { fromSatsToBtc, fromUstxToStx } from "@/lib/format/currency";
 import { avg, rewardsCompositionPercentages } from "../utils/apr-calculations";
-import { useCoinPricesForYield } from "./useCoinPricesForYield";
+import { useCoinPricesForYield } from "./use-coin-prices-for-yield";
 
 export function useAprComputation() {
   const { stxAddress } = useWalletAddresses();

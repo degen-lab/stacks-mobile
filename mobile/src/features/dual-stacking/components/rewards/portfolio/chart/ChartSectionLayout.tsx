@@ -5,7 +5,7 @@ import { UnitToggle, type Unit } from "./UnitToggle";
 import { ChartLegend } from "./Legend";
 import YieldChart from "./YieldChart";
 import type { ChartLegendItem, TimePeriod } from "./types";
-import type { YieldChartPoint } from "@/features/dual-stacking/hooks/useYieldChartData";
+import type { YieldChartPoint } from "@/features/dual-stacking/hooks/use-yield-chart-data";
 
 interface Props {
   chartData: YieldChartPoint[];

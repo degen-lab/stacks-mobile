@@ -1,5 +1,5 @@
 import { fromSatsToBtc, fromUstxToStx } from "@/lib/format/currency";
-import { useAprComputation } from "@/features/dual-stacking/hooks/useAprComputation";
+import { useAprComputation } from "@/features/dual-stacking/hooks/use-apr-computation";
 import { YieldCompositionCard } from "./CompositionCard";
 import { YieldCompositionCardSkeleton } from "./CompositionCard.skeleton";
 import type { YieldSource } from "./types";

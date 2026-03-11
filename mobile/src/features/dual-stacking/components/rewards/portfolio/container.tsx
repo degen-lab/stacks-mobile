@@ -10,10 +10,10 @@ import { useDualStackingStats } from "@/api/dual-stacking/use-dual-stacking-stat
 import { fromSatsToBtc, fromUstxToStx } from "@/lib/format/currency";
 import { principalArgFromAddress } from "@/lib/stacks/addresses";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
-import { useAprComputation } from "@/features/dual-stacking/hooks/useAprComputation";
-import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/useCoinPricesForYield";
-import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/useEnrollmentStatus";
-import { useYieldChartData } from "@/features/dual-stacking/hooks/useYieldChartData";
+import { useAprComputation } from "@/features/dual-stacking/hooks/use-apr-computation";
+import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/use-coin-prices-for-yield";
+import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
+import { useYieldChartData } from "@/features/dual-stacking/hooks/use-yield-chart-data";
 import { divisorNetwork } from "@/lib/stacks/utils";
 
 import type {

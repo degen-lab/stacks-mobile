@@ -9,7 +9,7 @@ import {
   VelarIcon,
   ZestIcon,
 } from "@/components/ui";
-import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/useEnrollmentStatus";
+import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
 import { DeFiAppsLayout } from "./DeFiApps.layout";
 import type { DeFiAppCard } from "./DeFiCard";
 

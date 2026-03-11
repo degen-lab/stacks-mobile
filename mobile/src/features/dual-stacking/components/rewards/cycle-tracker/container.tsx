@@ -3,9 +3,9 @@ import {
   useIsContractActive,
 } from "@/api/dual-stacking/contract/hooks";
 import { useTotalSbtcEnrolled } from "@/api/dual-stacking";
-import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/useCoinPricesForYield";
-import { useDaysUntilCycleStarts } from "@/features/dual-stacking/hooks/useDaysUntilCycleStarts";
-import { useDualStackingDataWithLatestCycle } from "@/features/dual-stacking/hooks/useDualStackingData";
+import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/use-coin-prices-for-yield";
+import { useDaysUntilCycleStarts } from "@/features/dual-stacking/hooks/use-days-until-cycle-starts";
+import { useDualStackingDataWithLatestCycle } from "@/features/dual-stacking/hooks/use-dual-stacking-data";
 import { fromSatsToBtc } from "@/lib/format/currency";
 import { isInDistributionWindow } from "@/lib/utils/time";
 import { RewardsCycleCard } from "./RewardsCycleCard";

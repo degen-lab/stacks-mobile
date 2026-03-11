@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useDualStackingDataWithLatestCycle } from "./useDualStackingData";
+import { useDualStackingDataWithLatestCycle } from "./use-dual-stacking-data";
 import { isPositiveNumber, poxForYield } from "../utils/apr-calculations";
 import { useIsContractActive } from "@/api/dual-stacking/contract/hooks";
 import { CoinPricesResponse, useCoinPrices } from "@/api/dual-stacking";

@@ -3,7 +3,7 @@ import {
   useIsContractActive,
   useIsDistributionFinalizedForThisCycle,
 } from "@/api/dual-stacking/contract/hooks";
-import { useDualStackingDataWithLatestCycle } from "./useDualStackingData";
+import { useDualStackingDataWithLatestCycle } from "./use-dual-stacking-data";
 import { isInDistributionWindow, timeUntilBlock } from "@/lib/utils/time";
 
 export function useDaysUntilCycleStarts() {

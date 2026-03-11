@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { BASE_APR, MAX_APR } from "@/lib/stacks/utils";
-import { useEnrollmentStatus } from "./useEnrollmentStatus";
+import { useEnrollmentStatus } from "./use-enrollment-status";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { principalArgFromAddress } from "@/lib/stacks/addresses";
 import {

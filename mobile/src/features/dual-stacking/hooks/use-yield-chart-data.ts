@@ -18,10 +18,10 @@ import { calculateBlockEndTime, MS_PER_DAY } from "@/lib/format/date";
 import { principalArgFromAddress } from "@/lib/stacks/addresses";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { avg } from "../utils/apr-calculations";
-import { useAprConstants } from "./useAprConstants";
-import { useCoinPricesForYield } from "./useCoinPricesForYield";
-import { useDualStackingDataWithLatestCycle } from "./useDualStackingData";
-import { useEnrollmentStatus } from "./useEnrollmentStatus";
+import { useAprConstants } from "./use-apr-constants";
+import { useCoinPricesForYield } from "./use-coin-prices-for-yield";
+import { useDualStackingDataWithLatestCycle } from "./use-dual-stacking-data";
+import { useEnrollmentStatus } from "./use-enrollment-status";
 import type { TimePeriod } from "../components/rewards/portfolio/chart/types";
 import type { Unit } from "../components/rewards/portfolio/chart/UnitToggle";
 

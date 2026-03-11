@@ -13,7 +13,7 @@ import { Text, View, colors } from "@/components/ui";
 import { useAuth } from "@/lib/store/auth";
 import { formatAddress } from "@/lib/stacks/addresses";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
-import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/useEnrollmentStatus";
+import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
 
 import { ChangeRewardAddressSheet } from "../layout/modals/change-reward-address-sheet";
 import { UnenrollSheet } from "../layout/modals/unenroll-sheet";

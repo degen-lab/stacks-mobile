@@ -8,7 +8,7 @@ type SectionProps = {
   children: ReactNode;
 };
 
-export default function Section({ icon, title, children }: SectionProps) {
+export default function SectionHeader({ icon, title, children }: SectionProps) {
   return (
     <View>
       <View className="mb-3 flex-row items-center gap-2 px-3">

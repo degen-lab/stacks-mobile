@@ -5,7 +5,7 @@ import { EarningsDisplay } from "./EarningsDisplay";
 import { ChartSectionLayout } from "./chart/ChartSectionLayout";
 import type { PortfolioPerformanceData, TimePeriod } from "./chart/types";
 import type { Unit } from "./chart/UnitToggle";
-import type { YieldChartPoint } from "@/features/dual-stacking/hooks/useYieldChartData";
+import type { YieldChartPoint } from "@/features/dual-stacking/hooks/use-yield-chart-data";
 
 export type PortfolioPerformanceCardProps = {
   chartData: YieldChartPoint[];

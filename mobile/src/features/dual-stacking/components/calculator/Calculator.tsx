@@ -20,7 +20,7 @@ import {
   useAprConstants,
   useEnrollmentStatus,
 } from "@/features/dual-stacking/hooks";
-import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/useCoinPricesForYield";
+import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/use-coin-prices-for-yield";
 import { formatDecimal, sanitizeDecimal } from "@/lib/format/decimal";
 import { CalculatorLayout } from "./Calculator.layout";
 import { computeBlendedApr } from "../../utils/apr-calculations";

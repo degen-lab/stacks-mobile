@@ -43,9 +43,7 @@ export function useContractCallFee({
 
   // The Stacks node returned 400 — it has no cost data for this function.
   const isFeeUnavailable =
-    isFeeError &&
-    isAxiosError(feeError) &&
-    feeError.response?.status === 400;
+    isFeeError && isAxiosError(feeError) && feeError.response?.status === 400;
 
   const feeMicroStx = useMemo(() => {
     if (selectedFeeOption === "custom") {

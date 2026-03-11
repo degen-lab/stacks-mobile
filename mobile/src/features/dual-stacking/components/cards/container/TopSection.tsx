@@ -7,7 +7,7 @@ import {
   useAprConstants,
   useEnrollmentStatus,
 } from "@/features/dual-stacking/hooks";
-import { useAprComputation } from "@/features/dual-stacking/hooks/useAprComputation";
+import { useAprComputation } from "@/features/dual-stacking/hooks/use-apr-computation";
 import { divisorNetwork } from "@/lib/stacks/utils";
 import { BalanceCard } from "../sbtc/balance-card";
 import { BalanceCardSkeleton } from "../sbtc/balance-card.skeleton";
