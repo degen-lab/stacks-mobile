@@ -65,7 +65,7 @@ describe('RewardsService - extractRaffleWinners', () => {
     expect(winners).toHaveLength(0);
   });
 
-  it('returns up to count winners, sampled randomly (deterministic)', async () => {
+  it('returns up to count winners with mocked random sampling', async () => {
     const submissions: Submission[] = Array.from({ length: 5 }).map((_, i) => {
       const s = new Submission();
       s.id = i + 1;

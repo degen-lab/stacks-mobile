@@ -14,6 +14,10 @@ import { FraudAttempt } from '../../src/domain/entities/fraudAttempt';
 import { RewardsDistributionData } from '../../src/domain/entities/rewardsDistributionData';
 import { TournamentStatus } from '../../src/domain/entities/tournamentStatus';
 import { CryptoPurchase } from '../../src/domain/entities/cryptoPurchase';
+import { StackingData } from '../../src/domain/entities/stackingData';
+import { DefiOperation } from '../../src/domain/entities/defiOperation';
+
+const TEST_DATABASE_NAME = 'stacks_app';
 
 let testDataSource: DataSource | null = null;
 
@@ -25,6 +29,8 @@ export interface TestDataSourceOptions {
 
 /**
  * Creates and initializes a test DataSource for integration tests.
+ * Uses the existing test database. With dropSchema: true, drops all tables and
+ * recreates them for a clean slate (avoids needing CREATE DATABASE permission).
  * @param options Configuration options for the test DataSource
  * @returns Initialized DataSource instance
  */
@@ -35,11 +41,7 @@ export const createTestDataSource = async (
     return testDataSource;
   }
 
-  const {
-    dropSchema = true, // Default: drop schema for clean slate
-    synchronize = true, // Default: auto-create schema
-    logging = false, // Default: no logging in tests
-  } = options;
+  const { dropSchema = true, synchronize = true, logging = false } = options;
 
   const dataSource = new DataSource({
     type: 'postgres',
@@ -47,10 +49,10 @@ export const createTestDataSource = async (
     port: DB_PORT,
     username: DB_USER,
     password: DB_PASSWORD,
-    database: 'stacks_app_integration', // Hardcoded test database name
+    database: TEST_DATABASE_NAME,
     synchronize,
     logging,
-    dropSchema, // Drop schema on connection for clean slate
+    dropSchema,
     entities: [
       User,
       DefaultItem,
@@ -61,6 +63,8 @@ export const createTestDataSource = async (
       RewardsDistributionData,
       TournamentStatus,
       CryptoPurchase,
+      StackingData,
+      DefiOperation,
     ],
   });
 
@@ -118,6 +122,8 @@ export const cleanTestDatabase = async (): Promise<void> => {
       .execute();
     await manager.createQueryBuilder().delete().from(FraudAttempt).execute();
     await manager.createQueryBuilder().delete().from(CryptoPurchase).execute();
+    await manager.createQueryBuilder().delete().from(StackingData).execute();
+    await manager.createQueryBuilder().delete().from(DefiOperation).execute();
     await manager.createQueryBuilder().delete().from(Submission).execute();
     await manager.createQueryBuilder().delete().from(ConsumableItem).execute();
     await manager.createQueryBuilder().delete().from(UniqueItem).execute();

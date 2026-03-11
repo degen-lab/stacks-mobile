@@ -76,8 +76,16 @@ describe('TransactionClient - fetchStackingTransactionData with real delegate-st
       poxAddress: null, // 'none' should become null
     });
 
+    // Check the actual URL that was called (may be localhost for devnet or hiro.so for testnet/mainnet)
+    const expectedUrl = STACKS_NETWORK === 'mainnet' 
+      ? 'https://api.mainnet.hiro.so/extended/v1/tx/0x3bf9dd597116c6a7e5f4f6b984e7f77a63bc47c7d9889a7997e65d7f2d3d5468'
+      : STACKS_NETWORK === 'testnet'
+        ? 'https://api.testnet.hiro.so/extended/v1/tx/0x3bf9dd597116c6a7e5f4f6b984e7f77a63bc47c7d9889a7997e65d7f2d3d5468'
+        : 'http://localhost:3999/extended/v1/tx/0x3bf9dd597116c6a7e5f4f6b984e7f77a63bc47c7d9889a7997e65d7f2d3d5468';
+    
     expect(global.fetch).toHaveBeenCalledWith(
-      `https://api.${STACKS_NETWORK === 'mainnet' ? 'mainnet' : 'testnet'}.hiro.so/extended/v1/tx/0x3bf9dd597116c6a7e5f4f6b984e7f77a63bc47c7d9889a7997e65d7f2d3d5468`,
+      expectedUrl,
+      { headers: { 'high-limit': 'true' } },
     );
   });
 

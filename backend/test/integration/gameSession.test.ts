@@ -23,7 +23,7 @@ import { StreakService } from '../../src/application/streaks/streakService';
 
 describe('Game Session Integration Tests', () => {
   let app: FastifyInstance;
-  const testGoogleId = '123456789012345678901234567890';
+  let testGoogleId = `test-google-id-${Date.now()}-${Math.random()}`;
   const testNickName = 'TestUser';
   let authToken: string;
   let userId: number;
@@ -45,14 +45,17 @@ describe('Game Session Integration Tests', () => {
   /**
    * Helper function to create a valid game session
    * Default moves have:
+   * - Durations >= 520ms (rotation ~469ms + MIN_BRIDGE_DURATION 50ms) to avoid TOO_FAST_BRIDGE
    * - Varied timing to avoid TIMING_VARIANCE_TOO_LOW fraud detection
-   * - Durations covering the gap range (40-180px at 320px/s)
+   * - Time between moves >= 100ms to avoid TOO_FAST_BETWEEN_MOVES
    */
   const createValidGameSession = async (
     moves: Array<{ startTime: number; duration: number }> = [
-      { startTime: 0, duration: 200 }, // 64px
-      { startTime: 500, duration: 400 }, // 128px
-      { startTime: 1200, duration: 300 }, // 96px
+      { startTime: 0, duration: 550 },
+      { startTime: 700, duration: 580 },
+      { startTime: 1380, duration: 530 },
+      { startTime: 2010, duration: 600 },
+      { startTime: 2710, duration: 560 },
     ],
     usedItems: ItemVariant[] = [],
   ): Promise<GameSession> => {
@@ -139,7 +142,8 @@ describe('Game Session Integration Tests', () => {
       // Key might not exist, ignore
     }
 
-    // Recreate user and token after cleanup
+    // Recreate user and token after cleanup with a unique googleId
+    testGoogleId = `test-google-id-${Date.now()}-${Math.random()}`; // Make googleId unique
     const authResponse = await app.inject({
       method: 'POST',
       url: '/user/auth',
@@ -462,7 +466,6 @@ describe('Game Session Integration Tests', () => {
     });
 
     it('should not increment streak twice if user completes daily challenge in multiple valid sessions on the same day', async () => {
-      // Set up a daily streak challenge
       const challenge: DailyStreakChallenge = {
         id: 1,
         description: 'Pass at least 10 blocks in a single session',
@@ -470,59 +473,128 @@ describe('Game Session Integration Tests', () => {
       };
       await setupDailyStreakChallenge(challenge);
 
-      // Get initial user streak
       const dataSource = getTestDataSource();
       const userRepository = dataSource.getRepository(User);
       const userBefore = await userRepository.findOne({
         where: { id: userId },
       });
-      const initialStreak = userBefore?.streak || 0;
+      let initialStreak = userBefore?.streak || 0;
 
-      // Submit two valid sessions that complete the challenge
-      // Try multiple times to find valid sessions that complete the challenge
+      // Use move patterns that have higher probability of passing blocks
+      // (same patterns as user.pointsCalculation.test.ts findValidSeedAndMoves)
+      // Durations: >= 520ms for TOO_FAST_BRIDGE; 600-1100ms for bridges to reach gaps
+      const movePatterns = [
+        [
+          { startTime: 0, duration: 650 },
+          { startTime: 800, duration: 700 },
+          { startTime: 1600, duration: 600 },
+          { startTime: 2300, duration: 750 },
+          { startTime: 3150, duration: 680 },
+          { startTime: 3930, duration: 720 },
+          { startTime: 4750, duration: 640 },
+          { startTime: 5490, duration: 690 },
+          { startTime: 6280, duration: 710 },
+          { startTime: 7090, duration: 660 },
+        ],
+        [
+          { startTime: 0, duration: 700 },
+          { startTime: 850, duration: 650 },
+          { startTime: 1600, duration: 750 },
+          { startTime: 2450, duration: 680 },
+          { startTime: 3230, duration: 720 },
+          { startTime: 4050, duration: 640 },
+          { startTime: 4790, duration: 690 },
+          { startTime: 5580, duration: 710 },
+        ],
+        [
+          { startTime: 0, duration: 630 },
+          { startTime: 780, duration: 680 },
+          { startTime: 1560, duration: 720 },
+          { startTime: 2380, duration: 650 },
+          { startTime: 3130, duration: 740 },
+          { startTime: 3970, duration: 670 },
+          { startTime: 4740, duration: 690 },
+          { startTime: 5530, duration: 710 },
+          { startTime: 6340, duration: 640 },
+          { startTime: 7080, duration: 700 },
+          { startTime: 7880, duration: 660 },
+          { startTime: 8640, duration: 730 },
+        ],
+        [
+          { startTime: 0, duration: 650 },
+          { startTime: 800, duration: 700 },
+          { startTime: 1600, duration: 600 },
+          { startTime: 2300, duration: 750 },
+          { startTime: 3150, duration: 680 },
+        ],
+      ];
+
       let validSessionsCompleted = 0;
+      let currentUserId = userId;
+      let currentAuthToken = authToken;
       for (
         let attempt = 0;
-        attempt < 30 && validSessionsCompleted < 2;
+        attempt < 100 && validSessionsCompleted < 2;
         attempt++
       ) {
-        const gameSession = await createValidGameSession([
-          { startTime: 0, duration: 200 }, // 64px
-          { startTime: 500, duration: 400 }, // 128px
-          { startTime: 1200, duration: 300 }, // 96px
-          { startTime: 1750, duration: 500 }, // 160px
-          { startTime: 2550, duration: 250 }, // 80px
-          { startTime: 3100, duration: 450 }, // 144px
-          { startTime: 3850, duration: 350 }, // 112px
-        ]);
-
-        const response = await app.inject({
-          method: 'POST',
-          url: '/session/validate',
-          headers: {
-            authorization: `Bearer ${authToken}`,
-          },
-          payload: {
-            sessionData: gameSession,
-          },
+        const currentUser = await userRepository.findOne({
+          where: { id: currentUserId },
+          relations: ['fraudAttempts'],
         });
+        if (currentUser) {
+          currentUser.updateBlacklistStatus();
+          if (currentUser.isBlackListed) {
+            const authResponse = await app.inject({
+              method: 'POST',
+              url: '/user/auth',
+              payload: {
+                googleId: `${testGoogleId}-retry-${attempt}`,
+                nickName: testNickName,
+              },
+            });
+            const authBody = JSON.parse(authResponse.body);
+            currentUserId = authBody.data.id;
+            currentAuthToken = authBody.token;
+            initialStreak = 0;
+            validSessionsCompleted = 0;
+          }
+        }
 
-        const body = JSON.parse(response.body);
+        // Try multiple move patterns per seed (same approach as user.pointsCalculation.test.ts)
+        const { seed, signature } =
+          await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
+        for (const moves of movePatterns) {
+          if (validSessionsCompleted >= 2) break;
+          const gameSession = { seed, signature, moves, usedItems: [] };
 
-        // Check if session was valid and completed challenge (score > 0 means blocks were passed)
-        if (
-          body.success &&
-          !body.data.isFraud &&
-          body.data.fraudReason === FraudReason.NONE &&
-          body.data.sessionScore > 0
-        ) {
-          validSessionsCompleted++;
+          const response = await app.inject({
+            method: 'POST',
+            url: '/session/validate',
+            headers: {
+              authorization: `Bearer ${currentAuthToken}`,
+            },
+            payload: {
+              sessionData: gameSession,
+            },
+          });
+
+          const body = JSON.parse(response.body);
+
+          // Check if session was valid and completed challenge (score > 0 means blocks were passed)
+          if (
+            body.success &&
+            !body.data.isFraud &&
+            body.data.fraudReason === FraudReason.NONE &&
+            body.data.sessionScore > 0
+          ) {
+            validSessionsCompleted++;
+          }
         }
       }
 
       // Check final streak - should only increase by 1, not 2
       const userAfter = await userRepository.findOne({
-        where: { id: userId },
+        where: { id: currentUserId },
       });
 
       const streakIncrease = (userAfter?.streak || 0) - initialStreak;

@@ -71,15 +71,16 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     } catch {
       // If we can't find a valid seed, use default moves
       // The tests will handle cases where validation fails gracefully
+      // Durations: >= 520ms for TOO_FAST_BRIDGE; 600-1100ms for bridges to reach gaps (40-200px)
       validMoves = [
-        { startTime: 0, duration: 200 }, // 64px
-        { startTime: 500, duration: 400 }, // 128px
-        { startTime: 1200, duration: 300 }, // 96px
-        { startTime: 1750, duration: 500 }, // 160px
-        { startTime: 2550, duration: 250 }, // 80px
-        { startTime: 3100, duration: 450 }, // 144px
-        { startTime: 3850, duration: 350 }, // 112px
-        { startTime: 4500, duration: 380 }, // 122px
+        { startTime: 0, duration: 650 },
+        { startTime: 800, duration: 700 },
+        { startTime: 1600, duration: 600 },
+        { startTime: 2300, duration: 750 },
+        { startTime: 3150, duration: 680 },
+        { startTime: 3930, duration: 720 },
+        { startTime: 4750, duration: 640 },
+        { startTime: 5490, duration: 690 },
       ];
       console.warn(
         'Could not find a guaranteed valid seed, using default. Tests may be flaky.',
@@ -124,6 +125,82 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     return Math.round(finalResult);
   };
 
+  /**
+   * Helper to find a valid game session with retry logic
+   * Handles user blacklisting by creating new users if needed
+   */
+  const findValidSession = async (
+    userId: number,
+    validMoves: Array<{ startTime: number; duration: number }>,
+    maxAttempts: number = 100,
+  ): Promise<{
+    result: {
+      sessionScore: number;
+      pointsEarned: number;
+      totalPoints: number;
+      isFraud: boolean;
+      fraudReason: FraudReason;
+    };
+    finalUserId: number;
+  }> => {
+    let currentUserId = userId;
+    let result;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      // Check if user got blacklisted BEFORE attempting validation
+      // This handles both initial blacklist and blacklisting during the loop
+      const existingUser = await entityManager.findOne(User, {
+        where: { id: currentUserId },
+        relations: ['fraudAttempts'],
+      });
+      
+      if (existingUser) {
+        existingUser.updateBlacklistStatus();
+        if (existingUser.isBlackListed) {
+          // User is blacklisted, create a new user with same properties
+          const newUser = new User();
+          newUser.googleId = `user-points-retry-${Date.now()}-${Math.random()}`;
+          newUser.nickName = existingUser.nickName;
+          newUser.referralCode = `${existingUser.referralCode}-RETRY-${attempts}`;
+          newUser.points = 0;
+          newUser.streak = existingUser.streak; // Preserve streak
+          newUser.isBlackListed = false;
+          newUser.fraudAttempts = [];
+          await entityManager.save(newUser);
+          currentUserId = newUser.id;
+        }
+      }
+
+      // Generate a new seed for each attempt
+      const { seed, signature } =
+        await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
+      const gameSession: GameSession = {
+        seed,
+        signature,
+        moves: validMoves,
+        usedItems: [],
+      };
+      result = await userService.validateSessionAndAwardPoints(
+        currentUserId,
+        gameSession,
+      );
+
+      // If we got points, the session was valid
+      if (
+        result.pointsEarned > 0 &&
+        result.sessionScore > 0 &&
+        !result.isFraud &&
+        result.fraudReason !== FraudReason.INVALID_DATA
+      ) {
+        break;
+      }
+      attempts++;
+    }
+
+    return { result: result!, finalUserId: currentUserId };
+  };
+
   // Generate a seed once and reuse it for all tests
   let validMoves: Array<{ startTime: number; duration: number }>;
 
@@ -155,56 +232,51 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
 
       // Try different move patterns - more moves = higher chance of success
       // IMPORTANT:
-      // 1. Timing must be varied (not consistent) to avoid TIMING_VARIANCE_TOO_LOW fraud detection
-      // 2. Durations must cover the range of possible gaps (40-180px at 320px/s = 125-562ms)
-      //    Adding platform width (~100px), max bridge needed is ~280px = 875ms
+      // 1. Durations >= 520ms for TOO_FAST_BRIDGE; 600-1100ms for bridges to reach gaps (40-200px)
+      // 2. Timing varied to avoid TIMING_VARIANCE_TOO_LOW; time between moves >= 100ms
       const movePatterns = [
-        // Pattern 1: Wide range of durations to hit various gap sizes
         [
-          { startTime: 0, duration: 150 }, // 48px - short gaps
-          { startTime: 450, duration: 350 }, // 112px - medium gaps
-          { startTime: 1100, duration: 250 }, // 80px
-          { startTime: 1550, duration: 450 }, // 144px
-          { startTime: 2300, duration: 200 }, // 64px
-          { startTime: 2800, duration: 550 }, // 176px - long gaps
-          { startTime: 3600, duration: 300 }, // 96px
-          { startTime: 4150, duration: 400 }, // 128px
-          { startTime: 4850, duration: 180 }, // 58px
-          { startTime: 5350, duration: 500 }, // 160px
+          { startTime: 0, duration: 650 },
+          { startTime: 800, duration: 700 },
+          { startTime: 1600, duration: 600 },
+          { startTime: 2300, duration: 750 },
+          { startTime: 3150, duration: 680 },
+          { startTime: 3930, duration: 720 },
+          { startTime: 4750, duration: 640 },
+          { startTime: 5490, duration: 690 },
+          { startTime: 6280, duration: 710 },
+          { startTime: 7090, duration: 660 },
         ],
-        // Pattern 2: Focus on medium-long gaps
         [
-          { startTime: 0, duration: 300 }, // 96px
-          { startTime: 600, duration: 450 }, // 144px
-          { startTime: 1350, duration: 350 }, // 112px
-          { startTime: 1950, duration: 550 }, // 176px
-          { startTime: 2750, duration: 400 }, // 128px
-          { startTime: 3400, duration: 500 }, // 160px
-          { startTime: 4200, duration: 380 }, // 122px
-          { startTime: 4850, duration: 480 }, // 154px
+          { startTime: 0, duration: 700 },
+          { startTime: 850, duration: 650 },
+          { startTime: 1600, duration: 750 },
+          { startTime: 2450, duration: 680 },
+          { startTime: 3230, duration: 720 },
+          { startTime: 4050, duration: 640 },
+          { startTime: 4790, duration: 690 },
+          { startTime: 5580, duration: 710 },
         ],
-        // Pattern 3: Many short-medium durations
         [
-          { startTime: 0, duration: 180 }, // 58px
-          { startTime: 400, duration: 280 }, // 90px
-          { startTime: 950, duration: 220 }, // 70px
-          { startTime: 1400, duration: 350 }, // 112px
-          { startTime: 2050, duration: 250 }, // 80px
-          { startTime: 2550, duration: 320 }, // 102px
-          { startTime: 3150, duration: 200 }, // 64px
-          { startTime: 3600, duration: 380 }, // 122px
-          { startTime: 4250, duration: 270 }, // 86px
-          { startTime: 4800, duration: 330 }, // 106px
-          { startTime: 5400, duration: 240 }, // 77px
-          { startTime: 5900, duration: 360 }, // 115px
+          { startTime: 0, duration: 630 },
+          { startTime: 780, duration: 680 },
+          { startTime: 1560, duration: 720 },
+          { startTime: 2380, duration: 650 },
+          { startTime: 3130, duration: 740 },
+          { startTime: 3970, duration: 670 },
+          { startTime: 4740, duration: 690 },
+          { startTime: 5530, duration: 710 },
+          { startTime: 6340, duration: 640 },
+          { startTime: 7080, duration: 700 },
+          { startTime: 7880, duration: 660 },
+          { startTime: 8640, duration: 730 },
         ],
-        // Pattern 4: Mix covering full range
         [
-          { startTime: 0, duration: 200 }, // 64px
-          { startTime: 500, duration: 400 }, // 128px
-          { startTime: 1200, duration: 300 }, // 96px
-          { startTime: 1750, duration: 500 }, // 160px
-          { startTime: 2550, duration: 250 }, // 80px
+          { startTime: 0, duration: 650 },
+          { startTime: 800, duration: 700 },
+          { startTime: 1600, duration: 600 },
+          { startTime: 2300, duration: 750 },
+          { startTime: 3150, duration: 680 },
         ],
       ];
 
@@ -246,9 +318,8 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
   };
 
   it('should calculate points correctly with streak boost for streak 0', async () => {
-    // Create user with streak 0
     const user = new User();
-    user.googleId = 'user-points-test-12345678901234567890';
+    user.googleId = `user-points-test-0-${Date.now()}-${Math.random()}`;
     user.nickName = 'PointsUser';
     user.referralCode = 'POINTS01';
     user.points = 0;
@@ -256,13 +327,10 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     user.isBlackListed = false;
     user.fraudAttempts = [];
     await entityManager.save(user);
-    // Reload user to ensure all defaults are applied
     const savedUser = await entityManager.findOne(User, {
       where: { id: user.id },
     });
-    if (!savedUser) {
-      throw new Error('User was not saved properly');
-    }
+    if (!savedUser) throw new Error('User was not saved properly');
 
     const dailyChallenge: DailyStreakChallenge = {
       id: 1,
@@ -271,72 +339,37 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     };
     await setupDailyStreakChallenge(dailyChallenge);
 
-    // Generate new seeds for each attempt since validation is probabilistic
-    // Reusing the same seed doesn't guarantee success
-    let result;
-    let attempts = 0;
-    const maxAttempts = 100; // Increased attempts significantly
+    // Mock game session validation for deterministic testing (avoids flaky physics)
+    const mockScore = 100;
+    jest.spyOn(gameSessionService, 'validateSession').mockReturnValue({
+      score: mockScore,
+      streakChallengeCompleted: true,
+      blocksPassed: 10,
+      isFraud: false,
+      fraudReason: FraudReason.NONE,
+    });
 
-    while (attempts < maxAttempts) {
-      // Generate a new seed for each attempt
-      const { seed, signature } =
-        await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
-      const gameSession: GameSession = {
-        seed,
-        signature,
-        moves: validMoves,
-        usedItems: [],
-      };
-      result = await userService.validateSessionAndAwardPoints(
-        savedUser.id,
-        gameSession,
-      );
+    const { seed, signature } =
+      await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
+    const result = await userService.validateSessionAndAwardPoints(
+      savedUser.id,
+      { seed, signature, moves: validMoves, usedItems: [] },
+    );
 
-      // If we got points, the session was valid
-      if (
-        result.pointsEarned > 0 &&
-        result.sessionScore > 0 &&
-        !result.isFraud &&
-        result.fraudReason !== FraudReason.INVALID_DATA
-      ) {
-        break;
-      }
-      attempts++;
-    }
+    expect(result.pointsEarned).toBeGreaterThan(0);
+    expect(result.sessionScore).toBe(mockScore);
+    expect(result.isFraud).toBe(false);
+    expect(result.fraudReason).not.toBe(FraudReason.INVALID_DATA);
 
-    // Verify we got a valid session
-    expect(result).toBeDefined();
-    // Game session validation is probabilistic - if all attempts failed,
-    // it means the seed/moves combination doesn't work with current validation rules
-    // This is a test data issue, not a logic issue
-    if (result!.pointsEarned === 0) {
-      // Log why validation failed for debugging
-      console.warn('Game session validation failed after all attempts:', {
-        pointsEarned: result!.pointsEarned,
-        sessionScore: result!.sessionScore,
-        isFraud: result!.isFraud,
-        fraudReason: result!.fraudReason,
-        attempts: maxAttempts,
-      });
-    }
-    expect(result!.pointsEarned).toBeGreaterThan(0);
-    expect(result!.sessionScore).toBeGreaterThan(0);
-    expect(result!.isFraud).toBe(false);
-    expect(result!.fraudReason).not.toBe(FraudReason.INVALID_DATA);
-
-    // Verify the boost formula: boost = Math.min(0.5, Math.log(0 + 1) / 7) = Math.log(1) / 7 = 0
-    // So points should be: basePoints + (0 * basePoints) = basePoints
-    const basePoints = Math.floor(result!.sessionScore * 0.1);
-    const expectedPoints = calculateExpectedPoints(result!.sessionScore, 0);
-
-    expect(result!.pointsEarned).toBe(expectedPoints);
-    expect(result!.pointsEarned).toBe(basePoints); // With streak 0, boost is 0
+    const basePoints = Math.floor(result.sessionScore * 0.1);
+    const expectedPoints = calculateExpectedPoints(result.sessionScore, 0);
+    expect(result.pointsEarned).toBe(expectedPoints);
+    expect(result.pointsEarned).toBe(basePoints);
   });
 
   it('should calculate points correctly with streak boost for streak 1', async () => {
-    // Create user with streak 1
     const user = new User();
-    user.googleId = 'user-points-test-12345678901234567890';
+    user.googleId = `user-points-test-1-${Date.now()}-${Math.random()}`;
     user.nickName = 'PointsUser';
     user.referralCode = 'POINTS02';
     user.points = 0;
@@ -344,13 +377,10 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     user.isBlackListed = false;
     user.fraudAttempts = [];
     await entityManager.save(user);
-    // Reload user to ensure all defaults are applied
     const savedUser = await entityManager.findOne(User, {
       where: { id: user.id },
     });
-    if (!savedUser) {
-      throw new Error('User was not saved properly');
-    }
+    if (!savedUser) throw new Error('User was not saved properly');
 
     const dailyChallenge: DailyStreakChallenge = {
       id: 1,
@@ -359,54 +389,31 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     };
     await setupDailyStreakChallenge(dailyChallenge);
 
-    // Generate new seeds for each attempt since validation is probabilistic
-    // Reusing the same seed doesn't guarantee success
-    let result;
-    let attempts = 0;
-    const maxAttempts = 100; // Increased attempts significantly
+    const mockScore = 80;
+    jest.spyOn(gameSessionService, 'validateSession').mockReturnValue({
+      score: mockScore,
+      streakChallengeCompleted: true,
+      blocksPassed: 8,
+      isFraud: false,
+      fraudReason: FraudReason.NONE,
+    });
 
-    while (attempts < maxAttempts) {
-      // Generate a new seed for each attempt
-      const { seed, signature } =
-        await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
-      const gameSession: GameSession = {
-        seed,
-        signature,
-        moves: validMoves,
-        usedItems: [],
-      };
-      result = await userService.validateSessionAndAwardPoints(
-        user.id,
-        gameSession,
-      );
+    const { seed, signature } =
+      await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
+    const result = await userService.validateSessionAndAwardPoints(
+      savedUser.id,
+      { seed, signature, moves: validMoves, usedItems: [] },
+    );
 
-      // If we got points, the session was valid
-      if (
-        result.pointsEarned > 0 &&
-        result.sessionScore > 0 &&
-        !result.isFraud &&
-        result.fraudReason !== FraudReason.INVALID_DATA
-      ) {
-        break;
-      }
-      attempts++;
-    }
-
-    // Verify we got a valid session
-    expect(result).toBeDefined();
-    expect(result!.pointsEarned).toBeGreaterThan(0);
-    expect(result!.sessionScore).toBeGreaterThan(0);
-
-    // Verify the boost formula: boost = Math.min(0.5, Math.log(1 + 1) / 7) = Math.log(2) / 7 ≈ 0.099
-    const expectedPoints = calculateExpectedPoints(result!.sessionScore, 1);
-
-    expect(result!.pointsEarned).toBe(expectedPoints);
+    expect(result.pointsEarned).toBeGreaterThan(0);
+    expect(result.sessionScore).toBe(mockScore);
+    const expectedPoints = calculateExpectedPoints(result.sessionScore, 1);
+    expect(result.pointsEarned).toBe(expectedPoints);
   });
 
   it('should calculate points correctly with streak boost for streak 5', async () => {
-    // Create user with streak 5
     const user = new User();
-    user.googleId = 'user-points-test-12345678901234567890';
+    user.googleId = `user-points-test-5-${Date.now()}-${Math.random()}`;
     user.nickName = 'PointsUser';
     user.referralCode = 'POINTS03';
     user.points = 0;
@@ -414,13 +421,10 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     user.isBlackListed = false;
     user.fraudAttempts = [];
     await entityManager.save(user);
-    // Reload user to ensure all defaults are applied
     const savedUser = await entityManager.findOne(User, {
       where: { id: user.id },
     });
-    if (!savedUser) {
-      throw new Error('User was not saved properly');
-    }
+    if (!savedUser) throw new Error('User was not saved properly');
 
     const dailyChallenge: DailyStreakChallenge = {
       id: 1,
@@ -429,60 +433,41 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     };
     await setupDailyStreakChallenge(dailyChallenge);
 
-    // Generate new seeds for each attempt since validation is probabilistic
-    // Reusing the same seed doesn't guarantee success
-    let result;
-    let attempts = 0;
-    const maxAttempts = 100; // Increased attempts significantly
+    const mockScore = 60;
+    jest.spyOn(gameSessionService, 'validateSession').mockReturnValue({
+      score: mockScore,
+      streakChallengeCompleted: true,
+      blocksPassed: 6,
+      isFraud: false,
+      fraudReason: FraudReason.NONE,
+    });
 
-    while (attempts < maxAttempts) {
-      // Generate a new seed for each attempt
-      const { seed, signature } =
-        await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
-      const gameSession: GameSession = {
-        seed,
-        signature,
-        moves: validMoves,
-        usedItems: [],
-      };
-      result = await userService.validateSessionAndAwardPoints(
-        savedUser.id,
-        gameSession,
-      );
+    const { seed, signature } =
+      await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
+    const result = await userService.validateSessionAndAwardPoints(
+      savedUser.id,
+      { seed, signature, moves: validMoves, usedItems: [] },
+    );
 
-      // If we got points, the session was valid
-      if (
-        result.pointsEarned > 0 &&
-        result.sessionScore > 0 &&
-        !result.isFraud &&
-        result.fraudReason !== FraudReason.INVALID_DATA
-      ) {
-        break;
-      }
-      attempts++;
-    }
-
-    // Verify we got a valid session
-    expect(result).toBeDefined();
-    expect(result!.pointsEarned).toBeGreaterThan(0);
-    expect(result!.sessionScore).toBeGreaterThan(0);
-
-    // Verify the boost formula: boost = Math.min(0.5, Math.log(5 + 1) / 7) = Math.log(6) / 7 ≈ 0.256
-    const expectedPoints = calculateExpectedPoints(result!.sessionScore, 5);
-
-    expect(result!.pointsEarned).toBe(expectedPoints);
+    expect(result.pointsEarned).toBeGreaterThan(0);
+    const expectedPoints = calculateExpectedPoints(result.sessionScore, 5);
+    expect(result.pointsEarned).toBe(expectedPoints);
   });
 
   it('should calculate points correctly with streak boost for streak 10', async () => {
-    // Create user with streak 10
     const user = new User();
-    user.googleId = 'user-points-test-12345678901234567890';
+    user.googleId = `user-points-test-10-${Date.now()}-${Math.random()}`;
     user.nickName = 'PointsUser';
     user.referralCode = 'POINTS04';
     user.points = 0;
     user.streak = 10;
     user.isBlackListed = false;
+    user.fraudAttempts = [];
     await entityManager.save(user);
+    const savedUser = await entityManager.findOne(User, {
+      where: { id: user.id },
+    });
+    if (!savedUser) throw new Error('User was not saved properly');
 
     const dailyChallenge: DailyStreakChallenge = {
       id: 1,
@@ -491,61 +476,43 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     };
     await setupDailyStreakChallenge(dailyChallenge);
 
-    // Generate new seeds for each attempt since validation is probabilistic
-    // Reusing the same seed doesn't guarantee success
-    let result;
-    let attempts = 0;
-    const maxAttempts = 100; // Increased attempts significantly
+    const mockScore = 50;
+    jest.spyOn(gameSessionService, 'validateSession').mockReturnValue({
+      score: mockScore,
+      streakChallengeCompleted: true,
+      blocksPassed: 5,
+      isFraud: false,
+      fraudReason: FraudReason.NONE,
+    });
 
-    while (attempts < maxAttempts) {
-      // Generate a new seed for each attempt
-      const { seed, signature } =
-        await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
-      const gameSession: GameSession = {
-        seed,
-        signature,
-        moves: validMoves,
-        usedItems: [],
-      };
-      result = await userService.validateSessionAndAwardPoints(
-        user.id,
-        gameSession,
-      );
+    const { seed, signature } =
+      await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
+    const result = await userService.validateSessionAndAwardPoints(
+      savedUser.id,
+      { seed, signature, moves: validMoves, usedItems: [] },
+    );
 
-      // If we got points, the session was valid
-      if (
-        result.pointsEarned > 0 &&
-        result.sessionScore > 0 &&
-        !result.isFraud &&
-        result.fraudReason !== FraudReason.INVALID_DATA
-      ) {
-        break;
-      }
-      attempts++;
-    }
-
-    // Verify we got a valid session
-    expect(result).toBeDefined();
-    expect(result!.pointsEarned).toBeGreaterThan(0);
-    expect(result!.sessionScore).toBeGreaterThan(0);
-
-    // Verify the boost formula: boost = Math.min(0.5, Math.log(10 + 1) / 7) = Math.log(11) / 7 ≈ 0.343
-    const expectedPoints = calculateExpectedPoints(result!.sessionScore, 10);
-    expect(Math.abs(result!.pointsEarned - expectedPoints)).toBeLessThanOrEqual(
+    expect(result.pointsEarned).toBeGreaterThan(0);
+    const expectedPoints = calculateExpectedPoints(result.sessionScore, 10);
+    expect(Math.abs(result.pointsEarned - expectedPoints)).toBeLessThanOrEqual(
       1,
     );
   });
 
   it('should cap boost at 0.5 for high streaks', async () => {
-    // Create user with very high streak (should cap boost at 0.5)
     const user = new User();
-    user.googleId = 'user-points-test-12345678901234567890';
+    user.googleId = `user-points-test-high-${Date.now()}-${Math.random()}`;
     user.nickName = 'PointsUser';
     user.referralCode = 'POINTS05';
     user.points = 0;
-    user.streak = 100; // Very high streak
+    user.streak = 100;
     user.isBlackListed = false;
+    user.fraudAttempts = [];
     await entityManager.save(user);
+    const savedUser = await entityManager.findOne(User, {
+      where: { id: user.id },
+    });
+    if (!savedUser) throw new Error('User was not saved properly');
 
     const dailyChallenge: DailyStreakChallenge = {
       id: 1,
@@ -554,71 +521,29 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     };
     await setupDailyStreakChallenge(dailyChallenge);
 
-    // Generate new seeds for each attempt since validation is probabilistic
-    // Reusing the same seed doesn't guarantee success
-    let result;
-    let attempts = 0;
-    const maxAttempts = 100; // Increased attempts significantly
+    const mockScore = 40;
+    jest.spyOn(gameSessionService, 'validateSession').mockReturnValue({
+      score: mockScore,
+      streakChallengeCompleted: true,
+      blocksPassed: 4,
+      isFraud: false,
+      fraudReason: FraudReason.NONE,
+    });
 
-    while (attempts < maxAttempts) {
-      // Generate a new seed for each attempt
-      const { seed, signature } =
-        await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
-      const gameSession: GameSession = {
-        seed,
-        signature,
-        moves: validMoves,
-        usedItems: [],
-      };
-      result = await userService.validateSessionAndAwardPoints(
-        user.id,
-        gameSession,
-      );
-
-      // If we got points, the session was valid
-      if (
-        result.pointsEarned > 0 &&
-        result.sessionScore > 0 &&
-        !result.isFraud &&
-        result.fraudReason !== FraudReason.INVALID_DATA
-      ) {
-        break;
-      }
-      attempts++;
-    }
-
-    // Verify we got a valid session
-    expect(result).toBeDefined();
-
-    // If we couldn't find a valid session after all attempts, skip the test
-    // This can happen due to the probabilistic nature of game session validation
-    if (
-      !result ||
-      result.pointsEarned === 0 ||
-      result.sessionScore === 0 ||
-      result.isFraud ||
-      result.fraudReason === FraudReason.INVALID_DATA
-    ) {
-      console.warn(
-        `Could not find valid session after ${maxAttempts} attempts for streak 100 test. Skipping assertions.`,
-      );
-      return; // Skip this test
-    }
+    const { seed, signature } =
+      await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
+    const result = await userService.validateSessionAndAwardPoints(
+      savedUser.id,
+      { seed, signature, moves: validMoves, usedItems: [] },
+    );
 
     expect(result.pointsEarned).toBeGreaterThan(0);
-    expect(result.sessionScore).toBeGreaterThan(0);
-
-    // Verify the boost formula: boost = Math.min(0.5, Math.log(100 + 1) / 7) = 0.5 (capped)
-    // Math.log(101) / 7 ≈ 0.664, but should be capped at 0.5
     const expectedPoints = calculateExpectedPoints(result.sessionScore, 100);
     expect(Math.abs(result.pointsEarned - expectedPoints)).toBeLessThanOrEqual(
       1,
     );
-
-    // Verify boost is capped at 0.5
     const basePoints = Math.floor(result.sessionScore * 0.1);
     const maxBoostPoints = Math.floor(basePoints + 0.5 * basePoints);
-    // Allow small rounding variance (+1)
     expect(result.pointsEarned).toBeLessThanOrEqual(maxBoostPoints + 1);
   });
 
@@ -630,7 +555,15 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
     };
     await setupDailyStreakChallenge(dailyChallenge);
 
-    // Test with different streaks
+    const mockScore = 70;
+    jest.spyOn(gameSessionService, 'validateSession').mockReturnValue({
+      score: mockScore,
+      streakChallengeCompleted: true,
+      blocksPassed: 7,
+      isFraud: false,
+      fraudReason: FraudReason.NONE,
+    });
+
     const streaks = [0, 1, 5, 10, 20];
     const pointsEarned: number[] = [];
 
@@ -644,103 +577,28 @@ describe('User Points Calculation with Streak Boost Integration Tests', () => {
       user.isBlackListed = false;
       user.fraudAttempts = [];
       await entityManager.save(user);
-      // Reload user to ensure all defaults are applied
       const savedUser = await entityManager.findOne(User, {
         where: { id: user.id },
       });
-      if (!savedUser) {
-        throw new Error('User was not saved properly');
-      }
+      if (!savedUser) throw new Error('User was not saved properly');
 
-      // Generate new seeds for each attempt since validation is probabilistic
-      let result;
-      let attempts = 0;
-      const maxAttempts = 100; // Increased attempts significantly
+      const { seed, signature } =
+        await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
+      const result = await userService.validateSessionAndAwardPoints(
+        savedUser.id,
+        { seed, signature, moves: validMoves, usedItems: [] },
+      );
 
-      while (attempts < maxAttempts) {
-        // Generate a new seed for each attempt
-        const { seed, signature } =
-          await gameSessionService.generateRandomSignedSeed(ADMIN_PRIVATE_KEY);
-        const gameSession: GameSession = {
-          seed,
-          signature,
-          moves: validMoves,
-          usedItems: [],
-        };
-        result = await userService.validateSessionAndAwardPoints(
-          savedUser.id,
-          gameSession,
-        );
-
-        // If we got points, the session was valid
-        if (
-          result.pointsEarned > 0 &&
-          result.sessionScore > 0 &&
-          !result.isFraud &&
-          result.fraudReason !== FraudReason.INVALID_DATA
-        ) {
-          break;
-        }
-        attempts++;
-      }
-
-      // Add the points earned if we got a valid session
-      if (
-        result &&
-        result.pointsEarned > 0 &&
-        result.sessionScore > 0 &&
-        !result.isFraud &&
-        result.fraudReason !== FraudReason.INVALID_DATA
-      ) {
-        pointsEarned.push(result.pointsEarned);
-      } else {
-        // If we couldn't find a valid session, push 0 as a placeholder
-        // This will help us identify which streaks failed
-        console.warn(
-          `Could not find valid session for streak ${streak} after ${maxAttempts} attempts`,
-        );
-        pointsEarned.push(0);
-      }
-
-      // Clean up for next iteration
+      pointsEarned.push(result.pointsEarned);
       await entityManager.remove(savedUser);
     }
 
-    // Verify we got results for all streaks
-    const validResults = pointsEarned.filter((p) => p > 0);
-
-    if (validResults.length < streaks.length) {
-      console.warn(
-        `Only got ${validResults.length} valid results out of ${streaks.length} streaks. Some tests may be flaky due to probabilistic validation.`,
-      );
-    }
-
-    // We need at least 3 valid results to meaningfully compare boost increases
-    // (since we need to see a pattern across multiple streaks)
-    // Still verify we got some results
-    expect(validResults.length).toBeGreaterThan(0);
-    if (validResults.length < 3) {
-      console.warn(
-        `Not enough valid results (${validResults.length}) to verify boost increases. Need at least 3. Skipping comparison.`,
-      );
-      return;
-    }
-
-    // Verify that we got results for all streaks
     expect(pointsEarned.length).toBe(streaks.length);
+    expect(pointsEarned.every((p) => p > 0)).toBe(true);
 
-    // Verify that all valid results are positive
-    const positivePoints = pointsEarned.filter((p) => p > 0);
-    expect(positivePoints.length).toBeGreaterThan(0);
-    for (let i = 0; i < positivePoints.length; i++) {
-      expect(positivePoints[i]).toBeGreaterThan(0);
+    // With same base score, points should increase with streak (boost increases)
+    for (let i = 1; i < pointsEarned.length; i++) {
+      expect(pointsEarned[i]).toBeGreaterThanOrEqual(pointsEarned[i - 1]);
     }
-
-    // Note: We can't directly verify that points increase with streaks because
-    // different seeds produce different base scores. However, we can verify that
-    // the boost formula is being applied correctly by checking that we got valid
-    // results for all streaks, which means the boost calculation is working.
-    // The actual boost increase verification would require using the same seed
-    // for all tests, which is not feasible with probabilistic validation.
   });
 });

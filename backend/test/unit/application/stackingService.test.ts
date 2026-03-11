@@ -7,12 +7,22 @@ import { StackingData } from '../../../src/domain/entities/stackingData';
 import { User } from '../../../src/domain/entities/user';
 import { TransactionStatus } from '../../../src/domain/entities/enums';
 import {
-  WrongStackingFunctionError,
-  WrongStackingPoolError,
+  // WrongStackingFunctionError,
+  // WrongStackingPoolError,
   RewardFolderRefNotCached,
 } from '../../../src/application/errors/stackingDataErrors';
 import { UserNotFoundError } from '../../../src/application/errors/userErrors';
 import { FAST_POOL_STX_ADDRESS } from '../../../src/shared/constants';
+
+// Mock NODE_ENV for tests that need production mode
+// Tests can set TEST_NODE_ENV to override
+jest.mock('../../../src/shared/constants', () => {
+  const original = jest.requireActual('../../../src/shared/constants');
+  return {
+    ...original,
+    NODE_ENV: process.env.TEST_NODE_ENV || process.env.NODE_ENV || 'development',
+  };
+});
 
 describe('StackingService', () => {
   let stackingService: StackingService;
@@ -153,6 +163,20 @@ describe('StackingService', () => {
     });
 
     it('should throw WrongStackingFunctionError if function is not delegate-stx', async () => {
+      // Set TEST_NODE_ENV to production for this test
+      const originalTestEnv = process.env.TEST_NODE_ENV;
+      process.env.TEST_NODE_ENV = 'production';
+      
+      // Re-import to get the updated NODE_ENV
+      jest.resetModules();
+      const { StackingService: StackingServiceProd } = await import('../../../src/application/stacking/stackingService');
+      const stackingServiceProd = new StackingServiceProd(
+        mockEntityManager,
+        mockTransactionClient,
+        mockStackingPoolClient,
+        mockCacheClient,
+      );
+      
       mockEntityManager.findOne.mockResolvedValue(mockUser as User);
       mockTransactionClient.fetchStackingTransactionData.mockResolvedValue({
         ...mockTxData,
@@ -160,11 +184,33 @@ describe('StackingService', () => {
       });
 
       await expect(
-        stackingService.saveStackingData(1, 'abc123', 'FastPool'),
-      ).rejects.toThrow(WrongStackingFunctionError);
+        stackingServiceProd.saveStackingData(1, 'abc123', 'FastPool'),
+      ).rejects.toThrow('Wrong contract call! the right pool stacking contract call should be: delegate-stx');
+      
+      // Restore and reset
+      if (originalTestEnv) {
+        process.env.TEST_NODE_ENV = originalTestEnv;
+      } else {
+        delete process.env.TEST_NODE_ENV;
+      }
+      jest.resetModules();
     });
 
     it('should throw WrongStackingPoolError if wrong pool address', async () => {
+      // Set TEST_NODE_ENV to production for this test
+      const originalTestEnv = process.env.TEST_NODE_ENV;
+      process.env.TEST_NODE_ENV = 'production';
+      
+      // Re-import to get the updated NODE_ENV
+      jest.resetModules();
+      const { StackingService: StackingServiceProd } = await import('../../../src/application/stacking/stackingService');
+      const stackingServiceProd = new StackingServiceProd(
+        mockEntityManager,
+        mockTransactionClient,
+        mockStackingPoolClient,
+        mockCacheClient,
+      );
+      
       mockEntityManager.findOne.mockResolvedValue(mockUser as User);
       mockTransactionClient.fetchStackingTransactionData.mockResolvedValue({
         ...mockTxData,
@@ -172,8 +218,16 @@ describe('StackingService', () => {
       });
 
       await expect(
-        stackingService.saveStackingData(1, 'abc123', 'FastPool'),
-      ).rejects.toThrow(WrongStackingPoolError);
+        stackingServiceProd.saveStackingData(1, 'abc123', 'FastPool'),
+      ).rejects.toThrow('Error: Wrong Pool please use fast pool for a better tracking of your stacking data');
+      
+      // Restore and reset
+      if (originalTestEnv) {
+        process.env.TEST_NODE_ENV = originalTestEnv;
+      } else {
+        delete process.env.TEST_NODE_ENV;
+      }
+      jest.resetModules();
     });
   });
 
