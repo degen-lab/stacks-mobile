@@ -73,6 +73,7 @@ export const ContractCallDetailsSheet = React.forwardRef<
       setCustomFee,
       feeMicroStx,
       isFeeValid,
+      isFeeUnavailable,
       isLoadingFees,
       resetFeeState,
     } = useContractCallFee({
@@ -98,10 +99,16 @@ export const ContractCallDetailsSheet = React.forwardRef<
       onConfirm?.(showFeeSelector ? feeMicroStx : undefined);
     }, [feeMicroStx, onConfirm, showFeeSelector]);
 
+    // Allow submission when fees aren't available — the wallet will estimate on confirmation
+    const canUseWalletEstimatedFee =
+      selectedFeeOption !== "custom" &&
+      !isLoadingFees &&
+      (feeMicroStx === undefined || isFeeUnavailable);
     const isConfirmDisabled =
       confirmDisabled ||
       isLoading ||
-      (showFeeSelector && (!isFeeValid || isLoadingFees));
+      (showFeeSelector &&
+        (isLoadingFees || (!isFeeValid && !canUseWalletEstimatedFee)));
 
     return (
       <Modal
@@ -162,6 +169,7 @@ export const ContractCallDetailsSheet = React.forwardRef<
                   stackingPrice={stackingPrice}
                   isLoadingFees={isLoadingFees}
                   isFeeValid={isFeeValid}
+                  isFeeUnavailable={isFeeUnavailable}
                   onAdvancedToggle={setShowAdvancedOnly}
                   txId={txId}
                 />

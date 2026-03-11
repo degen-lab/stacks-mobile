@@ -1,6 +1,6 @@
 import { principalCV } from "@stacks/transactions";
 import { useColorScheme } from "nativewind";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView } from "react-native";
 
 import { useGetLatestRewardAddressUser } from "@/api/dual-stacking/contract";
@@ -27,8 +27,6 @@ type ChangeRewardAddressSheetProps = {
     feeMicroStx?: number;
   }) => Promise<boolean>;
 };
-
-type SheetStep = "form" | "confirm";
 
 export function ChangeRewardAddressSheet({
   open,
@@ -62,41 +60,39 @@ export function ChangeRewardAddressSheet({
   const [rewardAddress, setRewardAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUserEdited, setHasUserEdited] = useState(false);
-  const [step, setStep] = useState<SheetStep>("form");
   const normalizedAddress = rewardAddress.trim();
 
   const isAddressValid = isValidPrincipal(normalizedAddress);
+  const isSameAddress =
+    typeof latestAddress === "string" &&
+    latestAddress.length > 0 &&
+    normalizedAddress === latestAddress;
+
   const feeFunctionArgs = useMemo(
     () => (isAddressValid ? [principalCV(normalizedAddress)] : []),
     [isAddressValid, normalizedAddress],
   );
 
-  useEffect(() => {
-    if (open) {
-      void refetch();
-    }
-  }, [open, refetch]);
+  const activeSheetRef = useRef<"form" | "confirm" | "none">("none");
+  const isClosingRef = useRef(false);
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      isClosingRef.current = false;
+      activeSheetRef.current = "form";
+      void refetch();
+      presentForm();
+    } else {
+      isClosingRef.current = true;
+      activeSheetRef.current = "none";
       dismissForm();
       dismissConfirm();
-      setStep("form");
       setRewardAddress("");
       setIsSubmitting(false);
       setHasUserEdited(false);
-      return;
     }
-
-    if (step === "form") {
-      presentForm();
-      dismissConfirm();
-      return;
-    }
-
-    dismissForm();
-    presentConfirm();
-  }, [dismissConfirm, dismissForm, open, presentConfirm, presentForm, step]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     if (!open || hasUserEdited) return;
@@ -117,25 +113,27 @@ export function ChangeRewardAddressSheet({
     onOpenChange(false);
   };
 
-  const isSameAddress =
-    typeof latestAddress === "string" &&
-    latestAddress.length > 0 &&
-    normalizedAddress === latestAddress;
-
-  const handleOpenContractCall = () => {
-    if (!isAddressValid || isSubmitting || isSameAddress) return;
-    setStep("confirm");
+  const handleOpenConfirm = () => {
+    if (isSubmitting || activeSheetRef.current !== "form") return;
+    activeSheetRef.current = "confirm";
+    dismissForm();
+    presentConfirm();
   };
 
   const handleReturnToForm = () => {
-    if (isSubmitting) return;
+    if (
+      isSubmitting ||
+      isClosingRef.current ||
+      activeSheetRef.current !== "confirm"
+    )
+      return;
+    activeSheetRef.current = "form";
     dismissConfirm();
-    setStep("form");
+    presentForm();
   };
 
-  const handleSubmit = async (feeMicroStx?: number) => {
-    if (isSubmitting || !isAddressValid) return;
-
+  const handleConfirm = async (feeMicroStx?: number) => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const ok = await onChangeRewardAddress({
@@ -154,7 +152,6 @@ export function ChangeRewardAddressSheet({
     <>
       <Modal
         ref={formRef}
-        title="Change reward address"
         snapPoints={["55%"]}
         backgroundStyle={{
           backgroundColor:
@@ -162,13 +159,16 @@ export function ChangeRewardAddressSheet({
         }}
         enablePanDownToClose
         onDismiss={() => {
-          if (step === "form") {
-            onOpenChange(false);
+          if (activeSheetRef.current === "form") {
+            handleClose();
           }
         }}
       >
         <ScrollView className="flex-1" contentContainerClassName="pb-6">
           <View className="px-6">
+            <Text className="mb-3 font-matter text-2xl text-primary">
+              Change reward address
+            </Text>
             <Text className="mb-6 text-sm font-instrument-sans leading-relaxed text-secondary">
               Update the address where you receive pool rewards. Make sure it is
               a valid Stacks principal.
@@ -204,8 +204,8 @@ export function ChangeRewardAddressSheet({
                 label="Change address"
                 variant="gamePrimary"
                 size="lg"
-                onPress={handleOpenContractCall}
-                disabled={!isAddressValid || isSubmitting || isSameAddress}
+                onPress={handleOpenConfirm}
+                disabled={!isAddressValid || isSameAddress || isSubmitting}
               />
               <Button
                 label="Cancel"
@@ -222,26 +222,26 @@ export function ChangeRewardAddressSheet({
       <ContractCallDetailsSheet
         ref={confirmRef}
         title="Change reward address"
-        snapPoints={["55%"]}
+        snapPoints={["60%"]}
         network={selectedNetwork}
         contractAddress={contractId}
         functionName={functionName}
-        feeFunctionArgs={feeFunctionArgs}
         contractArgs={[
           {
-            name: "new-reward-address",
+            name: "new-address",
             value: normalizedAddress,
             type: "principal",
           },
         ]}
-        showFeeSelector={step === "confirm"}
+        feeFunctionArgs={feeFunctionArgs}
+        showFeeSelector
         confirmLabel="Change address"
         onConfirm={(feeMicroStx) => {
-          void handleSubmit(feeMicroStx);
+          void handleConfirm(feeMicroStx);
         }}
         onClose={handleReturnToForm}
         isLoading={isSubmitting}
-        confirmDisabled={!isAddressValid || isSubmitting}
+        confirmDisabled={isSubmitting}
       />
     </>
   );

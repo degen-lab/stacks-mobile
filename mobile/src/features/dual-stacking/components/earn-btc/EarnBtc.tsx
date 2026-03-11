@@ -19,11 +19,15 @@ import { useCheckTerms } from "@/api/dual-stacking/enrollment/use-check-terms";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { fromSatsToBtc } from "@/lib/format/currency";
+import { contractEnroll } from "../contract-calls";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
-import { walletKit } from "@/lib/stacks/wallet";
 import { getExplorerTxUrl } from "@/lib/stacks/network";
-import { useSelectedNetwork, useSettingsStore } from "@/lib/store/settings";
-import { PostConditionMode } from "@stacks/transactions";
+import {
+  FUTURE_MIGRATION_ID,
+  getContractTypeForCycle,
+} from "@/lib/stacks/utils";
+import { useSelectedNetwork } from "@/lib/store/settings";
+import { noneCV } from "@stacks/transactions";
 
 type EarnBtcContainerProps = {
   onExploreApps?: () => void;
@@ -75,8 +79,10 @@ export default function EarnBtcContainer({
     enabled: !!stxAddress,
   });
 
-  const contractId = CONTRACTS[selectedNetwork].yieldV2;
-  const enrollFunctionName = SC_FUNCTIONS.yieldV2.publicFunctions.ENROLL;
+  const contractType = getContractTypeForCycle(FUTURE_MIGRATION_ID);
+  const contractId = CONTRACTS[selectedNetwork][contractType];
+  const enrollFunctionName = SC_FUNCTIONS[contractType].publicFunctions.ENROLL;
+  const enrollFunctionArgs = [noneCV()];
 
   const {
     selectedFeeOption,
@@ -89,7 +95,7 @@ export default function EarnBtcContainer({
   } = useContractCallFee({
     contractId,
     functionName: enrollFunctionName,
-    functionArgs: [],
+    functionArgs: enrollFunctionArgs,
     enabled: isEnrollSheetOpen,
   });
 
@@ -196,33 +202,29 @@ export default function EarnBtcContainer({
   const handleEnroll = async () => {
     if (!stxAddress || !isFeeValid) return;
 
+    setIsSubmittingEnroll(true);
     try {
-      setIsSubmittingEnroll(true);
-
-      const txId = await walletKit.makeContractCall(
-        contractId,
-        enrollFunctionName,
-        [],
-        PostConditionMode.Allow,
-        feeMicroStx,
-        useSettingsStore.getState().activeAccountIndex,
-      );
-
-      if (txId) {
-        setEnrollTxId(txId);
-        setIsEnrolledModalOpen(true);
-        setIsEnrolling(true);
-        setIsEnrollSheetOpen(false);
-        setIsSubmittingEnroll(false);
-      } else {
-        throw new Error("Broadcast failed");
+      const txid = await contractEnroll(undefined, feeMicroStx);
+      if (!txid) {
+        showMessage({
+          message: "Enrollment failed",
+          description: "Broadcast failed",
+          type: "danger",
+        });
+        return;
       }
-    } catch (e) {
+
+      setEnrollTxId(txid);
+      setIsEnrolledModalOpen(true);
+      setIsEnrolling(true);
+      setIsEnrollSheetOpen(false);
+    } catch {
       showMessage({
         message: "Enrollment failed",
-        description: String(e),
+        description: "Unable to create or broadcast enrollment transaction.",
         type: "danger",
       });
+    } finally {
       setIsSubmittingEnroll(false);
     }
   };

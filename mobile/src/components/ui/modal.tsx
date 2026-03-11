@@ -35,7 +35,10 @@ import type {
 import { BottomSheetModal, useBottomSheet } from "@gorhom/bottom-sheet";
 import * as React from "react";
 import { Pressable, View } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import colors from "./colors";
 
 import { Text } from "./text";
@@ -143,14 +146,16 @@ export const Modal = React.forwardRef(
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const CustomBackdrop = ({ style }: BottomSheetBackdropProps) => {
+const CustomBackdrop = ({ style, animatedIndex }: BottomSheetBackdropProps) => {
   const { close } = useBottomSheet();
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedIndex.value, [-1, 0], [0, 1], "clamp"),
+  }));
+
   return (
     <AnimatedPressable
       onPress={() => close()}
-      entering={FadeIn.duration(50)}
-      exiting={FadeOut.duration(20)}
-      style={[style, { backgroundColor: "rgba(0, 0, 0, 0.4)" }]}
+      style={[style, { backgroundColor: "rgba(0, 0, 0, 0.4)" }, animatedStyle]}
     />
   );
 };

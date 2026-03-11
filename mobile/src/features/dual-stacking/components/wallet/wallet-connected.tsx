@@ -33,12 +33,16 @@ export default function ConnectWallet() {
     changeRewardAddress,
     isOptOutSubmitting,
     optOutStatus,
+    isChangeAddressSubmitting,
+    changeAddressStatus,
   } = useWalletActions();
 
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
   const [isChangeAddressOpen, setIsChangeAddressOpen] = useState(false);
   const [isUnenrollOpen, setIsUnenrollOpen] = useState(false);
   const [isUnenrollModalOpen, setIsUnenrollModalOpen] = useState(false);
+  const [isChangeAddressModalOpen, setIsChangeAddressModalOpen] =
+    useState(false);
 
   useEffect(() => {
     if (optOutStatus === "loading") {
@@ -64,6 +68,35 @@ export default function ConnectWallet() {
 
     return () => clearTimeout(timeout);
   }, [isUnenrollModalOpen, isOptOutSubmitting, optOutStatus]);
+
+  useEffect(() => {
+    if (changeAddressStatus === "loading") {
+      setIsChangeAddressModalOpen(true);
+    }
+    if (changeAddressStatus === "error") {
+      setIsChangeAddressModalOpen(false);
+    }
+  }, [changeAddressStatus]);
+
+  useEffect(() => {
+    if (
+      !isChangeAddressModalOpen ||
+      isChangeAddressSubmitting ||
+      changeAddressStatus !== "success"
+    ) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setIsChangeAddressModalOpen(false);
+    }, 2200);
+
+    return () => clearTimeout(timeout);
+  }, [
+    isChangeAddressModalOpen,
+    isChangeAddressSubmitting,
+    changeAddressStatus,
+  ]);
 
   const isConnected = isAuthenticated && Boolean(stxAddress);
   const buttonLabel = isLoading
@@ -178,6 +211,21 @@ export default function ConnectWallet() {
         success={{
           title: "You are now unenrolled",
           message: "You'll stop earning Dual Stacking rewards from next cycle.",
+        }}
+      />
+
+      <TransactionStatusSheet
+        open={isChangeAddressModalOpen}
+        onOpenChange={setIsChangeAddressModalOpen}
+        isLoading={isChangeAddressSubmitting}
+        loading={{
+          title: "Updating reward address...",
+          message:
+            "Please wait while we confirm your transaction on the blockchain.",
+        }}
+        success={{
+          title: "Reward address updated",
+          message: "Your rewards will now be sent to the new address.",
         }}
       />
     </>

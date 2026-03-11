@@ -35,6 +35,7 @@ interface ContractTxDetailsProps {
   stackingPrice?: number;
   isLoadingFees?: boolean;
   isFeeValid?: boolean;
+  isFeeUnavailable?: boolean;
 
   txId?: string;
 }
@@ -55,12 +56,29 @@ export function ContractTxDetails({
   stackingPrice = 0,
   isLoadingFees = false,
   isFeeValid = true,
+  isFeeUnavailable = false,
   txId,
 }: ContractTxDetailsProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showFeePicker, setShowFeePicker] = useState(false);
 
   const explorerUrl = txId ? getExplorerTxUrl(txId).explorerUrl : "";
+  const feeDisplayLabel =
+    selectedFeeOption === "custom" && customFee && !showFeePicker
+      ? stackingPrice > 0
+        ? `$${(parseFloat(customFee || "0") * stackingPrice).toFixed(3)} • ${customFee} STX`
+        : `${customFee} STX`
+      : isLoadingFees
+        ? "Calculating..."
+        : isFeeUnavailable
+          ? "Unavailable — wallet will estimate"
+          : stackingPrice > 0 && feeMicroStx
+            ? `$${((feeMicroStx / MICRO_STX) * stackingPrice).toFixed(3)} • ${formatMicroStx(feeMicroStx)} STX`
+            : feeMicroStx
+              ? `${formatMicroStx(feeMicroStx)} STX`
+              : selectedFeeOption === "custom"
+                ? "Enter custom fee"
+                : "Estimated in wallet";
 
   const handleAdvancedToggle = () => {
     const newState = !showAdvanced;
@@ -135,10 +153,7 @@ export function ContractTxDetails({
                       <Text className="text-tertiary"> ({arg.type})</Text>
                     )}
                   </Text>
-                  <Text
-                    className="font-mono text-sm text-primary"
-                    numberOfLines={2}
-                  >
+                  <Text className="font-mono text-sm text-primary">
                     {arg.value}
                   </Text>
                 </View>
@@ -169,19 +184,7 @@ export function ContractTxDetails({
               </Text>
               <View className="mt-0.5">
                 <Input
-                  placeholder={
-                    selectedFeeOption === "custom" &&
-                    customFee &&
-                    !showFeePicker
-                      ? stackingPrice > 0
-                        ? `$${(parseFloat(customFee || "0") * stackingPrice).toFixed(3)} • ${customFee} STX`
-                        : `${customFee} STX`
-                      : stackingPrice > 0 && feeMicroStx
-                        ? `$${((feeMicroStx / MICRO_STX) * stackingPrice).toFixed(3)} • ${formatMicroStx(feeMicroStx)} STX`
-                        : feeMicroStx
-                          ? `${formatMicroStx(feeMicroStx)} STX`
-                          : "Calculating..."
-                  }
+                  placeholder={feeDisplayLabel}
                   keyboardType="decimal-pad"
                   value={
                     selectedFeeOption === "custom" && showFeePicker

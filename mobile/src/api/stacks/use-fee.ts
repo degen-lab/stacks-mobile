@@ -8,6 +8,12 @@ import {
 import { NetworkType } from "@degenlab/stacks-wallet-kit-core";
 import { fetchFromStacksApi, endpoints } from "./stacks-api";
 import { FeeResponse } from "./types/fee";
+import { isAxiosError } from "axios";
+
+const feeEstimationRetry = (failureCount: number, error: unknown) => {
+  if (isAxiosError(error) && error.response?.status === 400) return false;
+  return failureCount < 1;
+};
 
 interface UseFeeEstimationOptions {
   contractAddress: string;
@@ -65,11 +71,10 @@ export const useFeeEstimation = ({
           estimated_len: payloadBytes.length + 180,
         },
       );
-
       return response.estimations;
     },
     enabled,
-    staleTime: 30000, // 30 seconds
-    retry: 1,
+    staleTime: 30000,
+    retry: feeEstimationRetry,
   });
 };

@@ -30,7 +30,7 @@ export function TransactionStatusSheet({
   loading,
   success,
   children,
-  snapPoints = ["55%"],
+  snapPoints = ["40%"],
   spinnerColor = colors.stacks.bloodOrange,
   spinnerTrackColor = colors.neutral[200],
 }: TransactionStatusSheetProps) {

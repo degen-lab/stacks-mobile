@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { type ClarityValue } from "@stacks/transactions";
+import axios from "axios";
 
 import { useFeeEstimation } from "@/api/stacks/use-fee";
 import { FeeOption } from "@/features/stacking/components/fee-selector";
@@ -26,15 +27,25 @@ export function useContractCallFee({
 
   const [contractAddress = "", contractName = ""] = contractId.split(".");
 
-  const { data: feeEstimations = [], isLoading: isLoadingFees } =
-    useFeeEstimation({
-      contractAddress,
-      contractName,
-      functionName,
-      functionArgs,
-      network: selectedNetwork,
-      enabled: enabled && Boolean(contractAddress) && Boolean(contractName),
-    });
+  const {
+    data: feeEstimations = [],
+    isLoading: isLoadingFees,
+    isError: isFeeError,
+    error: feeError,
+  } = useFeeEstimation({
+    contractAddress,
+    contractName,
+    functionName,
+    functionArgs,
+    network: selectedNetwork,
+    enabled: enabled && Boolean(contractAddress) && Boolean(contractName),
+  });
+
+  // The Stacks node returned 400 — it has no cost data for this function.
+  const isFeeUnavailable =
+    isFeeError &&
+    axios.isAxiosError(feeError) &&
+    feeError.response?.status === 400;
 
   const feeMicroStx = useMemo(() => {
     if (selectedFeeOption === "custom") {
@@ -73,6 +84,7 @@ export function useContractCallFee({
     setCustomFee,
     feeMicroStx,
     isFeeValid,
+    isFeeUnavailable,
     isLoadingFees,
     resetFeeState,
   };
