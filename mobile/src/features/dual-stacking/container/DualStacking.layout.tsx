@@ -20,11 +20,11 @@ export default function DualStackingLayout() {
     });
 
   return (
-    <SafeAreaView className="bg-surface-tertiary" edges={["bottom"]}>
+    <SafeAreaView className="flex-1 bg-surface-tertiary" edges={[]}>
       <ScrollView
         ref={scrollViewRef}
-        className="px-4"
-        contentContainerStyle={{ paddingTop: 24, paddingBottom: 24, gap: 24 }}
+        className="flex-1 px-4"
+        contentContainerStyle={{ paddingTop: 24, paddingBottom: 12, gap: 24 }}
       >
         <TopSectionContainer />
 
