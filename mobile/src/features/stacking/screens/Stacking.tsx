@@ -13,7 +13,11 @@ import { useFeeEstimation } from "@/api/stacks/use-fee";
 import { FeeOption } from "../components/fee-selector";
 import { StackingScreenLayout } from "./Stacking.layout";
 import { useStxBalance } from "@/hooks/use-stx-balance";
-import { useSaveStackingDataMutation } from "@/api/stacking";
+import {
+  useSaveStackingDataMutation,
+  useUserStackingData,
+} from "@/api/stacking";
+import { useUserProfile } from "@/api/user";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useSelectedNetwork } from "@/lib/store/settings";
 
@@ -21,6 +25,7 @@ export function StackingScreen() {
   const { stackingInfo, daysPerCycle, calculate } = useStacking();
   const { balance: stxBalance, lockedBalance } = useStxBalance();
   const { stxAddress: address } = useWalletAddresses();
+  const { data: userProfile } = useUserProfile();
   const { selectedNetwork } = useSelectedNetwork();
 
   const approvalSheetRef = useRef<BottomSheetModal>(null);
@@ -250,6 +255,15 @@ export function StackingScreen() {
     }
   };
 
+  const {
+    data: userStackingData = [],
+    isLoading: isUserStackingDataLoading,
+    isError: isUserStackingDataError,
+  } = useUserStackingData({
+    variables: { userId: userProfile?.id ?? 0 },
+    enabled: !!userProfile?.id,
+  });
+
   const poolState = {
     stxBalance,
     activePosition,
@@ -300,6 +314,12 @@ export function StackingScreen() {
     onRevoke: handleRevoke,
   };
 
+  const stackingHistory = {
+    delegations: userStackingData,
+    isLoading: isUserStackingDataLoading,
+    isError: isUserStackingDataError,
+  };
+
   return (
     <StackingScreenLayout
       poolState={poolState}
@@ -307,6 +327,7 @@ export function StackingScreen() {
       feeState={feeState}
       uiState={uiState}
       actions={actions}
+      stackingHistory={stackingHistory}
     />
   );
 }

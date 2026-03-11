@@ -20,7 +20,7 @@ export function CustomPeriodModal({ visible, onClose, onApply }: Props) {
     unit: "weeks" | "months" | "years",
   ): number => {
     if (unit === "weeks") return value;
-    if (unit === "months") return value * 4;
+    if (unit === "months") return Math.round(value * (52 / 12));
     if (unit === "years") return value * 52;
     return value;
   };

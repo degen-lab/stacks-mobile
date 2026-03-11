@@ -5,7 +5,7 @@ import type {
   SaveStackingDataRequest,
   SaveStackingDataResponse,
 } from "./types";
-import { gameClient } from "../common";
+import { gameClient, queryClient } from "../common";
 
 type Variables = SaveStackingDataRequest;
 type Response = SaveStackingDataResponse;
@@ -21,8 +21,10 @@ export const useSaveStackingDataMutation = createMutation<
       method: "POST",
       data: variables,
     }).then((response) => response.data),
-  onSuccess: (data) => {
-    console.log("Stacking data saved successfully:", data);
+  onSuccess: () => {
+    queryClient.invalidateQueries({
+      queryKey: ["stacking-user-data"],
+    });
   },
   onError: (error) => {
     console.error(

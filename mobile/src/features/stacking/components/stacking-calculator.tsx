@@ -34,7 +34,7 @@ const LOCK_PERIODS = [
   { label: "2 months", weeks: 8 },
   { label: "3 months", weeks: 12 },
   { label: "6 months", weeks: 24 },
-  { label: "12 months", weeks: 48 },
+  { label: "12 months", weeks: 52 },
   { label: "Custom", weeks: null },
 ];
 

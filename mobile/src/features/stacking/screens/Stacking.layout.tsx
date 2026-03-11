@@ -11,6 +11,8 @@ import { TransactionLoadingOverlay } from "@/components/transaction-loading-over
 import { FeeOption } from "../components/fee-selector";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { WarningLabel } from "@/components/warning-label";
+import { StackingHistoryCard } from "../components/stacking-history-card";
+import type { UserStackingDataRow } from "@/api/stacking";
 
 interface PoolState {
   stxBalance: number;
@@ -85,12 +87,19 @@ interface Actions {
   onRevoke?: () => void;
 }
 
+interface StackingHistoryState {
+  delegations: UserStackingDataRow[];
+  isLoading: boolean;
+  isError: boolean;
+}
+
 interface StackingScreenLayoutProps {
   poolState: PoolState;
   formState: FormState;
   feeState: FeeState;
   uiState: UiState;
   actions: Actions;
+  stackingHistory: StackingHistoryState;
 }
 
 export function StackingScreenLayout({
@@ -99,6 +108,7 @@ export function StackingScreenLayout({
   feeState,
   uiState,
   actions,
+  stackingHistory,
 }: StackingScreenLayoutProps) {
   const {
     stxBalance,
@@ -149,6 +159,7 @@ export function StackingScreenLayout({
     setShowTransferSheet,
     onRevoke,
   } = actions;
+  const { delegations, isLoading, isError } = stackingHistory;
   const getCtaLabel = () => {
     if (!hasSufficientFunds) return "Add Funds";
     if (!activePosition) return "Start Stacking";
@@ -245,6 +256,17 @@ export function StackingScreenLayout({
               <Text className="text-center text-xs font-instrument-sans text-secondary">
                 Rewards may vary with network conditions.
               </Text>
+            </View>
+
+            <View className="mt-5">
+              <Text className="mb-3 font-matter text-xl text-primary">
+                Stacking history
+              </Text>
+              <StackingHistoryCard
+                delegations={delegations}
+                isLoading={isLoading}
+                isError={isError}
+              />
             </View>
           </View>
         </ScrollView>
