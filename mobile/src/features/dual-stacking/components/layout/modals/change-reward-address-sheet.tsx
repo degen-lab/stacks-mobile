@@ -222,7 +222,7 @@ export function ChangeRewardAddressSheet({
       <ContractCallDetailsSheet
         ref={confirmRef}
         title="Change reward address"
-        snapPoints={["60%"]}
+        snapPoints={["45%"]}
         network={selectedNetwork}
         contractAddress={contractId}
         functionName={functionName}

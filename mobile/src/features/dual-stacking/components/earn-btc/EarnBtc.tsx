@@ -129,7 +129,6 @@ export default function EarnBtcContainer({
       setIsSubmittingEnroll(false);
       setIsEnrolling(false);
       setEnrollTxId(null);
-      showMessage({ message: "Enrolled successfully", type: "success" });
     },
     onFailure: (_status, repr) => {
       setIsSubmittingEnroll(false);
@@ -317,7 +316,7 @@ export default function EarnBtcContainer({
             "Starting next cycle you'll earn Bitcoin-denominated yield, powered by Stacks.",
         }}
       >
-        <BitcoinTree />
+        <BitcoinTree width={188} height={88} />
       </TransactionStatusSheet>
     </>
   );
