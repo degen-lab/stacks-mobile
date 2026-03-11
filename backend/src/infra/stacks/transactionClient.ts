@@ -11,6 +11,7 @@ import {
   listCV,
   makeContractCall,
   makeUnsignedContractCall,
+  Pc,
   PostConditionMode,
   principalCV,
   serializeTransaction,
@@ -185,7 +186,7 @@ export class TransactionClient implements TransactionClientPort {
       functionArgs: [],
       network: this.network,
       senderKey: ADMIN_PRIVATE_KEY,
-      postConditionMode: PostConditionMode.Allow, // Allow contract to transfer STX
+      postConditionMode: PostConditionMode.Deny, // No STX should be transferred
     };
     const transaction = await makeContractCall(txOptions);
     const result = await broadcastTransaction({
@@ -267,7 +268,10 @@ export class TransactionClient implements TransactionClientPort {
       functionArgs: [recipients],
       network: this.network,
       senderKey: ADMIN_PRIVATE_KEY,
-      postConditionMode: PostConditionMode.Allow, // Allow contract to transfer STX
+      postConditionMode: PostConditionMode.Deny,
+      postConditions: [
+        Pc.principal(ADMIN_ADDRESS).willSendEq(totalRequired).ustx(), // Only allow the post condition STX amount to be transferred
+      ],
     };
     const transaction = await makeContractCall(txOptions);
     const result: TxBroadcastResult = await broadcastTransaction({
@@ -327,8 +331,9 @@ export class TransactionClient implements TransactionClientPort {
       sponsorNonce,
     });
 
+    transaction.postConditionMode = PostConditionMode.Deny;
     const sponsoredTx = await sponsorTransaction({
-      transaction: transaction,
+      transaction,
       sponsorPrivateKey: ADMIN_PRIVATE_KEY,
       sponsorNonce: sponsorNonce,
       network: this.network,
@@ -491,7 +496,7 @@ export class TransactionClient implements TransactionClientPort {
         uintCV(userNonce),
         bufferCV(signature),
       ],
-
+      postConditionMode: PostConditionMode.Deny, // No STX should be transferred
       publicKey: publicKey.startsWith('0x') ? publicKey.slice(2) : publicKey,
       network: this.network,
       sponsored,
@@ -664,8 +669,8 @@ export class TransactionClient implements TransactionClientPort {
 
     const response = await fetch(url, {
       headers: {
-        "high-limit": "true",
-      }
+        'high-limit': 'true',
+      },
     });
     if (!response.ok) {
       logger.error({
