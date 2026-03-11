@@ -1,13 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { showMessage } from "react-native-flash-message";
 
 import { EarnBtcLayout } from "./EarnBtc.layout";
 import { buildEarnBtcSteps } from "./model";
+import { BitcoinTree } from "@/components/icons/BitcoinTree";
 import { EnrollRewardsSheet } from "../layout/EnrollRewardsSheet";
 import { MintSbtcSheet } from "../layout/MintSbtcSheet";
 import { StackingPoolSheet } from "../layout/StackingPoolSheet";
 import { TermsAndConditionsSheet } from "../layout/TermsAndConditionsSheet";
 import { TermsDetailsSheet } from "../layout/TermsDetailsSheet";
+import { TransactionStatusSheet } from "../layout/modals/transaction-status-sheet";
 import { useContractCallFee } from "@/hooks/use-contract-call-fee";
 import { useTrackEnrollTx } from "@/features/dual-stacking/hooks/use-track-enroll-tx";
 import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/useEnrollmentStatus";
@@ -22,7 +24,6 @@ import { walletKit } from "@/lib/stacks/wallet";
 import { getExplorerTxUrl } from "@/lib/stacks/network";
 import { useSelectedNetwork, useSettingsStore } from "@/lib/store/settings";
 import { PostConditionMode } from "@stacks/transactions";
-import { TransactionLoadingOverlay } from "@/components/transaction-loading-overlay";
 
 type EarnBtcContainerProps = {
   onExploreApps?: () => void;
@@ -41,6 +42,8 @@ export default function EarnBtcContainer({
   const [isStackingPoolSheetOpen, setIsStackingPoolSheetOpen] = useState(false);
   const [isTermsSheetOpen, setIsTermsSheetOpen] = useState(false);
   const [isTermsDetailsSheetOpen, setIsTermsDetailsSheetOpen] = useState(false);
+  const [isEnrolledModalOpen, setIsEnrolledModalOpen] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   const {
     enrolledNextCycle,
@@ -114,15 +117,18 @@ export default function EarnBtcContainer({
     ? getExplorerTxUrl(enrollTxId).explorerUrl
     : undefined;
 
-  const { isPending: isEnrollPending } = useTrackEnrollTx({
+  useTrackEnrollTx({
     txId: enrollTxId,
     onSuccess: () => {
       setIsSubmittingEnroll(false);
+      setIsEnrolling(false);
       setEnrollTxId(null);
       showMessage({ message: "Enrolled successfully", type: "success" });
     },
     onFailure: (_status, repr) => {
       setIsSubmittingEnroll(false);
+      setIsEnrolling(false);
+      setIsEnrolledModalOpen(false);
       setEnrollTxId(null);
       showMessage({
         message: "Enrollment failed",
@@ -131,6 +137,16 @@ export default function EarnBtcContainer({
       });
     },
   });
+
+  useEffect(() => {
+    if (!isEnrolledModalOpen || isEnrolling) return;
+
+    const timeout = setTimeout(() => {
+      setIsEnrolledModalOpen(false);
+    }, 2200);
+
+    return () => clearTimeout(timeout);
+  }, [isEnrolledModalOpen, isEnrolling]);
 
   const model = useMemo(
     () =>
@@ -194,6 +210,8 @@ export default function EarnBtcContainer({
 
       if (txId) {
         setEnrollTxId(txId);
+        setIsEnrolledModalOpen(true);
+        setIsEnrolling(true);
         setIsEnrollSheetOpen(false);
         setIsSubmittingEnroll(false);
       } else {
@@ -282,10 +300,23 @@ export default function EarnBtcContainer({
         open={isTermsDetailsSheetOpen}
         onOpenChange={setIsTermsDetailsSheetOpen}
       />
-      <TransactionLoadingOverlay
-        visible={isEnrollPending}
-        message="Broadcasting Enrollment"
-      />
+      <TransactionStatusSheet
+        open={isEnrolledModalOpen}
+        onOpenChange={setIsEnrolledModalOpen}
+        isLoading={isEnrolling}
+        loading={{
+          title: "Processing your enrollment...",
+          message:
+            "Please wait while we confirm your transaction on the blockchain.",
+        }}
+        success={{
+          title: "Congrats! You are enrolled in Dual Stacking",
+          message:
+            "Starting next cycle you'll earn Bitcoin-denominated yield, powered by Stacks.",
+        }}
+      >
+        <BitcoinTree />
+      </TransactionStatusSheet>
     </>
   );
 }

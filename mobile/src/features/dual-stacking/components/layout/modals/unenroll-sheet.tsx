@@ -1,5 +1,5 @@
 import { useColorScheme } from "nativewind";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView } from "react-native";
 
 import {
@@ -35,8 +35,6 @@ type UnenrollSheetProps = {
   onGoBack?: () => void;
 };
 
-type SheetStep = "form" | "confirm";
-
 export function UnenrollSheet({
   open,
   onOpenChange,
@@ -59,30 +57,30 @@ export function UnenrollSheet({
     ...INITIAL_UNENROLL_REASONS,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [step, setStep] = useState<SheetStep>("form");
+  // Tracks which sheet is currently shown to prevent re-entrant calls
+  const activeSheetRef = useRef<"form" | "confirm" | "none">("none");
+  // Blocks onDismiss callbacks from firing side-effects during programmatic close
+  const isClosingRef = useRef(false);
+
   const contractType = getContractTypeForCycle(FUTURE_MIGRATION_ID);
   const contractId = CONTRACTS[selectedNetwork][contractType];
   const functionName = SC_FUNCTIONS[contractType].publicFunctions.OPT_OUT;
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      isClosingRef.current = false;
+      activeSheetRef.current = "form";
+      presentForm();
+    } else {
+      isClosingRef.current = true;
+      activeSheetRef.current = "none";
       dismissForm();
       dismissConfirm();
-      setStep("form");
       setReasons({ ...INITIAL_UNENROLL_REASONS });
       setIsSubmitting(false);
-      return;
     }
-
-    if (step === "form") {
-      presentForm();
-      dismissConfirm();
-      return;
-    }
-
-    dismissForm();
-    presentConfirm();
-  }, [dismissConfirm, dismissForm, open, presentConfirm, presentForm, step]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleReasonChange = (key: UnenrollReasonKey, checked: boolean) => {
     setReasons((prev) => ({ ...prev, [key]: checked }));
@@ -95,13 +93,22 @@ export function UnenrollSheet({
   };
 
   const handleOpenContractCall = () => {
-    if (isSubmitting) return;
-    setStep("confirm");
+    if (isSubmitting || activeSheetRef.current !== "form") return;
+    activeSheetRef.current = "confirm";
+    dismissForm();
+    presentConfirm();
   };
 
   const handleReturnToForm = () => {
-    if (isSubmitting) return;
-    setStep("form");
+    if (
+      isSubmitting ||
+      isClosingRef.current ||
+      activeSheetRef.current !== "confirm"
+    )
+      return;
+    activeSheetRef.current = "form";
+    dismissConfirm();
+    presentForm();
   };
 
   const handleConfirm = async (feeMicroStx?: number) => {
@@ -134,7 +141,7 @@ export function UnenrollSheet({
         }}
         enablePanDownToClose
         onDismiss={() => {
-          if (step === "form") {
+          if (activeSheetRef.current === "form") {
             handleGoBack();
           }
         }}
@@ -198,9 +205,8 @@ export function UnenrollSheet({
 
       <ContractCallDetailsSheet
         ref={confirmRef}
-        title="Unenroll from Dual Stacking"
-        description="Review the opt-out contract call before broadcasting it."
-        snapPoints={["55%"]}
+        title="Unenroll"
+        snapPoints={["50%"]}
         network={selectedNetwork}
         contractAddress={contractId}
         functionName={functionName}

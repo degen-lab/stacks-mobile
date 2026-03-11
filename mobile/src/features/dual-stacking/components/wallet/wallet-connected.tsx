@@ -6,7 +6,7 @@ import {
   XCircle,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable } from "react-native";
 
 import { Text, View, colors } from "@/components/ui";
@@ -17,6 +17,7 @@ import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/useEnrollmen
 
 import { ChangeRewardAddressSheet } from "../layout/modals/change-reward-address-sheet";
 import { UnenrollSheet } from "../layout/modals/unenroll-sheet";
+import { TransactionStatusSheet } from "../layout/modals/transaction-status-sheet";
 import { useWalletActions } from "../../hooks/use-wallet-actions";
 import { WalletActionSheet } from "../layout/modals/wallet-action-sheet";
 
@@ -25,12 +26,44 @@ export default function ConnectWallet() {
   const { isAuthenticated } = useAuth();
   const { stxAddress, isLoading } = useWalletAddresses();
   const { enrolledNextCycle } = useEnrollmentStatus();
-  const { openInExplorer, copyAddress, optOut, changeRewardAddress } =
-    useWalletActions();
+  const {
+    openInExplorer,
+    copyAddress,
+    optOut,
+    changeRewardAddress,
+    isOptOutSubmitting,
+    optOutStatus,
+  } = useWalletActions();
 
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
   const [isChangeAddressOpen, setIsChangeAddressOpen] = useState(false);
   const [isUnenrollOpen, setIsUnenrollOpen] = useState(false);
+  const [isUnenrollModalOpen, setIsUnenrollModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (optOutStatus === "loading") {
+      setIsUnenrollModalOpen(true);
+    }
+    if (optOutStatus === "error") {
+      setIsUnenrollModalOpen(false);
+    }
+  }, [optOutStatus]);
+
+  useEffect(() => {
+    if (
+      !isUnenrollModalOpen ||
+      isOptOutSubmitting ||
+      optOutStatus !== "success"
+    ) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setIsUnenrollModalOpen(false);
+    }, 2200);
+
+    return () => clearTimeout(timeout);
+  }, [isUnenrollModalOpen, isOptOutSubmitting, optOutStatus]);
 
   const isConnected = isAuthenticated && Boolean(stxAddress);
   const buttonLabel = isLoading
@@ -131,6 +164,21 @@ export default function ConnectWallet() {
         onConfirm={({ reasons, feeMicroStx }) =>
           optOut({ reasons, feeMicroStx })
         }
+      />
+
+      <TransactionStatusSheet
+        open={isUnenrollModalOpen}
+        onOpenChange={setIsUnenrollModalOpen}
+        isLoading={isOptOutSubmitting}
+        loading={{
+          title: "Processing your opt-out...",
+          message:
+            "Please wait while we confirm your transaction on the blockchain.",
+        }}
+        success={{
+          title: "You are now unenrolled",
+          message: "You'll stop earning Dual Stacking rewards from next cycle.",
+        }}
       />
     </>
   );

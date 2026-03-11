@@ -21,13 +21,20 @@ import {
 } from "@/lib/stacks/utils";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import type { UnenrollReasonKey } from "@/api/dual-stacking/enrollment/save-unenrollment-reasons";
-import { useTrackEnrollTx } from "@/features/dual-stacking/hooks/use-track-enroll-tx";
+import {
+  invalidateEnrollmentQueries,
+  useTrackEnrollTx,
+} from "@/features/dual-stacking/hooks/use-track-enroll-tx";
 
 export function useWalletActions() {
   const queryClient = useQueryClient();
   const { selectedNetwork } = useSelectedNetwork();
   const { stxAddress } = useWalletAddresses();
   const [optOutTxId, setOptOutTxId] = useState<string | null>(null);
+  const [isOptOutSubmitting, setIsOptOutSubmitting] = useState(false);
+  const [optOutStatus, setOptOutStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
 
   const contractType = getContractTypeForCycle(FUTURE_MIGRATION_ID);
   const contractId = CONTRACTS[selectedNetwork][contractType];
@@ -54,6 +61,8 @@ export function useWalletActions() {
     feeMicroStx?: number;
   }): Promise<boolean> => {
     if (!stxAddress) return false;
+    setIsOptOutSubmitting(true);
+    setOptOutStatus("loading");
 
     try {
       const txId = await walletKit.makeContractCall(
@@ -66,6 +75,8 @@ export function useWalletActions() {
       );
 
       if (!txId) {
+        setIsOptOutSubmitting(false);
+        setOptOutStatus("error");
         showMessage({
           message: "Opt-out failed",
           description: "No transaction ID received. Please try again.",
@@ -83,11 +94,7 @@ export function useWalletActions() {
       }
 
       setOptOutTxId(txId);
-      showMessage({
-        message: "Opt-out submitted",
-        description: "Confirming on-chain...",
-        type: "info",
-      });
+      setOptOutStatus("loading");
       return true;
     } catch (error) {
       showMessage({
@@ -95,6 +102,8 @@ export function useWalletActions() {
         description: String(error),
         type: "danger",
       });
+      setIsOptOutSubmitting(false);
+      setOptOutStatus("error");
       return false;
     }
   };
@@ -176,13 +185,14 @@ export function useWalletActions() {
   useTrackEnrollTx({
     txId: optOutTxId,
     onSuccess: () => {
+      setIsOptOutSubmitting(false);
+      setOptOutStatus("success");
+      invalidateEnrollmentQueries(queryClient);
       setOptOutTxId(null);
-      showMessage({
-        message: "Opted out successfully",
-        type: "success",
-      });
     },
     onFailure: (_status, repr) => {
+      setOptOutStatus("error");
+      setIsOptOutSubmitting(false);
       setOptOutTxId(null);
       showMessage({
         message: "Opt-out failed",
@@ -197,5 +207,7 @@ export function useWalletActions() {
     copyAddress,
     optOut,
     changeRewardAddress,
+    isOptOutSubmitting,
+    optOutStatus,
   };
 }
