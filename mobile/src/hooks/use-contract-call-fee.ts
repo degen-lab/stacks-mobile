@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { type ClarityValue } from "@stacks/transactions";
-import axios from "axios";
+import { isAxiosError } from "axios";
 
 import { useFeeEstimation } from "@/api/stacks/use-fee";
 import { FeeOption } from "@/features/stacking/components/fee-selector";
@@ -44,7 +44,7 @@ export function useContractCallFee({
   // The Stacks node returned 400 — it has no cost data for this function.
   const isFeeUnavailable =
     isFeeError &&
-    axios.isAxiosError(feeError) &&
+    isAxiosError(feeError) &&
     feeError.response?.status === 400;
 
   const feeMicroStx = useMemo(() => {

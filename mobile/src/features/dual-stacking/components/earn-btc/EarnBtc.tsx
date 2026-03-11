@@ -19,7 +19,7 @@ import { useCheckTerms } from "@/api/dual-stacking/enrollment/use-check-terms";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { fromSatsToBtc } from "@/lib/format/currency";
-import { contractEnroll } from "../contract-calls";
+import { contractEnroll } from "@/features/dual-stacking/contract-calls";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
 import { getExplorerTxUrl } from "@/lib/stacks/network";
 import {
