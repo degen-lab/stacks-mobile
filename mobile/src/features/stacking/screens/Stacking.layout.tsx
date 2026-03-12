@@ -4,7 +4,6 @@ import { Button, Text } from "@/components/ui";
 import { StackingOptionCard } from "../components/stacking-option-card";
 import { StackingCalculator } from "../components/stacking-calculator";
 import { PoolOptionsModal } from "../components/pool-options-modal";
-import { TransferSheet } from "@/features/transfer";
 import { ApprovePoolSheet } from "../components/approve-pool-sheet";
 import { StackStxSheet } from "../components/stack-stx-sheet";
 import { TransactionLoadingOverlay } from "@/components/transaction-loading-overlay";
@@ -62,7 +61,6 @@ interface FeeState {
 
 interface UiState {
   showPoolOptions: boolean;
-  showTransferSheet: boolean;
   isProcessing: boolean;
   isApprovalPending: boolean;
   isDelegatePending: boolean;
@@ -83,7 +81,6 @@ interface Actions {
   onSelectFee: (option: FeeOption) => void;
   onCustomFeeChange: (value: string) => void;
   setShowPoolOptions: (show: boolean) => void;
-  setShowTransferSheet: (show: boolean) => void;
   onRevoke?: () => void;
 }
 
@@ -139,7 +136,6 @@ export function StackingScreenLayout({
 
   const {
     showPoolOptions,
-    showTransferSheet,
     isProcessing,
     isApprovalPending,
     isDelegatePending,
@@ -156,7 +152,6 @@ export function StackingScreenLayout({
     onSelectFee,
     onCustomFeeChange,
     setShowPoolOptions,
-    setShowTransferSheet,
     onRevoke,
   } = actions;
   const { delegations, isLoading, isError } = stackingHistory;
@@ -316,11 +311,6 @@ export function StackingScreenLayout({
         isProcessing={isProcessing}
         inPreparePhase={stackingInfo.inPreparePhase}
         timeTillPreparePhase={stackingInfo.timeTillPreparePhase}
-      />
-
-      <TransferSheet
-        open={showTransferSheet}
-        onClose={() => setShowTransferSheet(false)}
       />
 
       <TransactionLoadingOverlay

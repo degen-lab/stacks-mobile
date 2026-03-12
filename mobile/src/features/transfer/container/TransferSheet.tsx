@@ -1,7 +1,12 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable } from "react-native";
+import { showMessage } from "react-native-flash-message";
 import { Modal, Text } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
+import { useBroadcastBitcoinTransaction } from "@/api/bitcoin";
+import { fromSatsToBtc } from "@/lib/format/currency";
+import { useSelectedNetwork } from "@/lib/store/settings";
+import { getBitcoinAddressError } from "@/lib/bitcoin/validation";
 import { TransferModeSelector } from "../components/transfer-mode-selector";
 import { ReceiveAssetList } from "../components/receive-asset-list";
 import { QRCodeView } from "../components/qr-code-view";
@@ -9,65 +14,155 @@ import { AssetSelection } from "../components/send/asset-selection";
 import { RecipientInput } from "../components/send/recipient-input";
 import { AmountInput } from "../components/send/amount-input";
 import { Confirmation } from "../components/send/confirmation";
+import {
+  usePrepareBtcSend,
+  type FeeRateTier,
+} from "../hooks/use-prepare-btc-send";
 import { useTransfer } from "../hooks/use-transfer";
 import { useSendFlow } from "../hooks/use-send-flow";
-import type { TransferAsset } from "../types";
+import type { TransferAsset, TransferSheetRequest } from "../types";
 
 type TransferSheetProps = {
   open: boolean;
   onClose: () => void;
   initialMode?: "send" | "receive";
+  request?: TransferSheetRequest;
+  requestVersion?: number;
 };
 
 export function TransferSheet({
   open,
   onClose,
   initialMode,
+  request,
+  requestVersion,
 }: TransferSheetProps) {
   const { ref, present, dismiss } = useModal();
+  const { selectedNetwork } = useSelectedNetwork();
   const {
     mode,
     setMode,
     stxAddress,
     btcAddress,
-    currentBalance,
-    currentBalanceIsLoading,
+    getCurrentBalance,
+    getCurrentBalanceIsLoading,
   } = useTransfer();
 
   const sendFlow = useSendFlow();
+  const [feeRateTier, setFeeRateTier] = useState<FeeRateTier>("standard");
   const [qrAsset, setQrAsset] = useState<TransferAsset | null>(null);
   const [qrAddress, setQrAddress] = useState<string | null>(null);
-  const hasSetInitialMode = useRef(false);
+  const currentAsset = sendFlow.formData.asset;
+  const currentBalance = getCurrentBalance(currentAsset);
+  const currentBalanceIsLoading = getCurrentBalanceIsLoading(currentAsset);
+  const recipientError =
+    mode === "send" &&
+    sendFlow.currentStep !== "asset" &&
+    currentAsset === "BTC"
+      ? getBitcoinAddressError(sendFlow.formData.recipient, selectedNetwork)
+      : !sendFlow.formData.recipient && sendFlow.currentStep === "recipient"
+        ? "Recipient address is required"
+        : null;
+
+  const {
+    data: preparedBtcSend,
+    isLoading: preparingBtcSend,
+    error: preparedBtcSendError,
+  } = usePrepareBtcSend({
+    recipient: sendFlow.formData.recipient,
+    amount: sendFlow.formData.amount,
+    feeRateTier,
+    enabled:
+      open &&
+      mode === "send" &&
+      sendFlow.currentStep === "confirm" &&
+      currentAsset === "BTC",
+  });
+
+  const broadcastBitcoinTx = useBroadcastBitcoinTransaction(selectedNetwork);
+
+  const btcFeeDisplay = useMemo(() => {
+    if (!preparedBtcSend) return "0.00000000";
+    return fromSatsToBtc(preparedBtcSend.feeSats).toFixed(8);
+  }, [preparedBtcSend]);
 
   useEffect(() => {
     if (open) {
       present();
-      // Set initial mode only once when sheet opens
-      if (initialMode && !hasSetInitialMode.current) {
-        setMode(initialMode);
-        hasSetInitialMode.current = true;
+      setQrAsset(null);
+      setQrAddress(null);
+
+      const nextMode = request?.mode ?? initialMode ?? "select";
+      setMode(nextMode);
+      if (nextMode === "send") {
+        sendFlow.initialize(request?.send);
+      } else {
+        sendFlow.reset();
       }
     } else {
       dismiss();
-      // Reset on close
       setTimeout(() => {
         setMode("select");
         sendFlow.reset();
         setQrAsset(null);
         setQrAddress(null);
-        hasSetInitialMode.current = false;
       }, 300);
     }
-  }, [open, present, dismiss, initialMode, setMode, sendFlow]);
+  }, [
+    sendFlow,
+    dismiss,
+    initialMode,
+    open,
+    present,
+    request,
+    requestVersion,
+    sendFlow.initialize,
+    sendFlow.reset,
+    setMode,
+  ]);
 
   const handleSelectMode = (selectedMode: "send" | "receive") => {
     setMode(selectedMode);
   };
 
   const handleSendTransaction = async () => {
-    // TODO: Implement actual send logic
-    console.log("Sending transaction:", sendFlow.formData);
-    onClose();
+    if (sendFlow.formData.asset !== "BTC") {
+      showMessage({
+        message: `${sendFlow.formData.asset} transfers are not available yet`,
+        type: "warning",
+      });
+      return;
+    }
+
+    if (!preparedBtcSend) {
+      showMessage({
+        message: "Unable to prepare the Bitcoin transaction",
+        description:
+          preparedBtcSendError instanceof Error
+            ? preparedBtcSendError.message
+            : "Try again in a few seconds.",
+        type: "danger",
+      });
+      return;
+    }
+
+    try {
+      const txId = await broadcastBitcoinTx.mutateAsync(
+        preparedBtcSend.rawTxHex,
+      );
+      showMessage({
+        message: "Bitcoin transaction submitted",
+        description: txId,
+        type: "success",
+      });
+      onClose();
+    } catch (error) {
+      showMessage({
+        message: "Bitcoin transaction failed",
+        description: error instanceof Error ? error.message : String(error),
+        type: "danger",
+      });
+    }
   };
 
   const handleBack = () => {
@@ -80,14 +175,16 @@ export function TransferSheet({
 
     if (mode === "send") {
       if (sendFlow.currentStep === "asset") {
-        // If on asset selection, go back to mode selector
         setMode("select");
         sendFlow.reset();
       } else if (sendFlow.currentStep === "amount") {
-        // If on amount, go back to asset selection
-        sendFlow.previousStep();
+        if (sendFlow.locks.asset) {
+          setMode("select");
+          sendFlow.reset();
+        } else {
+          sendFlow.previousStep();
+        }
       } else {
-        // For other steps, go back normally
         sendFlow.previousStep();
       }
     } else if (mode === "receive") {
@@ -118,11 +215,7 @@ export function TransferSheet({
       switch (sendFlow.currentStep) {
         case "asset":
           return "Select Asset";
-        case "amount":
-          return asset ? `Send ${asset}` : "Send";
-        case "recipient":
-          return asset ? `Send ${asset}` : "Send";
-        case "confirm":
+        default:
           return asset ? `Send ${asset}` : "Send";
       }
     }
@@ -172,7 +265,6 @@ export function TransferSheet({
       case "asset":
         return (
           <AssetSelection
-            // selectedAsset={sendFlow.fsormData.asset}
             onSelectAsset={sendFlow.updateAsset}
             onNext={sendFlow.nextStep}
           />
@@ -187,6 +279,7 @@ export function TransferSheet({
             onAmountChange={sendFlow.updateAmount}
             onNext={sendFlow.nextStep}
             onBack={sendFlow.previousStep}
+            isLocked={sendFlow.locks.amount}
           />
         );
       case "recipient":
@@ -199,15 +292,40 @@ export function TransferSheet({
             onMemoChange={sendFlow.updateMemo}
             onNext={sendFlow.nextStep}
             onBack={sendFlow.previousStep}
+            recipientError={recipientError}
+            recipientLocked={sendFlow.locks.recipient}
+            memoLocked={sendFlow.locks.memo}
           />
         );
       case "confirm":
         return (
           <Confirmation
             formData={sendFlow.formData}
-            fee="0.001" // TODO: Calculate actual fee
+            fee={sendFlow.formData.asset === "BTC" ? btcFeeDisplay : "0.001"}
+            feeAsset={sendFlow.formData.asset === "BTC" ? "BTC" : "STX"}
             onConfirm={handleSendTransaction}
             onBack={sendFlow.previousStep}
+            isLoading={broadcastBitcoinTx.isPending}
+            confirmDisabled={
+              sendFlow.formData.asset === "BTC"
+                ? preparingBtcSend ||
+                  !preparedBtcSend ||
+                  broadcastBitcoinTx.isPending
+                : false
+            }
+            error={
+              preparedBtcSendError instanceof Error
+                ? preparedBtcSendError.message
+                : null
+            }
+            info={preparingBtcSend ? "Preparing Bitcoin transaction..." : null}
+            feeRateTier={
+              sendFlow.formData.asset === "BTC" ? feeRateTier : undefined
+            }
+            feeRatePerVbyte={preparedBtcSend?.feeRate}
+            onFeeRateTierChange={
+              sendFlow.formData.asset === "BTC" ? setFeeRateTier : undefined
+            }
           />
         );
     }
@@ -219,7 +337,11 @@ export function TransferSheet({
     if (mode === "receive") return ["40%"];
     if (mode === "send") {
       if (sendFlow.currentStep === "asset") return ["50%"];
-      if (sendFlow.currentStep === "amount") return ["65%"];
+      if (
+        sendFlow.currentStep === "confirm" &&
+        sendFlow.formData.asset === "BTC"
+      )
+        return ["70%"];
       return ["65%"];
     }
     return ["60%"];

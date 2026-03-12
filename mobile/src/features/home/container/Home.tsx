@@ -1,12 +1,11 @@
-import { useState } from "react";
 import { useStacksPrice } from "@/api/market/use-stacks-price";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { RelativePathString, useRouter } from "expo-router";
 import HomeScreenLayout from "./Home.layout";
 import { useModal } from "@/components/ui";
 import { useActiveAccountIndex } from "@/lib/store/settings";
+import { useTransferSheet } from "@/features/transfer";
 import { useTransak } from "@/features/transak/context/transak-context";
-import { TransferSheet } from "@/features/transfer";
 
 export default function HomeScreen() {
   const { activeAccountIndex } = useActiveAccountIndex();
@@ -15,8 +14,8 @@ export default function HomeScreen() {
   const usdBalance = stxPriceUsd ? stxBalance * stxPriceUsd : 0;
   const emptyWalletModal = useModal();
   const { openTransak } = useTransak();
+  const { openTransfer } = useTransferSheet();
   const router = useRouter();
-  const [transferSheetOpen, setTransferSheetOpen] = useState(false);
 
   const navigateToPortfolio = () => {
     if (stxBalance > 0) {
@@ -41,7 +40,7 @@ export default function HomeScreen() {
 
   const handleDepositCrypto = () => {
     emptyWalletModal.dismiss();
-    setTransferSheetOpen(true);
+    openTransfer({ mode: "receive" });
   };
 
   return (
@@ -54,11 +53,6 @@ export default function HomeScreen() {
         emptyWalletModalRef={emptyWalletModal.ref}
         onBuyCrypto={navigateToBuy}
         onDepositCrypto={handleDepositCrypto}
-      />
-      <TransferSheet
-        open={transferSheetOpen}
-        onClose={() => setTransferSheetOpen(false)}
-        initialMode="receive"
       />
     </>
   );

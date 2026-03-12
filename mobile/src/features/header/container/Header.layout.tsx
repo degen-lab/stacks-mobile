@@ -87,6 +87,9 @@ export function HeaderLayout({
   onPressPlay,
 }: HeaderLayoutProps) {
   const insets = useSafeAreaInsets();
+  const formattedBtcBalance = Number.isFinite(btcBalance)
+    ? btcBalance.toFixed(8)
+    : "0.00000000";
 
   return (
     <View
@@ -116,7 +119,7 @@ export function HeaderLayout({
               <InfoBadge
                 icon={<BtcLogo size={18} />}
                 label="BTC"
-                value={btcBalance}
+                value={formattedBtcBalance}
                 loading={loadingBtc}
               />
               <InfoBadge

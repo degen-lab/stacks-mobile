@@ -3,16 +3,11 @@ import { SharedAssetSelection } from "../shared-asset-selection";
 import type { TransferAsset } from "../../types";
 
 type AssetSelectionProps = {
-  // selectedAsset: TransferAsset | null;
   onSelectAsset: (asset: TransferAsset) => void;
   onNext: () => void;
 };
 
-export function AssetSelection({
-  // selectedAsset,
-  onSelectAsset,
-  onNext,
-}: AssetSelectionProps) {
+export function AssetSelection({ onSelectAsset, onNext }: AssetSelectionProps) {
   const handleSelectAsset = (asset: TransferAsset) => {
     onSelectAsset(asset);
     setTimeout(() => {
@@ -22,10 +17,7 @@ export function AssetSelection({
 
   return (
     <View className="px-5 pb-6">
-      <SharedAssetSelection
-        // selectedAsset={selectedAsset}
-        onSelectAsset={handleSelectAsset}
-      />
+      <SharedAssetSelection onSelectAsset={handleSelectAsset} />
     </View>
   );
 }

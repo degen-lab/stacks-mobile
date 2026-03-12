@@ -46,8 +46,12 @@ jest.mock("../container/Home.layout", () => ({
   },
 }));
 
+const mockOpenTransfer = jest.fn();
+
 jest.mock("@/features/transfer", () => ({
-  TransferSheet: () => null,
+  useTransferSheet: () => ({
+    openTransfer: mockOpenTransfer,
+  }),
 }));
 
 jest.mock("@/features/transak/context/transak-context", () => ({

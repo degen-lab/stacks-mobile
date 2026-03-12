@@ -1,2 +1,10 @@
 export { TransferSheet } from "./container/TransferSheet";
-export type { TransferAsset, TransferMode } from "./types";
+export {
+  TransferSheetProvider,
+  useTransferSheet,
+} from "./provider/transfer-sheet-provider";
+export type {
+  TransferAsset,
+  TransferMode,
+  TransferSheetRequest,
+} from "./types";

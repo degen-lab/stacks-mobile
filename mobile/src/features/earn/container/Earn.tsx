@@ -5,7 +5,6 @@ import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useActiveAccountIndex } from "@/lib/store/settings";
 import formatCurrency from "@/lib/format/currency";
 import { useEarnActions } from "../hooks/use-earn-actions";
-import { TransferSheet } from "@/features/transfer";
 import { BridgeSheet } from "../components/bridge-sheet";
 
 import EarnLayout from "./Earn.layout";
@@ -38,10 +37,6 @@ export default function EarnScreen() {
         actions={actions}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-      />
-      <TransferSheet
-        open={actions.transferSheetOpen}
-        onClose={() => actions.setTransferSheetOpen(false)}
       />
       <BridgeSheet
         open={actions.bridgeSheetOpen}

@@ -28,6 +28,8 @@ export function TransakAmountDisplay({
   availableBalance,
 }: Props) {
   const isSell = action === "sell";
+  const availableBalanceLabel =
+    asset === "BTC" ? availableBalance.toFixed(8) : availableBalance.toFixed(2);
   const formattedQuote =
     quoteAmount !== null
       ? quoteUnit === "USD"
@@ -82,7 +84,7 @@ export function TransakAmountDisplay({
         {action === "sell" && (
           <View className="mt-1">
             <Text className="font-instrument-sans text-secondary text-xs">
-              Available: {availableBalance.toFixed(2)} {asset}
+              Available: {availableBalanceLabel} {asset}
             </Text>
           </View>
         )}

@@ -15,7 +15,7 @@ const ASSETS = [
     name: "Bitcoin",
     symbol: "BTC",
     logo: <BtcLogo size={32} />,
-    disabled: true,
+    disabled: false,
   },
   {
     id: "sBTC" as const,
@@ -27,12 +27,10 @@ const ASSETS = [
 ];
 
 type SharedAssetSelectionProps = {
-  // selectedAsset?: TransferAsset | null;
   onSelectAsset: (asset: TransferAsset) => void;
 };
 
 export function SharedAssetSelection({
-  // selectedAsset?: TransferAsset | null;
   onSelectAsset,
 }: SharedAssetSelectionProps) {
   return (

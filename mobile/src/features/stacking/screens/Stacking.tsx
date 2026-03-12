@@ -17,6 +17,7 @@ import {
   useSaveStackingDataMutation,
   useUserStackingData,
 } from "@/api/stacking";
+import { useTransferSheet } from "@/features/transfer";
 import { useUserProfile } from "@/api/user";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useSelectedNetwork } from "@/lib/store/settings";
@@ -27,6 +28,7 @@ export function StackingScreen() {
   const { stxAddress: address } = useWalletAddresses();
   const { data: userProfile } = useUserProfile();
   const { selectedNetwork } = useSelectedNetwork();
+  const { openTransfer } = useTransferSheet();
 
   const approvalSheetRef = useRef<BottomSheetModal>(null);
   const delegateSheetRef = useRef<BottomSheetModal>(null);
@@ -57,7 +59,6 @@ export function StackingScreen() {
   const [hasChanges, setHasChanges] = useState(false);
   const [isValidUpdate, setIsValidUpdate] = useState(false);
   const [showPoolOptions, setShowPoolOptions] = useState(false);
-  const [showTransferSheet, setShowTransferSheet] = useState(false);
   const [pendingAmount, setPendingAmount] = useState<number | undefined>(
     undefined,
   );
@@ -215,7 +216,7 @@ export function StackingScreen() {
 
   const handleStackOrIncrease = async () => {
     if (!hasSufficientFunds) {
-      setShowTransferSheet(true);
+      openTransfer();
       return;
     }
 
@@ -293,7 +294,6 @@ export function StackingScreen() {
 
   const uiState = {
     showPoolOptions,
-    showTransferSheet,
     isProcessing: isProcessing || isDelegatePending,
     isApprovalPending,
     isDelegatePending,
@@ -310,7 +310,6 @@ export function StackingScreen() {
     onSelectFee: setSelectedFeeOption,
     onCustomFeeChange: setCustomFee,
     setShowPoolOptions,
-    setShowTransferSheet,
     onRevoke: handleRevoke,
   };
 

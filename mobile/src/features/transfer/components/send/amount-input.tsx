@@ -3,13 +3,15 @@ import { Numpad } from "@/components/ui/numpad";
 import type { TransferAsset } from "../../types";
 
 type AmountInputProps = {
-  asset: TransferAsset;
+  asset: TransferAsset | null;
   amount: string;
   balance: number;
   balanceIsLoading?: boolean;
   onAmountChange: (value: string) => void;
   onNext: () => void;
   onBack: () => void;
+  isLocked?: boolean;
+  error?: string | null;
 };
 
 export function AmountInput({
@@ -20,6 +22,8 @@ export function AmountInput({
   onAmountChange,
   onNext,
   onBack,
+  isLocked = false,
+  error,
 }: AmountInputProps) {
   const numericAmount = parseFloat(amount) || 0;
   const canValidateBalance = Number.isFinite(balance) && !balanceIsLoading;
@@ -46,14 +50,30 @@ export function AmountInput({
           onChange={onAmountChange}
           mode="decimal"
           allowNextValue={(value) => {
+            if (isLocked) return false;
             if (!value || value === ".") return true;
             const num = parseFloat(value);
             if (isNaN(num)) return false;
+            const [, decimals = ""] = value.split(".");
+            const maxDecimals = asset === "STX" ? 6 : 8;
+            if (decimals.length > maxDecimals) return false;
             if (!canEnforceBalance) return true;
             return num <= balance;
           }}
         />
       </View>
+
+      {isLocked ? (
+        <Text className="mb-4 text-center text-xs font-instrument-sans text-secondary">
+          Amount is locked for this transfer.
+        </Text>
+      ) : null}
+
+      {error ? (
+        <Text className="mb-4 text-center text-xs font-instrument-sans text-red-500">
+          {error}
+        </Text>
+      ) : null}
 
       <Button
         label="Continue"

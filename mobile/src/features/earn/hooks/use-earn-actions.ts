@@ -1,10 +1,11 @@
 import { useCallback, useState } from "react";
 import { useTransak } from "@/features/transak/context/transak-context";
+import { useTransferSheet } from "@/features/transfer";
 
 export function useEarnActions() {
-  const [transferSheetOpen, setTransferSheetOpen] = useState(false);
   const [bridgeSheetOpen, setBridgeSheetOpen] = useState(false);
   const { openTransak } = useTransak();
+  const { openTransfer } = useTransferSheet();
 
   const handleBuy = useCallback(() => {
     openTransak("STX", "buy");
@@ -14,9 +15,9 @@ export function useEarnActions() {
     openTransak("STX", "sell");
   }, [openTransak]);
 
-  const handleTransfer = () => {
-    setTransferSheetOpen(true);
-  };
+  const handleTransfer = useCallback(() => {
+    openTransfer();
+  }, [openTransfer]);
 
   const handleSwap = () => {
     // TODO: Navigate to swap screen
@@ -33,8 +34,6 @@ export function useEarnActions() {
     handleTransfer,
     handleSwap,
     handleBridge,
-    transferSheetOpen,
-    setTransferSheetOpen,
     bridgeSheetOpen,
     setBridgeSheetOpen,
   };

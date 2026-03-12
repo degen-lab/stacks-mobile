@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useActiveAccountIndex } from "@/lib/store/settings";
+import { useBtcBalance } from "@/hooks/use-btc-balance";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import type { TransferAsset, TransferMode } from "../types";
 
 export function useTransfer() {
   const [mode, setMode] = useState<TransferMode>("select");
-  const [selectedAsset, setSelectedAsset] = useState<TransferAsset>("STX");
 
   const { activeAccountIndex } = useActiveAccountIndex();
   const { stxAddress, btcAddress } = useWalletAddresses({
@@ -14,13 +14,15 @@ export function useTransfer() {
   });
   const { balance: stxBalance, isLoading: stxBalanceIsLoading } =
     useStxBalance(activeAccountIndex);
+  const { balance: btcBalance, isLoading: btcBalanceIsLoading } =
+    useBtcBalance(activeAccountIndex);
 
-  const getCurrentBalance = () => {
-    switch (selectedAsset) {
+  const getCurrentBalance = (asset: TransferAsset | null) => {
+    switch (asset) {
       case "STX":
         return stxBalance;
       case "BTC":
-        return 0; // TODO: Implement BTC balance
+        return btcBalance;
       case "sBTC":
         return 0; // TODO: Implement sBTC balance
       default:
@@ -28,12 +30,12 @@ export function useTransfer() {
     }
   };
 
-  const getCurrentBalanceIsLoading = () => {
-    switch (selectedAsset) {
+  const getCurrentBalanceIsLoading = (asset: TransferAsset | null) => {
+    switch (asset) {
       case "STX":
         return stxBalanceIsLoading;
       case "BTC":
-        return false; // TODO: Implement BTC balance loading
+        return btcBalanceIsLoading;
       case "sBTC":
         return false; // TODO: Implement sBTC balance loading
       default:
@@ -44,11 +46,9 @@ export function useTransfer() {
   return {
     mode,
     setMode,
-    selectedAsset,
-    setSelectedAsset,
     stxAddress,
     btcAddress,
-    currentBalance: getCurrentBalance(),
-    currentBalanceIsLoading: getCurrentBalanceIsLoading(),
+    getCurrentBalance,
+    getCurrentBalanceIsLoading,
   };
 }

@@ -13,6 +13,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { APIProvider } from "@/api";
 import { ReferralHeader } from "@/features/referral/components/referral-header";
+import { TransferSheetProvider } from "@/features/transfer";
 import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
 import { fontConfig } from "@/lib/fonts";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";
@@ -82,7 +83,9 @@ function Providers({ children }: { children: React.ReactNode }) {
         <ThemeProvider value={theme}>
           <APIProvider>
             <BottomSheetModalProvider>
-              <TransakProvider>{children}</TransakProvider>
+              <TransferSheetProvider>
+                <TransakProvider>{children}</TransakProvider>
+              </TransferSheetProvider>
               <FlashMessage position="top" />
             </BottomSheetModalProvider>
           </APIProvider>

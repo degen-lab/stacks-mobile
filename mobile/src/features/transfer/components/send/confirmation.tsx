@@ -1,21 +1,43 @@
 import { View, Button, Text } from "@/components/ui";
+import { Toggle } from "@/components/ui/toggle";
 import { StxCoin, BtcLogo } from "@/components/ui/icons";
+import type { FeeRateTier } from "../../hooks/use-prepare-btc-send";
 import type { SendFormData } from "../../types";
+
+const FEE_TIER_OPTIONS: { value: FeeRateTier; label: string }[] = [
+  { value: "economy", label: "Economy" },
+  { value: "standard", label: "Standard" },
+  { value: "fast", label: "Fast" },
+];
 
 type ConfirmationProps = {
   formData: SendFormData;
   fee: string;
+  feeAsset?: string;
   onConfirm: () => void;
   onBack: () => void;
   isLoading?: boolean;
+  confirmDisabled?: boolean;
+  error?: string | null;
+  info?: string | null;
+  feeRateTier?: FeeRateTier;
+  feeRatePerVbyte?: number;
+  onFeeRateTierChange?: (tier: FeeRateTier) => void;
 };
 
 export function Confirmation({
   formData,
   fee,
+  feeAsset,
   onConfirm,
   onBack,
   isLoading,
+  confirmDisabled = false,
+  error,
+  info,
+  feeRateTier,
+  feeRatePerVbyte,
+  onFeeRateTierChange,
 }: ConfirmationProps) {
   const getAssetLogo = () => {
     switch (formData.asset) {
@@ -29,12 +51,34 @@ export function Confirmation({
 
   return (
     <View className="flex-1 px-5 pb-6">
-      <View className="rounded-2xl p-6 border-2 border-surface-tertiary bg-surface-primary items-center mb-6">
+      <View className="rounded-2xl p-6 border-2 border-surface-tertiary bg-surface-primary items-center mb-4">
         <View className="mb-3">{getAssetLogo()}</View>
         <Text className="text-3xl font-matter font-bold text-primary">
           {formData.amount} {formData.asset}
         </Text>
       </View>
+
+      {feeRateTier && onFeeRateTierChange && (
+        <View className="mb-4">
+          <View className="flex-row justify-between items-center mb-2">
+            <Text className="text-xs font-instrument-sans text-secondary">
+              Fee Rate
+            </Text>
+            {feeRatePerVbyte != null && (
+              <Text className="text-xs font-instrument-sans text-secondary">
+                {feeRatePerVbyte} sat/vB
+              </Text>
+            )}
+          </View>
+          <View className="self-start">
+            <Toggle
+              value={feeRateTier}
+              options={FEE_TIER_OPTIONS}
+              onChange={onFeeRateTierChange}
+            />
+          </View>
+        </View>
+      )}
 
       <View className="rounded-2xl p-4 border-2 border-surface-tertiary bg-surface-primary gap-3 mb-6">
         <View className="flex-row justify-between">
@@ -65,7 +109,7 @@ export function Confirmation({
             Network Fee
           </Text>
           <Text className="text-sm font-instrument-sans text-primary">
-            {fee} STX
+            {fee} {feeAsset ?? formData.asset}
           </Text>
         </View>
 
@@ -76,10 +120,21 @@ export function Confirmation({
             Total
           </Text>
           <Text className="text-sm font-instrument-sans-medium text-primary">
-            {parseFloat(formData.amount) + parseFloat(fee)} {formData.asset}
+            {(Number(formData.amount) || 0) + (Number(fee) || 0)}{" "}
+            {formData.asset}
           </Text>
         </View>
       </View>
+
+      {error ? (
+        <Text className="text-xs font-instrument-sans text-red-500 text-center mb-4">
+          {error}
+        </Text>
+      ) : info ? (
+        <Text className="text-xs font-instrument-sans text-secondary text-center mb-4">
+          {info}
+        </Text>
+      ) : null}
 
       <Button
         label={isLoading ? "Sending..." : "Confirm & Send"}
@@ -87,7 +142,7 @@ export function Confirmation({
         size="lg"
         onPress={onConfirm}
         loading={isLoading}
-        disabled={isLoading}
+        disabled={isLoading || confirmDisabled}
       />
 
       <Text className="text-xs font-instrument-sans text-secondary text-center mt-4">

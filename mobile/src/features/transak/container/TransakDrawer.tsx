@@ -7,6 +7,7 @@ import {
   useEffect,
 } from "react";
 import { View } from "react-native";
+import { showMessage } from "react-native-flash-message";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Modal, Text, Button } from "@/components/ui";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -20,7 +21,9 @@ import {
   type TransakConfig,
   type OnTransakEvent,
 } from "@transak/ui-expo-sdk";
+import { useTransferSheet } from "@/features/transfer";
 import { useActiveAccountIndex } from "@/lib/store/settings";
+import { useBtcBalance } from "@/hooks/use-btc-balance";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useI18nSettings } from "@/hooks/use-i18n-settings";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
@@ -30,6 +33,7 @@ import {
   BottomSheetFooterProps,
 } from "@gorhom/bottom-sheet";
 import type { AssetOption, TransakDrawerRef } from "../types";
+import { parseWalletRedirectionPayload } from "../utils/wallet-redirection";
 import { TransakDrawerLayout } from "./TransakDrawer.layout";
 
 type Props = {
@@ -58,17 +62,20 @@ export function TransakDrawer({ drawerRef }: Props) {
   const [step, setStep] = useState<"form" | "checkout">("form");
   const { activeAccountIndex } = useActiveAccountIndex();
   const { countryCode } = useI18nSettings();
+  const { openTransfer } = useTransferSheet();
   const [quoteLimits, setQuoteLimits] = useState<Record<string, QuoteLimit>>(
     {},
   );
   const fiatCurrency = "USD";
   const isSell = action === "sell";
 
-  const { availableBalance } = useStxBalance(activeAccountIndex);
+  const { availableBalance: availableStxBalance } =
+    useStxBalance(activeAccountIndex);
+  const { balance: btcBalance } = useBtcBalance(activeAccountIndex);
   const { stxAddress: walletAddress, btcAddress } = useWalletAddresses({
     accountIndex: activeAccountIndex,
   });
-  const snapPoints = useMemo(() => ["85%", "85%"], []);
+  const snapPoints = useMemo(() => ["85%"], []);
   const isCheckout = step === "checkout";
 
   const debouncedAmount = useDebounce(amount, 500);
@@ -85,11 +92,16 @@ export function TransakDrawer({ drawerRef }: Props) {
     currentLimits?.max !== undefined &&
     amountValue > 0 &&
     amountValue > currentLimits.max;
+  const sellAvailableBalance =
+    asset === "BTC" ? btcBalance : availableStxBalance;
+  const exceedsWalletBalance =
+    isSell && amountValue > 0 && amountValue > sellAvailableBalance;
   const isOutsideLimits = isBelowMin || isAboveMax;
   const isFeatureDisabled = currentLimits?.featureDisabled === true;
 
-  const quoteMessage =
-    isFeatureDisabled || currentLimits?.message
+  const quoteMessage = exceedsWalletBalance
+    ? `Available balance: ${sellAvailableBalance.toFixed(8)} ${asset}`
+    : isFeatureDisabled || currentLimits?.message
       ? currentLimits?.message
       : isBelowMin
         ? `Minimum ${isSell ? "sell" : "buy"} amount: ${currentLimits?.min} ${limitUnit}`
@@ -215,7 +227,7 @@ export function TransakDrawer({ drawerRef }: Props) {
         setCheckoutUrl(url);
         setStep("checkout");
         requestAnimationFrame(() => {
-          modalRef.current?.snapToIndex?.(1);
+          modalRef.current?.snapToIndex?.(0);
         });
       },
       onError: (e) => {
@@ -258,9 +270,35 @@ export function TransakDrawer({ drawerRef }: Props) {
         case Events.TRANSAK_ORDER_FAILED:
           break;
         case Events.TRANSAK_WALLET_REDIRECTION:
-          // For SELL flow: user needs to transfer crypto to Transak's wallet
-          // eventData contains: walletAddress, cryptoCurrency, cryptoAmount, network
-          // TODO: Handle wallet redirection (navigate to send screen with pre-filled data)
+          {
+            const payload = parseWalletRedirectionPayload(eventData);
+
+            if (!payload) {
+              showMessage({
+                message: "Unable to open BTC transfer",
+                description:
+                  "Transak did not return a valid wallet redirection payload.",
+                type: "danger",
+              });
+              break;
+            }
+
+            modalRef.current?.dismiss();
+            openTransfer({
+              mode: "send",
+              send: {
+                asset: "BTC",
+                recipient: payload.walletAddress,
+                amount: payload.cryptoAmount,
+                source: "transak-sell",
+                locks: {
+                  asset: true,
+                  recipient: true,
+                  amount: true,
+                },
+              },
+            });
+          }
           break;
         case Events.TRANSAK_WIDGET_CLOSE:
           handleCheckoutClose();
@@ -269,7 +307,7 @@ export function TransakDrawer({ drawerRef }: Props) {
           break;
       }
     },
-    [handleCheckoutClose],
+    [handleCheckoutClose, openTransfer],
   );
 
   const transakConfig: TransakConfig = checkoutUrl
@@ -289,6 +327,7 @@ export function TransakDrawer({ drawerRef }: Props) {
             disabled={
               !isValidAmount ||
               isOutsideLimits ||
+              exceedsWalletBalance ||
               isFeatureDisabled ||
               (!!quoteError && !isOutsideLimits && !isFeatureDisabled) ||
               isLoadingQuote ||
@@ -309,6 +348,7 @@ export function TransakDrawer({ drawerRef }: Props) {
       isValidAmount,
       quoteError,
       isOutsideLimits,
+      exceedsWalletBalance,
       isFeatureDisabled,
     ],
   );
@@ -345,7 +385,7 @@ export function TransakDrawer({ drawerRef }: Props) {
         quoteError={!!quoteError && !isOutsideLimits && !isFeatureDisabled}
         quoteMessage={quoteMessage}
         isValidAmount={isValidAmount}
-        availableBalance={availableBalance}
+        availableBalance={sellAvailableBalance}
         bottomInset={insets.bottom}
       />
     </Modal>
