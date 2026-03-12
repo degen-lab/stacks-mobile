@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable } from "react-native";
 import { showMessage } from "react-native-flash-message";
 import { Modal, Text } from "@/components/ui";
@@ -49,9 +49,12 @@ export function TransferSheet({
   } = useTransfer();
 
   const sendFlow = useSendFlow();
+  const { initialize, reset } = sendFlow;
   const [feeRateTier, setFeeRateTier] = useState<FeeRateTier>("standard");
   const [qrAsset, setQrAsset] = useState<TransferAsset | null>(null);
   const [qrAddress, setQrAddress] = useState<string | null>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasOpenedRef = useRef(false);
   const currentAsset = sendFlow.formData.asset;
   const currentBalance = getCurrentBalance(currentAsset);
   const currentBalanceIsLoading = getCurrentBalanceIsLoading(currentAsset);
@@ -87,37 +90,58 @@ export function TransferSheet({
   }, [preparedBtcSend]);
 
   useEffect(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+
     if (open) {
+      hasOpenedRef.current = true;
       present();
+      return;
+    }
+
+    if (!hasOpenedRef.current) return;
+
+    dismiss();
+    hasOpenedRef.current = false;
+    closeTimeoutRef.current = setTimeout(() => {
+      setMode("select");
+      reset();
       setQrAsset(null);
       setQrAddress(null);
+      closeTimeoutRef.current = null;
+    }, 300);
 
-      const nextMode = request?.mode ?? initialMode ?? "select";
-      setMode(nextMode);
-      if (nextMode === "send") {
-        sendFlow.initialize(request?.send);
-      } else {
-        sendFlow.reset();
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
       }
-    } else {
-      dismiss();
-      setTimeout(() => {
-        setMode("select");
-        sendFlow.reset();
-        setQrAsset(null);
-        setQrAddress(null);
-      }, 300);
+    };
+  }, [dismiss, open, present, reset, setMode]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    setQrAsset(null);
+    setQrAddress(null);
+
+    const nextMode = request?.mode ?? initialMode ?? "select";
+    setMode(nextMode);
+    if (nextMode === "send") {
+      initialize(request?.send);
+      return;
     }
+
+    reset();
   }, [
-    sendFlow,
-    dismiss,
     initialMode,
+    initialize,
     open,
-    present,
     request,
     requestVersion,
-    sendFlow.initialize,
-    sendFlow.reset,
+    reset,
     setMode,
   ]);
 
