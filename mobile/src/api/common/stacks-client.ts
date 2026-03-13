@@ -10,12 +10,13 @@ export const hiroApiClient = axios.create({
     "Content-Type": "application/json",
   },
 });
-if (__DEV__) {
-  hiroApiClient.interceptors.request.use((config) => {
+hiroApiClient.interceptors.request.use((config) => {
+  config.baseURL = getHiroApiBase();
+  if (__DEV__) {
     console.log(`[Stacks Node] ${config.method?.toUpperCase()} ${config.url}`);
-    return config;
-  });
-}
+  }
+  return config;
+});
 
 export const stacksApiDegenClient = axios.create({
   baseURL: getStacksDegenApiBase(),

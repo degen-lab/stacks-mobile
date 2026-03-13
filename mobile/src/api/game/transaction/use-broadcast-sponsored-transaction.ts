@@ -3,12 +3,12 @@ import { createMutation } from "react-query-kit";
 
 import { gameClient, queryClient } from "../../common";
 import type {
-  BroadcastTransactionRequest,
-  BroadcastTransactionResponse,
+  BroadcastSponsoredTransactionRequest,
+  BroadcastSponsoredTransactionResponse,
 } from "./types";
 
-type Variables = BroadcastTransactionRequest;
-type Response = BroadcastTransactionResponse;
+type Variables = BroadcastSponsoredTransactionRequest;
+type Response = BroadcastSponsoredTransactionResponse;
 
 export const useBroadcastSponsoredTransactionMutation = createMutation<
   Response,

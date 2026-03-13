@@ -1,6 +1,5 @@
 import type { ImageSource } from "expo-image";
 
-import { OrDivider } from "@/components/or-divider";
 import {
   Button,
   ClassicTicket,
@@ -14,6 +13,7 @@ import { WeeklyTournamentPreview } from "@/features/leaderboard/components/submi
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import React from "react";
+import { TransactionFundingActions } from "./transaction-funding-actions";
 import { WarningLabel } from "./warning-label";
 import {
   ContractTxDetails,
@@ -279,26 +279,14 @@ export const TournamentSubmissionSheet = React.forwardRef<
               )}
 
               {!showAdvancedOnly && (
-                <View className="mt-8 gap-6">
-                  <Button
-                    label={sponsoredLabel}
-                    onPress={() => handleSubmit("sponsored")}
-                    disabled={!canUseSponsoredButton}
-                    variant="gamePrimary"
-                    size="game"
-                    testID={`tournament-submit-sponsored-${tournamentId}`}
-                  />
-                  <OrDivider />
-                  <Button
-                    label={walletCtaLabel}
-                    onPress={handleWalletPress}
-                    disabled={!canSubmit}
-                    variant="gameOutline"
-                    className="rounded-none"
-                    size="game"
-                    testID={`tournament-submit-wallet-${tournamentId}`}
-                  />
-                </View>
+                <TransactionFundingActions
+                  sponsoredLabel={sponsoredLabel}
+                  walletLabel={walletCtaLabel}
+                  onPressSponsored={() => void handleSubmit("sponsored")}
+                  onPressWallet={handleWalletPress}
+                  sponsoredDisabled={!canUseSponsoredButton}
+                  walletDisabled={!canSubmit}
+                />
               )}
             </>
           ) : null}

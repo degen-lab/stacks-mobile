@@ -49,6 +49,16 @@ const attachDevLogger = (instance: AxiosInstance, serviceName: string) => {
   );
 };
 
+const attachDynamicBaseUrl = (
+  instance: AxiosInstance,
+  service: BackendServiceType,
+) => {
+  instance.interceptors.request.use((config) => {
+    config.baseURL = getBackendServer(service);
+    return config;
+  });
+};
+
 export const createBackendClient = (
   service: BackendServiceType,
   { withAuth = false }: ClientOptions = {},
@@ -57,6 +67,8 @@ export const createBackendClient = (
     baseURL: getBackendServer(service),
     timeout: REQUEST_TIMEOUT,
   });
+
+  attachDynamicBaseUrl(instance, service);
 
   if (withAuth) {
     attachBackendTokenInterceptor(instance);
