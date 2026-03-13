@@ -3,9 +3,10 @@ import { ITransactionClient } from '../../../src/application/ports/ITransactionC
 import { SubmissionDomainService } from '../../../src/domain/service/submissionDomainService';
 import { EntityManager, FindOperator } from 'typeorm';
 import { Submission } from '../../../src/domain/entities/submission';
+import { SponsoredTransaction } from '../../../src/domain/entities/sponsoredTransaction';
 import { TransactionStatus } from '../../../src/domain/entities/enums';
 
-describe('TransactionService - cleanUpUnsuccessfullSubmissions', () => {
+describe('TransactionService - cleanUpUnsuccessfulTransactions', () => {
   let service: TransactionService;
   let transactionClientMock: jest.Mocked<ITransactionClient>;
   let submissionDomainServiceMock: jest.Mocked<SubmissionDomainService>;
@@ -32,10 +33,18 @@ describe('TransactionService - cleanUpUnsuccessfullSubmissions', () => {
       find: jest.fn(),
       save: jest.fn(),
       transaction: jest.fn(),
+      createQueryBuilder: jest.fn(),
     } as unknown as jest.Mocked<EntityManager>;
 
     // Return shape similar to DeleteResult
     (entityManagerMock.delete as jest.Mock).mockResolvedValue({ affected: 0 });
+    (entityManagerMock.createQueryBuilder as jest.Mock).mockReturnValue({
+      delete: jest.fn().mockReturnThis(),
+      from: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue({ affected: 0 }),
+    });
 
     service = new TransactionService(
       transactionClientMock,
@@ -48,7 +57,7 @@ describe('TransactionService - cleanUpUnsuccessfullSubmissions', () => {
     const now = Date.now();
     jest.spyOn(Date, 'now').mockReturnValue(now);
 
-    await service.cleanUpUnsuccessfullSubmissions();
+    await service.cleanUpUnsuccessfulTransactions();
 
     expect(transactionClientMock.getTournamentId).toHaveBeenCalledTimes(1);
     // First delete: failed submissions for this tournament
@@ -56,10 +65,8 @@ describe('TransactionService - cleanUpUnsuccessfullSubmissions', () => {
       1,
       Submission,
       expect.objectContaining({
-        where: {
-          tournamentId: 7,
-          transactionStatus: TransactionStatus.Failed,
-        },
+        tournamentId: 7,
+        transactionStatus: TransactionStatus.Failed,
       }),
     );
 
@@ -67,12 +74,20 @@ describe('TransactionService - cleanUpUnsuccessfullSubmissions', () => {
     const secondCallArgs = (entityManagerMock.delete as jest.Mock).mock
       .calls[1];
     expect(secondCallArgs[0]).toBe(Submission);
-    const whereClause = secondCallArgs[1].where;
+    const whereClause = secondCallArgs[1];
     expect(whereClause.tournamentId).toBe(7);
     expect(whereClause.transactionStatus).toBe(
       TransactionStatus.NotBroadcasted,
     );
     expect(whereClause.createdAt).toBeInstanceOf(FindOperator);
+
+    expect(entityManagerMock.delete).toHaveBeenNthCalledWith(
+      3,
+      SponsoredTransaction,
+      expect.objectContaining({
+        status: TransactionStatus.Failed,
+      }),
+    );
     // Check the LessThan value is roughly now - 1 day
     const lessThanVal = (whereClause.createdAt as FindOperator<Date>).value;
     const oneDayMs = 1000 * 60 * 60 * 24;

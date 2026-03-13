@@ -19,9 +19,9 @@ export class SubmissionsCleanupWorker {
     try {
       logger.info(`Handling job: ${job.name} (ID: ${job.id})`);
       switch (job.name) {
-        case 'cleanupSubmissions': {
-          await this.transactionService.cleanUpUnsuccessfullSubmissions();
-          logger.info(`Job ${job.id}: Submissions cleanup completed`);
+        case 'cleanupTransactions': {
+          await this.transactionService.cleanUpUnsuccessfulTransactions();
+          logger.info(`Job ${job.id}: Transactions cleanup completed`);
           break;
         }
         default: {
