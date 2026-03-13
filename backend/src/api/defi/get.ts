@@ -5,6 +5,7 @@ import { serializeBigInt } from '../../shared/utils';
 import { logger } from '../helpers/logger';
 import { rateLimitOptions } from '../config/rateLimitConfig';
 import { UserToken } from '../config/types';
+import { swapParamsSchema } from '../validators/defiValidator';
 
 export default function getDefiRoutes(
   app: FastifyInstance,
@@ -114,18 +115,20 @@ export default function getDefiRoutes(
     handler: async (req, res) => {
       try {
         const user = req.user as UserToken;
-        const {
-          tokenInId,
-          tokenOutId,
-          amount: amountStr,
-          senderAddress,
-        } = req.query as {
-          tokenInId: string;
-          tokenOutId: string;
-          amount: string;
-          senderAddress: string;
-        };
-        const amount = parseFloat(amountStr);
+        const validationResult = swapParamsSchema.safeParse(req.query);
+        if (!validationResult.success) {
+          logger.warn({
+            msg: 'Swap params validation failed',
+            err: validationResult.error,
+          });
+          return res.status(400).send({
+            success: false,
+            message: 'Invalid swap parameters',
+            error: validationResult.error.message,
+          });
+        }
+        const { tokenInId, tokenOutId, amount, senderAddress } =
+          validationResult.data;
         const { defiOperation, contractCallParams } =
           await defiService.getSwapParams(
             user.id,

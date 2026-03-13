@@ -54,10 +54,56 @@ describe('UserDomainService domain class Unit tests', () => {
       userDomainService.increaseUserPoints(testUser, sessionScore);
 
       // With streak 10, boost should be applied
-      // Base points: Math.floor(100 * 0.1) = 10
+      // Base points: Math.round(100 * 0.1) = 10
       // Boost: Math.min(0.5, Math.log(11) / 7) ≈ 0.34
-      // Final: 10 + 0.34 * 10 = 13.4, floored to 13
+      // Final: 10 + 0.34 * 10 = 13.4, rounded to 13
       expect(testUser.points).toBeGreaterThan(10);
+    });
+
+    it('should compute points formula correctly: basePoints = round(score * 0.1)', () => {
+      testUser.points = 0;
+      testUser.streak = 0; // No boost
+
+      // score 100 -> basePoints = 10, boost(0) = 0, final = 10
+      userDomainService.increaseUserPoints(testUser, 100);
+      expect(testUser.points).toBe(10);
+
+      testUser.points = 0;
+      userDomainService.increaseUserPoints(testUser, 250);
+      expect(testUser.points).toBe(25);
+
+      testUser.points = 0;
+      userDomainService.increaseUserPoints(testUser, 999);
+      expect(testUser.points).toBe(100);
+    });
+
+    it('should compute boost correctly: min(0.5, log(streak+1)/7)', () => {
+      testUser.points = 0;
+      testUser.streak = 0;
+      userDomainService.increaseUserPoints(testUser, 100);
+      expect(testUser.points).toBe(10); // boost=0
+
+      testUser.points = 0;
+      testUser.streak = 6; // log(7)/7 ≈ 0.278
+      userDomainService.increaseUserPoints(testUser, 100);
+      const expectedBoost = Math.min(0.5, Math.log(7) / 7);
+      const expectedPoints = Math.round(10 + expectedBoost * 10);
+      expect(testUser.points).toBe(expectedPoints);
+
+      testUser.points = 0;
+      testUser.streak = 20; // log(21)/7 ≈ 0.43, capped below 0.5
+      userDomainService.increaseUserPoints(testUser, 100);
+      const expectedBoost20 = Math.min(0.5, Math.log(21) / 7);
+      const expectedPoints20 = Math.round(10 + expectedBoost20 * 10);
+      expect(testUser.points).toBe(expectedPoints20);
+    });
+
+    it('should cap boost at 0.5 for high streaks', () => {
+      testUser.points = 0;
+      testUser.streak = 1000; // log(1001)/7 ≈ 0.99, capped to 0.5
+      userDomainService.increaseUserPoints(testUser, 100);
+      // basePoints=10, boost=0.5, final = 10 + 5 = 15
+      expect(testUser.points).toBe(15);
     });
 
     it('should handle zero session score', () => {

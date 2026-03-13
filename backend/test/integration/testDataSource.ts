@@ -128,6 +128,11 @@ export const cleanTestDatabase = async (): Promise<void> => {
     await manager.createQueryBuilder().delete().from(ConsumableItem).execute();
     await manager.createQueryBuilder().delete().from(UniqueItem).execute();
     await manager.createQueryBuilder().delete().from(DefaultItem).execute();
+    await manager
+      .createQueryBuilder()
+      .delete()
+      .from(TournamentStatus)
+      .execute();
     await manager.createQueryBuilder().delete().from(User).execute();
   });
 };

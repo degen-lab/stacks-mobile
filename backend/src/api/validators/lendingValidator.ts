@@ -1,14 +1,19 @@
+import { validateStacksAddress } from '@stacks/transactions';
 import z from 'zod';
 
 export const saveLendingOperationSchema = z.object({
   txId: z
     .string()
     .min(1, 'Transaction ID is required')
-    .regex(/^0x[a-fA-F0-9]+$/, 'Invalid transaction ID format'),
+    .regex(
+      /^(0x)?[a-fA-F0-9]{64}$/,
+      'Invalid Stacks transaction ID (must be 64 hex chars, optional 0x prefix)',
+    )
+    .transform((val) => (val.startsWith('0x') ? val : `0x${val}`)),
   senderAddress: z
     .string()
     .min(1, 'Sender address is required')
-    .regex(/^S[A-Z0-9]+$/, 'Invalid Stacks address format'),
+    .refine(validateStacksAddress, 'Invalid Stacks address (c32check)'),
   amount: z
     .number()
     .positive('Amount must be positive')
@@ -17,8 +22,16 @@ export const saveLendingOperationSchema = z.object({
   assetContract: z
     .string()
     .min(1, 'Asset contract is required')
-    .regex(
-      /^S[A-Z0-9]+\.[a-z0-9-]+$/,
-      'Invalid contract format (must be principal.contract-name)',
+    .refine(
+      (val) => {
+        const parts = val.split('.');
+        return (
+          parts.length === 2 &&
+          parts[1].length > 0 &&
+          /^[a-z0-9-]+$/.test(parts[1]) &&
+          validateStacksAddress(parts[0])
+        );
+      },
+      'Invalid contract format (principal.contract-name)',
     ),
 });

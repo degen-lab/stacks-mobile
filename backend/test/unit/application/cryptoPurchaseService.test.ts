@@ -6,6 +6,7 @@ import { CryptoPurchaseDomainService } from '../../../src/domain/service/cryptoP
 import { User } from '../../../src/domain/entities/user';
 import { CryptoPurchase } from '../../../src/domain/entities/cryptoPurchase';
 import { UserNotFoundError } from '../../../src/application/errors/userErrors';
+import { PurchaseNotFoundError } from '../../../src/application/errors/purchaseErrors';
 import { AppPlatform, TransakAccessToken } from '../../../src/shared/types';
 
 describe('CryptoPurchaseService unit test', () => {
@@ -355,6 +356,134 @@ describe('CryptoPurchaseService unit test', () => {
       );
 
       expect(callOrder).toEqual(['save', 'createWidgetUrl']);
+    });
+  });
+
+  describe('updatePurchaseFromWebhook', () => {
+    const validWebhookData = {
+      id: 'transak-order-123',
+      partnerOrderId: '456',
+      partnerCustomerId: '789',
+      status: 'COMPLETED',
+      cryptoAmount: 100,
+    };
+
+    it('should throw PurchaseNotFoundError when partnerOrderId is missing', async () => {
+      await expect(
+        cryptoPurchaseService.updatePurchaseFromWebhook({
+          ...validWebhookData,
+          partnerOrderId: undefined,
+        }),
+      ).rejects.toThrow('purchase not provided in webhook');
+    });
+
+    it('should throw PurchaseNotFoundError when partnerCustomerId is missing', async () => {
+      await expect(
+        cryptoPurchaseService.updatePurchaseFromWebhook({
+          ...validWebhookData,
+          partnerCustomerId: undefined,
+        }),
+      ).rejects.toThrow('partnerCustomerId not provided in webhook');
+    });
+
+    it('should return existing purchase when webhook already processed (idempotency)', async () => {
+      const existingPurchase = new CryptoPurchase();
+      existingPurchase.id = 456;
+      existingPurchase.status = 'PENDING';
+      existingPurchase.user = { id: 789 } as User;
+
+      mockCacheClient.get.mockResolvedValue('1'); // Already processed
+      mockEntityManager.findOne.mockResolvedValue(existingPurchase);
+
+      const result = await cryptoPurchaseService.updatePurchaseFromWebhook(
+        validWebhookData,
+      );
+
+      expect(result).toBe(existingPurchase);
+      expect(result.status).toBe('PENDING'); // Unchanged
+      expect(mockEntityManager.save).not.toHaveBeenCalled();
+      expect(mockCacheClient.get).toHaveBeenCalledWith(
+        'webhook:processed:transak-order-123:COMPLETED',
+      );
+    });
+
+    it('should return stub when idempotency hit but purchase not found', async () => {
+      mockCacheClient.get.mockResolvedValue('1'); // Already processed
+      mockEntityManager.findOne.mockResolvedValue(null); // Purchase purged
+
+      const result = await cryptoPurchaseService.updatePurchaseFromWebhook(
+        validWebhookData,
+      );
+
+      expect(result).toBeInstanceOf(CryptoPurchase);
+      expect(result.id).toBe(456);
+      expect(result.status).toBe('COMPLETED');
+      expect(mockEntityManager.save).not.toHaveBeenCalled();
+    });
+
+    it('should update purchase and set idempotency key on first processing', async () => {
+      const existingPurchase = new CryptoPurchase();
+      existingPurchase.id = 456;
+      existingPurchase.status = 'PENDING';
+      existingPurchase.user = { id: 789 } as User;
+
+      mockCacheClient.get.mockResolvedValue(null); // Not yet processed
+      mockEntityManager.findOne.mockResolvedValue(existingPurchase);
+      mockEntityManager.save.mockImplementation(
+        async (entity) => entity as unknown as CryptoPurchase,
+      );
+
+      const result = await cryptoPurchaseService.updatePurchaseFromWebhook(
+        validWebhookData,
+      );
+
+      expect(result.status).toBe('COMPLETED');
+      expect(result.cryptoAmount).toBe(100);
+      expect(mockEntityManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 456,
+          status: 'COMPLETED',
+          cryptoAmount: 100,
+        }),
+      );
+      expect(mockCacheClient.set).toHaveBeenCalledWith(
+        'webhook:processed:transak-order-123:COMPLETED',
+        '1',
+        86400,
+      );
+    });
+
+    it('should proceed when cache get throws (cache unavailable)', async () => {
+      const existingPurchase = new CryptoPurchase();
+      existingPurchase.id = 456;
+      existingPurchase.status = 'PENDING';
+      existingPurchase.user = { id: 789 } as User;
+
+      mockCacheClient.get.mockRejectedValue(new Error('Redis down'));
+      mockEntityManager.findOne.mockResolvedValue(existingPurchase);
+      mockEntityManager.save.mockImplementation(
+        async (entity) => entity as unknown as CryptoPurchase,
+      );
+
+      const result = await cryptoPurchaseService.updatePurchaseFromWebhook(
+        validWebhookData,
+      );
+
+      expect(result.status).toBe('COMPLETED');
+      expect(mockEntityManager.save).toHaveBeenCalled();
+    });
+
+    it('should throw PurchaseNotFoundError when purchase not found (normal flow)', async () => {
+      mockCacheClient.get.mockResolvedValue(null);
+      mockEntityManager.findOne.mockResolvedValue(null);
+
+      await expect(
+        cryptoPurchaseService.updatePurchaseFromWebhook(validWebhookData),
+      ).rejects.toThrow(PurchaseNotFoundError);
+
+      await expect(
+        cryptoPurchaseService.updatePurchaseFromWebhook(validWebhookData),
+      ).rejects.toThrow(`Purchase with id 456 not found`);
     });
   });
 });

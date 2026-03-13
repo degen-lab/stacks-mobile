@@ -87,12 +87,42 @@ export class CryptoPurchaseService {
     const purchaseId = webhookData.partnerOrderId;
     const partnerCustomerId = webhookData.partnerCustomerId;
     if (!purchaseId) {
-      throw new PurchaseNotFoundError('puchase not provided in webhook');
+      throw new PurchaseNotFoundError('purchase not provided in webhook');
     }
     if (!partnerCustomerId) {
       throw new PurchaseNotFoundError(
         'partnerCustomerId not provided in webhook',
       );
+    }
+
+    // Idempotency: skip if we've already processed this exact webhook (order + status)
+    // Transak sends multiple webhooks per order as status changes; each must be processed once
+    const checkWebhookKey = `webhook:processed:${webhookData.id}:${webhookData.status}`;
+    try {
+      const alreadyProcessed =
+        await this.cacheClient.get<string>(checkWebhookKey);
+      if (alreadyProcessed) {
+        logger.info({
+          msg: 'Webhook already processed, skipping (idempotency)',
+          orderId: webhookData.id,
+        });
+        const purchase = await this.entityManager.findOne(CryptoPurchase, {
+          where: {
+            id: parseInt(purchaseId, 10),
+            user: { id: parseInt(partnerCustomerId, 10) },
+          },
+        });
+        // Return purchase if found; otherwise return stub for logging (purchase may have been purged)
+        return (
+          purchase ??
+          Object.assign(new CryptoPurchase(), {
+            id: parseInt(purchaseId, 10),
+            status: webhookData.status,
+          })
+        );
+      }
+    } catch {
+      // Cache unavailable - proceed with processing
     }
 
     const purchase = await this.entityManager.findOne(CryptoPurchase, {
@@ -115,7 +145,17 @@ export class CryptoPurchaseService {
       purchase.cryptoAmount = webhookData.cryptoAmount;
     }
 
-    return await this.entityManager.save(purchase);
+    const savedPurchase = await this.entityManager.save(purchase);
+
+    // Mark webhook as processed (24h TTL for idempotency)
+    try {
+      await this.cacheClient.set(checkWebhookKey, '1', 86400);
+    } catch {
+      // Cache unavailable - log but don't fail
+      logger.warn({ msg: 'Failed to set webhook idempotency key in cache' });
+    }
+
+    return savedPurchase;
   }
 
   async getAccessTokenForWebhook(): Promise<string> {

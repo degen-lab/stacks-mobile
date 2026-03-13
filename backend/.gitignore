@@ -2,3 +2,4 @@
 **/.env
 **/dist
 **/be_scripts
+**/.cache

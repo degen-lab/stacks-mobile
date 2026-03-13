@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { CryptoPurchaseService } from '../../application/purchase/cryptoPurchaseService';
 import { logger } from '../helpers/logger';
 import { BaseError } from '../../shared/errors/baseError';
+import { rateLimitOptions } from '../config/rateLimitConfig';
 import {
   transakWebhookPayloadSchema,
   TransakWebhookPayload,
@@ -20,6 +21,18 @@ export default function purchaseWebhookRoutes(
   },
 ) {
   app.post<{ Body: TransakWebhookBody }>('/webhook', {
+    config: {
+      // Webhook needs higher limit - Transak may send multiple order updates
+      rateLimit: rateLimitOptions({
+        max: 60,
+        timeWindow: '60000',
+        errorResponseBuilder: () => ({
+          statusCode: 429,
+          error: 'Too many requests',
+          message: 'Too many webhook requests, please try again later',
+        }),
+      }),
+    },
     handler: async (request, reply) => {
       try {
         const { data } = request.body;
