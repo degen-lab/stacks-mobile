@@ -67,7 +67,6 @@ const mockTournamentLeaderboard = jest.fn();
 const mockTournamentData = jest.fn();
 const mockCurrentTournamentSubmissions = jest.fn();
 const mockSponsoredSubmissionsLeft = jest.fn();
-const mockBroadcastSponsoredTransaction = jest.fn();
 const mockGetRunSummary = jest.fn();
 const mockSetRunSummary = jest.fn();
 const mockResetReviveReward = jest.fn();
@@ -111,12 +110,6 @@ jest.mock("@/api/game/tournament", () => ({
   useTournamentLeaderboard: () => mockTournamentLeaderboard(),
   useTournamentData: () => mockTournamentData(),
   useCurrentTournamentSubmissions: () => mockCurrentTournamentSubmissions(),
-}));
-
-jest.mock("@/api/game/transaction", () => ({
-  useBroadcastSponsoredTransactionMutation: () => ({
-    mutateAsync: mockBroadcastSponsoredTransaction,
-  }),
 }));
 
 // Mock the barrel export @/api to ensure mocks are used
@@ -193,15 +186,7 @@ jest.mock("../hooks/useGameAds", () => ({
       loadAd: mockReviveAdLoadAd,
       showAd: mockReviveAdShowAd,
     },
-    submissionAd: {
-      loaded: false,
-      loading: false,
-      loadAd: jest.fn(),
-      showAd: jest.fn(),
-    },
-    queueSubmissionAd: jest.fn(),
     resetReviveReward: mockResetReviveReward,
-    ssvData: null,
   }),
 }));
 

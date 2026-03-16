@@ -8,14 +8,13 @@ import { useSsvRewardedAdFlow } from "@/lib/ads/use-ssv-rewarded-ad-flow";
 import { useCallback, useRef } from "react";
 import { useSignTransaction } from "./use-sign-transaction";
 
-type PendingSponsoredTransaction = {
+type QueuedSponsoredTransaction = {
   requestId: number;
   serializedTx: string;
-  resolvedValue: unknown;
 };
 
-type DeferredRef = {
-  resolve: (value: unknown) => void;
+type PendingSponsoredRequest = {
+  resolve: (requestId: number) => void;
   reject: (error: Error) => void;
 };
 
@@ -25,71 +24,72 @@ type SubmitSponsoredTransactionOptions = {
   unsignedSerializedTx: string;
 };
 
-type SubmitPreparedSponsoredTransactionOptions<TResult> = {
+type SubmitPreparedSponsoredTransactionOptions = {
   requestId: number;
   accountIndex: number;
   unsignedSerializedTx: string;
-  resolveValue?: TResult | ((requestId: number) => TResult);
 };
 
 const toError = (error: unknown) =>
   error instanceof Error ? error : new Error(String(error));
 
-function getResolvedValue<TResult>(
-  requestId: number,
-  resolveValue?: TResult | ((requestId: number) => TResult),
-) {
-  if (typeof resolveValue === "function") {
-    return (resolveValue as (requestId: number) => TResult)(requestId);
-  }
-
-  if (resolveValue !== undefined) {
-    return resolveValue;
-  }
-
-  return requestId as TResult;
-}
-
 export function useSponsoredStacksTransaction() {
   const { data: userProfile } = useUserProfile();
+  const userId = userProfile?.id;
   const createSponsoredTransactionMutation =
     useCreateSponsoredTransactionMutation();
   const broadcastSponsoredTransactionMutation =
     useBroadcastSponsoredTransactionMutation();
   const signTransaction = useSignTransaction();
-  const deferredRef = useRef<DeferredRef | null>(null);
+  const pendingRequestRef = useRef<PendingSponsoredRequest | null>(null);
+
+  const clearPendingRequest = useCallback(() => {
+    pendingRequestRef.current = null;
+  }, []);
+
+  const resolvePendingRequest = useCallback(
+    (requestId: number) => {
+      pendingRequestRef.current?.resolve(requestId);
+      clearPendingRequest();
+    },
+    [clearPendingRequest],
+  );
+
+  const rejectPendingRequest = useCallback(
+    (error: unknown) => {
+      pendingRequestRef.current?.reject(toError(error));
+      clearPendingRequest();
+    },
+    [clearPendingRequest],
+  );
 
   const { queue: queueSponsoredAd, isActive: isSponsoredFlowActive } =
-    useSsvRewardedAdFlow<PendingSponsoredTransaction>(getRewardedAdUnitId(), {
+    useSsvRewardedAdFlow<QueuedSponsoredTransaction>(getRewardedAdUnitId(), {
       onEarned: async (pendingTx) => {
         await broadcastSponsoredTransactionMutation.mutateAsync({
           requestId: pendingTx.requestId,
           serializedTx: pendingTx.serializedTx,
         });
-        deferredRef.current?.resolve(pendingTx.resolvedValue);
-        deferredRef.current = null;
+        resolvePendingRequest(pendingTx.requestId);
       },
       onCanceled: () => {
-        deferredRef.current?.reject(new Error("Ad not completed."));
-        deferredRef.current = null;
+        rejectPendingRequest(new Error("Ad not completed."));
       },
       onError: (error) => {
-        deferredRef.current?.reject(toError(error));
-        deferredRef.current = null;
+        rejectPendingRequest(error);
       },
     });
 
   const submitPreparedSponsoredTransaction = useCallback(
-    async <TResult = number>({
+    async ({
       requestId,
       accountIndex,
       unsignedSerializedTx,
-      resolveValue,
-    }: SubmitPreparedSponsoredTransactionOptions<TResult>): Promise<TResult> => {
-      if (!userProfile?.id) {
+    }: SubmitPreparedSponsoredTransactionOptions): Promise<number> => {
+      if (!userId) {
         throw new Error("User profile not available.");
       }
-      if (deferredRef.current) {
+      if (pendingRequestRef.current) {
         throw new Error(
           "Another sponsored transaction is already in progress.",
         );
@@ -99,11 +99,10 @@ export function useSponsoredStacksTransaction() {
         unsignedSerializedTx,
         accountIndex,
       );
-      const resolvedValue = getResolvedValue(requestId, resolveValue);
 
-      return await new Promise<TResult>((resolve, reject) => {
-        deferredRef.current = {
-          resolve: resolve as (value: unknown) => void,
+      return new Promise<number>((resolve, reject) => {
+        pendingRequestRef.current = {
+          resolve,
           reject,
         };
 
@@ -111,16 +110,15 @@ export function useSponsoredStacksTransaction() {
           {
             requestId,
             serializedTx: signedSerializedTx,
-            resolvedValue,
           },
           {
-            userId: String(userProfile.id),
+            userId: String(userId),
             customData: String(requestId),
           },
         );
       });
     },
-    [queueSponsoredAd, signTransaction, userProfile?.id],
+    [queueSponsoredAd, signTransaction, userId],
   );
 
   const submitSponsoredTransaction = useCallback(
@@ -129,7 +127,7 @@ export function useSponsoredStacksTransaction() {
       accountIndex,
       unsignedSerializedTx,
     }: SubmitSponsoredTransactionOptions): Promise<number> => {
-      if (!userProfile?.id) {
+      if (!userId) {
         throw new Error("User profile not available.");
       }
 
@@ -150,7 +148,7 @@ export function useSponsoredStacksTransaction() {
     [
       createSponsoredTransactionMutation,
       submitPreparedSponsoredTransaction,
-      userProfile?.id,
+      userId,
     ],
   );
 

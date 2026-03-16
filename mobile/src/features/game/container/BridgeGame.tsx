@@ -1,4 +1,3 @@
-import { useBroadcastSponsoredTransactionMutation } from "@/api/game/transaction";
 import {
   useCurrentTournamentSubmissions,
   useTournamentData,
@@ -47,12 +46,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const { selectedNetwork } = useSelectedNetwork();
   const { balance: walletBalance } = useStxBalance();
   const { userData } = useAuth();
-  const broadcastSponsoredTransactionMutation =
-    useBroadcastSponsoredTransactionMutation();
-  const submissionDeferredRef = useRef<{
-    resolve: (txId: string) => void;
-    reject: (error: Error) => void;
-  } | null>(null);
   const [perfectCue, setPerfectCue] = useState<{
     x: number;
     y: number;
@@ -228,14 +221,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     updateScore,
   ]);
 
-  const {
-    isWatchingAd,
-    reviveAd,
-    submissionAd,
-    queueSubmissionAd,
-    resetReviveReward,
-    ssvData,
-  } = useGameAds({
+  const { isWatchingAd, reviveAd, resetReviveReward } = useGameAds({
     onReviveEarned: () => {
       engineRef.current.revive();
       setOverlay("PLAYING");
@@ -245,22 +231,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       if (overlayState === "REVIVE") {
         declineRevive();
       }
-    },
-    onSubmissionEarned: async (payload) => {
-      await broadcastSponsoredTransactionMutation.mutateAsync({
-        submissionId: payload.submissionId,
-        serializedTx: payload.serializedTx,
-      });
-      submissionDeferredRef.current?.resolve(String(payload.submissionId));
-      submissionDeferredRef.current = null;
-    },
-    onSubmissionFailed: (error) => {
-      submissionDeferredRef.current?.reject(error);
-      submissionDeferredRef.current = null;
-    },
-    onSubmissionCanceled: () => {
-      submissionDeferredRef.current?.reject(new Error("Ad not completed."));
-      submissionDeferredRef.current = null;
     },
   });
 
@@ -405,13 +375,9 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       runSummary,
       setRunSummary,
       submissionContext,
-      selectedNetwork,
-      userProfile,
       highscore,
       setHighscore,
       raffleSubmissionsUsed,
-      queueSubmissionAd,
-      submissionDeferredRef,
     });
 
   const avatarSource = useMemo(
@@ -427,49 +393,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     submissionContext?.kind === "raffle"
       ? raffleSubmissionsLeft
       : weeklyContestSubmissionsLeft;
-
-  // Refs to prevent redundant ad operations
-  const prevSsvDataRef = useRef(ssvData);
-  const hasLoadedSubmissionAdRef = useRef(false);
-  const submissionAdLoadRef = useRef(submissionAd.loadAd);
-  const submissionAdShowRef = useRef(submissionAd.showAd);
-
-  // Update refs when functions change
-  useEffect(() => {
-    submissionAdLoadRef.current = submissionAd.loadAd;
-    submissionAdShowRef.current = submissionAd.showAd;
-  }, [submissionAd.loadAd, submissionAd.showAd]);
-
-  // Load submission ad when ssvData becomes available
-  useEffect(() => {
-    if (!ssvData) {
-      prevSsvDataRef.current = null;
-      hasLoadedSubmissionAdRef.current = false;
-      return;
-    }
-
-    // Only load if ssvData changed and ad isn't already loaded/loading
-    if (
-      prevSsvDataRef.current !== ssvData &&
-      !submissionAd.loaded &&
-      !submissionAd.loading &&
-      !hasLoadedSubmissionAdRef.current
-    ) {
-      submissionAdLoadRef.current();
-      hasLoadedSubmissionAdRef.current = true;
-    }
-    prevSsvDataRef.current = ssvData;
-  }, [ssvData, submissionAd.loaded, submissionAd.loading]);
-
-  // Show submission ad when it becomes loaded
-  useEffect(() => {
-    if (!ssvData) return;
-    // Only show if ad just became loaded
-    if (submissionAd.loaded && hasLoadedSubmissionAdRef.current) {
-      submissionAdShowRef.current();
-      hasLoadedSubmissionAdRef.current = false;
-    }
-  }, [ssvData, submissionAd.loaded]);
 
   const handleAddFunds = useCallback(() => {
     router.push("/add-funds" as RelativePathString); // TOOD: when we add this screen we should need a way to navigate back to the game and still let user submit
