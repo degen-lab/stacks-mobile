@@ -1,8 +1,10 @@
-import { Pressable, Text, View, colors } from "@/components/ui";
+import { Pressable, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "./text";
+import colors from "./colors";
 
 type ScreenHeaderProps = {
   title: string;
@@ -12,12 +14,14 @@ type ScreenHeaderProps = {
     onPress: () => void;
     accessibilityLabel: string;
   };
+  rightSlot?: React.ReactNode;
 };
 
 export function ScreenHeader({
   title,
   onBack,
   rightAction,
+  rightSlot,
 }: ScreenHeaderProps) {
   const router = useRouter();
   const navigation = useNavigation();
@@ -36,7 +40,7 @@ export function ScreenHeader({
 
   return (
     <SafeAreaView edges={["top"]} className="bg-surface-tertiary">
-      <View className="flex-row items-center px-5 py-4 border-b border-surface-secondary">
+      <View className="flex-row items-center px-4 py-4 border-b border-surface-secondary">
         <Pressable
           onPress={handleBack}
           className="w-10 h-10 items-center justify-center"
@@ -44,14 +48,20 @@ export function ScreenHeader({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ArrowLeft size={20} color={colors.neutral[900]} />
+          <ArrowLeft
+            size={20}
+            color={colors.neutral[900]}
+            pointerEvents="none"
+          />
         </Pressable>
 
         <Text className="text-xl font-matter text-primary flex-1 text-center">
           {title}
         </Text>
 
-        {rightAction ? (
+        {rightSlot ? (
+          <View className="items-end justify-center">{rightSlot}</View>
+        ) : rightAction ? (
           <Pressable
             onPress={rightAction.onPress}
             className="w-10 h-10 items-center justify-center"

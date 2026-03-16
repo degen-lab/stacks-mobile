@@ -3,12 +3,18 @@ import { useStxBalance } from "@/hooks/use-stx-balance";
 import { RelativePathString, useRouter } from "expo-router";
 import HomeScreenLayout from "./Home.layout";
 import { useModal } from "@/components/ui";
+import { useActiveAccountIndex } from "@/lib/store/settings";
+import { useTransferSheet } from "@/features/transfer";
+import { useTransak } from "@/features/transak/context/transak-context";
 
 export default function HomeScreen() {
-  const { balance: stxBalance } = useStxBalance();
+  const { activeAccountIndex } = useActiveAccountIndex();
+  const { balance: stxBalance } = useStxBalance(activeAccountIndex);
   const { data: stxPriceUsd } = useStacksPrice();
   const usdBalance = stxPriceUsd ? stxBalance * stxPriceUsd : 0;
   const emptyWalletModal = useModal();
+  const { openTransak } = useTransak();
+  const { openTransfer } = useTransferSheet();
   const router = useRouter();
 
   const navigateToPortfolio = () => {
@@ -27,15 +33,27 @@ export default function HomeScreen() {
     router.push("/referral" as RelativePathString);
   };
 
+  const navigateToBuy = () => {
+    emptyWalletModal.dismiss();
+    openTransak("STX", "buy");
+  };
+
+  const handleDepositCrypto = () => {
+    emptyWalletModal.dismiss();
+    openTransfer({ mode: "receive" });
+  };
+
   return (
-    <HomeScreenLayout
-      usdBalance={usdBalance}
-      navigateToPortfolio={navigateToPortfolio}
-      navigateToPlay={navigateToPlay}
-      navigateToReferral={navigateToReferral}
-      emptyWalletModalRef={emptyWalletModal.ref}
-      onBuyCrypto={emptyWalletModal.dismiss}
-      onDepositCrypto={emptyWalletModal.dismiss}
-    />
+    <>
+      <HomeScreenLayout
+        usdBalance={usdBalance}
+        navigateToPortfolio={navigateToPortfolio}
+        navigateToPlay={navigateToPlay}
+        navigateToReferral={navigateToReferral}
+        emptyWalletModalRef={emptyWalletModal.ref}
+        onBuyCrypto={navigateToBuy}
+        onDepositCrypto={handleDepositCrypto}
+      />
+    </>
   );
 }

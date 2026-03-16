@@ -1,4 +1,5 @@
-import { Text, View } from "@/components/ui";
+import { View } from "react-native";
+import { Text } from "./text";
 
 type NumberedSectionProps = {
   title: string;

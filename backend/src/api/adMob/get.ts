@@ -3,6 +3,7 @@ import { ssvSchema } from '../validators/adMobValidator';
 import { logger } from '../helpers/logger';
 import { TransactionService } from '../../application/transaction/transactionService';
 import { BaseError } from '../../shared/errors/baseError';
+import { verifyAdMobSsv } from '../../infra/adMob/verifyAdMobSsv';
 
 export default function adMobGetRoutes(
   app: FastifyInstance,
@@ -18,7 +19,6 @@ export default function adMobGetRoutes(
             method: request.method,
             err: parsed.error,
           });
-
           return reply.status(400).send({
             success: false,
             message: 'Invalid body',
@@ -27,13 +27,13 @@ export default function adMobGetRoutes(
         }
         const data = parsed.data;
         const rawQueryString = request.raw.url?.split('?')[1] ?? '';
-        await transactionService.validateSsv(
+
+        await verifyAdMobSsv(data.key_id, data.signature, rawQueryString);
+        await transactionService.markSponsoredTransactionAdWatched(
           data.user_id,
           data.custom_data,
-          data.key_id,
-          data.signature,
-          rawQueryString,
         );
+
         logger.info({
           msg: 'SSV validated successfully',
           method: request.method,

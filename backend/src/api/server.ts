@@ -25,7 +25,10 @@ import stackingRoutes from './stacking';
 import { StackingService } from '../application/stacking/stackingService';
 import defiRoutes from './defi';
 import { DefiService } from '../application/defi/defiService';
-import { httpRequestCounter, httpRequestDuration } from '../infra/monitoring/metrics';
+import {
+  httpRequestCounter,
+  httpRequestDuration,
+} from '../infra/monitoring/metrics';
 
 export const buildServer = async (dataSource: DataSource) => {
   const app = Fastify();

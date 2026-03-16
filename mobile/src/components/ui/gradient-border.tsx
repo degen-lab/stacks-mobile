@@ -6,6 +6,7 @@ import { ColorValue, StyleProp, View, ViewStyle } from "react-native";
 type GradientBorderProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
   borderRadius?: number;
+  borderBottomRightRadius?: number;
   gradient: readonly [ColorValue, ColorValue, ...ColorValue[]];
   shadow?: ViewStyle;
   innerBackground?: string;
@@ -27,6 +28,7 @@ export default function GradientBorder({
   children,
   style,
   borderRadius = 12, // ~ rounded-lg
+  borderBottomRightRadius = 12,
   gradient = colors.stacks.borderGradientBloodOrangeCard,
   shadow = shadows.bloodOrangeCard,
   innerBackground = "#EAE8E6",
@@ -41,11 +43,15 @@ export default function GradientBorder({
         // angle(-205deg) ≈ start/end like this:
         start={start}
         end={end}
-        style={[shadow, { borderRadius, padding: 1 }]}
+        style={[shadow, { borderRadius, borderBottomRightRadius, padding: 1 }]}
       >
         <View
           style={[
-            { borderRadius, backgroundColor: innerBackground },
+            {
+              borderRadius,
+              borderBottomRightRadius,
+              backgroundColor: innerBackground,
+            },
             { overflow: "hidden" },
             style,
           ]}

@@ -35,7 +35,10 @@ import type {
 import { BottomSheetModal, useBottomSheet } from "@gorhom/bottom-sheet";
 import * as React from "react";
 import { Pressable, View } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import colors from "./colors";
 
 import { Text } from "./text";
@@ -45,12 +48,16 @@ type ModalProps = BottomSheetModalProps & {
   showHandle?: boolean;
   handleColor?: string;
   handleBackgroundColor?: string;
+  headerLeft?: React.ReactNode;
+  headerRight?: React.ReactNode;
 };
 
 type ModalRef = React.ForwardedRef<BottomSheetModal>;
 
 type ModalHeaderProps = {
   title?: string;
+  headerLeft?: React.ReactNode;
+  headerRight?: React.ReactNode;
 };
 
 export const useModal = () => {
@@ -74,6 +81,8 @@ export const Modal = React.forwardRef(
       showHandle = true,
       handleColor = colors.neutral[300],
       handleBackgroundColor,
+      headerLeft,
+      headerRight,
       ...props
     }: ModalProps,
     ref: ModalRef,
@@ -104,10 +113,14 @@ export const Modal = React.forwardRef(
               backgroundColor: handleColor,
             }}
           />
-          <ModalHeader title={title} />
+          <ModalHeader
+            title={title}
+            headerLeft={headerLeft}
+            headerRight={headerRight}
+          />
         </View>
       ),
-      [title, handleColor, handleBackgroundColor],
+      [title, handleColor, handleBackgroundColor, headerLeft, headerRight],
     );
 
     const emptyHandle = React.useCallback(() => null, []);
@@ -133,14 +146,16 @@ export const Modal = React.forwardRef(
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const CustomBackdrop = ({ style }: BottomSheetBackdropProps) => {
+const CustomBackdrop = ({ style, animatedIndex }: BottomSheetBackdropProps) => {
   const { close } = useBottomSheet();
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedIndex.value, [-1, 0], [0, 1], "clamp"),
+  }));
+
   return (
     <AnimatedPressable
       onPress={() => close()}
-      entering={FadeIn.duration(50)}
-      exiting={FadeOut.duration(20)}
-      style={[style, { backgroundColor: "rgba(0, 0, 0, 0.4)" }]}
+      style={[style, { backgroundColor: "rgba(0, 0, 0, 0.4)" }, animatedStyle]}
     />
   );
 };
@@ -174,20 +189,22 @@ const getDetachedProps = (detached: boolean) => {
  */
 
 // eslint-disable-next-line react/display-name
-const ModalHeader = React.memo(({ title }: ModalHeaderProps) => {
-  return (
-    <>
-      {title && (
-        <View className="flex-row items-center px-2 py-4">
-          <View className="size-[24px]" />
-          <View className="flex-1">
-            <Text className="text-center text-2xl font-matter text-primary dark:text-white">
-              {title}
-            </Text>
+const ModalHeader = React.memo(
+  ({ title, headerLeft, headerRight }: ModalHeaderProps) => {
+    return (
+      <>
+        {title && (
+          <View className="flex-row items-center px-2 py-4">
+            <View className="w-[48px] items-start">{headerLeft}</View>
+            <View className="flex-1">
+              <Text className="text-center text-2xl font-matter text-primary dark:text-white">
+                {title}
+              </Text>
+            </View>
+            <View className="w-[48px] items-end">{headerRight}</View>
           </View>
-          <View className="size-[24px]" />
-        </View>
-      )}
-    </>
-  );
-});
+        )}
+      </>
+    );
+  },
+);

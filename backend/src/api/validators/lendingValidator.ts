@@ -22,16 +22,13 @@ export const saveLendingOperationSchema = z.object({
   assetContract: z
     .string()
     .min(1, 'Asset contract is required')
-    .refine(
-      (val) => {
-        const parts = val.split('.');
-        return (
-          parts.length === 2 &&
-          parts[1].length > 0 &&
-          /^[a-z0-9-]+$/.test(parts[1]) &&
-          validateStacksAddress(parts[0])
-        );
-      },
-      'Invalid contract format (principal.contract-name)',
-    ),
+    .refine((val) => {
+      const parts = val.split('.');
+      return (
+        parts.length === 2 &&
+        parts[1].length > 0 &&
+        /^[a-z0-9-]+$/.test(parts[1]) &&
+        validateStacksAddress(parts[0])
+      );
+    }, 'Invalid contract format (principal.contract-name)'),
 });

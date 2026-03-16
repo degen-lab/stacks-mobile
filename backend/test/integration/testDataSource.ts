@@ -14,11 +14,11 @@ import { FraudAttempt } from '../../src/domain/entities/fraudAttempt';
 import { RewardsDistributionData } from '../../src/domain/entities/rewardsDistributionData';
 import { TournamentStatus } from '../../src/domain/entities/tournamentStatus';
 import { CryptoPurchase } from '../../src/domain/entities/cryptoPurchase';
-import { StackingData } from '../../src/domain/entities/stackingData';
 import { DefiOperation } from '../../src/domain/entities/defiOperation';
+import { StackingData } from '../../src/domain/entities/stackingData';
+import { SponsoredTransaction } from '../../src/domain/entities/sponsoredTransaction';
 
 const TEST_DATABASE_NAME = 'stacks_app';
-
 let testDataSource: DataSource | null = null;
 
 export interface TestDataSourceOptions {
@@ -64,6 +64,7 @@ export const createTestDataSource = async (
       TournamentStatus,
       CryptoPurchase,
       StackingData,
+      SponsoredTransaction,
       DefiOperation,
     ],
   });
@@ -122,6 +123,11 @@ export const cleanTestDatabase = async (): Promise<void> => {
       .execute();
     await manager.createQueryBuilder().delete().from(FraudAttempt).execute();
     await manager.createQueryBuilder().delete().from(CryptoPurchase).execute();
+    await manager
+      .createQueryBuilder()
+      .delete()
+      .from(SponsoredTransaction)
+      .execute();
     await manager.createQueryBuilder().delete().from(StackingData).execute();
     await manager.createQueryBuilder().delete().from(DefiOperation).execute();
     await manager.createQueryBuilder().delete().from(Submission).execute();

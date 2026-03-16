@@ -3,7 +3,7 @@ import { create } from "zustand";
 
 import type { UserData as BackendUserData } from "@/api/auth";
 import { getItem, removeItem, setItem } from "@/lib/storage/storage";
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 
 const ACCESS_TOKEN_KEY = "auth.accessToken";
 const USER_DATA_KEY = "auth.userData";
@@ -31,6 +31,7 @@ interface AuthState {
   backendUserData: BackendUserData | null;
   referralUsed: boolean;
 
+  setHasBackup: (hasBackup: boolean) => void;
   signInWithGoogle: () => Promise<SignInResult>;
   signOut: () => Promise<void>;
   hydrate: () => Promise<void>;
@@ -54,6 +55,8 @@ const useAuthStore = create<AuthState>((set, get) => ({
   userData: null,
   backendUserData: null,
   referralUsed: false,
+
+  setHasBackup: (hasBackup: boolean) => set({ hasBackup }),
 
   signInWithGoogle: async () => {
     set({ isAuthenticating: true });

@@ -1,7 +1,8 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { RefObject } from "react";
+import { ScrollView, View } from "react-native";
 
-import { Modal, ScrollView, View } from "@/components/ui";
+import { Modal } from "./modal";
 import { NumberedSection } from "./numbered-section";
 
 type HowItWorksModalProps = {

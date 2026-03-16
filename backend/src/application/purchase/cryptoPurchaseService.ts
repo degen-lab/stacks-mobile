@@ -42,8 +42,11 @@ export class CryptoPurchaseService {
     userId: number,
     cryptoCurrencyCode: string,
     fiatCurrency: string,
-    fiatAmount: number,
+    fiatAmount: number | undefined,
+    cryptoAmount: number | undefined,
     platform: AppPlatform,
+    productsAvailed: string,
+    walletAddress?: string,
   ): Promise<string> {
     const user = await this.entityManager.findOne(User, {
       where: {
@@ -57,23 +60,53 @@ export class CryptoPurchaseService {
       );
     }
 
+    const fiatAmountCents =
+      fiatAmount === undefined ? undefined : Math.round(fiatAmount * 100);
+    const cryptoDecimals = this.getCryptoDecimals(cryptoCurrencyCode);
+    const cryptoAmountBaseUnits =
+      cryptoAmount === undefined
+        ? undefined
+        : Math.round(cryptoAmount * Math.pow(10, cryptoDecimals));
+
     const purchase = this.purchaseDomainService.createPurchase(
       user,
       cryptoCurrencyCode,
       fiatCurrency,
-      fiatAmount,
+      fiatAmountCents,
+      cryptoAmountBaseUnits,
     );
-    const savedPurchase = await this.entityManager.save(purchase);
+    let savedPurchase: CryptoPurchase;
+    try {
+      savedPurchase = await this.entityManager.save(purchase);
+    } catch (error) {
+      logger.error({
+        msg: 'Failed to save purchase',
+        err: error,
+        userId: user.id,
+        cryptoCurrencyCode,
+        fiatCurrency,
+        fiatAmount,
+        cryptoAmount,
+      });
+      throw error;
+    }
     const accessToken = await this.getAccessToken();
     return await this.purchaseClient.createWidgetUrl(
       accessToken,
       cryptoCurrencyCode,
       fiatCurrency,
       fiatAmount,
+      cryptoAmount,
       user.id.toString(),
       savedPurchase.id.toString(),
       platform,
+      productsAvailed,
+      walletAddress,
     );
+  }
+
+  private getCryptoDecimals(cryptoCurrencyCode: string): number {
+    return cryptoCurrencyCode.toUpperCase() === 'STX' ? 6 : 8;
   }
 
   async updatePurchaseFromWebhook(webhookData: {
@@ -142,7 +175,12 @@ export class CryptoPurchaseService {
     purchase.status = webhookData.status;
 
     if (webhookData.cryptoAmount !== undefined) {
-      purchase.cryptoAmount = webhookData.cryptoAmount;
+      const cryptoDecimals = this.getCryptoDecimals(
+        purchase.cryptoCurrencyCode,
+      );
+      purchase.cryptoAmount = Math.round(
+        webhookData.cryptoAmount * Math.pow(10, cryptoDecimals),
+      );
     }
 
     const savedPurchase = await this.entityManager.save(purchase);

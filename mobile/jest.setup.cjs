@@ -1,39 +1,20 @@
-require("react-native-gesture-handler/jestSetup");
-require("@shopify/flash-list/jestSetup");
+jest.mock("@react-native-async-storage/async-storage", () =>
+  require("@react-native-async-storage/async-storage/jest/async-storage-mock")
+);
 
-jest.mock("expo-router");
-
-jest.mock("expo-web-browser", () => ({
-  openBrowserAsync: jest.fn(),
-  WebBrowserPresentationStyle: { AUTOMATIC: "automatic" },
+jest.mock("@react-native-google-signin/google-signin", () => ({
+  GoogleSignin: {
+    configure: jest.fn(),
+    hasPlayServices: jest.fn(() => Promise.resolve(true)),
+    signIn: jest.fn(() => Promise.resolve({})),
+    signOut: jest.fn(() => Promise.resolve()),
+    isSignedIn: jest.fn(() => Promise.resolve(false)),
+    getTokens: jest.fn(() => Promise.resolve({})),
+    getCurrentUser: jest.fn(() => Promise.resolve(null)),
+  },
+  statusCodes: {
+    SIGN_IN_CANCELLED: "SIGN_IN_CANCELLED",
+    IN_PROGRESS: "IN_PROGRESS",
+    PLAY_SERVICES_NOT_AVAILABLE: "PLAY_SERVICES_NOT_AVAILABLE",
+  },
 }));
-
-jest.mock("axios", () => ({
-  isAxiosError: (err) => Boolean(err?.isAxiosError),
-  create: () => ({
-    get: jest.fn(),
-    post: jest.fn(),
-    interceptors: {
-      request: { use: jest.fn(), eject: jest.fn() },
-      response: { use: jest.fn(), eject: jest.fn() },
-    },
-  }),
-}));
-
-jest.mock("react-native-safe-area-context", () => {
-  const React = require("react");
-  return {
-    SafeAreaProvider: ({ children }) =>
-      React.createElement(React.Fragment, null, children),
-    SafeAreaView: ({ children }) =>
-      React.createElement(React.Fragment, null, children),
-    useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
-  };
-});
-
-jest.mock("moti");
-
-jest.mock("@gorhom/bottom-sheet");
-jest.mock("expo-image");
-jest.mock("react-native-svg");
-jest.mock("lucide-react-native");

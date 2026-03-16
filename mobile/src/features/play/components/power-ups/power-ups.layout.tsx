@@ -1,4 +1,4 @@
-import { PointsBadge, Text, View } from "@/components/ui";
+import { InfoBadge, Text, View } from "@/components/ui";
 import type { ItemVariant } from "@/lib/enums";
 import PowerUpCard from "./power-up-card";
 import type { PowerUp } from "./utils";
@@ -30,7 +30,7 @@ export function PowerUpsLayout({
         <Text className="text-3xl font-matter text-primary mb-3">
           Power-ups
         </Text>
-        <PointsBadge points={points} loading={isPointsLoading} />
+        <InfoBadge label="Points" value={points} loading={isPointsLoading} />
       </View>
 
       <View className="gap-4 mt-2">

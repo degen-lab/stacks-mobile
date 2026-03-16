@@ -6,7 +6,10 @@ export const swapParamsSchema = z.object({
   amount: z
     .string()
     .min(1, 'Amount is required')
-    .refine((val) => !Number.isNaN(parseFloat(val)), 'Amount must be a valid number')
+    .refine(
+      (val) => !Number.isNaN(parseFloat(val)),
+      'Amount must be a valid number',
+    )
     .transform((val) => parseFloat(val))
     .refine((val) => val > 0, 'Amount must be positive')
     .refine((val) => Number.isFinite(val), 'Amount must be finite'),

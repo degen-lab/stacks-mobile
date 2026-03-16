@@ -17,6 +17,7 @@ import { CryptoPurchase } from './cryptoPurchase';
 import { StackingData } from './stackingData';
 import { DefiOperation } from './defiOperation';
 
+import { SponsoredTransaction } from './sponsoredTransaction';
 @Entity()
 export class User extends BaseAppEntity {
   @Column({ type: 'varchar', unique: true })
@@ -66,6 +67,11 @@ export class User extends BaseAppEntity {
     cascade: true,
   })
   defiOperationList: DefiOperation[];
+  @OneToMany(
+    () => SponsoredTransaction,
+    (sponsoredTransaction) => sponsoredTransaction.user,
+  )
+  sponsoredTransactions: SponsoredTransaction[];
 
   updateBlacklistStatus() {
     if (!this.fraudAttempts || this.fraudAttempts.length === 0) {

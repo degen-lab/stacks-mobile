@@ -23,7 +23,7 @@ jest.mock("@/api/user", () => ({
   useUserProfile: () => mockUseUserProfile(),
 }));
 
-jest.mock("@/api/tournament", () => ({
+jest.mock("@/api/game/tournament", () => ({
   useTournamentLeaderboard: () => mockUseTournamentLeaderboard(),
   useCurrentTournamentSubmissions: () => mockUseCurrentTournamentSubmissions(),
 }));

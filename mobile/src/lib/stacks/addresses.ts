@@ -1,0 +1,54 @@
+import type {
+  NetworkType,
+  WalletAccount,
+} from "@degenlab/stacks-wallet-kit-core";
+import { cvToHex, principalCV } from "@stacks/transactions";
+
+/**
+ * Gets the appropriate address for a wallet account based on the network type.
+ * @param account - The wallet account containing mainnet and testnet addresses
+ * @param network - The network type (mainnet, testnet, or devnet)
+ * @returns The address string for the specified network
+ */
+export function getAddressForNetwork(
+  account: WalletAccount,
+  network: NetworkType,
+): string {
+  return network === "mainnet"
+    ? account.addresses.mainnet
+    : account.addresses.testnet;
+}
+
+/**
+ * Formats a Stacks address to show first 4 and last 4 characters
+ * @param address - The full address string (e.g., "ST13XJ4G348VGDRT5Z791J8GBTB9Z0ESPNCRAPN4E")
+ * @returns Formatted address string (e.g., "ST13...APN4E")
+ */
+export const formatAddress = (address: string): string => {
+  if (!address || address.length < 8) {
+    return address;
+  }
+
+  const first4 = address.slice(0, 4);
+  const last4 = address.slice(-4);
+
+  return `${first4}...${last4}`;
+};
+
+export const principalHexFromAddress = (address: string | null): string =>
+  address ? cvToHex(principalCV(address)) : "";
+
+export const principalArgFromAddress = (address: string | null) =>
+  address ? [principalCV(address)] : [];
+
+export const isValidPrincipal = (address: string | null | undefined) => {
+  const value = address?.trim();
+  if (!value) return false;
+
+  try {
+    principalCV(value);
+    return true;
+  } catch {
+    return false;
+  }
+};

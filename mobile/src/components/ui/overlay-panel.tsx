@@ -1,6 +1,5 @@
 import React from "react";
-
-import { View } from "@/components/ui";
+import { View } from "react-native";
 
 type OverlayPanelProps = {
   children: React.ReactNode;

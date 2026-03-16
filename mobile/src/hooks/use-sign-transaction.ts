@@ -1,4 +1,4 @@
-import { walletKit } from "@/lib/wallet";
+import { walletKit } from "@/lib/stacks/wallet";
 import { derivePrivateKey } from "@degenlab/stacks-wallet-kit-core";
 import { HDKey } from "@scure/bip32";
 import {

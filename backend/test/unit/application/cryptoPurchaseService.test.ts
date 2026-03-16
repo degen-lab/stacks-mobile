@@ -69,7 +69,7 @@ describe('CryptoPurchaseService unit test', () => {
       testPurchase.id = 999;
       testPurchase.cryptoCurrencyCode = cryptoCurrencyCode;
       testPurchase.fiatCurrency = fiatCurrency;
-      testPurchase.fiatAmount = fiatAmount;
+      testPurchase.fiatAmount = fiatAmount * 100;
       testPurchase.user = testUser;
     });
 
@@ -82,7 +82,9 @@ describe('CryptoPurchaseService unit test', () => {
           cryptoCurrencyCode,
           fiatCurrency,
           fiatAmount,
+          undefined,
           AppPlatform.ANDROID,
+          'BUY',
         ),
       ).rejects.toThrow(UserNotFoundError);
 
@@ -103,7 +105,9 @@ describe('CryptoPurchaseService unit test', () => {
           cryptoCurrencyCode,
           fiatCurrency,
           fiatAmount,
+          undefined,
           AppPlatform.ANDROID,
+          'BUY',
         ),
       ).rejects.toThrow(`Error: User with id ${userId} doesn't exists`);
     });
@@ -125,7 +129,9 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined,
         AppPlatform.ANDROID,
+        'BUY',
       );
 
       expect(result).toBe(expectedWidgetUrl);
@@ -136,7 +142,8 @@ describe('CryptoPurchaseService unit test', () => {
         testUser,
         cryptoCurrencyCode,
         fiatCurrency,
-        fiatAmount,
+        fiatAmount * 100,
+        undefined,
       );
       expect(mockEntityManager.save).toHaveBeenCalledWith(testPurchase);
       expect(mockPurchaseClient.createWidgetUrl).toHaveBeenCalledWith(
@@ -144,9 +151,12 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined, // cryptoAmount
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
+        'BUY',
+        undefined,
       );
     });
 
@@ -167,7 +177,9 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined,
         AppPlatform.ANDROID,
+        'BUY',
       );
 
       expect(mockCacheClient.get).toHaveBeenCalledWith('accessToken');
@@ -178,9 +190,12 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined, // cryptoAmount
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
+        'BUY',
+        undefined,
       );
     });
 
@@ -207,7 +222,9 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined,
         AppPlatform.ANDROID,
+        'BUY',
       );
 
       expect(mockCacheClient.get).toHaveBeenCalledWith('accessToken');
@@ -218,9 +235,12 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined, // cryptoAmount
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
+        'BUY',
+        undefined,
       );
     });
 
@@ -242,7 +262,9 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined,
         AppPlatform.ANDROID,
+        'BUY',
       );
 
       expect(mockCacheClient.get).toHaveBeenCalledWith('accessToken');
@@ -253,9 +275,12 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined, // cryptoAmount
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
+        'BUY',
+        undefined,
       );
     });
 
@@ -277,7 +302,9 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined,
         AppPlatform.ANDROID,
+        'BUY',
       );
 
       expect(mockPurchaseClient.createWidgetUrl).toHaveBeenCalledWith(
@@ -285,9 +312,12 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined, // cryptoAmount
         testUser.id.toString(), // partnerCustomerId = user ID
         '12345', // partnerOrderId = saved purchase ID
         AppPlatform.ANDROID,
+        'BUY',
+        undefined,
       );
     });
 
@@ -308,23 +338,29 @@ describe('CryptoPurchaseService unit test', () => {
         'BTC',
         'EUR',
         500,
+        undefined,
         AppPlatform.ANDROID,
+        'BUY',
       );
 
       expect(mockPurchaseDomainService.createPurchase).toHaveBeenCalledWith(
         testUser,
         'BTC',
         'EUR',
-        500,
+        500 * 100,
+        undefined,
       );
       expect(mockPurchaseClient.createWidgetUrl).toHaveBeenCalledWith(
         cachedToken.accessToken,
         'BTC',
         'EUR',
         500,
+        undefined, // cryptoAmount
         testUser.id.toString(), // partnerCustomerId = user ID
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
+        'BUY',
+        undefined,
       );
     });
 
@@ -352,7 +388,9 @@ describe('CryptoPurchaseService unit test', () => {
         cryptoCurrencyCode,
         fiatCurrency,
         fiatAmount,
+        undefined,
         AppPlatform.ANDROID,
+        'BUY',
       );
 
       expect(callOrder).toEqual(['save', 'createWidgetUrl']);
@@ -395,9 +433,8 @@ describe('CryptoPurchaseService unit test', () => {
       mockCacheClient.get.mockResolvedValue('1'); // Already processed
       mockEntityManager.findOne.mockResolvedValue(existingPurchase);
 
-      const result = await cryptoPurchaseService.updatePurchaseFromWebhook(
-        validWebhookData,
-      );
+      const result =
+        await cryptoPurchaseService.updatePurchaseFromWebhook(validWebhookData);
 
       expect(result).toBe(existingPurchase);
       expect(result.status).toBe('PENDING'); // Unchanged
@@ -411,9 +448,8 @@ describe('CryptoPurchaseService unit test', () => {
       mockCacheClient.get.mockResolvedValue('1'); // Already processed
       mockEntityManager.findOne.mockResolvedValue(null); // Purchase purged
 
-      const result = await cryptoPurchaseService.updatePurchaseFromWebhook(
-        validWebhookData,
-      );
+      const result =
+        await cryptoPurchaseService.updatePurchaseFromWebhook(validWebhookData);
 
       expect(result).toBeInstanceOf(CryptoPurchase);
       expect(result.id).toBe(456);
@@ -426,6 +462,7 @@ describe('CryptoPurchaseService unit test', () => {
       existingPurchase.id = 456;
       existingPurchase.status = 'PENDING';
       existingPurchase.user = { id: 789 } as User;
+      existingPurchase.cryptoCurrencyCode = 'STX';
 
       mockCacheClient.get.mockResolvedValue(null); // Not yet processed
       mockEntityManager.findOne.mockResolvedValue(existingPurchase);
@@ -433,17 +470,17 @@ describe('CryptoPurchaseService unit test', () => {
         async (entity) => entity as unknown as CryptoPurchase,
       );
 
-      const result = await cryptoPurchaseService.updatePurchaseFromWebhook(
-        validWebhookData,
-      );
+      const result =
+        await cryptoPurchaseService.updatePurchaseFromWebhook(validWebhookData);
 
       expect(result.status).toBe('COMPLETED');
-      expect(result.cryptoAmount).toBe(100);
+      // STX uses 6 decimals: 100 * 10^6 = 100000000
+      expect(result.cryptoAmount).toBe(100_000_000);
       expect(mockEntityManager.save).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 456,
           status: 'COMPLETED',
-          cryptoAmount: 100,
+          cryptoAmount: 100_000_000,
         }),
       );
       expect(mockCacheClient.set).toHaveBeenCalledWith(
@@ -458,6 +495,7 @@ describe('CryptoPurchaseService unit test', () => {
       existingPurchase.id = 456;
       existingPurchase.status = 'PENDING';
       existingPurchase.user = { id: 789 } as User;
+      existingPurchase.cryptoCurrencyCode = 'STX';
 
       mockCacheClient.get.mockRejectedValue(new Error('Redis down'));
       mockEntityManager.findOne.mockResolvedValue(existingPurchase);
@@ -465,11 +503,11 @@ describe('CryptoPurchaseService unit test', () => {
         async (entity) => entity as unknown as CryptoPurchase,
       );
 
-      const result = await cryptoPurchaseService.updatePurchaseFromWebhook(
-        validWebhookData,
-      );
+      const result =
+        await cryptoPurchaseService.updatePurchaseFromWebhook(validWebhookData);
 
       expect(result.status).toBe('COMPLETED');
+      expect(result.cryptoAmount).toBe(100_000_000);
       expect(mockEntityManager.save).toHaveBeenCalled();
     });
 

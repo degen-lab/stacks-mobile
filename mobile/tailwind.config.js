@@ -32,7 +32,8 @@ module.exports = {
         },
         surface: {
           tertiary: '#F7F6F5',
-          secondary: '#D5D3D1'
+          secondary: '#D5D3D1',
+          primary: '#EAE8E6',
         },
         feedback: {
           yellow: {
@@ -42,12 +43,31 @@ module.exports = {
           green: {
             DEFAULT: '#22C55E',
             100: '#F0FDF4',
+            150: '#C2E7D0',
             700: '#15803D'
-          }
+          },
+          blue: {
+            100: '#EBF4FC',
+            200: '#D5E8F5',
+            900: '#1E3D8B',
+          },
         },
         stacks: {
           'blood-orange': '#FC6432',
           'accent-400': '#FF8A64',
+        },
+        bitcoin: {
+          DEFAULT: '#F7931A',
+          50: '#FEF7EC',
+          100: '#FCEFD9',
+          200: '#ffd1a7',
+          300: '#F7CF8D',
+          400: '#F4BF67',
+          500: '#F7931A',
+          600: '#e17c18',
+          700: '#C97713',
+          800: '#B26910',
+          900: '#9B5B0D',
         },
         border: {
           primary: '#BFBDBA',
@@ -72,6 +92,9 @@ module.exports = {
       boxShadow: {
         'elevation-light-m': '0 8px 16px 0 rgba(213, 211, 209, 0.4)',
         'blood-orange': '0 8px 16px 0 rgba(252, 100, 50, 0.4)',
+        'dual-stacking': '0 10px 30px -5px rgba(255, 152, 53, 0.5)',
+        'cta-button': '0 8px 26px 0 rgba(255, 152, 53, 0.8)',
+        'next-step-icon': '0 4px 13px 0 rgba(117, 172, 243, 1)',
       },
       fontSize: {
         xxs: ['0.6875rem', { lineHeight: '1rem' }],

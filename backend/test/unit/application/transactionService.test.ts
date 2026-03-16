@@ -1,292 +1,271 @@
+import { EntityManager } from 'typeorm';
 import { TransactionService } from '../../../src/application/transaction/transactionService';
 import { TransactionClientPort } from '../../../src/application/ports/transactionClientPort';
 import { SubmissionDomainService } from '../../../src/domain/service/submissionDomainService';
-import { EntityManager } from 'typeorm';
 import { User } from '../../../src/domain/entities/user';
 import { Submission } from '../../../src/domain/entities/submission';
-import { TournamentStatus } from '../../../src/domain/entities/tournamentStatus';
+import { SponsoredTransaction } from '../../../src/domain/entities/sponsoredTransaction';
 import {
   SubmissionType,
-  TournamentStatusEnum,
   TransactionStatus,
 } from '../../../src/domain/entities/enums';
+import { parseSponsoredTransaction } from '../../../src/application/transaction/sponsoredTransactionValidation';
 
-describe('TransactionService application class Unit tests', () => {
-  let transactionService: TransactionService;
-  let mockTransactionClient: jest.Mocked<TransactionClientPort>;
-  let mockSubmissionDomainService: jest.Mocked<SubmissionDomainService>;
-  let mockEntityManager: jest.Mocked<EntityManager>;
+jest.mock(
+  '../../../src/application/transaction/sponsoredTransactionValidation',
+  () => ({
+    parseSponsoredTransaction: jest.fn(),
+  }),
+);
+
+describe('TransactionService', () => {
+  let service: TransactionService;
+  let transactionClientMock: jest.Mocked<TransactionClientPort>;
+  let submissionDomainServiceMock: jest.Mocked<SubmissionDomainService>;
+  let entityManagerMock: jest.Mocked<EntityManager>;
+
   beforeEach(() => {
-    mockTransactionClient = {
+    transactionClientMock = {
       createTournamentUnsignedTransaction: jest.fn(),
       broadcastSponsoredTransaction: jest.fn(),
       broadcastTransaction: jest.fn(),
       getTournamentId: jest.fn(),
+      distributeRewards: jest.fn(),
+      headToNextTournament: jest.fn(),
+      getTransactionStatus: jest.fn(),
+      fetchStackingTransactionData: jest.fn(),
+      fetchPoxCycleData: jest.fn(),
     } as unknown as jest.Mocked<TransactionClientPort>;
-    mockSubmissionDomainService = {
+
+    submissionDomainServiceMock = {
       createSubmission: jest.fn(),
     } as unknown as jest.Mocked<SubmissionDomainService>;
-    mockEntityManager = {
-      transaction: jest.fn(),
+
+    entityManagerMock = {
       findOne: jest.fn(),
-      find: jest.fn().mockResolvedValue([]), // Default: no pending submissions
+      find: jest.fn(),
       save: jest.fn(),
+      delete: jest.fn(),
+      createQueryBuilder: jest.fn(),
     } as unknown as jest.Mocked<EntityManager>;
-    transactionService = new TransactionService(
-      mockTransactionClient,
-      mockSubmissionDomainService,
-      mockEntityManager,
+
+    service = new TransactionService(
+      transactionClientMock,
+      submissionDomainServiceMock,
+      entityManagerMock,
     );
   });
-  describe('createUnsignedTransaction', () => {
-    it('should create an unsigned transaction successfully', async () => {
-      const address = 'mockedAddress';
-      const publicKey = 'mockedPublicKey';
-      const score = 100;
-      const userId = 1;
-      const user = new User();
-      user.id = userId;
-      user.isBlackListed = false;
-      const submission = new Submission();
-      submission.id = 1;
-      submission.score = score;
-      mockEntityManager.findOne.mockResolvedValue(user);
-      mockEntityManager.save.mockResolvedValue(submission);
-      mockTransactionClient.getTournamentId.mockResolvedValue(1);
-      mockTransactionClient.createTournamentUnsignedTransaction.mockResolvedValue(
-        'mockedSerializedTx',
-      );
-      const result = await transactionService.createUnsignedTransaction(
-        userId,
-        address,
-        publicKey,
-        score,
-        SubmissionType.WeeklyContest,
-        false,
-      );
-      expect(mockEntityManager.findOne).toHaveBeenCalledWith(User, {
-        where: { id: userId },
-        relations: ['fraudAttempts', 'submissions'],
-      });
-      expect(
-        mockTransactionClient.createTournamentUnsignedTransaction,
-      ).toHaveBeenCalledWith(address, publicKey, score, false);
-      expect(result).toEqual({
-        serializedTx: 'mockedSerializedTx',
-        submission: expect.any(Submission),
-      });
-    });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
-  describe('submitContestScore', () => {
-    it('should submit a contest score successfully', async () => {
-      const userId = 1;
-      const submissionId = 1;
-      const serializedTx = 'mockedSerializedTx';
-      const submission = new Submission();
-      submission.id = submissionId;
-      submission.user = { id: userId } as User;
-      submission.transactionStatus = TransactionStatus.NotBroadcasted;
-      mockTransactionClient.broadcastSponsoredTransaction.mockResolvedValue(
-        'mockedTxId',
-      );
-      mockEntityManager.find.mockResolvedValue([]); // No pending transactions
-      (mockEntityManager.transaction as jest.Mock).mockImplementation(
-        async (callback: (manager: EntityManager) => Promise<string>) => {
-          return (await callback({
-            findOne: jest.fn().mockResolvedValue(submission),
-            save: jest.fn().mockResolvedValue(submission),
-          } as unknown as EntityManager)) as unknown as Promise<string>;
-        },
-      );
-      const result = await transactionService.submitContestScore(
-        userId,
-        submissionId,
-        serializedTx,
-      );
-      expect(mockEntityManager.transaction).toHaveBeenCalled();
-      expect(result).toEqual('mockedTxId');
-    });
-    it('should throw an error if submission is not found', async () => {
-      const userId = 1;
-      const submissionId = 1;
-      const serializedTx = 'mockedSerializedTx';
-      mockEntityManager.find.mockResolvedValue([]); // No pending transactions
-      (mockEntityManager.transaction as jest.Mock).mockImplementation(
-        async (callback: (manager: EntityManager) => Promise<void>) => {
-          return await callback({
-            findOne: jest.fn().mockResolvedValue(null), // Submission not found
-          } as unknown as EntityManager);
-        },
-      );
-      await expect(
-        transactionService.submitContestScore(
-          userId,
-          submissionId,
-          serializedTx,
-        ),
-      ).rejects.toThrow('Invalid id, submission with id');
-    });
-    it('should throw an error if submission is already submitted', async () => {
-      const userId = 1;
-      const submissionId = 1;
-      const serializedTx = 'mockedSerializedTx';
-      const submission = new Submission();
-      submission.id = submissionId;
-      submission.user = { id: userId } as User;
-      submission.transactionStatus = TransactionStatus.Pending; // Already submitted
-      mockEntityManager.find.mockResolvedValue([]); // No pending transactions
-      (mockEntityManager.transaction as jest.Mock).mockImplementation(
-        async (callback: (manager: EntityManager) => Promise<void>) => {
-          return await callback({
-            findOne: jest.fn().mockResolvedValue(submission),
-          } as unknown as EntityManager);
-        },
-      );
-      await expect(
-        transactionService.submitContestScore(
-          userId,
-          submissionId,
-          serializedTx,
-        ),
-      ).rejects.toThrow('Transaction already submitted');
+
+  it('creates an unsigned wallet-funded submission transaction', async () => {
+    const user = new User();
+    user.id = 7;
+    user.isBlackListed = false;
+
+    const submission = new Submission();
+    submission.id = 19;
+
+    entityManagerMock.findOne.mockResolvedValue(user);
+    entityManagerMock.save.mockResolvedValue(submission);
+    transactionClientMock.getTournamentId.mockResolvedValue(44);
+    submissionDomainServiceMock.createSubmission.mockReturnValue(submission);
+    transactionClientMock.createTournamentUnsignedTransaction.mockResolvedValue(
+      'unsigned-submission',
+    );
+
+    const result = await service.createGameSubmissionTransaction(
+      user.id,
+      'STTESTADDRESS',
+      'public-key',
+      123,
+      SubmissionType.WeeklyContest,
+      false,
+    );
+
+    expect(
+      transactionClientMock.createTournamentUnsignedTransaction,
+    ).toHaveBeenCalledWith('STTESTADDRESS', 'public-key', 123, false);
+    expect(result).toEqual({
+      serializedTx: 'unsigned-submission',
+      submission,
     });
   });
 
-  describe('processSubmissionTransaction', () => {
-    it('should process submission transaction successfully', async () => {
-      const userId = 1;
-      const submissionId = 1;
-      const serializedTx = 'mockedSerializedTx';
-      const tournamentId = 1;
+  it('creates a sponsored submission request linked to the submission', async () => {
+    const user = new User();
+    user.id = 11;
+    user.isBlackListed = false;
+    user.submissions = [];
+    user.fraudAttempts = [];
 
-      const tournamentStatus = new TournamentStatus();
-      tournamentStatus.tournamentId = tournamentId;
-      tournamentStatus.status = TournamentStatusEnum.SubmitPhase;
+    const submission = new Submission();
+    submission.id = 31;
 
-      const submission = new Submission();
-      submission.id = submissionId;
-      submission.user = { id: userId } as User;
-      submission.transactionStatus = TransactionStatus.NotBroadcasted;
-      submission.isSponsored = true;
+    const sponsoredTransaction = new SponsoredTransaction();
+    sponsoredTransaction.id = 55;
+    sponsoredTransaction.expiresAt = new Date('2026-03-12T10:15:00.000Z');
 
-      mockTransactionClient.getTournamentId.mockResolvedValue(tournamentId);
-      mockEntityManager.find.mockResolvedValueOnce([tournamentStatus]);
-      mockEntityManager.findOne.mockResolvedValueOnce(submission);
-      mockEntityManager.find.mockResolvedValueOnce([]); // No pending submissions
-      mockEntityManager.save.mockResolvedValue(submission);
+    entityManagerMock.findOne.mockResolvedValue(user);
+    entityManagerMock.save
+      .mockResolvedValueOnce(submission)
+      .mockResolvedValueOnce(sponsoredTransaction);
+    transactionClientMock.getTournamentId.mockResolvedValue(9);
+    submissionDomainServiceMock.createSubmission.mockReturnValue(submission);
+    transactionClientMock.createTournamentUnsignedTransaction.mockResolvedValue(
+      'unsigned-sponsored-submission',
+    );
 
-      const result = await transactionService.processSubmissionTransaction(
-        userId,
-        submissionId,
-        serializedTx,
-      );
+    const result = await service.createGameSubmissionTransaction(
+      user.id,
+      'STSPONSORED',
+      'public-key',
+      88,
+      SubmissionType.Raffle,
+      true,
+    );
 
-      expect(mockTransactionClient.getTournamentId).toHaveBeenCalled();
-      expect(mockEntityManager.find).toHaveBeenCalledWith(TournamentStatus, {
-        where: { tournamentId },
-      });
-      expect(mockEntityManager.findOne).toHaveBeenCalledWith(Submission, {
-        where: { id: submissionId, user: { id: userId } },
-      });
-      expect(result.transactionStatus).toBe(TransactionStatus.Processing);
-      expect(result.serializedTx).toBe(serializedTx);
-      expect(mockEntityManager.save).toHaveBeenCalledWith(submission);
+    expect(result.sponsoredRequest).toEqual({
+      requestId: 55,
+      expiresAt: sponsoredTransaction.expiresAt,
+    });
+  });
+
+  it('creates a generic sponsored transaction request', async () => {
+    const user = new User();
+    user.id = 4;
+
+    const sponsoredTransaction = new SponsoredTransaction();
+    sponsoredTransaction.id = 91;
+    sponsoredTransaction.expiresAt = new Date('2026-03-12T11:00:00.000Z');
+
+    entityManagerMock.findOne.mockResolvedValue(user);
+    entityManagerMock.save.mockResolvedValue(sponsoredTransaction);
+
+    await expect(
+      service.createSponsoredTransactionRequest(user.id, 'STORIGIN'),
+    ).resolves.toEqual({
+      requestId: 91,
+      expiresAt: sponsoredTransaction.expiresAt,
+    });
+  });
+
+  it('queues a generic sponsored transaction after validation', async () => {
+    const user = new User();
+    user.id = 3;
+
+    const sponsoredTransaction = new SponsoredTransaction();
+    sponsoredTransaction.id = 15;
+    sponsoredTransaction.user = user;
+    sponsoredTransaction.originAddress = 'STORIGIN';
+    sponsoredTransaction.status = TransactionStatus.NotBroadcasted;
+    sponsoredTransaction.adWatched = false;
+    sponsoredTransaction.expiresAt = new Date(Date.now() + 60_000);
+
+    entityManagerMock.findOne.mockResolvedValue(sponsoredTransaction);
+    entityManagerMock.save.mockResolvedValue(sponsoredTransaction);
+    jest.mocked(parseSponsoredTransaction).mockReturnValue({
+      kind: 'contract_call',
+      originAddress: 'STORIGIN',
+      contractId: 'STTEST.contract',
+      functionName: 'enroll',
     });
 
-    it('should throw error if tournament status not found', async () => {
-      const userId = 1;
-      const submissionId = 1;
-      const serializedTx = 'mockedSerializedTx';
-      const tournamentId = 1;
+    const result = await service.enqueueSponsoredTransaction(
+      user.id,
+      sponsoredTransaction.id,
+      'signed-generic-tx',
+    );
 
-      mockTransactionClient.getTournamentId.mockResolvedValue(tournamentId);
-      mockEntityManager.find.mockResolvedValueOnce([]); // No tournament status
+    expect(result.status).toBe(TransactionStatus.Processing);
+    expect(result.serializedTx).toBe('signed-generic-tx');
+    expect(entityManagerMock.save).toHaveBeenCalledWith(sponsoredTransaction);
+  });
 
-      await expect(
-        transactionService.processSubmissionTransaction(
-          userId,
-          submissionId,
-          serializedTx,
-        ),
-      ).rejects.toThrow('Failed to initialize tournament status');
+  it('marks a sponsored transaction ad as watched', async () => {
+    const user = new User();
+    user.id = 5;
+
+    const submission = new Submission();
+    submission.id = 22;
+
+    const sponsoredTransaction = new SponsoredTransaction();
+    sponsoredTransaction.id = 23;
+    sponsoredTransaction.user = user;
+    sponsoredTransaction.submission = submission;
+    sponsoredTransaction.status = TransactionStatus.NotBroadcasted;
+    sponsoredTransaction.adWatched = false;
+    sponsoredTransaction.expiresAt = new Date(Date.now() + 60_000);
+
+    entityManagerMock.findOne.mockResolvedValue(sponsoredTransaction);
+    entityManagerMock.save
+      .mockResolvedValueOnce(sponsoredTransaction)
+      .mockResolvedValueOnce(submission);
+
+    await service.markSponsoredTransactionAdWatched(user.id, String(23));
+
+    expect(sponsoredTransaction.adWatched).toBe(true);
+    expect(entityManagerMock.save).toHaveBeenCalledWith(sponsoredTransaction);
+  });
+
+  it('moves a signed sponsored submission into processing when ad verification arrives after signing', async () => {
+    const user = new User();
+    user.id = 6;
+
+    const submission = new Submission();
+    submission.id = 42;
+    submission.transactionStatus = TransactionStatus.NotBroadcasted;
+
+    const sponsoredTransaction = new SponsoredTransaction();
+    sponsoredTransaction.id = 24;
+    sponsoredTransaction.user = user;
+    sponsoredTransaction.submission = submission;
+    sponsoredTransaction.status = TransactionStatus.NotBroadcasted;
+    sponsoredTransaction.adWatched = false;
+    sponsoredTransaction.serializedTx = 'signed-sponsored-submission';
+    sponsoredTransaction.expiresAt = new Date(Date.now() + 60_000);
+
+    entityManagerMock.findOne.mockResolvedValue(sponsoredTransaction);
+    entityManagerMock.save
+      .mockResolvedValueOnce(sponsoredTransaction)
+      .mockResolvedValueOnce(submission);
+
+    await service.markSponsoredTransactionAdWatched(user.id, String(24));
+
+    expect(sponsoredTransaction.adWatched).toBe(true);
+    expect(sponsoredTransaction.status).toBe(TransactionStatus.Processing);
+    expect(submission.transactionStatus).toBe(TransactionStatus.Processing);
+  });
+
+  it('broadcasts a wallet-funded non-submission transaction directly', async () => {
+    transactionClientMock.broadcastTransaction.mockResolvedValue({
+      txid: '0xabc',
     });
 
-    it('should throw error if tournament is not in SubmitPhase', async () => {
-      const userId = 1;
-      const submissionId = 1;
-      const serializedTx = 'mockedSerializedTx';
-      const tournamentId = 1;
+    await expect(
+      service.broadcastWalletTransaction(1, undefined, 'signed-wallet-tx'),
+    ).resolves.toEqual({
+      txid: '0xabc',
+    });
+  });
 
-      const tournamentStatus = new TournamentStatus();
-      tournamentStatus.tournamentId = tournamentId;
-      tournamentStatus.status = TournamentStatusEnum.DistributionPhase;
+  it('broadcasts a wallet-funded submission and updates the submission state', async () => {
+    const submission = new Submission();
+    submission.id = 10;
+    submission.transactionStatus = TransactionStatus.NotBroadcasted;
 
-      mockTransactionClient.getTournamentId.mockResolvedValue(tournamentId);
-      mockEntityManager.find.mockResolvedValueOnce([tournamentStatus]);
-
-      await expect(
-        transactionService.processSubmissionTransaction(
-          userId,
-          submissionId,
-          serializedTx,
-        ),
-      ).rejects.toThrow('Tournament is not in submit phase');
+    entityManagerMock.findOne.mockResolvedValue(submission);
+    entityManagerMock.save.mockResolvedValue(submission);
+    transactionClientMock.broadcastTransaction.mockResolvedValue({
+      txid: '0xsubmission',
     });
 
-    it('should throw error if submission not found', async () => {
-      const userId = 1;
-      const submissionId = 1;
-      const serializedTx = 'mockedSerializedTx';
-      const tournamentId = 1;
+    await service.broadcastWalletTransaction(1, 10, 'signed-submission');
 
-      const tournamentStatus = new TournamentStatus();
-      tournamentStatus.tournamentId = tournamentId;
-      tournamentStatus.status = TournamentStatusEnum.SubmitPhase;
-
-      mockTransactionClient.getTournamentId.mockResolvedValue(tournamentId);
-      mockEntityManager.find.mockResolvedValueOnce([tournamentStatus]);
-      mockEntityManager.findOne.mockResolvedValueOnce(null); // Submission not found
-      mockEntityManager.find.mockResolvedValueOnce([]); // No pending submissions
-
-      await expect(
-        transactionService.processSubmissionTransaction(
-          userId,
-          submissionId,
-          serializedTx,
-        ),
-      ).rejects.toThrow('Invalid id, submission with id');
-    });
-
-    it('should throw error if user has pending submissions', async () => {
-      const userId = 1;
-      const submissionId = 1;
-      const serializedTx = 'mockedSerializedTx';
-      const tournamentId = 1;
-
-      const tournamentStatus = new TournamentStatus();
-      tournamentStatus.tournamentId = tournamentId;
-      tournamentStatus.status = TournamentStatusEnum.SubmitPhase;
-
-      const submission = new Submission();
-      submission.id = submissionId;
-      submission.user = { id: userId } as User;
-
-      const pendingSubmission = new Submission();
-      pendingSubmission.id = 2;
-      pendingSubmission.transactionStatus = TransactionStatus.Pending;
-
-      mockTransactionClient.getTournamentId.mockResolvedValue(tournamentId);
-      mockEntityManager.find.mockResolvedValueOnce([tournamentStatus]);
-      mockEntityManager.findOne.mockResolvedValueOnce(submission);
-      mockEntityManager.find.mockResolvedValueOnce([pendingSubmission]); // Has pending submission
-
-      await expect(
-        transactionService.processSubmissionTransaction(
-          userId,
-          submissionId,
-          serializedTx,
-        ),
-      ).rejects.toThrow("Can't have more than one pending submission");
-    });
+    expect(submission.transactionId).toBe('0xsubmission');
+    expect(submission.transactionStatus).toBe(TransactionStatus.Success);
+    expect(entityManagerMock.save).toHaveBeenCalledWith(submission);
   });
 });

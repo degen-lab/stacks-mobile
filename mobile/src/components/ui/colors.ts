@@ -44,6 +44,7 @@ const colors = {
     800: "#CC5600",
     900: "#B24C00",
   },
+  secondary: "#595754",
   success: {
     50: "#F0FDF4",
     100: "#DCFCE7",
@@ -96,6 +97,7 @@ const colors = {
     menuFillBottom: [T, "rgba(255, 152, 53, 0.35)"],
     gameCardStroke: ["rgba(255, 255, 255, 0.6)", "rgba(252, 100, 50, 1)"],
     gameCardFillRight: [T, "rgba(252, 100, 50, 0.28)"],
+    bitcoinCardStroke: ["rgba(255, 255, 255, 0.6)", "rgba(255, 152, 53, 1)"],
   },
 } as const;
 

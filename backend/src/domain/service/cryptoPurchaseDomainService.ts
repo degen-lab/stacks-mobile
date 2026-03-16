@@ -6,13 +6,15 @@ export class CryptoPurchaseDomainService {
     user: User,
     cryptoCurrencyCode: string,
     fiatCurrency: string,
-    fiatAmount: number,
+    fiatAmount?: number,
+    cryptoAmount?: number,
   ): CryptoPurchase {
     const purchase = new CryptoPurchase();
     purchase.cryptoCurrencyCode = cryptoCurrencyCode;
     purchase.fiatCurrency = fiatCurrency;
     purchase.user = user;
-    purchase.fiatAmount = fiatAmount;
+    if (fiatAmount !== undefined) purchase.fiatAmount = fiatAmount;
+    if (cryptoAmount !== undefined) purchase.cryptoAmount = cryptoAmount;
     return purchase;
   }
 }

@@ -1,9 +1,8 @@
-import { useBroadcastSponsoredTransactionMutation } from "@/api/transaction";
 import {
   useCurrentTournamentSubmissions,
   useTournamentData,
   useTournamentLeaderboard,
-} from "@/api/tournament";
+} from "@/api/";
 import { useSponsoredSubmissionsLeft, useUserProfile } from "@/api/user";
 import { getItemVariant } from "@/api/user/types";
 import { ItemVariant, TournamentStatusEnum } from "@/lib/enums";
@@ -19,16 +18,13 @@ import { useRunSummary } from "../hooks/useRunSummary";
 import { useSubmissionActions } from "../hooks/useSubmissionActions";
 import { useSubmissionSheet } from "../hooks/useSubmissionSheet";
 
-import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
 import { TournamentSubmissionSheet } from "@/components/tournament-submission-sheet";
 import { ActivityIndicator, View } from "@/components/ui";
 import { useStxBalance } from "@/hooks/use-stx-balance";
-import { formatAddress } from "@/lib/addresses";
-import { CONTRACTS, SC_FUNCTIONS } from "@/lib/contracts";
+import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
 import { useAuth } from "@/lib/store/auth";
 import { useGameStore } from "@/lib/store/game";
 import { useSelectedNetwork } from "@/lib/store/settings";
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { StacksBridgeEngine } from "../engine";
 import type {
   BridgeOverlayState,
@@ -50,12 +46,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const { selectedNetwork } = useSelectedNetwork();
   const { balance: walletBalance } = useStxBalance();
   const { userData } = useAuth();
-  const broadcastSponsoredTransactionMutation =
-    useBroadcastSponsoredTransactionMutation();
-  const submissionDeferredRef = useRef<{
-    resolve: (txId: string) => void;
-    reject: (error: Error) => void;
-  } | null>(null);
   const [perfectCue, setPerfectCue] = useState<{
     x: number;
     y: number;
@@ -189,7 +179,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   }, [userProfile?.items]);
 
   const engineRef = useRef(new StacksBridgeEngine());
-  const contractDetailsSheetRef = useRef<BottomSheetModal>(null);
 
   const {
     submissionContext,
@@ -232,14 +221,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     updateScore,
   ]);
 
-  const {
-    isWatchingAd,
-    reviveAd,
-    submissionAd,
-    queueSubmissionAd,
-    resetReviveReward,
-    ssvData,
-  } = useGameAds({
+  const { isWatchingAd, reviveAd, resetReviveReward } = useGameAds({
     onReviveEarned: () => {
       engineRef.current.revive();
       setOverlay("PLAYING");
@@ -249,22 +231,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       if (overlayState === "REVIVE") {
         declineRevive();
       }
-    },
-    onSubmissionEarned: async (payload) => {
-      await broadcastSponsoredTransactionMutation.mutateAsync({
-        submissionId: payload.submissionId,
-        serializedTx: payload.serializedTx,
-      });
-      submissionDeferredRef.current?.resolve(String(payload.submissionId));
-      submissionDeferredRef.current = null;
-    },
-    onSubmissionFailed: (error) => {
-      submissionDeferredRef.current?.reject(error);
-      submissionDeferredRef.current = null;
-    },
-    onSubmissionCanceled: () => {
-      submissionDeferredRef.current?.reject(new Error("Ad not completed."));
-      submissionDeferredRef.current = null;
     },
   });
 
@@ -409,13 +375,9 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       runSummary,
       setRunSummary,
       submissionContext,
-      selectedNetwork,
-      userProfile,
       highscore,
       setHighscore,
       raffleSubmissionsUsed,
-      queueSubmissionAd,
-      submissionDeferredRef,
     });
 
   const avatarSource = useMemo(
@@ -431,49 +393,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     submissionContext?.kind === "raffle"
       ? raffleSubmissionsLeft
       : weeklyContestSubmissionsLeft;
-
-  // Refs to prevent redundant ad operations
-  const prevSsvDataRef = useRef(ssvData);
-  const hasLoadedSubmissionAdRef = useRef(false);
-  const submissionAdLoadRef = useRef(submissionAd.loadAd);
-  const submissionAdShowRef = useRef(submissionAd.showAd);
-
-  // Update refs when functions change
-  useEffect(() => {
-    submissionAdLoadRef.current = submissionAd.loadAd;
-    submissionAdShowRef.current = submissionAd.showAd;
-  }, [submissionAd.loadAd, submissionAd.showAd]);
-
-  // Load submission ad when ssvData becomes available
-  useEffect(() => {
-    if (!ssvData) {
-      prevSsvDataRef.current = null;
-      hasLoadedSubmissionAdRef.current = false;
-      return;
-    }
-
-    // Only load if ssvData changed and ad isn't already loaded/loading
-    if (
-      prevSsvDataRef.current !== ssvData &&
-      !submissionAd.loaded &&
-      !submissionAd.loading &&
-      !hasLoadedSubmissionAdRef.current
-    ) {
-      submissionAdLoadRef.current();
-      hasLoadedSubmissionAdRef.current = true;
-    }
-    prevSsvDataRef.current = ssvData;
-  }, [ssvData, submissionAd.loaded, submissionAd.loading]);
-
-  // Show submission ad when it becomes loaded
-  useEffect(() => {
-    if (!ssvData) return;
-    // Only show if ad just became loaded
-    if (submissionAd.loaded && hasLoadedSubmissionAdRef.current) {
-      submissionAdShowRef.current();
-      hasLoadedSubmissionAdRef.current = false;
-    }
-  }, [ssvData, submissionAd.loaded]);
 
   const handleAddFunds = useCallback(() => {
     router.push("/add-funds" as RelativePathString); // TOOD: when we add this screen we should need a way to navigate back to the game and still let user submit
@@ -511,10 +430,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     resetSession();
     void startGameWithLoading();
   }, [cancelPendingStart, resetSession, startGameWithLoading]);
-
-  const handleOpenContractDetails = useCallback(() => {
-    contractDetailsSheetRef.current?.present();
-  }, []);
 
   useEffect(() => {
     void hydrateHighscore();
@@ -611,27 +526,26 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
         onCancel={handleSubmissionCancel}
         onSuccess={handleSubmissionSuccess}
         canSubmit={canSubmitTournament}
-        onOpenContractDetails={handleOpenContractDetails}
         snapPoints={["60%"]}
         resetKey={submissionOpenCount}
         weeklyContestSubmissionsLeft={weeklyContestSubmissionsLeft}
         raffleSubmissionsLeft={raffleSubmissionsLeft}
-      />
-      <ContractCallDetailsSheet
-        ref={contractDetailsSheetRef}
-        onClose={() => contractDetailsSheetRef.current?.dismiss()}
         network={
           selectedNetwork.charAt(0).toUpperCase() + selectedNetwork.slice(1)
         }
-        contractName={(() => {
-          const contract = CONTRACTS[selectedNetwork]?.game?.CONTRACT;
-          if (!contract) return "Not configured";
-          const [address, contractName] = contract.split(".");
-          return address && contractName
-            ? `${formatAddress(address)}.${contractName}`
-            : "Not configured";
-        })()}
+        contractAddress={CONTRACTS[selectedNetwork]?.game || "Not configured"}
         functionName={SC_FUNCTIONS.game.publicFunctions.SUBMIT_SCORE}
+        contractArgs={[
+          {
+            name: "score",
+            value: score.toString(),
+            type: "uint",
+          },
+          {
+            name: "tournament-id",
+            value: tournamentId,
+          },
+        ]}
       />
     </>
   );

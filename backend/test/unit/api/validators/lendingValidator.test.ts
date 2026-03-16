@@ -4,6 +4,7 @@ jest.mock('@stacks/transactions', () => ({
   }),
 }));
 
+import assert from 'assert';
 import { saveLendingOperationSchema } from '../../../../src/api/validators/lendingValidator';
 
 const validStacksAddress = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7';
@@ -22,21 +23,19 @@ describe('saveLendingOperationSchema', () => {
   it('should accept valid input', () => {
     const result = saveLendingOperationSchema.safeParse(validInput);
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.txId).toBe(`0x${validTxId}`);
-      expect(result.data.senderAddress).toBe(validStacksAddress);
-      expect(result.data.amount).toBe(100);
-      expect(result.data.assetId).toBe('asset-123');
-      expect(result.data.assetContract).toBe(validContract);
-    }
+    assert(result.success);
+    expect(result.data.txId).toBe(`0x${validTxId}`);
+    expect(result.data.senderAddress).toBe(validStacksAddress);
+    expect(result.data.amount).toBe(100);
+    expect(result.data.assetId).toBe('asset-123');
+    expect(result.data.assetContract).toBe(validContract);
   });
 
   it('should add 0x prefix to txId when missing', () => {
     const result = saveLendingOperationSchema.safeParse(validInput);
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.txId).toMatch(/^0x/);
-    }
+    assert(result.success);
+    expect(result.data.txId).toMatch(/^0x/);
   });
 
   it('should preserve 0x prefix when already present', () => {
@@ -45,9 +44,8 @@ describe('saveLendingOperationSchema', () => {
       txId: `0x${validTxId}`,
     });
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.txId).toBe(`0x${validTxId}`);
-    }
+    assert(result.success);
+    expect(result.data.txId).toBe(`0x${validTxId}`);
   });
 
   it('should reject empty txId', () => {
@@ -153,9 +151,8 @@ describe('saveLendingOperationSchema', () => {
       senderAddress: multisigAddress,
     });
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.senderAddress).toBe(multisigAddress);
-    }
+    assert(result.success);
+    expect(result.data.senderAddress).toBe(multisigAddress);
   });
 
   it('should accept assetContract with multisig principal', () => {

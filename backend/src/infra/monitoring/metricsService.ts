@@ -53,15 +53,12 @@ export class MetricsService {
     await this.updateNumberOfDailyTransactionsMetric();
     await this.updateNumberOfDefiOperationsMetric();
     await this.updateNumberOfReferralsUsedMetric();
-    setInterval(
-      async () => {
-        await this.updateNumberOfUserMetric();
-        await this.updateNumberOfDailyTransactionsMetric();
-        await this.updateNumberOfDefiOperationsMetric();
-        await this.updateNumberOfReferralsUsedMetric();
-      },
-      1000 * 60,
-    ); // 1 Minute
+    setInterval(async () => {
+      await this.updateNumberOfUserMetric();
+      await this.updateNumberOfDailyTransactionsMetric();
+      await this.updateNumberOfDefiOperationsMetric();
+      await this.updateNumberOfReferralsUsedMetric();
+    }, 1000 * 60); // 1 Minute
     logger.info('Metrics refreshed');
   }
 }

@@ -122,8 +122,12 @@ describe('Rewards Distribution Integration Tests', () => {
       });
 
       const gold = submissions.filter((s) => s.tier === SubmissionTier.Gold);
-      const silver = submissions.filter((s) => s.tier === SubmissionTier.Silver);
-      const bronze = submissions.filter((s) => s.tier === SubmissionTier.Bronze);
+      const silver = submissions.filter(
+        (s) => s.tier === SubmissionTier.Silver,
+      );
+      const bronze = submissions.filter(
+        (s) => s.tier === SubmissionTier.Bronze,
+      );
 
       expect(gold).toHaveLength(1);
       expect(silver).toHaveLength(3);
@@ -145,7 +149,9 @@ describe('Rewards Distribution Integration Tests', () => {
       expect(mockTransactionClient.distributeRewards).toHaveBeenCalledWith(
         expect.arrayContaining(gold.map((s) => s.stacksAddress)),
       );
-      expect(mockTransactionClient.distributeRewards.mock.calls[0][0]).toHaveLength(1);
+      expect(
+        mockTransactionClient.distributeRewards.mock.calls[0][0],
+      ).toHaveLength(1);
     });
 
     it('should call distributeRewards with gold addresses and correct amount', async () => {
@@ -208,8 +214,12 @@ describe('Rewards Distribution Integration Tests', () => {
       });
 
       const goldSub = submissions.find((s) => s.tier === SubmissionTier.Gold);
-      const silverSub = submissions.find((s) => s.tier === SubmissionTier.Silver);
-      const bronzeSub = submissions.find((s) => s.tier === SubmissionTier.Bronze);
+      const silverSub = submissions.find(
+        (s) => s.tier === SubmissionTier.Silver,
+      );
+      const bronzeSub = submissions.find(
+        (s) => s.tier === SubmissionTier.Bronze,
+      );
 
       expect(goldSub?.score).toBe(900);
       expect(goldSub?.user.id).toBe(user1.id);

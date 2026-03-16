@@ -540,6 +540,7 @@ export class TransactionClient implements TransactionClientPort {
         // Cache miss or error - continue to fetch from blockchain
         logger.debug({
           msg: 'Tournament ID not found in cache, fetching from blockchain',
+          error,
         });
       }
     }

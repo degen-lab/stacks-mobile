@@ -1,7 +1,7 @@
 import type { AxiosError } from "axios";
 import { createQuery } from "react-query-kit";
 
-import { client } from "../../common";
+import { gameClient } from "../../common";
 import type { DailyStreakData, DailyStreakResponse } from "./types";
 
 type Response = DailyStreakData;
@@ -9,8 +9,8 @@ type Variables = void;
 
 export const useDailyStreak = createQuery<Response, Variables, AxiosError>({
   queryKey: ["daily-streak"],
-  fetcher: () => {
-    return client
+  fetcher: async () => {
+    return gameClient
       .get<
         DailyStreakResponse | { data: DailyStreakData }
       >("session/daily-streak")

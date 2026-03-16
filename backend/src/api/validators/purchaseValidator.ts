@@ -4,8 +4,11 @@ import { AppPlatform } from '../../shared/types';
 export const createWidgetUrlSchema = z.object({
   cryptoCurrencyCode: z.string(),
   fiatCurrency: z.string(),
-  fiatAmount: z.number(),
+  fiatAmount: z.number().optional(),
+  cryptoAmount: z.number().optional(),
   platform: z.enum(AppPlatform),
+  productsAvailed: z.enum(['BUY', 'SELL']),
+  walletAddress: z.string().optional(),
 });
 
 // Transak webhook payload after JWT decryption
@@ -23,7 +26,6 @@ export const transakWebhookPayloadSchema = z.object({
     network: z.string().optional(),
     transactionHash: z.string().optional(),
     transactionLink: z.string().optional(),
-    isBuyOrSell: z.string().optional(),
     conversionPrice: z.number().optional(),
     totalFeeInFiat: z.number().optional(),
   }),

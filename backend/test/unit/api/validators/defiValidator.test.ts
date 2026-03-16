@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { swapParamsSchema } from '../../../../src/api/validators/defiValidator';
 
 jest.mock('@stacks/transactions', () => ({
@@ -20,12 +21,11 @@ describe('swapParamsSchema', () => {
   it('should accept valid input', () => {
     const result = swapParamsSchema.safeParse(validInput);
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.tokenInId).toBe('token-a');
-      expect(result.data.tokenOutId).toBe('token-b');
-      expect(result.data.amount).toBe(100.5);
-      expect(result.data.senderAddress).toBe(validStacksAddress);
-    }
+    assert(result.success);
+    expect(result.data.tokenInId).toBe('token-a');
+    expect(result.data.tokenOutId).toBe('token-b');
+    expect(result.data.amount).toBe(100.5);
+    expect(result.data.senderAddress).toBe(validStacksAddress);
   });
 
   it('should reject empty tokenInId', () => {
@@ -106,10 +106,9 @@ describe('swapParamsSchema', () => {
       amount: '42.75',
     });
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(typeof result.data.amount).toBe('number');
-      expect(result.data.amount).toBe(42.75);
-    }
+    assert(result.success);
+    expect(typeof result.data.amount).toBe('number');
+    expect(result.data.amount).toBe(42.75);
   });
 
   it('should accept another valid Stacks address (ST format)', () => {
@@ -128,9 +127,8 @@ describe('swapParamsSchema', () => {
       senderAddress: multisigAddress,
     });
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.senderAddress).toBe(multisigAddress);
-    }
+    assert(result.success);
+    expect(result.data.senderAddress).toBe(multisigAddress);
   });
 
   it('should accept multisig address (SN testnet format)', () => {

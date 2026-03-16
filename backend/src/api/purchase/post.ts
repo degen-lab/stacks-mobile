@@ -49,7 +49,10 @@ export default function purchasePostRoutes(
           data.cryptoCurrencyCode,
           data.fiatCurrency,
           data.fiatAmount,
+          data.cryptoAmount,
           data.platform,
+          data.productsAvailed,
+          data.walletAddress,
         );
         return reply.status(200).send({
           success: true,

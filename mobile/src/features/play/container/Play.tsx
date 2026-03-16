@@ -2,7 +2,7 @@ import { useDailyStreak } from "@/api/game/session/use-daily-streak";
 import {
   useCurrentTournamentSubmissions,
   useTournamentLeaderboard,
-} from "@/api/tournament";
+} from "@/api/game/tournament";
 import { useUserProfile } from "@/api/user";
 import {
   buildLeaderboardUsers,

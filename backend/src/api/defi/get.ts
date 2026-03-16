@@ -71,7 +71,7 @@ export default function getDefiRoutes(
         logger.info({
           msg: 'Possible pair list retrieved successfully',
           data: possiblePairList,
-        })
+        });
         return res.status(200).send({
           success: true,
           message: 'Possible pair list retrieved successfully',
@@ -143,7 +143,7 @@ export default function getDefiRoutes(
             defiOperation,
             contractCallParams: serializeBigInt(contractCallParams),
           },
-        })
+        });
         return res.status(200).send({
           success: true,
           message: 'Swap params retrieved successfully',

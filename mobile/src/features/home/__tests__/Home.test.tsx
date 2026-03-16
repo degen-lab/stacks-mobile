@@ -46,6 +46,20 @@ jest.mock("../container/Home.layout", () => ({
   },
 }));
 
+const mockOpenTransfer = jest.fn();
+
+jest.mock("@/features/transfer", () => ({
+  useTransferSheet: () => ({
+    openTransfer: mockOpenTransfer,
+  }),
+}));
+
+jest.mock("@/features/transak/context/transak-context", () => ({
+  useTransak: () => ({
+    openTransak: jest.fn(),
+  }),
+}));
+
 describe("HomeScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();

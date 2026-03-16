@@ -156,14 +156,20 @@ export const BITFLOW_API_HOST: string = configParser(
   isTest ? 'https://api.bitflow.finance' : undefined,
 );
 
-export const BITFLOW_API_KEY: string = configParser('BITFLOW_API_KEY');
+export const BITFLOW_API_KEY: string = configParser(
+  'BITFLOW_API_KEY',
+  isTest ? 'test-bitflow-api-key' : undefined,
+);
 
 export const READONLY_CALL_API_HOST: string = configParser(
   'READONLY_CALL_API_HOST',
   isTest ? 'https://api.mainnet.hiro.so' : undefined,
 );
 
-export const KEEPER_API_KEY: string = configParser('KEEPER_API_KEY');
+export const KEEPER_API_KEY: string = configParser(
+  'KEEPER_API_KEY',
+  isTest ? 'test-keeper-api-key' : undefined,
+);
 
 export const KEEPER_API_HOST: string = configParser(
   'KEEPER_API_HOST',
@@ -172,4 +178,7 @@ export const KEEPER_API_HOST: string = configParser(
 
 export const SWAP_SLIPPAGE_TOLLERANCE: number = 0.01;
 
-export const READONLY_CALL_API_KEY = configParser('READONLY_CALL_API_KEY');
+export const READONLY_CALL_API_KEY = configParser(
+  'READONLY_CALL_API_KEY',
+  isTest ? 'test-readonly-call-api-key' : undefined,
+);

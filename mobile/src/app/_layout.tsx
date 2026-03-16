@@ -13,9 +13,12 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { APIProvider } from "@/api";
 import { ReferralHeader } from "@/features/referral/components/referral-header";
+import { TransferSheetProvider } from "@/features/transfer";
 import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
 import { fontConfig } from "@/lib/fonts";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";
+
+import { TransakProvider } from "@/features/transak/context/transak-context";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -31,6 +34,11 @@ export default function RootLayout() {
     }
   }, [isAppReady, fontsLoaded, fontError]);
 
+  // Don't mount app until auth (and token) are hydrated — avoids 401 on refresh
+  if (!isAppReady) {
+    return null;
+  }
+
   return (
     <Providers>
       <Stack>
@@ -42,7 +50,11 @@ export default function RootLayout() {
         <Stack.Screen name="wallet-restore" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen
-          name="settings/accounts"
+          name="settings/accounts/index"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="settings/accounts/[id]"
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -76,7 +88,9 @@ function Providers({ children }: { children: React.ReactNode }) {
         <ThemeProvider value={theme}>
           <APIProvider>
             <BottomSheetModalProvider>
-              {children}
+              <TransferSheetProvider>
+                <TransakProvider>{children}</TransakProvider>
+              </TransferSheetProvider>
               <FlashMessage position="top" />
             </BottomSheetModalProvider>
           </APIProvider>

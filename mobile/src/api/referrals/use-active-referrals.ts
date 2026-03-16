@@ -1,7 +1,7 @@
 import type { AxiosError } from "axios";
 import { createQuery } from "react-query-kit";
 
-import { client } from "../common";
+import { gameClient } from "../common";
 import type {
   ActiveReferralsData,
   ActiveReferralsResponse,
@@ -13,8 +13,8 @@ type Variables = void;
 
 export const useActiveReferrals = createQuery<Response, Variables, AxiosError>({
   queryKey: ["active-referrals"],
-  fetcher: () => {
-    return client
+  fetcher: async () => {
+    return gameClient
       .get<
         ActiveReferralsResponse | { data: ActiveReferralsData }
       >(`user/active-referrals`)
