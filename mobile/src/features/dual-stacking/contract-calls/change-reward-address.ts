@@ -23,9 +23,9 @@ export const contractChangeRewardsAddress = async (
   const contractId = CONTRACTS[network][contractType];
   const functionName =
     SC_FUNCTIONS[contractType].publicFunctions.CHANGE_REWARDS_ADDRESS;
-  const accountIndex = useSettingsStore.getState().activeAccountIndex;
 
   const convertedArgs = [principalCV(normalizedAddress)];
+  const accountIndex = useSettingsStore.getState().activeAccountIndex;
 
   return walletKit.makeContractCall(
     contractId,

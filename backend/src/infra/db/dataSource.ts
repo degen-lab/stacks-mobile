@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { DataSource } from 'typeorm';
 import {
   DB_HOST,
@@ -6,7 +7,6 @@ import {
   DB_PORT,
   DB_TYPE,
   DB_USER,
-  NODE_ENV,
 } from '../../shared/constants';
 import { User } from '../../domain/entities/user';
 import { DefaultItem } from '../../domain/entities/defaultItem';
@@ -18,6 +18,10 @@ import { RewardsDistributionData } from '../../domain/entities/rewardsDistributi
 import { TournamentStatus } from '../../domain/entities/tournamentStatus';
 import { CryptoPurchase } from '../../domain/entities/cryptoPurchase';
 import { StackingData } from '../../domain/entities/stackingData';
+import { SponsoredTransaction } from '../../domain/entities/sponsoredTransaction';
+
+const shouldSynchronize =
+  process.env.DB_SYNCHRONIZE === 'true' || process.env.NODE_ENV === 'test';
 
 export const AppDataSource = new DataSource({
   type: DB_TYPE,
@@ -26,7 +30,9 @@ export const AppDataSource = new DataSource({
   username: DB_USER,
   password: DB_PASSWORD,
   database: DB_NAME,
-  synchronize: NODE_ENV === 'production' ? false : true,
+  // Keep schema mutations out of worker startup unless explicitly requested.
+  synchronize: shouldSynchronize,
+  migrationsRun: !shouldSynchronize,
   logging: process.env.DB_LOGGING === 'true', // Only log SQL if explicitly enabled
   entities: [
     User,
@@ -39,7 +45,8 @@ export const AppDataSource = new DataSource({
     TournamentStatus,
     StackingData,
     CryptoPurchase,
+    SponsoredTransaction,
   ],
   subscribers: [],
-  migrations: ['src/infra/db/migrations/**/*.ts'],
+  migrations: [join(__dirname, 'migrations/**/*.{ts,js}')],
 });

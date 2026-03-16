@@ -62,6 +62,7 @@ interface FeeState {
 interface UiState {
   showPoolOptions: boolean;
   isProcessing: boolean;
+  isSponsoredSubmitting: boolean;
   isApprovalPending: boolean;
   isDelegatePending: boolean;
   approvalSheetRef: React.RefObject<BottomSheetModal | null>;
@@ -76,7 +77,9 @@ interface Actions {
   ) => void;
   onStackOrIncrease: () => void;
   onConfirmApproval: () => void;
+  onConfirmSponsoredApproval: () => void;
   onConfirmDelegate: () => void;
+  onConfirmSponsoredDelegate: () => void;
   onSheetClose: () => void;
   onSelectFee: (option: FeeOption) => void;
   onCustomFeeChange: (value: string) => void;
@@ -137,6 +140,7 @@ export function StackingScreenLayout({
   const {
     showPoolOptions,
     isProcessing,
+    isSponsoredSubmitting,
     isApprovalPending,
     isDelegatePending,
     approvalSheetRef,
@@ -147,7 +151,9 @@ export function StackingScreenLayout({
     onUpdateChange,
     onStackOrIncrease,
     onConfirmApproval,
+    onConfirmSponsoredApproval,
     onConfirmDelegate,
+    onConfirmSponsoredDelegate,
     onSheetClose,
     onSelectFee,
     onCustomFeeChange,
@@ -288,7 +294,9 @@ export function StackingScreenLayout({
         feeMicroStx={feeMicroStx}
         stackingPrice={stackingInfo.price}
         onConfirm={onConfirmApproval}
+        onSponsoredConfirm={onConfirmSponsoredApproval}
         isLoading={isProcessing || isApprovalPending}
+        isSponsoredLoading={isSponsoredSubmitting}
         confirmDisabled={!isFeeValid}
       />
 
@@ -308,7 +316,9 @@ export function StackingScreenLayout({
         isLoadingFees={isLoadingFees}
         feeMicroStx={feeMicroStx}
         onConfirm={onConfirmDelegate}
+        onSponsoredConfirm={onConfirmSponsoredDelegate}
         isProcessing={isProcessing}
+        isSponsoredProcessing={isSponsoredSubmitting}
         inPreparePhase={stackingInfo.inPreparePhase}
         timeTillPreparePhase={stackingInfo.timeTillPreparePhase}
       />

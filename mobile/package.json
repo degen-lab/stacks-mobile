@@ -94,6 +94,11 @@
     "zod": "^4.1.13"
   },
   "private": true,
+  "pnpm": {
+    "overrides": {
+      "@degenlab/stacks-wallet-kit-mobile>@degenlab/stacks-wallet-kit-core": "1.5.0"
+    }
+  },
   "jest": {
     "preset": "jest-expo",
     "setupFilesAfterEnv": [

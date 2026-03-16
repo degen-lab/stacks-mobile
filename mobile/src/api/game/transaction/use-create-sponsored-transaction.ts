@@ -3,21 +3,21 @@ import { createMutation } from "react-query-kit";
 
 import { gameClient } from "../../common";
 import type {
-  CreateGameSubmissionTransactionRequest,
-  CreateGameSubmissionTransactionResponse,
+  CreateSponsoredTransactionRequest,
+  CreateSponsoredTransactionResponse,
 } from "./types";
 
-type Variables = CreateGameSubmissionTransactionRequest;
-type Response = CreateGameSubmissionTransactionResponse;
+type Variables = CreateSponsoredTransactionRequest;
+type Response = CreateSponsoredTransactionResponse;
 
-export const useCreateGameSubmissionTransactionMutation = createMutation<
+export const useCreateSponsoredTransactionMutation = createMutation<
   Response,
   Variables,
   AxiosError
 >({
   mutationFn: async (variables) =>
     gameClient({
-      url: "transaction/game-submission",
+      url: "transaction/sponsored-request",
       method: "POST",
       data: variables,
     }).then((response) => response.data),

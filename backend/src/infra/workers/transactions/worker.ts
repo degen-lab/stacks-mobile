@@ -32,7 +32,7 @@ export class TransactionWorker {
     while (!this.shouldStop) {
       try {
         logger.info('Processing batch of transactions...');
-        await this.transactionService.broadcastBatchTransactions();
+        await this.transactionService.processSponsoredBroadcastQueue();
         logger.info('Batch processing completed');
 
         // Wait before next iteration

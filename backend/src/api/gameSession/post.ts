@@ -63,14 +63,15 @@ export default function gameSessionPostRoutes(
         let submission: Submission | undefined = undefined;
         let serializedTx: string | undefined = undefined;
         if (data.transactionData && !isFraud) {
-          const result = await transactionService.createUnsignedTransaction(
-            user.id,
-            data.transactionData.address,
-            data.transactionData.publicKey,
-            sessionScore,
-            data.transactionData.submissionType,
-            data.transactionData.isSponsored,
-          );
+          const result =
+            await transactionService.createGameSubmissionTransaction(
+              user.id,
+              data.transactionData.address,
+              data.transactionData.publicKey,
+              sessionScore,
+              data.transactionData.submissionType,
+              data.transactionData.isSponsored,
+            );
           submission = result.submission;
           serializedTx = result.serializedTx;
         }

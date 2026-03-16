@@ -13,9 +13,11 @@ export const transactionQueue = new Queue('transactions', {
   },
 });
 
-export const submissionsCleanupQueue = new Queue('submissions-cleanup', {
+export const transactionsCleanupQueue = new Queue('submissions-cleanup', {
   connection: redis,
 });
+
+export const submissionsCleanupQueue = transactionsCleanupQueue;
 
 export const stackingQueue = new Queue('stacking', {
   connection: redis,

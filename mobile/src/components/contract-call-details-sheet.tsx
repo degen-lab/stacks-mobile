@@ -5,6 +5,7 @@ import { useContractCallFee } from "@/hooks/use-contract-call-fee";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import { ScrollView } from "react-native";
+import { TransactionFundingActions } from "./transaction-funding-actions";
 import {
   ContractTxDetails,
   type ContractArgument,
@@ -22,11 +23,15 @@ type ContractCallDetailsSheetProps = {
   stackingPrice?: number;
   confirmLabel?: string;
   onConfirm?: (feeMicroStx?: number) => void | Promise<void>;
+  sponsoredConfirmLabel?: string;
+  onSponsoredConfirm?: (feeMicroStx?: number) => void | Promise<void>;
   onClose?: () => void;
   extraContent?: React.ReactNode;
   snapPoints?: string[];
   isLoading?: boolean;
   confirmDisabled?: boolean;
+  sponsoredConfirmDisabled?: boolean;
+  isSponsoredLoading?: boolean;
   showSuccess?: boolean;
   successMessage?: string;
   txId?: string;
@@ -49,11 +54,15 @@ export const ContractCallDetailsSheet = React.forwardRef<
       stackingPrice = 0,
       confirmLabel,
       onConfirm,
+      sponsoredConfirmLabel = "Watch an ad",
+      onSponsoredConfirm,
       onClose,
       extraContent,
       snapPoints = ["65%"],
       isLoading = false,
       confirmDisabled = false,
+      sponsoredConfirmDisabled = false,
+      isSponsoredLoading = false,
       showSuccess = false,
       successMessage,
       txId,
@@ -99,6 +108,10 @@ export const ContractCallDetailsSheet = React.forwardRef<
       onConfirm?.(showFeeSelector ? feeMicroStx : undefined);
     }, [feeMicroStx, onConfirm, showFeeSelector]);
 
+    const handleSponsoredConfirm = React.useCallback(() => {
+      onSponsoredConfirm?.(showFeeSelector ? feeMicroStx : undefined);
+    }, [feeMicroStx, onSponsoredConfirm, showFeeSelector]);
+
     // Allow submission when fees aren't available — the wallet will estimate on confirmation
     const canUseWalletEstimatedFee =
       selectedFeeOption !== "custom" &&
@@ -107,8 +120,17 @@ export const ContractCallDetailsSheet = React.forwardRef<
     const isConfirmDisabled =
       confirmDisabled ||
       isLoading ||
+      isSponsoredLoading ||
       (showFeeSelector &&
         (isLoadingFees || (!isFeeValid && !canUseWalletEstimatedFee)));
+    const isSponsoredDisabled =
+      sponsoredConfirmDisabled ||
+      isSponsoredLoading ||
+      isLoading ||
+      (showFeeSelector &&
+        (isLoadingFees || (!isFeeValid && !canUseWalletEstimatedFee)));
+    const showFundingChoice = Boolean(confirmLabel && onConfirm);
+    const walletFundingLabel = confirmLabel ?? "Use wallet funds";
 
     return (
       <Modal
@@ -182,24 +204,21 @@ export const ContractCallDetailsSheet = React.forwardRef<
                 {/* Action Buttons - Hidden when advanced mode is active */}
                 {!showAdvancedOnly && (
                   <>
-                    {confirmLabel && onConfirm ? (
-                      <View className="mt-6 gap-3">
-                        <Button
-                          label={confirmLabel}
-                          loading={isLoading}
-                          variant="gamePrimary"
-                          size="lg"
-                          onPress={handleConfirm}
-                          disabled={isConfirmDisabled}
-                        />
-                        <Button
-                          label="Cancel"
-                          variant="secondary"
-                          size="lg"
-                          onPress={handleClose}
-                          disabled={isLoading}
-                        />
-                      </View>
+                    {showFundingChoice ? (
+                      <TransactionFundingActions
+                        sponsoredLabel={sponsoredConfirmLabel}
+                        walletLabel={walletFundingLabel}
+                        onPressSponsored={
+                          onSponsoredConfirm
+                            ? () => void handleSponsoredConfirm()
+                            : undefined
+                        }
+                        onPressWallet={() => void handleConfirm()}
+                        sponsoredDisabled={isSponsoredDisabled}
+                        walletDisabled={isConfirmDisabled}
+                        sponsoredLoading={isSponsoredLoading}
+                        walletLoading={isLoading}
+                      />
                     ) : (
                       <Button
                         label="Close"

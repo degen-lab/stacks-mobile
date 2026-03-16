@@ -30,11 +30,16 @@ export default function ConnectWallet() {
     openInExplorer,
     copyAddress,
     optOut,
+    optOutSponsored,
     changeRewardAddress,
+    changeRewardAddressSponsored,
     isOptOutSubmitting,
     optOutStatus,
+    optOutFunding,
     isChangeAddressSubmitting,
     changeAddressStatus,
+    changeAddressFunding,
+    isSubmittingSponsored,
   } = useWalletActions();
 
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
@@ -188,6 +193,8 @@ export default function ConnectWallet() {
         open={isChangeAddressOpen}
         onOpenChange={setIsChangeAddressOpen}
         onChangeRewardAddress={changeRewardAddress}
+        onSponsoredChangeRewardAddress={changeRewardAddressSponsored}
+        isSponsoredSubmitting={isSubmittingSponsored}
       />
 
       <UnenrollSheet
@@ -197,6 +204,10 @@ export default function ConnectWallet() {
         onConfirm={({ reasons, feeMicroStx }) =>
           optOut({ reasons, feeMicroStx })
         }
+        onSponsoredConfirm={({ reasons, feeMicroStx }) =>
+          optOutSponsored({ reasons, feeMicroStx })
+        }
+        isSponsoredSubmitting={isSubmittingSponsored}
       />
 
       <TransactionStatusSheet
@@ -204,13 +215,24 @@ export default function ConnectWallet() {
         onOpenChange={setIsUnenrollModalOpen}
         isLoading={isOptOutSubmitting}
         loading={{
-          title: "Processing your opt-out...",
+          title:
+            optOutFunding === "sponsored"
+              ? "Queueing sponsored opt-out..."
+              : "Processing your opt-out...",
           message:
-            "Please wait while we confirm your transaction on the blockchain.",
+            optOutFunding === "sponsored"
+              ? "We are preparing your sponsored transaction and will broadcast it shortly."
+              : "Please wait while we confirm your transaction on the blockchain.",
         }}
         success={{
-          title: "You are now unenrolled",
-          message: "You'll stop earning Dual Stacking rewards from next cycle.",
+          title:
+            optOutFunding === "sponsored"
+              ? "Opt-out queued"
+              : "You are now unenrolled",
+          message:
+            optOutFunding === "sponsored"
+              ? "Your sponsored opt-out will broadcast shortly."
+              : "You'll stop earning Dual Stacking rewards from next cycle.",
         }}
       />
 
@@ -219,13 +241,24 @@ export default function ConnectWallet() {
         onOpenChange={setIsChangeAddressModalOpen}
         isLoading={isChangeAddressSubmitting}
         loading={{
-          title: "Updating reward address...",
+          title:
+            changeAddressFunding === "sponsored"
+              ? "Queueing sponsored update..."
+              : "Updating reward address...",
           message:
-            "Please wait while we confirm your transaction on the blockchain.",
+            changeAddressFunding === "sponsored"
+              ? "We are preparing your sponsored transaction and will broadcast it shortly."
+              : "Please wait while we confirm your transaction on the blockchain.",
         }}
         success={{
-          title: "Reward address updated",
-          message: "Your rewards will now be sent to the new address.",
+          title:
+            changeAddressFunding === "sponsored"
+              ? "Address update queued"
+              : "Reward address updated",
+          message:
+            changeAddressFunding === "sponsored"
+              ? "Your sponsored address update will broadcast shortly."
+              : "Your rewards will now be sent to the new address.",
         }}
       />
     </>

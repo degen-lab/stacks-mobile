@@ -26,12 +26,19 @@ type ChangeRewardAddressSheetProps = {
     rewardAddress: string;
     feeMicroStx?: number;
   }) => Promise<boolean>;
+  onSponsoredChangeRewardAddress?: (params: {
+    rewardAddress: string;
+    feeMicroStx?: number;
+  }) => Promise<boolean>;
+  isSponsoredSubmitting?: boolean;
 };
 
 export function ChangeRewardAddressSheet({
   open,
   onOpenChange,
   onChangeRewardAddress,
+  onSponsoredChangeRewardAddress,
+  isSponsoredSubmitting = false,
 }: ChangeRewardAddressSheetProps) {
   const {
     ref: formRef,
@@ -148,6 +155,18 @@ export function ChangeRewardAddressSheet({
     }
   };
 
+  const handleSponsoredConfirm = async (feeMicroStx?: number) => {
+    if (!onSponsoredChangeRewardAddress) return;
+
+    const ok = await onSponsoredChangeRewardAddress({
+      rewardAddress: normalizedAddress,
+      feeMicroStx,
+    });
+    if (ok !== false) {
+      onOpenChange(false);
+    }
+  };
+
   return (
     <>
       <Modal
@@ -222,7 +241,7 @@ export function ChangeRewardAddressSheet({
       <ContractCallDetailsSheet
         ref={confirmRef}
         title="Change reward address"
-        snapPoints={["45%"]}
+        snapPoints={["50%"]}
         network={selectedNetwork}
         contractAddress={contractId}
         functionName={functionName}
@@ -235,13 +254,23 @@ export function ChangeRewardAddressSheet({
         ]}
         feeFunctionArgs={feeFunctionArgs}
         showFeeSelector
-        confirmLabel="Change address"
+        confirmLabel="Use wallet funds"
+        sponsoredConfirmLabel="Watch an ad"
         onConfirm={(feeMicroStx) => {
           void handleConfirm(feeMicroStx);
         }}
+        onSponsoredConfirm={
+          onSponsoredChangeRewardAddress
+            ? (feeMicroStx) => void handleSponsoredConfirm(feeMicroStx)
+            : undefined
+        }
         onClose={handleReturnToForm}
         isLoading={isSubmitting}
         confirmDisabled={isSubmitting}
+        isSponsoredLoading={isSponsoredSubmitting}
+        sponsoredConfirmDisabled={
+          isSubmitting || !isAddressValid || isSameAddress
+        }
       />
     </>
   );

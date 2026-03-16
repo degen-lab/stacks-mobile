@@ -3,7 +3,7 @@ import { TransactionWorker } from './worker';
 import { RedisCacheAdapter } from '../../redis/cacheAdapter';
 import { logger } from '../../../api/helpers/logger';
 import { ServiceFactory } from '../../../application/factory';
-import { submissionsCleanupQueue } from '../queue';
+import { transactionsCleanupQueue } from '../queue';
 
 let worker: TransactionWorker | null = null;
 let isShuttingDown = false;
@@ -70,8 +70,8 @@ AppDataSource.initialize()
     logger.info('Transaction worker started successfully');
 
     // Schedule submissions cleanup every 2 hours
-    await submissionsCleanupQueue.add(
-      'cleanupSubmissions',
+    await transactionsCleanupQueue.add(
+      'cleanupTransactions',
       {},
       { repeat: { every: 2 * 60 * 60 * 1000 } },
     );

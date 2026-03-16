@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { showMessage } from "react-native-flash-message";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { EarnBtcLayout } from "./EarnBtc.layout";
 import { buildEarnBtcSteps } from "./model";
@@ -11,15 +12,21 @@ import { TermsAndConditionsSheet } from "../layout/modals/terms-and-conditions-s
 import { TermsDetailsSheet } from "../layout/modals/terms-details-sheet";
 import { TransactionStatusSheet } from "../layout/modals/transaction-status-sheet";
 import { useContractCallFee } from "@/hooks/use-contract-call-fee";
-import { useTrackEnrollTx } from "@/features/dual-stacking/hooks/use-track-enroll-tx";
+import {
+  useTrackEnrollTx,
+  invalidateEnrollmentQueries,
+} from "@/features/dual-stacking/hooks/use-track-enroll-tx";
 import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
 import { useAprComputation } from "@/features/dual-stacking/hooks/use-apr-computation";
 import { useMinHoldForEnrollment } from "@/api/dual-stacking/contract/hooks";
 import { useCheckTerms } from "@/api/dual-stacking/enrollment/use-check-terms";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useStxBalance } from "@/hooks/use-stx-balance";
+import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
+import { contractEnroll } from "../../contract-calls/enroll";
+import { getActiveWalletAccount } from "@/lib/stacks/active-account";
 import { fromSatsToBtc } from "@/lib/format/currency";
-import { contractEnroll } from "@/features/dual-stacking/contract-calls";
+import { buildUnsignedContractCall } from "@/lib/stacks/transaction-builder";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
 import { getExplorerTxUrl } from "@/lib/stacks/network";
 import {
@@ -27,7 +34,7 @@ import {
   getContractTypeForCycle,
 } from "@/lib/stacks/utils";
 import { useSelectedNetwork } from "@/lib/store/settings";
-import { noneCV } from "@stacks/transactions";
+import { noneCV, PostConditionMode } from "@stacks/transactions";
 
 type EarnBtcContainerProps = {
   onExploreApps?: () => void;
@@ -36,10 +43,16 @@ type EarnBtcContainerProps = {
 export default function EarnBtcContainer({
   onExploreApps,
 }: EarnBtcContainerProps) {
+  const queryClient = useQueryClient();
   const { stxAddress } = useWalletAddresses();
   const { selectedNetwork } = useSelectedNetwork();
+  const { submitSponsoredTransaction, isSubmittingSponsored } =
+    useSponsoredStacksTransaction();
   const [isSubmittingEnroll, setIsSubmittingEnroll] = useState(false);
   const [enrollTxId, setEnrollTxId] = useState<string | null>(null);
+  const [enrollFunding, setEnrollFunding] = useState<
+    "wallet" | "sponsored" | null
+  >(null);
 
   const [isEnrollSheetOpen, setIsEnrollSheetOpen] = useState(false);
   const [isMintSbtcSheetOpen, setIsMintSbtcSheetOpen] = useState(false);
@@ -203,17 +216,10 @@ export default function EarnBtcContainer({
 
     setIsSubmittingEnroll(true);
     try {
+      setEnrollFunding("wallet");
       const txid = await contractEnroll(undefined, feeMicroStx);
-      if (!txid) {
-        showMessage({
-          message: "Enrollment failed",
-          description: "Broadcast failed",
-          type: "danger",
-        });
-        return;
-      }
 
-      setEnrollTxId(txid);
+      setEnrollTxId(txid ?? null);
       setIsEnrolledModalOpen(true);
       setIsEnrolling(true);
       setIsEnrollSheetOpen(false);
@@ -221,6 +227,48 @@ export default function EarnBtcContainer({
       showMessage({
         message: "Enrollment failed",
         description: "Unable to create or broadcast enrollment transaction.",
+        type: "danger",
+      });
+    } finally {
+      setIsSubmittingEnroll(false);
+    }
+  };
+
+  const handleSponsoredEnroll = async () => {
+    if (!stxAddress || !isFeeValid) return;
+
+    setIsSubmittingEnroll(true);
+    try {
+      setEnrollFunding("sponsored");
+      const { account, accountIndex, address } = await getActiveWalletAccount();
+      const unsignedSerializedTx = await buildUnsignedContractCall({
+        contractId,
+        functionName: enrollFunctionName,
+        functionArgs: enrollFunctionArgs,
+        network: selectedNetwork,
+        publicKey: account.publicKey,
+        feeMicroStx,
+        postConditionMode: PostConditionMode.Allow,
+        sponsored: true,
+      });
+      await submitSponsoredTransaction({
+        originAddress: address,
+        accountIndex,
+        unsignedSerializedTx,
+      });
+
+      invalidateEnrollmentQueries(queryClient);
+      setTimeout(() => {
+        invalidateEnrollmentQueries(queryClient);
+      }, 15000);
+
+      setIsEnrolledModalOpen(true);
+      setIsEnrolling(false);
+      setIsEnrollSheetOpen(false);
+    } catch {
+      showMessage({
+        message: "Enrollment failed",
+        description: "Unable to queue the sponsored enrollment transaction.",
         type: "danger",
       });
     } finally {
@@ -280,7 +328,9 @@ export default function EarnBtcContainer({
         isLoadingFees={isLoadingFees}
         feeMicroStx={feeMicroStx}
         onConfirm={handleEnroll}
+        onSponsoredConfirm={handleSponsoredEnroll}
         isSubmitting={isSubmittingEnroll}
+        isSponsoredSubmitting={isSubmittingSponsored}
       />
       <MintSbtcSheet
         open={isMintSbtcSheetOpen}
@@ -306,14 +356,24 @@ export default function EarnBtcContainer({
         onOpenChange={setIsEnrolledModalOpen}
         isLoading={isEnrolling}
         loading={{
-          title: "Processing your enrollment...",
+          title:
+            enrollFunding === "sponsored"
+              ? "Queueing sponsored enrollment..."
+              : "Processing your enrollment...",
           message:
-            "Please wait while we confirm your transaction on the blockchain.",
+            enrollFunding === "sponsored"
+              ? "We are preparing your sponsored transaction and will broadcast it shortly."
+              : "Please wait while we confirm your transaction on the blockchain.",
         }}
         success={{
-          title: "Congrats! You are enrolled in Dual Stacking",
+          title:
+            enrollFunding === "sponsored"
+              ? "Enrollment queued"
+              : "Congrats! You are enrolled in Dual Stacking",
           message:
-            "Starting next cycle you'll earn Bitcoin-denominated yield, powered by Stacks.",
+            enrollFunding === "sponsored"
+              ? "Your sponsored enrollment will broadcast shortly."
+              : "Starting next cycle you'll earn Bitcoin-denominated yield, powered by Stacks.",
         }}
       >
         <BitcoinTree width={188} height={88} />

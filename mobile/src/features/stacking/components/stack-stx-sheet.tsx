@@ -7,6 +7,7 @@ import { ContractTxDetails } from "@/components/contract-tx-details";
 import { formatMicroStx, MICRO_STX } from "@/lib/format/currency";
 import { useColorScheme } from "nativewind";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { TransactionFundingActions } from "@/components/transaction-funding-actions";
 
 interface StackStxSheetProps {
   isVisible?: boolean;
@@ -25,7 +26,9 @@ interface StackStxSheetProps {
   isLoadingFees: boolean;
   feeMicroStx?: number;
   onConfirm: () => void;
+  onSponsoredConfirm?: () => void;
   isProcessing: boolean;
+  isSponsoredProcessing?: boolean;
   inPreparePhase?: boolean;
   timeTillPreparePhase?: string;
 }
@@ -46,7 +49,9 @@ export function StackStxSheet({
   isLoadingFees,
   feeMicroStx,
   onConfirm,
+  onSponsoredConfirm,
   isProcessing,
+  isSponsoredProcessing = false,
   inPreparePhase,
   timeTillPreparePhase,
 }: StackStxSheetProps) {
@@ -203,14 +208,22 @@ export function StackStxSheet({
               </View>
 
               {/* Actions */}
-              <View className="gap-3">
-                <Button
-                  label={isStacking ? "Confirm Increase" : "Start Stacking"}
-                  variant="gamePrimary"
-                  size="lg"
-                  onPress={onConfirm}
-                  disabled={!isFeeValid || isProcessing}
-                />
+              <TransactionFundingActions
+                sponsoredLabel="Watch an ad"
+                walletLabel="Use wallet funds"
+                onPressSponsored={onSponsoredConfirm}
+                onPressWallet={onConfirm}
+                sponsoredDisabled={
+                  !isFeeValid || isProcessing || isSponsoredProcessing
+                }
+                walletDisabled={
+                  !isFeeValid || isProcessing || isSponsoredProcessing
+                }
+                sponsoredLoading={isSponsoredProcessing}
+                walletLoading={isProcessing}
+              />
+
+              <View className="mt-4">
                 <Button
                   label="Cancel"
                   variant="secondary"
@@ -219,7 +232,7 @@ export function StackStxSheet({
                     onClose();
                     sheetRef.current?.dismiss();
                   }}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isSponsoredProcessing}
                 />
               </View>
             </>

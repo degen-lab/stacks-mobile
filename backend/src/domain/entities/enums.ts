@@ -26,12 +26,14 @@ export enum ItemCategory {
   unique = 'unique',
 }
 
+// Persisted as numeric Postgres enum labels in the existing schema.
+// Keep the enum numeric-backed until we run a dedicated data migration.
 export enum TransactionStatus {
-  'Pending',
-  'Success',
-  'Failed',
-  'NotBroadcasted',
-  'Processing',
+  Pending,
+  Success,
+  Failed,
+  NotBroadcasted,
+  Processing,
 }
 
 export enum TournamentStatusEnum {

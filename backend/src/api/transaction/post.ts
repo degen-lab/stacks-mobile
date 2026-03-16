@@ -1,9 +1,11 @@
-import { TransactionService } from '../../application/transaction/transactionService';
 import { FastifyInstance } from 'fastify';
+import { TransactionService } from '../../application/transaction/transactionService';
 import { rateLimitOptions } from '../config/rateLimitConfig';
 import {
   broadcastTxSchema,
-  createTransactionSchema,
+  createGameSubmissionTransactionSchema,
+  createSponsoredTransactionSchema,
+  enqueueSponsoredTransactionSchema,
 } from '../validators/transactionValidator';
 import { logger } from '../helpers/logger';
 import { BaseError } from '../../shared/errors/baseError';
@@ -17,7 +19,7 @@ export default function transactionPostRoutes(
     transactionService: TransactionService;
   },
 ) {
-  app.post('/create', {
+  app.post('/game-submission', {
     preHandler: app.authenticateUser,
     config: {
       rateLimit: rateLimitOptions({
@@ -33,7 +35,9 @@ export default function transactionPostRoutes(
     handler: async (request, reply) => {
       try {
         const user = request.user as UserToken;
-        const body = createTransactionSchema.safeParse(request.body);
+        const body = createGameSubmissionTransactionSchema.safeParse(
+          request.body,
+        );
         if (!body.success) {
           logger.warn({
             msg: 'Validation Error',
@@ -46,9 +50,10 @@ export default function transactionPostRoutes(
             error: body.error.message,
           });
         }
+
         const data = body.data;
-        const unsignedTransaction =
-          await transactionService.createUnsignedTransaction(
+        const gameSubmissionTransaction =
+          await transactionService.createGameSubmissionTransaction(
             user.id,
             data.address,
             data.publicKey,
@@ -56,21 +61,90 @@ export default function transactionPostRoutes(
             data.submissionType,
             data.isSponsored,
           );
+
         return reply.status(200).send({
           success: true,
-          message: 'Transaction created successfully',
+          message: 'Game submission transaction created successfully',
           data: {
-            unsignedTransaction,
+            unsignedGameSubmissionTransaction: {
+              serializedTx: gameSubmissionTransaction.serializedTx,
+              submission: {
+                id: gameSubmissionTransaction.submission.id,
+              },
+              requestId: gameSubmissionTransaction.sponsoredRequest?.requestId,
+              expiresAt: gameSubmissionTransaction.sponsoredRequest?.expiresAt,
+            },
           },
         });
       } catch (error) {
         logger.error({
-          msg: 'Error in POST /create route',
+          msg: 'Error in POST /transaction/game-submission',
           method: request.method,
           err: error,
         });
         if (error instanceof BaseError) {
+          return reply.status(error.statusCode).send({
+            success: false,
+            message: error.message,
+          });
+        }
+        return reply.status(500).send({
+          success: false,
+          message: 'An unknown error occurred',
+        });
+      }
+    },
+  });
+
+  app.post('/sponsored-request', {
+    preHandler: app.authenticateUser,
+    config: {
+      rateLimit: rateLimitOptions({
+        max: 5,
+        timeWindow: '60000',
+        errorResponseBuilder: () => ({
+          statusCode: 429,
+          error: 'Too many requests',
+          message: 'Too many requests, please try again after 1 minute',
+        }),
+      }),
+    },
+    handler: async (request, reply) => {
+      try {
+        const user = request.user as UserToken;
+        const body = createSponsoredTransactionSchema.safeParse(request.body);
+        if (!body.success) {
+          logger.warn({
+            msg: 'Validation Error',
+            method: request.method,
+            err: body.error,
+          });
           return reply.status(400).send({
+            success: false,
+            message: 'Invalid body',
+            error: body.error.message,
+          });
+        }
+
+        const result =
+          await transactionService.createSponsoredTransactionRequest(
+            user.id,
+            body.data.originAddress,
+          );
+
+        return reply.status(200).send({
+          success: true,
+          message: 'Sponsored transaction request created successfully',
+          data: result,
+        });
+      } catch (error) {
+        logger.error({
+          msg: 'Error in POST /transaction/sponsored-request',
+          method: request.method,
+          err: error,
+        });
+        if (error instanceof BaseError) {
+          return reply.status(error.statusCode).send({
             success: false,
             message: error.message,
           });
@@ -99,7 +173,7 @@ export default function transactionPostRoutes(
     handler: async (request, reply) => {
       try {
         const user = request.user as UserToken;
-        const body = broadcastTxSchema.safeParse(request.body);
+        const body = enqueueSponsoredTransactionSchema.safeParse(request.body);
         if (!body.success) {
           logger.warn({
             msg: 'Validation Error',
@@ -112,28 +186,32 @@ export default function transactionPostRoutes(
             error: body.error.message,
           });
         }
-        const data = body.data;
-        const submission =
-          await transactionService.processSubmissionTransaction(
+
+        const queuedTransaction =
+          await transactionService.enqueueSponsoredTransaction(
             user.id,
-            data.submissionId,
-            data.serializedTx,
+            body.data.requestId,
+            body.data.serializedTx,
           );
+
         return reply.status(200).send({
           success: true,
           message: 'Transaction saved to queue successfully',
           data: {
-            submission,
+            requestId: queuedTransaction.id,
+            submission: queuedTransaction.submission
+              ? { id: queuedTransaction.submission.id }
+              : undefined,
           },
         });
       } catch (error) {
         logger.error({
-          msg: 'Error in POST /broadcast route',
+          msg: 'Error in POST /transaction/broadcast-sponsored',
           method: request.method,
           err: error,
         });
         if (error instanceof BaseError) {
-          return reply.status(400).send({
+          return reply.status(error.statusCode).send({
             success: false,
             message: error.message,
           });
@@ -175,31 +253,37 @@ export default function transactionPostRoutes(
             error: body.error.message,
           });
         }
-        const data = body.data;
+
         const transactionResult =
-          await transactionService.submitNormalTransaction(
+          await transactionService.broadcastWalletTransaction(
             user.id,
-            data.submissionId,
-            data.serializedTx,
+            body.data.submissionId,
+            body.data.serializedTx,
           );
         return reply.status(200).send({
           success: true,
-          message: 'Transaction saved to queue successfully',
+          message: 'Transaction broadcasted successfully',
           data: {
             transactionResult,
           },
         });
       } catch (error) {
         logger.error({
-          msg: 'Error in POST /broadcast route',
+          msg: 'Error in POST /transaction/broadcast',
           method: request.method,
           err: error,
         });
+        if (error instanceof BaseError) {
+          return reply.status(error.statusCode).send({
+            success: false,
+            message: error.message,
+          });
+        }
+        return reply.status(500).send({
+          success: false,
+          message: 'An unknown error occurred',
+        });
       }
-      return reply.status(500).send({
-        success: false,
-        message: 'An unknown error occurred',
-      });
     },
   });
 }

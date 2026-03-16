@@ -1,9 +1,10 @@
 import { BaseAppEntity } from './baseAppEntity';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { SubmissionType, TransactionStatus } from './enums';
 import { User } from './user';
 import { SubmissionTier } from '../helpers/types';
 import { InvalidStacksAddressError } from '../errors/submissionError';
+import { SponsoredTransaction } from './sponsoredTransaction';
 
 @Entity()
 export class Submission extends BaseAppEntity {
@@ -32,12 +33,14 @@ export class Submission extends BaseAppEntity {
     default: TransactionStatus.NotBroadcasted,
   })
   transactionStatus: TransactionStatus;
-  @Column({ type: 'text', nullable: true })
-  serializedTx?: string;
-  @Column({ type: 'bool', default: false })
-  adWatched: boolean;
   @Column({ type: 'bool', default: false })
   isSponsored: boolean;
+  @OneToOne(() => SponsoredTransaction, (st) => st.submission, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn()
+  sponsoredTransaction?: SponsoredTransaction | null;
   /**
    * Invariant: Validates that the Stacks address is valid.
    * Valid Stacks addresses:
