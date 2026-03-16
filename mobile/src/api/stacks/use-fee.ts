@@ -34,8 +34,13 @@ export const useFeeEstimation = ({
   postConditions = [],
   enabled = true,
 }: UseFeeEstimationOptions) => {
-  const argsKey = JSON.stringify(functionArgs, (_, value) =>
-    typeof value === "bigint" ? value.toString() : value,
+  const serializeQueryKeyPart = (_: string, value: unknown) =>
+    typeof value === "bigint" ? value.toString() : value;
+
+  const argsKey = JSON.stringify(functionArgs, serializeQueryKeyPart);
+  const postConditionsKey = JSON.stringify(
+    postConditions,
+    serializeQueryKeyPart,
   );
 
   return useQuery({
@@ -45,6 +50,7 @@ export const useFeeEstimation = ({
       contractName,
       functionName,
       argsKey,
+      postConditionsKey,
       network,
     ],
     queryFn: async () => {

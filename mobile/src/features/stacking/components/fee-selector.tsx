@@ -7,12 +7,14 @@ type FeeSelectorProps = {
   selectedFee: FeeOption;
   onSelectFee: (option: FeeOption) => void;
   isLoading?: boolean;
+  showCustom?: boolean;
 };
 
 export function FeeSelector({
   selectedFee,
   onSelectFee,
   isLoading,
+  showCustom = true,
 }: FeeSelectorProps) {
   if (isLoading) {
     return (
@@ -40,13 +42,15 @@ export function FeeSelector({
         />
       ))}
 
-      <Button
-        label="Custom"
-        variant={selectedFee === "custom" ? "default" : "outline"}
-        size="sm"
-        className="flex-1 rounded-xl"
-        onPress={() => onSelectFee("custom")}
-      />
+      {showCustom ? (
+        <Button
+          label="Custom"
+          variant={selectedFee === "custom" ? "default" : "outline"}
+          size="sm"
+          className="flex-1 rounded-xl"
+          onPress={() => onSelectFee("custom")}
+        />
+      ) : null}
     </View>
   );
 }
