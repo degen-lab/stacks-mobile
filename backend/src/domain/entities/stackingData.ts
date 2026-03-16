@@ -13,8 +13,14 @@ export class StackingData extends BaseAppEntity {
   poolStxAddress: string;
   @Column({ type: 'text' })
   userStxAddress: string;
-  @Column({ type: 'decimal', precision: 20, scale: 6 })
-  amountOfStxStacked: number;
+  @Column({
+    type: 'decimal',
+    precision: 20,
+    scale: 6,
+    nullable: true,
+    default: 0,
+  })
+  amountOfStxStacked: number | null;
   @Column({ type: 'int', nullable: true })
   endCycleId: number | null;
   @Column({ type: 'text', unique: true })

@@ -4,7 +4,6 @@ import { BaseError } from '../../shared/errors/baseError';
 import { serializeBigInt } from '../../shared/utils';
 import { logger } from '../helpers/logger';
 import { rateLimitOptions } from '../config/rateLimitConfig';
-import { UserToken } from '../config/types';
 import { swapParamsSchema } from '../validators/defiValidator';
 
 export default function getDefiRoutes(
@@ -114,7 +113,6 @@ export default function getDefiRoutes(
     },
     handler: async (req, res) => {
       try {
-        const user = req.user as UserToken;
         const validationResult = swapParamsSchema.safeParse(req.query);
         if (!validationResult.success) {
           logger.warn({
@@ -129,28 +127,16 @@ export default function getDefiRoutes(
         }
         const { tokenInId, tokenOutId, amount, senderAddress } =
           validationResult.data;
-        const { defiOperation, contractCallParams } =
-          await defiService.getSwapParams(
-            user.id,
-            tokenInId,
-            tokenOutId,
-            senderAddress,
-            amount,
-          );
-        logger.info({
-          msg: 'Swap params retrieved successfully',
-          data: {
-            defiOperation,
-            contractCallParams: serializeBigInt(contractCallParams),
-          },
-        });
+        const { contractCallParams } = await defiService.getSwapQuote(
+          tokenInId,
+          tokenOutId,
+          senderAddress,
+          amount,
+        );
         return res.status(200).send({
           success: true,
-          message: 'Swap params retrieved successfully',
-          data: {
-            defiOperation,
-            contractCallParams: serializeBigInt(contractCallParams),
-          },
+          message: 'Swap quote retrieved successfully',
+          data: { contractCallParams: serializeBigInt(contractCallParams) },
         });
       } catch (error) {
         logger.error({
