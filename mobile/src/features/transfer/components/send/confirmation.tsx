@@ -3,6 +3,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { StxCoin, BtcLogo } from "@/components/ui/icons";
 import type { FeeRateTier } from "../../hooks/use-prepare-btc-send";
 import type { SendFormData } from "../../types";
+import { TransactionFundingActions } from "@/components/transaction-funding-actions";
 
 const FEE_TIER_OPTIONS: { value: FeeRateTier; label: string }[] = [
   { value: "economy", label: "Economy" },
@@ -15,8 +16,10 @@ type ConfirmationProps = {
   fee: string;
   feeAsset?: string;
   onConfirm: () => void;
+  onConfirmSponsored?: () => void;
   onBack: () => void;
   isLoading?: boolean;
+  isSponsoredLoading?: boolean;
   confirmDisabled?: boolean;
   error?: string | null;
   info?: string | null;
@@ -30,8 +33,10 @@ export function Confirmation({
   fee,
   feeAsset,
   onConfirm,
+  onConfirmSponsored,
   onBack,
   isLoading,
+  isSponsoredLoading,
   confirmDisabled = false,
   error,
   info,
@@ -136,14 +141,27 @@ export function Confirmation({
         </Text>
       ) : null}
 
-      <Button
-        label={isLoading ? "Sending..." : "Confirm & Send"}
-        variant="gamePrimary"
-        size="lg"
-        onPress={onConfirm}
-        loading={isLoading}
-        disabled={isLoading || confirmDisabled}
-      />
+      {formData.asset === "STX" ? (
+        <TransactionFundingActions
+          sponsoredLabel="Watch an ad"
+          walletLabel="Use wallet funds"
+          onPressSponsored={onConfirmSponsored}
+          onPressWallet={onConfirm}
+          sponsoredDisabled={confirmDisabled}
+          walletDisabled={confirmDisabled}
+          sponsoredLoading={isSponsoredLoading}
+          walletLoading={isLoading}
+        />
+      ) : (
+        <Button
+          label={isLoading ? "Sending..." : "Confirm & Send"}
+          variant="gamePrimary"
+          size="lg"
+          onPress={onConfirm}
+          loading={isLoading}
+          disabled={isLoading || confirmDisabled}
+        />
+      )}
 
       <Text className="text-xs font-instrument-sans text-secondary text-center mt-4">
         This transaction cannot be reversed once confirmed

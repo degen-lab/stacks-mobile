@@ -5,6 +5,7 @@ import { FeeOption } from "./fee-selector";
 import { ContractTxDetails } from "@/components/contract-tx-details";
 import { useColorScheme } from "nativewind";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { TransactionFundingActions } from "@/components/transaction-funding-actions";
 
 interface ApprovePoolSheetProps {
   sheetRef: React.RefObject<BottomSheetModal | null>;
@@ -21,7 +22,9 @@ interface ApprovePoolSheetProps {
   feeMicroStx?: number;
   stackingPrice?: number;
   onConfirm: () => void;
+  onSponsoredConfirm?: () => void;
   isLoading: boolean;
+  isSponsoredLoading?: boolean;
   confirmDisabled?: boolean;
 }
 
@@ -40,7 +43,9 @@ export function ApprovePoolSheet({
   feeMicroStx,
   stackingPrice = 0,
   onConfirm,
+  onSponsoredConfirm,
   isLoading,
+  isSponsoredLoading = false,
   confirmDisabled,
 }: ApprovePoolSheetProps) {
   const { colorScheme } = useColorScheme();
@@ -94,14 +99,22 @@ export function ApprovePoolSheet({
           </Text>
 
           {/* Actions */}
-          <View className="gap-3">
-            <Button
-              label={isLoading ? "Approving..." : "Approve Pool"}
-              variant="gamePrimary"
-              size="lg"
-              onPress={onConfirm}
-              disabled={!isFeeValid || isLoading || confirmDisabled}
-            />
+          <TransactionFundingActions
+            sponsoredLabel="Watch an ad"
+            walletLabel="Use wallet funds"
+            onPressSponsored={onSponsoredConfirm}
+            onPressWallet={onConfirm}
+            sponsoredDisabled={
+              !isFeeValid || isLoading || confirmDisabled || isSponsoredLoading
+            }
+            walletDisabled={
+              !isFeeValid || isLoading || confirmDisabled || isSponsoredLoading
+            }
+            sponsoredLoading={isSponsoredLoading}
+            walletLoading={isLoading}
+          />
+
+          <View className="mt-4">
             <Button
               label="Cancel"
               variant="secondary"
@@ -110,7 +123,7 @@ export function ApprovePoolSheet({
                 onClose();
                 sheetRef.current?.dismiss();
               }}
-              disabled={isLoading}
+              disabled={isLoading || isSponsoredLoading}
             />
           </View>
         </View>

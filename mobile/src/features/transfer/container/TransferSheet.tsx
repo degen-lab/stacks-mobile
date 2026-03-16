@@ -4,7 +4,7 @@ import { showMessage } from "react-native-flash-message";
 import { Modal, Text } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { useBroadcastBitcoinTransaction } from "@/api/bitcoin";
-import { fromSatsToBtc } from "@/lib/format/currency";
+import { fromSatsToBtc, MICRO_STX } from "@/lib/format/currency";
 import { useSelectedNetwork } from "@/lib/store/settings";
 import { getBitcoinAddressError } from "@/lib/bitcoin/validation";
 import { TransferModeSelector } from "../components/transfer-mode-selector";
@@ -18,9 +18,20 @@ import {
   usePrepareBtcSend,
   type FeeRateTier,
 } from "../hooks/use-prepare-btc-send";
+import { usePrepareStxSend } from "../hooks/use-prepare-stx-send";
 import { useTransfer } from "../hooks/use-transfer";
 import { useSendFlow } from "../hooks/use-send-flow";
 import type { TransferAsset, TransferSheetRequest } from "../types";
+import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
+import { useSignTransaction } from "@/hooks/use-sign-transaction";
+import { buildUnsignedStxTransfer } from "@/lib/stacks/transaction-builder";
+import { getActiveWalletAccount } from "@/lib/stacks/active-account";
+import { getHiroApiBase } from "@/lib/stacks/network";
+import {
+  broadcastTransaction,
+  deserializeTransaction,
+} from "@stacks/transactions";
+import { useQueryClient } from "@tanstack/react-query";
 
 type TransferSheetProps = {
   open: boolean;
@@ -38,7 +49,12 @@ export function TransferSheet({
   requestVersion,
 }: TransferSheetProps) {
   const { ref, present, dismiss } = useModal();
+  const queryClient = useQueryClient();
   const { selectedNetwork } = useSelectedNetwork();
+  const { submitSponsoredTransaction, isSubmittingSponsored } =
+    useSponsoredStacksTransaction();
+  const signTransaction = useSignTransaction();
+  const [isSubmittingWallet, setIsSubmittingWallet] = useState(false);
   const {
     mode,
     setMode,
@@ -80,6 +96,21 @@ export function TransferSheet({
       mode === "send" &&
       sendFlow.currentStep === "confirm" &&
       currentAsset === "BTC",
+  });
+
+  const {
+    data: preparedStxSend,
+    isLoading: preparingStxSend,
+    error: preparedStxSendError,
+  } = usePrepareStxSend({
+    recipient: sendFlow.formData.recipient,
+    amount: sendFlow.formData.amount,
+    network: selectedNetwork,
+    enabled:
+      open &&
+      mode === "send" &&
+      sendFlow.currentStep === "confirm" &&
+      currentAsset === "STX",
   });
 
   const broadcastBitcoinTx = useBroadcastBitcoinTransaction(selectedNetwork);
@@ -135,22 +166,47 @@ export function TransferSheet({
     }
 
     reset();
-  }, [
-    initialMode,
-    initialize,
-    open,
-    request,
-    requestVersion,
-    reset,
-    setMode,
-  ]);
+  }, [initialMode, initialize, open, request, requestVersion, reset, setMode]);
 
   const handleSelectMode = (selectedMode: "send" | "receive") => {
     setMode(selectedMode);
   };
 
   const handleSendTransaction = async () => {
-    if (sendFlow.formData.asset !== "BTC") {
+    if (sendFlow.formData.asset === "BTC") {
+      if (!preparedBtcSend) {
+        showMessage({
+          message: "Unable to prepare the Bitcoin transaction",
+          description:
+            preparedBtcSendError instanceof Error
+              ? preparedBtcSendError.message
+              : "Try again in a few seconds.",
+          type: "danger",
+        });
+        return;
+      }
+
+      try {
+        const txId = await broadcastBitcoinTx.mutateAsync(
+          preparedBtcSend.rawTxHex,
+        );
+        showMessage({
+          message: "Bitcoin transaction submitted",
+          description: txId,
+          type: "success",
+        });
+        onClose();
+      } catch (error) {
+        showMessage({
+          message: "Bitcoin transaction failed",
+          description: error instanceof Error ? error.message : String(error),
+          type: "danger",
+        });
+      }
+      return;
+    }
+
+    if (sendFlow.formData.asset !== "STX") {
       showMessage({
         message: `${sendFlow.formData.asset} transfers are not available yet`,
         type: "warning",
@@ -158,12 +214,12 @@ export function TransferSheet({
       return;
     }
 
-    if (!preparedBtcSend) {
+    if (!preparedStxSend) {
       showMessage({
-        message: "Unable to prepare the Bitcoin transaction",
+        message: "Unable to estimate STX fee",
         description:
-          preparedBtcSendError instanceof Error
-            ? preparedBtcSendError.message
+          preparedStxSendError instanceof Error
+            ? preparedStxSendError.message
             : "Try again in a few seconds.",
         type: "danger",
       });
@@ -171,18 +227,92 @@ export function TransferSheet({
     }
 
     try {
-      const txId = await broadcastBitcoinTx.mutateAsync(
-        preparedBtcSend.rawTxHex,
+      setIsSubmittingWallet(true);
+      const amountMicroStx = Math.round(
+        (Number(sendFlow.formData.amount) || 0) * MICRO_STX,
       );
+      const { account, accountIndex } = await getActiveWalletAccount();
+      const unsignedSerializedTx = await buildUnsignedStxTransfer({
+        recipient: sendFlow.formData.recipient,
+        amountMicroStx,
+        network: selectedNetwork,
+        publicKey: account.publicKey,
+        memo: sendFlow.formData.memo || undefined,
+        feeMicroStx: preparedStxSend.feeMicroStx,
+      });
+
+      const signedTxHex = await signTransaction(
+        unsignedSerializedTx,
+        accountIndex,
+      );
+      const txHex = signedTxHex.startsWith("0x")
+        ? signedTxHex.slice(2)
+        : signedTxHex;
+      const response = await broadcastTransaction({
+        transaction: deserializeTransaction(txHex),
+        client: { baseUrl: getHiroApiBase(selectedNetwork) },
+      });
+
+      if ("error" in response) {
+        throw new Error(response.reason ?? response.error);
+      }
+
+      void queryClient.invalidateQueries({
+        queryKey: ["stacks-user-balances"],
+      });
       showMessage({
-        message: "Bitcoin transaction submitted",
-        description: txId,
+        message: "STX transaction submitted",
+        description: response.txid,
         type: "success",
       });
       onClose();
     } catch (error) {
       showMessage({
-        message: "Bitcoin transaction failed",
+        message: "STX transaction failed",
+        description: error instanceof Error ? error.message : String(error),
+        type: "danger",
+      });
+    } finally {
+      setIsSubmittingWallet(false);
+    }
+  };
+
+  const handleSponsoredSendTransaction = async () => {
+    if (sendFlow.formData.asset !== "STX") return;
+
+    try {
+      const amountMicroStx = Math.round(
+        (Number(sendFlow.formData.amount) || 0) * MICRO_STX,
+      );
+      const { account, accountIndex, address } = await getActiveWalletAccount();
+      const unsignedSerializedTx = await buildUnsignedStxTransfer({
+        recipient: sendFlow.formData.recipient,
+        amountMicroStx,
+        network: selectedNetwork,
+        publicKey: account.publicKey,
+        memo: sendFlow.formData.memo || undefined,
+        feeMicroStx: 1000,
+        sponsored: true,
+      });
+
+      await submitSponsoredTransaction({
+        originAddress: address,
+        accountIndex,
+        unsignedSerializedTx,
+      });
+
+      void queryClient.invalidateQueries({
+        queryKey: ["stacks-user-balances"],
+      });
+      showMessage({
+        message: "STX transfer queued",
+        description: "Your sponsored transfer will be broadcast shortly.",
+        type: "success",
+      });
+      onClose();
+    } catch (error) {
+      showMessage({
+        message: "Sponsored transfer failed",
         description: error instanceof Error ? error.message : String(error),
         type: "danger",
       });
@@ -325,24 +455,49 @@ export function TransferSheet({
         return (
           <Confirmation
             formData={sendFlow.formData}
-            fee={sendFlow.formData.asset === "BTC" ? btcFeeDisplay : "0.001"}
+            fee={
+              sendFlow.formData.asset === "BTC"
+                ? btcFeeDisplay
+                : (preparedStxSend?.feeDisplay ?? "...")
+            }
             feeAsset={sendFlow.formData.asset === "BTC" ? "BTC" : "STX"}
             onConfirm={handleSendTransaction}
+            onConfirmSponsored={
+              sendFlow.formData.asset === "STX"
+                ? handleSponsoredSendTransaction
+                : undefined
+            }
             onBack={sendFlow.previousStep}
-            isLoading={broadcastBitcoinTx.isPending}
+            isLoading={
+              sendFlow.formData.asset === "BTC"
+                ? broadcastBitcoinTx.isPending
+                : isSubmittingWallet
+            }
+            isSponsoredLoading={isSubmittingSponsored}
             confirmDisabled={
               sendFlow.formData.asset === "BTC"
                 ? preparingBtcSend ||
                   !preparedBtcSend ||
                   broadcastBitcoinTx.isPending
-                : false
+                : preparingStxSend ||
+                  !preparedStxSend ||
+                  isSubmittingWallet ||
+                  isSubmittingSponsored
             }
             error={
               preparedBtcSendError instanceof Error
                 ? preparedBtcSendError.message
-                : null
+                : preparedStxSendError instanceof Error
+                  ? preparedStxSendError.message
+                  : null
             }
-            info={preparingBtcSend ? "Preparing Bitcoin transaction..." : null}
+            info={
+              preparingBtcSend
+                ? "Preparing Bitcoin transaction..."
+                : preparingStxSend
+                  ? "Estimating STX fee..."
+                  : null
+            }
             feeRateTier={
               sendFlow.formData.asset === "BTC" ? feeRateTier : undefined
             }
@@ -361,11 +516,10 @@ export function TransferSheet({
     if (mode === "receive") return ["40%"];
     if (mode === "send") {
       if (sendFlow.currentStep === "asset") return ["50%"];
-      if (
-        sendFlow.currentStep === "confirm" &&
-        sendFlow.formData.asset === "BTC"
-      )
-        return ["70%"];
+      if (sendFlow.currentStep === "confirm") {
+        if (sendFlow.formData.asset === "BTC") return ["70%"];
+        return ["75%"]; // STX confirm has two buttons (wallet + watch ad) + divider
+      }
       return ["65%"];
     }
     return ["60%"];

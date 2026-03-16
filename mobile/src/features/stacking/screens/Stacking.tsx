@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef } from "react";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { showMessage } from "react-native-flash-message";
 import { formatMicroStx, MICRO_STX } from "@/lib/format/currency";
 import { useStacking } from "../hooks/use-stacking";
 import { useFastPool } from "@/api/stacks/fast-pool/use-fast-pool";
@@ -21,6 +22,10 @@ import { useTransferSheet } from "@/features/transfer";
 import { useUserProfile } from "@/api/user";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useSelectedNetwork } from "@/lib/store/settings";
+import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
+import { buildUnsignedContractCall } from "@/lib/stacks/transaction-builder";
+import { PostConditionMode } from "@stacks/transactions";
+import { getActiveWalletAccount } from "@/lib/stacks/active-account";
 
 export function StackingScreen() {
   const { stackingInfo, daysPerCycle, calculate } = useStacking();
@@ -41,6 +46,8 @@ export function StackingScreen() {
     delegateAsync,
     revokeAsync,
   } = useFastPool(address ?? undefined);
+  const { submitSponsoredTransaction, isSubmittingSponsored } =
+    useSponsoredStacksTransaction();
 
   const isStacking = poolStatus?.isLocked ?? false;
 
@@ -146,7 +153,7 @@ export function StackingScreen() {
 
   const { isPending: isApprovalPending } = useTrackTx({
     txId: approvalTxId,
-    invalidateQueries: [["stacking-allowance"]],
+    invalidateQueries: [["stacking-allowance"], ["stacks-user-balances"]],
     onSuccess: () => {
       setApprovalTxId(null);
       approvalSheetRef.current?.dismiss();
@@ -161,7 +168,11 @@ export function StackingScreen() {
 
   const { isPending: isDelegatePending } = useTrackTx({
     txId: delegateTxId,
-    invalidateQueries: [["stacking-status"], ["stacking-allowance"]],
+    invalidateQueries: [
+      ["stacking-status"],
+      ["stacking-allowance"],
+      ["stacks-user-balances"],
+    ],
     onSuccess: () => {
       // Save stacking data to backend after successful delegation
       if (delegateTxId) {
@@ -184,10 +195,44 @@ export function StackingScreen() {
   const handleConfirmApproval = async () => {
     setIsProcessing(true);
     try {
-      const txId = await approveAsync(feeMicroStx ?? undefined);
+      const txId = await approveAsync(feeMicroStx);
       setApprovalTxId(txId);
     } catch (error) {
       console.error("Failed to approve pool:", error);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSponsoredApproval = async () => {
+    setIsProcessing(true);
+    try {
+      const { account, accountIndex, address } = await getActiveWalletAccount();
+      const unsignedSerializedTx = await buildUnsignedContractCall({
+        contractId: poolContract,
+        functionName: "allow-contract-caller",
+        functionArgs: getAllowanceArgs(poolContract),
+        network: selectedNetwork,
+        publicKey: account.publicKey,
+        feeMicroStx,
+        postConditionMode: PostConditionMode.Allow,
+        sponsored: true,
+      });
+      await submitSponsoredTransaction({
+        originAddress: address,
+        accountIndex,
+        unsignedSerializedTx,
+      });
+
+      approvalSheetRef.current?.dismiss();
+      setIsProcessing(false);
+      setActiveFeeFlow(null);
+      showMessage({
+        message: "Approval queued",
+        description: "Your sponsored approval will be broadcast shortly.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to sponsor pool approval:", error);
       setIsProcessing(false);
     }
   };
@@ -200,11 +245,48 @@ export function StackingScreen() {
       const amountMicroStx = Math.floor(totalStackingAmount * MICRO_STX);
       const txId = await delegateAsync({
         amount: amountMicroStx,
-        fee: feeMicroStx ?? undefined,
+        fee: feeMicroStx,
       });
       setDelegateTxId(txId);
     } catch (error) {
       console.error("Failed to delegate:", error);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSponsoredDelegate = async () => {
+    if (pendingAmount === undefined || pendingAmount <= 0) return;
+
+    setIsProcessing(true);
+    try {
+      const amountMicroStx = Math.floor(totalStackingAmount * MICRO_STX);
+      const { account, accountIndex, address } = await getActiveWalletAccount();
+      const unsignedSerializedTx = await buildUnsignedContractCall({
+        contractId: poolContract,
+        functionName: "delegate-stx",
+        functionArgs: getDelegateArgs(amountMicroStx),
+        network: selectedNetwork,
+        publicKey: account.publicKey,
+        feeMicroStx,
+        postConditionMode: PostConditionMode.Allow,
+        sponsored: true,
+      });
+      await submitSponsoredTransaction({
+        originAddress: address,
+        accountIndex,
+        unsignedSerializedTx,
+      });
+
+      delegateSheetRef.current?.dismiss();
+      setIsProcessing(false);
+      setActiveFeeFlow(null);
+      showMessage({
+        message: "Delegation queued",
+        description: "Your sponsored delegation will be broadcast shortly.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to sponsor delegation:", error);
       setIsProcessing(false);
     }
   };
@@ -295,6 +377,7 @@ export function StackingScreen() {
   const uiState = {
     showPoolOptions,
     isProcessing: isProcessing || isDelegatePending,
+    isSponsoredSubmitting: isSubmittingSponsored,
     isApprovalPending,
     isDelegatePending,
     approvalSheetRef,
@@ -305,7 +388,9 @@ export function StackingScreen() {
     onUpdateChange: handleCalculatorUpdate,
     onStackOrIncrease: handleStackOrIncrease,
     onConfirmApproval: handleConfirmApproval,
+    onConfirmSponsoredApproval: handleSponsoredApproval,
     onConfirmDelegate: handleConfirmDelegate,
+    onConfirmSponsoredDelegate: handleSponsoredDelegate,
     onSheetClose: handleSheetClose,
     onSelectFee: setSelectedFeeOption,
     onCustomFeeChange: setCustomFee,

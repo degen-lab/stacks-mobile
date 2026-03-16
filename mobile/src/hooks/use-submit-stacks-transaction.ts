@@ -8,6 +8,11 @@ type SubmitWalletTransactionOptions = {
   linkedSubmissionId?: number;
 };
 
+/**
+ * Submits a signed transaction via the game backend.
+ * Used exclusively for game score submissions where the backend needs to
+ * For non-game contract calls use walletKit.makeContractCall() directly.
+ */
 export function useSubmitStacksTransaction() {
   const broadcastTransactionMutation = useBroadcastTransactionMutation();
   const signTransaction = useSignTransaction();

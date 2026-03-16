@@ -22,6 +22,7 @@ export const useBitcoinUtxos = ({
     queryFn: () => fetchBitcoinUtxos(address ?? "", network),
     enabled: enabled && !!address,
     staleTime: 15_000,
+    refetchInterval: 30_000,
   });
 
 export const useBitcoinFeeRecommendation = ({

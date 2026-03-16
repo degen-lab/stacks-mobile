@@ -13,6 +13,45 @@ const mockMutateAsync = jest.fn();
 const mockShowMessage = jest.fn();
 const mockUseSendFlow = jest.fn();
 const mockUsePrepareBtcSend = jest.fn();
+const mockSubmitBuiltWalletTransaction = jest.fn();
+const mockSubmitBuiltSponsoredTransaction = jest.fn();
+
+jest.mock("@/hooks/use-sponsored-stacks-transaction", () => ({
+  useSponsoredStacksTransaction: () => ({
+    submitSponsoredTransaction: mockSubmitBuiltSponsoredTransaction,
+    isSubmittingSponsored: false,
+  }),
+}));
+
+jest.mock("@/lib/stacks/active-account", () => ({
+  getActiveWalletAccount: async () => ({
+    account: { publicKey: "abc123" },
+    accountIndex: 0,
+    address: "STX123",
+    network: "testnet",
+  }),
+}));
+
+jest.mock("@/hooks/use-sign-transaction", () => ({
+  useSignTransaction: () => mockSubmitBuiltWalletTransaction,
+}));
+
+jest.mock("@stacks/transactions", () => ({
+  broadcastTransaction: jest.fn().mockResolvedValue({ txid: "stx-txid-abc" }),
+  deserializeTransaction: jest.fn().mockReturnValue({}),
+}));
+
+jest.mock("../hooks/use-prepare-stx-send", () => ({
+  usePrepareStxSend: () => ({
+    data: { feeMicroStx: 1500, feeDisplay: "0.001500" },
+    isLoading: false,
+    error: null,
+  }),
+}));
+
+jest.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ invalidateQueries: jest.fn() }),
+}));
 
 jest.mock("react-native-flash-message", () => ({
   showMessage: (...args: unknown[]) => mockShowMessage(...args),
@@ -80,11 +119,13 @@ jest.mock("../components/send/confirmation", () => ({
     fee,
     feeAsset,
     info,
+    feeRatePerVbyte,
   }: {
     onConfirm: () => void;
     fee: string;
     feeAsset: string;
     info?: string | null;
+    feeRatePerVbyte?: number;
   }) => {
     const { Pressable, Text, View } =
       jest.requireActual<typeof import("react-native")>("react-native");
@@ -93,6 +134,7 @@ jest.mock("../components/send/confirmation", () => ({
         <Text>{fee}</Text>
         <Text>{feeAsset}</Text>
         {info ? <Text>{info}</Text> : null}
+        {feeRatePerVbyte != null ? <Text>{feeRatePerVbyte} sat/vB</Text> : null}
         <Pressable onPress={onConfirm}>
           <Text>Confirm transfer</Text>
         </Pressable>
@@ -209,10 +251,10 @@ describe("TransferSheet", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("shows a warning when trying to send a non-BTC asset", async () => {
+  it("shows a warning when trying to send a non-BTC, non-STX asset", async () => {
     mockUseSendFlow.mockReturnValue({
       ...defaultSendFlow,
-      formData: { ...defaultSendFlow.formData, asset: "STX" as const },
+      formData: { ...defaultSendFlow.formData, asset: "sBTC" as const },
     });
 
     render(<TransferSheet open onClose={jest.fn()} requestVersion={1} />);
@@ -221,7 +263,7 @@ describe("TransferSheet", () => {
 
     await waitFor(() => {
       expect(mockShowMessage).toHaveBeenCalledWith({
-        message: "STX transfers are not available yet",
+        message: "sBTC transfers are not available yet",
         type: "warning",
       });
     });

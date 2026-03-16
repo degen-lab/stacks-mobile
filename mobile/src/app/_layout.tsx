@@ -34,6 +34,11 @@ export default function RootLayout() {
     }
   }, [isAppReady, fontsLoaded, fontError]);
 
+  // Don't mount app until auth (and token) are hydrated — avoids 401 on refresh
+  if (!isAppReady) {
+    return null;
+  }
+
   return (
     <Providers>
       <Stack>

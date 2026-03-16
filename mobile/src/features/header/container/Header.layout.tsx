@@ -118,13 +118,11 @@ export function HeaderLayout({
             <>
               <InfoBadge
                 icon={<BtcLogo size={18} />}
-                label="BTC"
                 value={formattedBtcBalance}
                 loading={loadingBtc}
               />
               <InfoBadge
                 icon={<StxCoin size={18} />}
-                label="STX"
                 value={stxBalance}
                 loading={loadingStx}
               />

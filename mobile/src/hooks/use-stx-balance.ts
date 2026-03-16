@@ -19,6 +19,7 @@ export const useStxBalance = (accountIndex = 0): UseStxBalanceResult => {
   const { data, isLoading, error, refetch } = useUserBalances({
     variables: { address: address ?? "" },
     enabled: !!address,
+    refetchInterval: 30_000,
   });
 
   const balanceData = useMemo(() => {

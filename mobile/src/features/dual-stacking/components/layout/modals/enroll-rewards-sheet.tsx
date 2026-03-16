@@ -6,6 +6,7 @@ import { Button, Modal, Text, View, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { ContractTxDetails } from "@/components/contract-tx-details";
 import { FeeOption } from "@/features/stacking/components/fee-selector";
+import { TransactionFundingActions } from "@/components/transaction-funding-actions";
 
 type Props = {
   open: boolean;
@@ -21,7 +22,9 @@ type Props = {
   isLoadingFees: boolean;
   feeMicroStx?: number;
   onConfirm: () => void;
+  onSponsoredConfirm?: () => void;
   isSubmitting: boolean;
+  isSponsoredSubmitting?: boolean;
 };
 
 export function EnrollRewardsSheet({
@@ -38,7 +41,9 @@ export function EnrollRewardsSheet({
   isLoadingFees,
   feeMicroStx,
   onConfirm,
+  onSponsoredConfirm,
   isSubmitting,
+  isSponsoredSubmitting = false,
 }: Props) {
   const { ref, present, dismiss } = useModal();
   const { colorScheme } = useColorScheme();
@@ -81,20 +86,28 @@ export function EnrollRewardsSheet({
             Your sBTC stays in your custody.
           </Text>
 
-          <View className="gap-3">
-            <Button
-              label={isSubmitting ? "Submitting..." : "Confirm Enrollment"}
-              variant="gamePrimary"
-              size="lg"
-              onPress={onConfirm}
-              disabled={!isFeeValid || isSubmitting}
-            />
+          <TransactionFundingActions
+            sponsoredLabel="Watch an ad"
+            walletLabel="Use wallet funds"
+            onPressSponsored={onSponsoredConfirm}
+            onPressWallet={onConfirm}
+            sponsoredDisabled={
+              !isFeeValid || isSubmitting || isSponsoredSubmitting
+            }
+            walletDisabled={
+              !isFeeValid || isSubmitting || isSponsoredSubmitting
+            }
+            sponsoredLoading={isSponsoredSubmitting}
+            walletLoading={isSubmitting}
+          />
+
+          <View className="mt-4">
             <Button
               label="Cancel"
               variant="secondary"
               size="lg"
               onPress={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSponsoredSubmitting}
             />
           </View>
         </View>

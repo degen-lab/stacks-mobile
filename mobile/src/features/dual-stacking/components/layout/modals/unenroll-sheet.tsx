@@ -32,14 +32,21 @@ type UnenrollSheetProps = {
     reasons: UnenrollReasonKey[];
     feeMicroStx?: number;
   }) => Promise<boolean> | boolean;
+  onSponsoredConfirm?: (params: {
+    reasons: UnenrollReasonKey[];
+    feeMicroStx?: number;
+  }) => Promise<boolean> | boolean;
   onGoBack?: () => void;
+  isSponsoredSubmitting?: boolean;
 };
 
 export function UnenrollSheet({
   open,
   onOpenChange,
   onConfirm,
+  onSponsoredConfirm,
   onGoBack,
+  isSponsoredSubmitting = false,
 }: UnenrollSheetProps) {
   const {
     ref: formRef,
@@ -129,6 +136,19 @@ export function UnenrollSheet({
     }
   };
 
+  const handleSponsoredConfirm = async (feeMicroStx?: number) => {
+    if (!onSponsoredConfirm) return;
+
+    const selected = (Object.entries(reasons) as [UnenrollReasonKey, boolean][])
+      .filter(([, value]) => value)
+      .map(([key]) => key);
+
+    const ok = await onSponsoredConfirm({ reasons: selected, feeMicroStx });
+    if (ok !== false) {
+      onOpenChange(false);
+    }
+  };
+
   return (
     <>
       <Modal
@@ -211,13 +231,21 @@ export function UnenrollSheet({
         contractAddress={contractId}
         functionName={functionName}
         showFeeSelector
-        confirmLabel="Confirm unenroll"
+        confirmLabel="Use wallet funds"
+        sponsoredConfirmLabel="Watch an ad"
         onConfirm={(feeMicroStx) => {
           void handleConfirm(feeMicroStx);
         }}
+        onSponsoredConfirm={
+          onSponsoredConfirm
+            ? (feeMicroStx) => void handleSponsoredConfirm(feeMicroStx)
+            : undefined
+        }
         onClose={handleReturnToForm}
         isLoading={isSubmitting}
         confirmDisabled={isSubmitting}
+        isSponsoredLoading={isSponsoredSubmitting}
+        sponsoredConfirmDisabled={isSubmitting}
       />
     </>
   );
