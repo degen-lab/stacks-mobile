@@ -1,7 +1,6 @@
 import {
   BitflowSDK,
   QuoteResult,
-  SelectedSwapRoute,
   SwapDataParamsAndPostConditions,
   SwapExecutionData,
   SwapOptions,
@@ -21,10 +20,7 @@ import {
 import { User } from '../../domain/entities/user';
 import { UserNotFoundError } from '../errors/userErrors';
 import { DefiOperation } from '../../domain/entities/defiOperation';
-import {
-  DefiOperationMetadata,
-  LendingTxMetadata,
-} from '../../domain/helpers/types';
+import { LendingTxMetadata } from '../../domain/helpers/types';
 import { LendingClientPort } from '../ports/LendingClientPort';
 
 export class DefiService {
@@ -43,16 +39,12 @@ export class DefiService {
     return await this.bitflowClient.getPossibleSwaps(tokenId);
   }
 
-  async getSwapParams(
-    userId: number,
+  async getSwapQuote(
     tokenInId: string,
     tokenOutId: string,
     senderAddress: string,
     amount: number,
-  ): Promise<{
-    defiOperation: DefiOperation;
-    contractCallParams: SwapDataParamsAndPostConditions;
-  }> {
+  ): Promise<{ contractCallParams: SwapDataParamsAndPostConditions }> {
     const quote: QuoteResult = await this.bitflowClient.getQuoteForRoute(
       tokenInId,
       tokenOutId,
@@ -65,13 +57,7 @@ export class DefiService {
       );
     }
 
-    let route: SelectedSwapRoute;
-    if (quote.bestRoute) {
-      route = quote.bestRoute.route;
-    } else {
-      route = quote.allRoutes[0].route;
-    }
-
+    const route = quote.bestRoute.route;
     const swapExecutionData: SwapExecutionData = {
       route,
       amount,
@@ -79,36 +65,52 @@ export class DefiService {
       tokenYDecimals: route.tokenYDecimals,
     };
 
-    const user = await this.entityManager.findOne(User, {
-      where: {
-        id: userId,
-      },
-    });
-    if (!user) {
-      throw new UserNotFoundError(`User with id ${userId} not found!`);
-    }
-
-    const operationMetadata: DefiOperationMetadata = {
-      tokenIn: tokenInId,
-      tokenOut: tokenOutId,
-      amount,
-    };
-
-    const defiOperation = new DefiOperation();
-    defiOperation.metadata = operationMetadata;
-    defiOperation.status = TransactionStatus.NotBroadcasted;
-    defiOperation.operationType = DefiOperationType.Swap;
-    defiOperation.senderAddress = senderAddress;
-    defiOperation.user = user;
-    const savedOperation = await this.entityManager.save(defiOperation);
     return {
-      defiOperation: savedOperation,
       contractCallParams: await this.bitflowClient.getSwapParams(
         swapExecutionData,
         senderAddress,
         SWAP_SLIPPAGE_TOLLERANCE,
       ),
     };
+  }
+
+  async prepareSwap(
+    userId: number,
+    tokenInId: string,
+    tokenOutId: string,
+    senderAddress: string,
+    amount: number,
+  ): Promise<{
+    defiOperation: DefiOperation;
+    contractCallParams: SwapDataParamsAndPostConditions;
+  }> {
+    const user = await this.entityManager.findOne(User, {
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new UserNotFoundError(`User with id ${userId} not found!`);
+    }
+
+    const { contractCallParams } = await this.getSwapQuote(
+      tokenInId,
+      tokenOutId,
+      senderAddress,
+      amount,
+    );
+
+    const defiOperation = new DefiOperation();
+    defiOperation.metadata = {
+      tokenIn: tokenInId,
+      tokenOut: tokenOutId,
+      amount,
+    };
+    defiOperation.status = TransactionStatus.NotBroadcasted;
+    defiOperation.operationType = DefiOperationType.Swap;
+    defiOperation.senderAddress = senderAddress;
+    defiOperation.user = user;
+    const savedOperation = await this.entityManager.save(defiOperation);
+
+    return { defiOperation: savedOperation, contractCallParams };
   }
 
   async updateDefiOperation(
