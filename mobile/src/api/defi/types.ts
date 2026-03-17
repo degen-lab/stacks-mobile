@@ -122,7 +122,7 @@ export type SwapContractCallParams = {
   functionName: string;
 };
 
-export type SwapOperation = {
+export type DefiOperation = {
   id: number;
   senderAddress: string;
   txId: string | null;
@@ -143,12 +143,12 @@ export type SwapQuoteData = {
 
 // POST /defi/swap-params
 export type SwapParamsResponse = {
-  defiOperation: SwapOperation;
+  defiOperation: DefiOperation;
   contractCallParams: SwapContractCallParams;
 };
 
 export type SwapParamsData = {
-  operation: SwapOperation;
+  operation: DefiOperation;
   contractCallParams: SwapContractCallParams;
 };
 
