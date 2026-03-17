@@ -8,11 +8,11 @@ import {
 import { useUpdateDefiOperation, type SwapParamsData } from "@/api/defi";
 import { getActiveWalletAccount } from "@/lib/stacks/active-account";
 import { getHiroApiBase } from "@/lib/stacks/network";
+import { parseSerializedContractCallParams } from "@/lib/stacks/parse-serialized-clarity";
 import { buildUnsignedContractCall } from "@/lib/stacks/transaction-builder";
 import { useSelectedNetwork } from "@/lib/store/settings";
 import { useSignTransaction } from "@/hooks/use-sign-transaction";
 import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
-import { parseSerializedContractCallParams } from "../serialization";
 
 type ExecuteSwapOptions = {
   swapParams: SwapParamsData;

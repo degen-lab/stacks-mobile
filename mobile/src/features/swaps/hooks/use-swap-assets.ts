@@ -30,9 +30,14 @@ function buildSwapAsset(token: SwapToken, balanceBaseUnits: string) {
   } satisfies SwapAsset;
 }
 
-export function useSwapAssets() {
+type UseSwapAssetsOptions = {
+  enabled?: boolean;
+};
+
+export function useSwapAssets(options?: UseSwapAssetsOptions) {
+  const { enabled = true } = options ?? {};
   const { stxAddress, isLoading: isWalletLoading } = useWalletAddresses();
-  const tokenListQuery = useSwapTokenList();
+  const tokenListQuery = useSwapTokenList({ enabled });
   const balancesQuery = useUserBalances({
     variables: { address: stxAddress ?? "" },
     enabled: !!stxAddress,

@@ -11,10 +11,10 @@ import { useFeeEstimation } from "@/api/stacks/use-fee";
 import { useDebounce } from "@/hooks/use-debounce";
 import { formatMicroStx } from "@/lib/format/currency";
 import { sanitizeDecimal } from "@/lib/format/decimal";
+import { parseSerializedContractCallParams } from "@/lib/stacks/parse-serialized-clarity";
 import { useSelectedNetwork } from "@/lib/store/settings";
 import type { FeeOption } from "@/features/stacking/components/fee-selector";
 import type { SwapAsset, SwapSheetRequest, SwapSheetStep } from "../types";
-import { parseSerializedContractCallParams } from "../serialization";
 import {
   baseUnitsToDisplayString,
   compareBaseUnitAmounts,
@@ -92,7 +92,7 @@ export function useSwap({
     error,
     isLoading,
     stxAddress,
-  } = useSwapAssets();
+  } = useSwapAssets({ enabled: open });
   const { selectedNetwork } = useSelectedNetwork();
   const {
     executeSwap,
