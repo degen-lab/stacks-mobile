@@ -115,7 +115,8 @@ export function getMinimumReceivedBaseUnits(
           { type: "stx-postcondition" }
         > =>
           postCondition.type === "stx-postcondition" &&
-          postCondition.condition !== "eq",
+          postCondition.condition !== "eq" &&
+          postCondition.amount !== "0",
       );
 
     return outputPostCondition?.amount ?? null;
@@ -136,6 +137,7 @@ export function getMinimumReceivedBaseUnits(
         { type: "ft-postcondition" }
       > =>
         postCondition.type === "ft-postcondition" &&
+        postCondition.amount !== "0" &&
         postCondition.asset.toLowerCase().startsWith(assetPrefix),
     );
 
