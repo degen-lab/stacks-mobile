@@ -20,19 +20,17 @@ export function getAddressForNetwork(
 }
 
 /**
- * Formats a Stacks address to show first 4 and last 4 characters
+ * Truncates a Stacks address to show the first `head` and last `tail` characters
  * @param address - The full address string (e.g., "ST13XJ4G348VGDRT5Z791J8GBTB9Z0ESPNCRAPN4E")
- * @returns Formatted address string (e.g., "ST13...APN4E")
+ * @returns Truncated address string (e.g., "ST13...APN4E")
  */
-export const formatAddress = (address: string): string => {
-  if (!address || address.length < 8) {
-    return address;
-  }
-
-  const first4 = address.slice(0, 4);
-  const last4 = address.slice(-4);
-
-  return `${first4}...${last4}`;
+export const truncateAddress = (
+  address: string,
+  head = 4,
+  tail = 4,
+): string => {
+  if (!address || address.length <= head + tail + 3) return address;
+  return `${address.slice(0, head)}...${address.slice(-tail)}`;
 };
 
 export const principalHexFromAddress = (address: string | null): string =>

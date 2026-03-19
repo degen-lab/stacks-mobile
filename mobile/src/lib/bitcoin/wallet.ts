@@ -64,6 +64,10 @@ export function deriveBitcoinWalletPaymentFromRootKey(
   };
 }
 
+export function toXOnly(pubKey: Uint8Array): Uint8Array {
+  return pubKey.length === 33 ? pubKey.subarray(1) : pubKey;
+}
+
 export async function getBitcoinWalletPayment(
   accountIndex: number,
   network: NetworkType,
