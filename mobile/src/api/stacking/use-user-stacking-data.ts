@@ -19,7 +19,6 @@ export const useUserStackingData = createQuery<Response, Variables, AxiosError>(
       const rows =
         response.data.data ??
         (response.data as { data: UserStackingDataRow[] })?.data ??
-        [] ??
         [];
 
       return rows.map((row) => ({

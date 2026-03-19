@@ -332,7 +332,7 @@ export function StackingScreen() {
 
   const handleRevoke = async () => {
     try {
-      await revokeAsync();
+      await revokeAsync(feeMicroStx);
     } catch (error) {
       console.error("Failed to revoke delegation:", error);
     }

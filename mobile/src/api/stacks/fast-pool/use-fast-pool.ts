@@ -39,7 +39,7 @@ export const useFastPool = (userAddress?: string) => {
   });
 
   const revokeMutation = useMutation({
-    mutationFn: () => service.revoke(),
+    mutationFn: (fee?: number) => service.revoke(fee),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stacking-status"] });
       queryClient.invalidateQueries({ queryKey: ["stacking-allowance"] });
