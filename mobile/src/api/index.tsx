@@ -4,4 +4,5 @@ export * from "./defi";
 export * from "./game";
 export * from "./market";
 export * from "./referrals";
+export * from "./sbtc-bridge";
 export * from "./stacking";
