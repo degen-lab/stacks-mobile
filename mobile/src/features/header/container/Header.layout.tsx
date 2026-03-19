@@ -5,8 +5,8 @@ import { InfoBadge, Pressable, Text, View } from "@/components/ui";
 import { BtcLogo } from "@/components/ui/icons/btc-logo";
 import { StreakIcon } from "@/components/ui/icons/streak";
 import { StxCoin } from "@/components/ui/icons/stx-coin";
-import type { StreakDay } from "@/lib/format/date";
 import { Avatar } from "../components/Avatar";
+import { BreadcrumbBar } from "../components/BreadcrumbBar";
 import { PointsPopover } from "../components/PointsPopover";
 import { ProfilePopover } from "../components/ProfilePopover";
 import { StreakPopover } from "../components/StreakPopover";
@@ -16,7 +16,7 @@ type HeaderLayoutProps = {
   email: string;
   points: number | null;
   streak: number | null;
-  streakDays: StreakDay[];
+  streakDays: import("@/lib/format/date").StreakDay[];
   loadingStreak: boolean;
   loadingPoints: boolean;
   btcBalance: number;
@@ -24,15 +24,6 @@ type HeaderLayoutProps = {
   loadingBtc: boolean;
   loadingStx: boolean;
   isEarnScreen: boolean;
-  breadcrumb: {
-    parent: string;
-    current: string;
-    parentPath: string;
-    helpIcon?: React.ReactNode;
-    onHelpPress?: () => void;
-  } | null;
-  breadcrumbRightAccessory?: React.ReactNode;
-  onBreadcrumbPress: () => void;
   avatarSource: ImageSource;
   onPressProfile: () => void;
   onPressPoints: () => void;
@@ -48,7 +39,6 @@ type HeaderLayoutProps = {
   onPressAccountHistory?: () => void;
   onPressSignOut: () => void;
   signingOut: boolean;
-  onPressPointsDetails: () => void;
   onPressPlay: () => void;
 };
 
@@ -65,9 +55,6 @@ export function HeaderLayout({
   loadingBtc,
   loadingStx,
   isEarnScreen,
-  breadcrumb,
-  breadcrumbRightAccessory,
-  onBreadcrumbPress,
   avatarSource,
   onPressProfile,
   onPressPoints,
@@ -83,7 +70,6 @@ export function HeaderLayout({
   onPressAccountHistory,
   onPressSignOut,
   signingOut,
-  onPressPointsDetails,
   onPressPlay,
 }: HeaderLayoutProps) {
   const insets = useSafeAreaInsets();
@@ -161,45 +147,7 @@ export function HeaderLayout({
         </View>
       </View>
 
-      {breadcrumb && (
-        <View className="mx-4 flex-row items-center justify-between gap-3 border-b border-surface-secondary py-2">
-          <Pressable
-            onPress={onBreadcrumbPress}
-            className="flex-1"
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={`Go back to ${breadcrumb.parent}`}
-          >
-            <View className="flex-row items-center gap-1.5">
-              <Text className="font-matter text-sm text-secondary">
-                {breadcrumb.parent}
-              </Text>
-              <Text className="font-matter text-sm text-secondary">{">"}</Text>
-              <Text className="font-matter text-sm text-primary font-medium">
-                {breadcrumb.current}
-              </Text>
-            </View>
-          </Pressable>
-
-          {(breadcrumb.onHelpPress || breadcrumbRightAccessory) && (
-            <View className="flex-row items-center gap-1">
-              {breadcrumb.onHelpPress && (
-                <Pressable
-                  onPress={breadcrumb.onHelpPress}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  accessibilityLabel="Help"
-                >
-                  <View className="w-8 h-8 items-center justify-center">
-                    {breadcrumb.helpIcon}
-                  </View>
-                </Pressable>
-              )}
-              {breadcrumbRightAccessory}
-            </View>
-          )}
-        </View>
-      )}
+      <BreadcrumbBar />
 
       <ProfilePopover
         visible={profilePopoverVisible}
