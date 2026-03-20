@@ -1,4 +1,3 @@
-import { useIsFocused } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import {
   GestureResponderEvent,
@@ -13,7 +12,10 @@ export function HapticTab({
   className,
   ...rest
 }: PressableProps) {
-  const isFocused = useIsFocused();
+  // Avoid react-navigation focus hooks here (they require a navigation context
+  // which can be briefly unavailable during fast tab transitions).
+  // Tabs sets `accessibilityState.selected` for the active tab.
+  const isFocused = Boolean(rest.accessibilityState?.selected);
   const borderClass = isFocused
     ? "border-stacks-blood-orange"
     : "border-transparent";
