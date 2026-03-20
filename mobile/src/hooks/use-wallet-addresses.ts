@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { NetworkType } from "@degenlab/stacks-wallet-kit-core";
+
+import { getBitcoinAddressForAccount } from "@/lib/bitcoin/addresses";
+import { getAddressForNetwork } from "@/lib/stacks/addresses";
 import { walletKit } from "@/lib/stacks/wallet";
 import {
   useActiveAccountIndex,
   useSelectedNetwork,
 } from "@/lib/store/settings";
-import { NetworkType } from "@degenlab/stacks-wallet-kit-core";
-import { getAddressForNetwork } from "@/lib/stacks/addresses";
-import { getBitcoinAddressForAccount } from "@/lib/bitcoin/addresses";
 
 type UseWalletAddressesOptions = {
   accountIndex?: number;
@@ -17,63 +18,47 @@ export function useWalletAddresses(options: UseWalletAddressesOptions = {}) {
   const { selectedNetwork } = useSelectedNetwork();
   const { activeAccountIndex } = useActiveAccountIndex();
   const accountIndex = requestedAccountIndex ?? activeAccountIndex;
-  const [stxAddress, setStxAddress] = useState<string | null>(null);
-  const [btcAddress, setBtcAddress] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    const loadAddresses = async () => {
+  const addressesQuery = useQuery({
+    queryKey: ["wallet-addresses", selectedNetwork, accountIndex],
+    queryFn: async () => {
       try {
-        if (mounted) {
-          setIsLoading(true);
-          setStxAddress(null);
-          setBtcAddress(null);
-        }
-
         const accounts = await walletKit.getWalletAccounts();
         const account =
-          accounts.find((account) => account.index === accountIndex) ?? null;
+          accounts.find((entry) => entry.index === accountIndex) ?? null;
 
         if (!account) {
-          if (mounted) {
-            setStxAddress(null);
-            setBtcAddress(null);
-          }
-          return;
+          return {
+            stxAddress: null,
+            btcAddress: null,
+          };
         }
 
-        // Load STX address
-        const stxAddr = getAddressForNetwork(account, selectedNetwork);
-        if (mounted) setStxAddress(stxAddr);
-
-        // Always load BTC address
-        const btcAddr = await getBitcoinAddressForAccount(
+        const stxAddress = getAddressForNetwork(account, selectedNetwork);
+        const btcAddress = await getBitcoinAddressForAccount(
           account.index,
           selectedNetwork,
         );
-        if (mounted) setBtcAddress(btcAddr);
-      } catch (e) {
-        console.error("Failed to load wallet addresses", e);
-        if (mounted) {
-          setStxAddress(null);
-          setBtcAddress(null);
-        }
-      } finally {
-        if (mounted) setIsLoading(false);
+
+        return {
+          stxAddress,
+          btcAddress,
+        };
+      } catch (error) {
+        console.error("Failed to load wallet addresses", error);
+        return {
+          stxAddress: null,
+          btcAddress: null,
+        };
       }
-    };
-    loadAddresses();
-    return () => {
-      mounted = false;
-    };
-  }, [accountIndex, selectedNetwork]);
+    },
+    staleTime: 60_000,
+  });
 
   return {
-    stxAddress,
-    btcAddress,
+    stxAddress: addressesQuery.data?.stxAddress ?? null,
+    btcAddress: addressesQuery.data?.btcAddress ?? null,
     walletKit,
     network: selectedNetwork as NetworkType,
-    isLoading,
+    isLoading: addressesQuery.isLoading,
   };
 }

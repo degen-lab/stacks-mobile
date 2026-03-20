@@ -1,31 +1,20 @@
 import { useMemo, useState } from "react";
 
-import { useStacksPrice } from "@/api/market/use-stacks-price";
-import { useStxBalance } from "@/hooks/use-stx-balance";
-import { useActiveAccountIndex } from "@/lib/store/settings";
+import { usePortfolioBalance } from "@/hooks/use-portfolio-balance";
 import formatCurrency from "@/lib/format/currency";
 import { useEarnActions } from "../hooks/use-earn-actions";
 
 import EarnLayout from "./Earn.layout";
 
 export default function EarnScreen() {
-  const { activeAccountIndex } = useActiveAccountIndex();
-  const { balance: stxBalance } = useStxBalance(activeAccountIndex);
-  const { data: stxPriceUsd } = useStacksPrice();
-
   const actions = useEarnActions();
+  const { usdBalance } = usePortfolioBalance();
   const [activeTab, setActiveTab] = useState("defi");
 
-  const totalBalanceUsd = useMemo(() => {
-    if (stxPriceUsd === null || stxPriceUsd === undefined) return null;
-    return stxBalance * stxPriceUsd;
-  }, [stxBalance, stxPriceUsd]);
-
   const formattedBalance = useMemo(() => {
-    if (totalBalanceUsd === null) return null;
-    const { dollars, cents } = formatCurrency(totalBalanceUsd);
+    const { dollars, cents } = formatCurrency(usdBalance);
     return `${dollars}${cents}`;
-  }, [totalBalanceUsd]);
+  }, [usdBalance]);
   const totalEarnings = 0;
 
   return (

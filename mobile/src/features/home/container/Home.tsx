@@ -1,24 +1,22 @@
-import { useStacksPrice } from "@/api/market/use-stacks-price";
-import { useStxBalance } from "@/hooks/use-stx-balance";
 import { RelativePathString, useRouter } from "expo-router";
-import HomeScreenLayout from "./Home.layout";
 import { useModal } from "@/components/ui";
-import { useActiveAccountIndex } from "@/lib/store/settings";
+import { useEarnActions } from "@/features/earn/hooks/use-earn-actions";
 import { useTransferSheet } from "@/features/transfer";
 import { useTransak } from "@/features/transak/context/transak-context";
+import { usePortfolioBalance } from "@/hooks/use-portfolio-balance";
+
+import HomeScreenLayout from "./Home.layout";
 
 export default function HomeScreen() {
-  const { activeAccountIndex } = useActiveAccountIndex();
-  const { balance: stxBalance } = useStxBalance(activeAccountIndex);
-  const { data: stxPriceUsd } = useStacksPrice();
-  const usdBalance = stxPriceUsd ? stxBalance * stxPriceUsd : 0;
+  const actions = useEarnActions();
+  const { usdBalance, hasBalance } = usePortfolioBalance();
   const emptyWalletModal = useModal();
   const { openTransak } = useTransak();
   const { openTransfer } = useTransferSheet();
   const router = useRouter();
 
   const navigateToPortfolio = () => {
-    if (stxBalance > 0) {
+    if (hasBalance) {
       router.push("/(app)/Earn" as RelativePathString);
       return;
     }
@@ -47,6 +45,7 @@ export default function HomeScreen() {
     <>
       <HomeScreenLayout
         usdBalance={usdBalance}
+        actions={actions}
         navigateToPortfolio={navigateToPortfolio}
         navigateToPlay={navigateToPlay}
         navigateToReferral={navigateToReferral}

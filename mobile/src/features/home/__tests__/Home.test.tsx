@@ -7,8 +7,8 @@ const mockLayoutProps: { current: Record<string, any> | null } = {
   current: null,
 };
 
-let mockStxBalance = 0;
-let mockStxPriceUsd: number | undefined = undefined;
+let mockUsdBalance = 0;
+let mockHasBalance = false;
 
 const mockModal = {
   ref: { current: null },
@@ -16,18 +16,13 @@ const mockModal = {
   dismiss: jest.fn(),
 };
 
-jest.mock("@/hooks/use-stx-balance", () => ({
-  useStxBalance: () => ({
-    balance: mockStxBalance,
-    isLoading: false,
-    error: null,
-    refresh: jest.fn(),
-  }),
-}));
-
-jest.mock("@/api/market/use-stacks-price", () => ({
-  useStacksPrice: () => ({
-    data: mockStxPriceUsd,
+jest.mock("@/hooks/use-portfolio-balance", () => ({
+  usePortfolioBalance: () => ({
+    usdBalance: mockUsdBalance,
+    hasBalance: mockHasBalance,
+    stxBalance: 0,
+    btcBalance: 0,
+    sbtcBalance: 0,
   }),
 }));
 
@@ -60,25 +55,34 @@ jest.mock("@/features/transak/context/transak-context", () => ({
   }),
 }));
 
+jest.mock("@/features/earn/hooks/use-earn-actions", () => ({
+  useEarnActions: () => ({
+    handleBuy: jest.fn(),
+    handleSell: jest.fn(),
+    handleTransfer: jest.fn(),
+    handleSwap: jest.fn(),
+    handleBridge: jest.fn(),
+  }),
+}));
+
 describe("HomeScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockLayoutProps.current = null;
-    mockStxBalance = 0;
-    mockStxPriceUsd = undefined;
+    mockUsdBalance = 0;
+    mockHasBalance = false;
   });
 
   it("passes the computed USD balance to the layout", () => {
-    mockStxBalance = 3;
-    mockStxPriceUsd = 4;
+    mockUsdBalance = 75_012;
 
     render(<HomeScreen />);
 
-    expect(mockLayoutProps.current?.usdBalance).toBe(12);
+    expect(mockLayoutProps.current?.usdBalance).toBe(75_012);
   });
 
-  it("routes to earn when balance is available", () => {
-    mockStxBalance = 1;
+  it("routes to earn when any supported balance is available", () => {
+    mockHasBalance = true;
 
     render(<HomeScreen />);
 
@@ -91,8 +95,6 @@ describe("HomeScreen", () => {
   });
 
   it("opens empty wallet modal when balance is zero", () => {
-    mockStxBalance = 0;
-
     render(<HomeScreen />);
     mockLayoutProps.current?.navigateToPortfolio();
 
