@@ -5,7 +5,7 @@ import {
   Edit3,
   XCircle,
 } from "lucide-react-native";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable } from "react-native";
 
@@ -22,7 +22,6 @@ import { useWalletActions } from "../../hooks/use-wallet-actions";
 import { WalletActionSheet } from "../layout/modals/wallet-action-sheet";
 
 export default function ConnectWallet() {
-  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { stxAddress, isLoading } = useWalletAddresses();
   const { enrolledNextCycle } = useEnrollmentStatus();

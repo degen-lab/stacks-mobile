@@ -7,13 +7,15 @@ import TopSectionContainer from "../components/cards/container/TopSection";
 import EarnBtcContainer from "../components/earn-btc/EarnBtc";
 import DeFiApps from "../components/defi-apps/DeFiApps";
 import { Calculator } from "../components/calculator";
-import { PortfolioPerformanceCardContainer } from "../components/rewards/portfolio/container";
-import { CompositionCardContainer } from "../components/rewards/pie-chart/container";
-import { RewardsCycleCardContainer } from "../components/rewards/cycle-tracker/container";
+import { RewardsLayout } from "../components/rewards/Rewards.layout";
 
 type DualStackingSectionId = "defi-apps";
 
-export default function DualStackingLayout() {
+export default function DualStackingLayout({
+  isEnrolledNextCycle,
+}: {
+  isEnrolledNextCycle: boolean;
+}) {
   const { scrollViewRef, registerSection, scrollToSection } =
     useSectionScroll<DualStackingSectionId>({
       defaultOffset: 12,
@@ -31,13 +33,7 @@ export default function DualStackingLayout() {
         <EarnBtcContainer onExploreApps={() => scrollToSection("defi-apps")} />
 
         <Calculator />
-
-        <PortfolioPerformanceCardContainer />
-
-        <CompositionCardContainer />
-
-        <RewardsCycleCardContainer />
-
+        {isEnrolledNextCycle ? <RewardsLayout /> : null}
         <DeFiApps onLayout={registerSection("defi-apps")} />
 
         <View className="py-4" />

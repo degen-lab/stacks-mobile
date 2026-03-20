@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 
 import { Image, Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
@@ -11,7 +11,6 @@ type Props = {
 };
 
 export function MintSbtcSheet({ open, onOpenChange }: Props) {
-  const router = useRouter();
   const { ref, present, dismiss } = useModal();
 
   useEffect(() => {
