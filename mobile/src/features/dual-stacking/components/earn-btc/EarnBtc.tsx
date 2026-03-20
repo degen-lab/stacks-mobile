@@ -9,7 +9,6 @@ import { EnrollRewardsSheet } from "../layout/modals/enroll-rewards-sheet";
 import { MintSbtcSheet } from "../layout/modals/mint-sbtc-sheet";
 import { StackingPoolSheet } from "../layout/modals/stacking-pool-sheet";
 import { TermsAndConditionsSheet } from "../layout/modals/terms-and-conditions-sheet";
-import { TermsDetailsSheet } from "../layout/modals/terms-details-sheet";
 import { TransactionStatusSheet } from "../layout/modals/transaction-status-sheet";
 import { useContractCallFee } from "@/hooks/use-contract-call-fee";
 import {
@@ -58,7 +57,6 @@ export default function EarnBtcContainer({
   const [isMintSbtcSheetOpen, setIsMintSbtcSheetOpen] = useState(false);
   const [isStackingPoolSheetOpen, setIsStackingPoolSheetOpen] = useState(false);
   const [isTermsSheetOpen, setIsTermsSheetOpen] = useState(false);
-  const [isTermsDetailsSheetOpen, setIsTermsDetailsSheetOpen] = useState(false);
   const [isEnrolledModalOpen, setIsEnrolledModalOpen] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
 
@@ -344,12 +342,7 @@ export default function EarnBtcContainer({
         open={isTermsSheetOpen}
         onOpenChange={setIsTermsSheetOpen}
         address={stxAddress ?? ""}
-        onShowDetails={() => setIsTermsDetailsSheetOpen(true)}
         onAccept={() => handleOpenEnroll({ skipTermsCheck: true })}
-      />
-      <TermsDetailsSheet
-        open={isTermsDetailsSheetOpen}
-        onOpenChange={setIsTermsDetailsSheetOpen}
       />
       <TransactionStatusSheet
         open={isEnrolledModalOpen}
