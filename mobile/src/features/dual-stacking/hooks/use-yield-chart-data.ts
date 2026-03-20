@@ -77,7 +77,7 @@ export function useYieldChartData(
     isLoading: loadingCurrentBitcoinHeight,
   } = useCurrentBitcoinBlockHeight();
 
-  const { enrolledCurrentCycle, enrolledNextCycle } = useEnrollmentStatus();
+  const { enrolledNextCycle } = useEnrollmentStatus();
 
   const { data: currentStxStackedUstx, isLoading: loadingStxStacked } =
     useAmountStackedNow(principal);
@@ -98,14 +98,16 @@ export function useYieldChartData(
 
   const { raw: coinPriceResponse } = useCoinPricesForYield(firstCycleYield);
 
-  const shouldIncludeBalancesInProjection =
-    enrolledNextCycle && !enrolledCurrentCycle;
+  const hasProjectionBalances =
+    sbtcWalletBalanceSats !== undefined &&
+    totalSbtcInDefi !== undefined &&
+    currentStxStackedUstx !== undefined;
 
   const projectionRequestParams = useMemo(
     () => ({
       address: stxAddress as string,
       maxApr: maxAPR,
-      ...(shouldIncludeBalancesInProjection && {
+      ...(hasProjectionBalances && {
         sbtcWallet: Number(sbtcWalletBalanceSats || 0),
         sbtcDefi: Number(totalSbtcInDefi || 0),
         stx: Number(currentStxStackedUstx || 0),
@@ -113,15 +115,16 @@ export function useYieldChartData(
     }),
     [
       stxAddress,
-      shouldIncludeBalancesInProjection,
       totalSbtcInDefi,
       sbtcWalletBalanceSats,
       currentStxStackedUstx,
       maxAPR,
+      hasProjectionBalances,
     ],
   );
 
-  const shouldQueryProjectedRewards = !!stxAddress && enrolledNextCycle;
+  const shouldQueryProjectedRewards =
+    !!stxAddress && !!enrolledNextCycle && hasProjectionBalances;
   const { data: projectedRewards, isLoading: loadingProjectedRewards } =
     useProjectRewards({
       variables: projectionRequestParams,

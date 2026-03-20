@@ -61,16 +61,14 @@ export function useAprComputation() {
     () => ({
       address: stxAddress as string,
       maxApr: maxAPR,
-      ...(userBalancesForProjection &&
-        hasProjectionBalances && {
-          sbtcWallet: Number(sbtcBalance || 0),
-          sbtcDefi: Number(totalSbtcDefi || 0),
-          stx: Number(stxStacked || 0),
-        }),
+      ...(hasProjectionBalances && {
+        sbtcWallet: Number(sbtcBalance || 0),
+        sbtcDefi: Number(totalSbtcDefi || 0),
+        stx: Number(stxStacked || 0),
+      }),
     }),
     [
       stxAddress,
-      userBalancesForProjection,
       totalSbtcDefi,
       sbtcBalance,
       stxStacked,
@@ -80,9 +78,7 @@ export function useAprComputation() {
   );
 
   const shouldQueryRewards =
-    !!stxAddress &&
-    enrolledNextCycle &&
-    (!userBalancesForProjection || hasProjectionBalances);
+    !!stxAddress && !!enrolledNextCycle && hasProjectionBalances;
   const { data: projectedReward } = useProjectRewards({
     variables: projectedRewardsParams,
     enabled: shouldQueryRewards,
