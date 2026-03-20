@@ -5,7 +5,6 @@ import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useActiveAccountIndex } from "@/lib/store/settings";
 import formatCurrency from "@/lib/format/currency";
 import { useEarnActions } from "../hooks/use-earn-actions";
-import { BridgeSheet } from "../components/bridge-sheet";
 
 import EarnLayout from "./Earn.layout";
 
@@ -30,18 +29,12 @@ export default function EarnScreen() {
   const totalEarnings = 0;
 
   return (
-    <>
-      <EarnLayout
-        totalBalance={formattedBalance}
-        totalEarnings={totalEarnings}
-        actions={actions}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      <BridgeSheet
-        open={actions.bridgeSheetOpen}
-        onClose={() => actions.setBridgeSheetOpen(false)}
-      />
-    </>
+    <EarnLayout
+      totalBalance={formattedBalance}
+      totalEarnings={totalEarnings}
+      actions={actions}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    />
   );
 }

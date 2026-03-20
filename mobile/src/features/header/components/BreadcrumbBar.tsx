@@ -19,44 +19,44 @@ function extractSegmentId(pathname: string, segment: string): string {
 
 function getCrumbs(pathname: string): Crumb[] | null {
   if (
-    pathname.includes("/Earn/bridge/deposit/") &&
+    pathname.includes("/Earn/sbtc-bridge/deposit/") &&
     pathname.endsWith("/reclaim")
   ) {
     return [
       { label: "Earn", path: "/Earn" },
-      { label: "sBTC Bridge", path: "/Earn/bridge" },
-      { label: "Activity", path: "/Earn/bridge/activity" },
+      { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
+      { label: "Activity", path: "/Earn/sbtc-bridge/activity" },
       { label: "Reclaim" },
     ];
   }
-  if (pathname.includes("/Earn/bridge/deposit/")) {
+  if (pathname.includes("/Earn/sbtc-bridge/deposit/")) {
     return [
       { label: "Earn", path: "/Earn" },
-      { label: "sBTC Bridge", path: "/Earn/bridge" },
-      { label: "Activity", path: "/Earn/bridge/activity" },
+      { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
+      { label: "Activity", path: "/Earn/sbtc-bridge/activity" },
       {
         label: `Deposit ${truncateAddress(extractSegmentId(pathname, "deposit"))}`,
       },
     ];
   }
-  if (pathname.includes("/Earn/bridge/withdraw/")) {
+  if (pathname.includes("/Earn/sbtc-bridge/withdraw/")) {
     return [
       { label: "Earn", path: "/Earn" },
-      { label: "sBTC Bridge", path: "/Earn/bridge" },
-      { label: "Activity", path: "/Earn/bridge/activity" },
+      { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
+      { label: "Activity", path: "/Earn/sbtc-bridge/activity" },
       {
         label: `Withdrawal ${truncateAddress(extractSegmentId(pathname, "withdraw"))}`,
       },
     ];
   }
-  if (pathname.includes("/Earn/bridge/activity")) {
+  if (pathname.includes("/Earn/sbtc-bridge/activity")) {
     return [
       { label: "Earn", path: "/Earn" },
-      { label: "sBTC Bridge", path: "/Earn/bridge" },
+      { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
       { label: "Activity" },
     ];
   }
-  if (pathname.includes("/Earn/bridge")) {
+  if (pathname.includes("/Earn/sbtc-bridge")) {
     return [{ label: "Earn", path: "/Earn" }, { label: "sBTC Bridge" }];
   }
   if (pathname.includes("/Earn/stacking")) {
@@ -106,10 +106,10 @@ export function BreadcrumbBar() {
   if (!crumbs) return null;
 
   const isBridgeHome =
-    pathname === "/Earn/bridge" ||
-    pathname === "/(app)/Earn/bridge" ||
-    pathname === "/Earn/bridge/" ||
-    pathname === "/(app)/Earn/bridge/";
+    pathname === "/Earn/sbtc-bridge" ||
+    pathname === "/(app)/Earn/sbtc-bridge" ||
+    pathname === "/Earn/sbtc-bridge/" ||
+    pathname === "/(app)/Earn/sbtc-bridge/";
   const isDualStacking =
     pathname.includes("/Earn/dual-stacking") ||
     pathname.includes("/(app)/Earn/dual-stacking");

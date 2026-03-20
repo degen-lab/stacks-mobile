@@ -11,7 +11,7 @@ import { Pressable } from "react-native";
 
 import { Text, View, colors } from "@/components/ui";
 import { useAuth } from "@/lib/store/auth";
-import { formatAddress } from "@/lib/stacks/addresses";
+import { truncateAddress } from "@/lib/stacks/addresses";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
 
@@ -107,7 +107,7 @@ export default function ConnectWallet() {
   const buttonLabel = isLoading
     ? "Loading..."
     : isConnected && stxAddress
-      ? formatAddress(stxAddress)
+      ? truncateAddress(stxAddress)
       : "Connect";
 
   const handlePrimaryPress = () => {

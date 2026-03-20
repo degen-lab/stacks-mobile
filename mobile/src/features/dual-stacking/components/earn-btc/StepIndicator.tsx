@@ -36,12 +36,12 @@ export function StepIndicator({ step }: { step: Step }) {
   return (
     <View
       className={`w-8 h-8 shrink-0 items-center justify-center rounded-full ${
-        isPrimary ? "border border-stacks-blood-orange" : "bg-sand-200"
+        isPrimary ? "bg-sand-900" : "bg-sand-200"
       }`}
     >
       <ArrowRight
         size={16}
-        color={isPrimary ? colors.stacks.bloodOrange : colors.neutral[500]}
+        color={isPrimary ? colors.white : colors.neutral[500]}
         strokeWidth={2}
         pointerEvents="none"
       />

@@ -1,8 +1,5 @@
 import { useEffect } from "react";
-import {
-  openBrowserAsync,
-  WebBrowserPresentationStyle,
-} from "expo-web-browser";
+import { useRouter } from "expo-router";
 
 import { Image, Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
@@ -14,6 +11,7 @@ type Props = {
 };
 
 export function MintSbtcSheet({ open, onOpenChange }: Props) {
+  const router = useRouter();
   const { ref, present, dismiss } = useModal();
 
   useEffect(() => {
@@ -42,15 +40,13 @@ export function MintSbtcSheet({ open, onOpenChange }: Props) {
           peg back out to the L1 at any time.
         </Text>
         <Button
-          label="Go to Bridge ↗"
+          label="Go to Bridge"
           variant="default"
           size="lg"
           className="mt-3"
           onPress={() => {
             onOpenChange(false);
-            void openBrowserAsync("https://sbtc.stacks.co/", {
-              presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-            });
+            router.push("/Earn/sbtc-bridge");
           }}
         />
       </View>

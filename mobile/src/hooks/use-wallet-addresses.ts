@@ -25,18 +25,31 @@ export function useWalletAddresses(options: UseWalletAddressesOptions = {}) {
     let mounted = true;
     const loadAddresses = async () => {
       try {
+        if (mounted) {
+          setIsLoading(true);
+          setStxAddress(null);
+          setBtcAddress(null);
+        }
+
         const accounts = await walletKit.getWalletAccounts();
-        const account = accounts[accountIndex];
+        const account =
+          accounts.find((account) => account.index === accountIndex) ?? null;
+
+        if (!account) {
+          if (mounted) {
+            setStxAddress(null);
+            setBtcAddress(null);
+          }
+          return;
+        }
 
         // Load STX address
-        const stxAddr = account
-          ? getAddressForNetwork(account, selectedNetwork)
-          : null;
+        const stxAddr = getAddressForNetwork(account, selectedNetwork);
         if (mounted) setStxAddress(stxAddr);
 
         // Always load BTC address
         const btcAddr = await getBitcoinAddressForAccount(
-          accountIndex,
+          account.index,
           selectedNetwork,
         );
         if (mounted) setBtcAddress(btcAddr);

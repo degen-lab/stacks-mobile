@@ -7,7 +7,7 @@ import { StepIndicator } from "./StepIndicator";
 import { CtaVariant, Step, StepStatus } from "./model";
 
 const CARD_STYLE: Record<StepStatus, string> = {
-  current: "border-border-primary bg-sand-100",
+  current: "border-sand-600 bg-sand-100",
   completed: "border-border-secondary bg-sand-100",
   pending: "border-border-secondary bg-sand-100",
   locked: "border-border-secondary bg-sand-100 opacity-70",

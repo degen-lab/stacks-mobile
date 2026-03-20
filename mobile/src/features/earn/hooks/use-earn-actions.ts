@@ -1,10 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
+import { useRouter } from "expo-router";
 import { useTransak } from "@/features/transak/context/transak-context";
 import { useSwapSheet } from "@/features/swaps";
 import { useTransferSheet } from "@/features/transfer";
 
 export function useEarnActions() {
-  const [bridgeSheetOpen, setBridgeSheetOpen] = useState(false);
+  const router = useRouter();
   const { openTransak } = useTransak();
   const { openSwap } = useSwapSheet();
   const { openTransfer } = useTransferSheet();
@@ -25,9 +26,9 @@ export function useEarnActions() {
     openSwap();
   }, [openSwap]);
 
-  const handleBridge = () => {
-    setBridgeSheetOpen(true);
-  };
+  const handleBridge = useCallback(() => {
+    router.push("/Earn/sbtc-bridge");
+  }, [router]);
 
   return {
     handleBuy,
@@ -35,8 +36,6 @@ export function useEarnActions() {
     handleTransfer,
     handleSwap,
     handleBridge,
-    bridgeSheetOpen,
-    setBridgeSheetOpen,
   };
 }
 

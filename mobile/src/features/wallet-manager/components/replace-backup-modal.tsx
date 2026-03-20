@@ -2,6 +2,7 @@ import { Button, Modal, ScrollView, Text, View } from "@/components/ui";
 import { WarningLabel } from "@/components/warning-label";
 import { useActiveAccountIndex } from "@/lib/store/settings";
 import { walletKit } from "@/lib/stacks/wallet";
+import { PasswordInput } from "@/features/login/components/password-input";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english";
@@ -100,7 +101,11 @@ function validateMnemonicWords(words: string[]): MnemonicValidation {
 
 interface MnemonicStepProps {
   words: string[];
+  mnemonicPassphrase: string;
+  showMnemonicPassphrase: boolean;
   onWordChange: (index: number, word: string) => void;
+  onPassphraseChange: (value: string) => void;
+  onToggleShowPassphrase: () => void;
   onPaste: () => void;
   onNext: () => void;
   validation: MnemonicValidation;
@@ -108,7 +113,11 @@ interface MnemonicStepProps {
 
 function MnemonicStep({
   words,
+  mnemonicPassphrase,
+  showMnemonicPassphrase,
   onWordChange,
+  onPassphraseChange,
+  onToggleShowPassphrase,
   onPaste,
   onNext,
   validation,
@@ -157,6 +166,25 @@ function MnemonicStep({
         ) : null}
       </View>
 
+      <View className="mb-4">
+        <Text className="mb-2 text-base font-instrument-sans-medium text-primary">
+          Mnemonic Passphrase (Optional)
+        </Text>
+        <PasswordInput
+          password={mnemonicPassphrase}
+          showPassword={showMnemonicPassphrase}
+          onPasswordChange={onPassphraseChange}
+          onToggleShowPassword={onToggleShowPassphrase}
+          placeholder="Passphrase"
+          inputTestID="replace-wallet-passphrase-input"
+          toggleTestID="replace-wallet-passphrase-toggle"
+        />
+        <Text className="mt-2 text-sm font-instrument-sans text-secondary">
+          Only enter this if the original wallet used one. A different
+          passphrase creates a different wallet from the same words.
+        </Text>
+      </View>
+
       <Button
         variant="default"
         size="lg"
@@ -176,8 +204,10 @@ export const ReplaceBackupModal = forwardRef<
   const [mnemonicWords, setMnemonicWords] = useState<string[]>(
     Array(24).fill(""),
   );
+  const [mnemonicPassphrase, setMnemonicPassphrase] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showMnemonicPassphrase, setShowMnemonicPassphrase] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -197,8 +227,10 @@ export const ReplaceBackupModal = forwardRef<
   const handleModalOpen = useCallback(() => {
     setStep("mnemonic");
     setMnemonicWords(Array(24).fill(""));
+    setMnemonicPassphrase("");
     setPassword("");
     setConfirmPassword("");
+    setShowMnemonicPassphrase(false);
     setShowPassword(false);
     setShowConfirmPassword(false);
     setLoading(false);
@@ -307,7 +339,10 @@ export const ReplaceBackupModal = forwardRef<
               }
 
               // Store the new wallet (replaces local wallet + accounts)
-              await walletKit.storeExistingWallet(mnemonic);
+              await walletKit.storeExistingWallet(
+                mnemonic,
+                mnemonicPassphrase || undefined,
+              );
               await setActiveAccountIndex(0);
 
               // Create new backup
@@ -345,6 +380,7 @@ export const ReplaceBackupModal = forwardRef<
     );
   }, [
     mnemonicWords,
+    mnemonicPassphrase,
     password,
     mnemonicValidation,
     passwordValidation,
@@ -381,14 +417,20 @@ export const ReplaceBackupModal = forwardRef<
         {step === "mnemonic" ? (
           <MnemonicStep
             words={mnemonicWords}
+            mnemonicPassphrase={mnemonicPassphrase}
+            showMnemonicPassphrase={showMnemonicPassphrase}
             onWordChange={handleWordChange}
+            onPassphraseChange={setMnemonicPassphrase}
+            onToggleShowPassphrase={() =>
+              setShowMnemonicPassphrase(!showMnemonicPassphrase)
+            }
             onPaste={handlePasteFromClipboard}
             onNext={handleNextToPassword}
             validation={mnemonicValidation}
           />
         ) : (
           <View className="gap-4">
-            <WarningLabel label="Warning: This password cannot be reset. Keep it safe." />
+            <WarningLabel label="Warning: This backup password cannot be reset. Keep it safe." />
 
             <BackupPasswordForm
               password={password}

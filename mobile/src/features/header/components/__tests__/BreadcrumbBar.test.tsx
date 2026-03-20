@@ -47,7 +47,7 @@ jest.mock("@/features/sbtc-bridge/components/bridge-help-modal", () => ({
 describe("BreadcrumbBar", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUsePathname.mockReturnValue("/Earn/bridge");
+    mockUsePathname.mockReturnValue("/Earn/sbtc-bridge");
   });
 
   it("opens the bridge help sheet from the bridge home breadcrumb action", () => {
