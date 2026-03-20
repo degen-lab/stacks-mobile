@@ -10,7 +10,7 @@ type WalletMenuItemProps = {
   destructive?: boolean;
 };
 
-export default function WalletMenuItem({
+export function WalletMenuItem({
   label,
   icon: Icon,
   onPress,

@@ -21,16 +21,18 @@ jest.mock("@/components/ui", () => {
   };
 });
 
-jest.mock(
-  "@/features/dual-stacking/components/wallet/wallet-connected",
-  () => ({
-    __esModule: true,
-    default: () => null,
-  }),
-);
+jest.mock("@/features/header/components/connected-wallet", () => ({
+  __esModule: true,
+  default: () => null,
+  ConnectedWallet: () => null,
+}));
 
 jest.mock("@/features/stacking/components/stacking-guide-modal", () => ({
   StackingGuideModal: () => null,
+}));
+
+jest.mock("@/features/earn/components/earn-help-modal", () => ({
+  EarnHelpModal: () => null,
 }));
 
 jest.mock(
@@ -51,6 +53,11 @@ describe("BreadcrumbBar", () => {
   });
 
   it("opens the bridge help sheet from the bridge home breadcrumb action", () => {
+    const earnHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
     const bridgeHelpModal = {
       ref: { current: null },
       present: jest.fn(),
@@ -69,6 +76,7 @@ describe("BreadcrumbBar", () => {
 
     jest
       .mocked(useModal)
+      .mockReturnValueOnce(earnHelpModal as any)
       .mockReturnValueOnce(bridgeHelpModal as any)
       .mockReturnValueOnce(stackingHelpModal as any)
       .mockReturnValueOnce(dualStackingHelpModal as any);
@@ -77,6 +85,7 @@ describe("BreadcrumbBar", () => {
 
     fireEvent.press(screen.getByLabelText("Help"));
 
+    expect(earnHelpModal.present).not.toHaveBeenCalled();
     expect(bridgeHelpModal.present).toHaveBeenCalledTimes(1);
     expect(stackingHelpModal.present).not.toHaveBeenCalled();
     expect(dualStackingHelpModal.present).not.toHaveBeenCalled();
@@ -85,6 +94,11 @@ describe("BreadcrumbBar", () => {
   it("opens the dual stacking help sheet next to the connected wallet control", () => {
     mockUsePathname.mockReturnValue("/Earn/dual-stacking");
 
+    const earnHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
     const bridgeHelpModal = {
       ref: { current: null },
       present: jest.fn(),
@@ -103,6 +117,7 @@ describe("BreadcrumbBar", () => {
 
     jest
       .mocked(useModal)
+      .mockReturnValueOnce(earnHelpModal as any)
       .mockReturnValueOnce(bridgeHelpModal as any)
       .mockReturnValueOnce(stackingHelpModal as any)
       .mockReturnValueOnce(dualStackingHelpModal as any);
@@ -111,8 +126,51 @@ describe("BreadcrumbBar", () => {
 
     fireEvent.press(screen.getByLabelText("Help"));
 
+    expect(earnHelpModal.present).not.toHaveBeenCalled();
     expect(dualStackingHelpModal.present).toHaveBeenCalledTimes(1);
     expect(bridgeHelpModal.present).not.toHaveBeenCalled();
     expect(stackingHelpModal.present).not.toHaveBeenCalled();
+  });
+
+  it("opens the earn help sheet on the earn landing page", () => {
+    mockUsePathname.mockReturnValue("/Earn");
+
+    const earnHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
+    const bridgeHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
+    const stackingHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
+    const dualStackingHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
+
+    jest
+      .mocked(useModal)
+      .mockReturnValueOnce(earnHelpModal as any)
+      .mockReturnValueOnce(bridgeHelpModal as any)
+      .mockReturnValueOnce(stackingHelpModal as any)
+      .mockReturnValueOnce(dualStackingHelpModal as any);
+
+    render(<BreadcrumbBar />);
+
+    expect(screen.getByText("Earn")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Help"));
+
+    expect(earnHelpModal.present).toHaveBeenCalledTimes(1);
+    expect(bridgeHelpModal.present).not.toHaveBeenCalled();
+    expect(stackingHelpModal.present).not.toHaveBeenCalled();
+    expect(dualStackingHelpModal.present).not.toHaveBeenCalled();
   });
 });

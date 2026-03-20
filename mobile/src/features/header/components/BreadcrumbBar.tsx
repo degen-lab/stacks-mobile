@@ -4,12 +4,19 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { Pressable, Text, View, colors, useModal } from "@/components/ui";
 import { truncateAddress } from "@/lib/stacks/addresses";
-import ConnectWallet from "@/features/dual-stacking/components/wallet/wallet-connected";
+import { EarnHelpModal } from "@/features/earn/components/earn-help-modal";
+import { ConnectedWallet } from "@/features/header/components/connected-wallet";
 import { BridgeHelpModal } from "@/features/sbtc-bridge/components/bridge-help-modal";
 import { DualStackingHelpModal } from "@/features/dual-stacking/components/layout/modals/dual-stacking-help-modal";
 import { StackingGuideModal } from "@/features/stacking/components/stacking-guide-modal";
 
 type Crumb = { label: string; path?: string };
+type HeaderHelpKind = "earn" | "bridge" | "stacking" | "dual-stacking";
+type BreadcrumbConfig = {
+  crumbs: Crumb[];
+  helpKind?: HeaderHelpKind;
+  walletVariant?: "default" | "dual-stacking";
+};
 
 function extractSegmentId(pathname: string, segment: string): string {
   const parts = pathname.split("/");
@@ -17,53 +24,89 @@ function extractSegmentId(pathname: string, segment: string): string {
   return parts[idx + 1] ?? "";
 }
 
-function getCrumbs(pathname: string): Crumb[] | null {
+function getBreadcrumbConfig(pathname: string): BreadcrumbConfig | null {
+  const isEarnHome =
+    pathname === "/Earn" ||
+    pathname === "/(app)/Earn" ||
+    pathname === "/Earn/" ||
+    pathname === "/(app)/Earn/";
+
+  if (isEarnHome) {
+    return {
+      crumbs: [{ label: "Earn" }],
+      helpKind: "earn",
+      walletVariant: "default",
+    };
+  }
+
   if (
     pathname.includes("/Earn/sbtc-bridge/deposit/") &&
     pathname.endsWith("/reclaim")
   ) {
-    return [
-      { label: "Earn", path: "/Earn" },
-      { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
-      { label: "Activity", path: "/Earn/sbtc-bridge/activity" },
-      { label: "Reclaim" },
-    ];
+    return {
+      crumbs: [
+        { label: "Earn", path: "/Earn" },
+        { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
+        { label: "Activity", path: "/Earn/sbtc-bridge/activity" },
+        { label: "Reclaim" },
+      ],
+    };
   }
   if (pathname.includes("/Earn/sbtc-bridge/deposit/")) {
-    return [
-      { label: "Earn", path: "/Earn" },
-      { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
-      { label: "Activity", path: "/Earn/sbtc-bridge/activity" },
-      {
-        label: `Deposit ${truncateAddress(extractSegmentId(pathname, "deposit"))}`,
-      },
-    ];
+    return {
+      crumbs: [
+        { label: "Earn", path: "/Earn" },
+        { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
+        { label: "Activity", path: "/Earn/sbtc-bridge/activity" },
+        {
+          label: `Deposit ${truncateAddress(extractSegmentId(pathname, "deposit"))}`,
+        },
+      ],
+    };
   }
   if (pathname.includes("/Earn/sbtc-bridge/withdraw/")) {
-    return [
-      { label: "Earn", path: "/Earn" },
-      { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
-      { label: "Activity", path: "/Earn/sbtc-bridge/activity" },
-      {
-        label: `Withdrawal ${truncateAddress(extractSegmentId(pathname, "withdraw"))}`,
-      },
-    ];
+    return {
+      crumbs: [
+        { label: "Earn", path: "/Earn" },
+        { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
+        { label: "Activity", path: "/Earn/sbtc-bridge/activity" },
+        {
+          label: `Withdrawal ${truncateAddress(extractSegmentId(pathname, "withdraw"))}`,
+        },
+      ],
+    };
   }
   if (pathname.includes("/Earn/sbtc-bridge/activity")) {
-    return [
-      { label: "Earn", path: "/Earn" },
-      { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
-      { label: "Activity" },
-    ];
+    return {
+      crumbs: [
+        { label: "Earn", path: "/Earn" },
+        { label: "sBTC Bridge", path: "/Earn/sbtc-bridge" },
+        { label: "Activity" },
+      ],
+      helpKind: "bridge",
+      walletVariant: "default",
+    };
   }
   if (pathname.includes("/Earn/sbtc-bridge")) {
-    return [{ label: "Earn", path: "/Earn" }, { label: "sBTC Bridge" }];
+    return {
+      crumbs: [{ label: "Earn", path: "/Earn" }, { label: "sBTC Bridge" }],
+      helpKind: "bridge",
+      walletVariant: "default",
+    };
   }
   if (pathname.includes("/Earn/stacking")) {
-    return [{ label: "Earn", path: "/Earn" }, { label: "Stack STX" }];
+    return {
+      crumbs: [{ label: "Earn", path: "/Earn" }, { label: "Stack STX" }],
+      helpKind: "stacking",
+      walletVariant: "default",
+    };
   }
   if (pathname.includes("/Earn/dual-stacking")) {
-    return [{ label: "Earn", path: "/Earn" }, { label: "Dual Stacking" }];
+    return {
+      crumbs: [{ label: "Earn", path: "/Earn" }, { label: "Dual Stacking" }],
+      helpKind: "dual-stacking",
+      walletVariant: "dual-stacking",
+    };
   }
   return null;
 }
@@ -96,32 +139,39 @@ function HeaderHelpButton({
 export function BreadcrumbBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { ref: earnHelpModalRef, present: presentEarnHelp } = useModal();
   const { ref: bridgeHelpModalRef, present: presentBridgeHelp } = useModal();
   const { ref: stackingHelpModalRef, present: presentStackingHelp } =
     useModal();
   const { ref: dualStackingHelpModalRef, present: presentDualStackingHelp } =
     useModal();
 
-  const crumbs = getCrumbs(pathname);
-  if (!crumbs) return null;
+  const config = getBreadcrumbConfig(pathname);
+  if (!config) return null;
 
-  const isBridgeHome =
-    pathname === "/Earn/sbtc-bridge" ||
-    pathname === "/(app)/Earn/sbtc-bridge" ||
-    pathname === "/Earn/sbtc-bridge/" ||
-    pathname === "/(app)/Earn/sbtc-bridge/";
-  const isDualStacking =
-    pathname.includes("/Earn/dual-stacking") ||
-    pathname.includes("/(app)/Earn/dual-stacking");
-  const isStacking =
-    pathname.includes("/Earn/stacking") ||
-    pathname.includes("/(app)/Earn/stacking");
+  const handleHelpPress = () => {
+    if (config.helpKind === "earn") {
+      presentEarnHelp();
+      return;
+    }
+    if (config.helpKind === "bridge") {
+      presentBridgeHelp();
+      return;
+    }
+    if (config.helpKind === "stacking") {
+      presentStackingHelp();
+      return;
+    }
+    if (config.helpKind === "dual-stacking") {
+      presentDualStackingHelp();
+    }
+  };
 
   return (
     <>
-      <View className="mx-4 flex-row items-center justify-between gap-3 border-b border-surface-secondary h-10">
+      <View className="mx-4 flex-row items-center justify-between gap-3 border-b border-surface-secondary h-12">
         <View className="flex-1 flex-row items-center gap-1.5">
-          {crumbs.map((crumb, i) => {
+          {config.crumbs.map((crumb, i) => {
             return (
               <View key={crumb.label} className="flex-row items-center gap-1.5">
                 {i > 0 && (
@@ -150,18 +200,21 @@ export function BreadcrumbBar() {
           })}
         </View>
 
-        {isDualStacking ? (
+        {config.helpKind || config.walletVariant ? (
           <View className="flex-row items-center gap-1.5">
-            <HeaderHelpButton onPress={presentDualStackingHelp} />
-            <ConnectWallet />
+            {config.helpKind ? (
+              <HeaderHelpButton onPress={handleHelpPress} />
+            ) : null}
+            {config.walletVariant ? (
+              <ConnectedWallet variant={config.walletVariant} />
+            ) : null}
           </View>
-        ) : isBridgeHome ? (
-          <HeaderHelpButton onPress={presentBridgeHelp} />
-        ) : isStacking ? (
-          <HeaderHelpButton onPress={presentStackingHelp} />
         ) : null}
       </View>
 
+      <EarnHelpModal
+        modalRef={earnHelpModalRef as React.RefObject<BottomSheetModal>}
+      />
       <BridgeHelpModal
         modalRef={bridgeHelpModalRef as React.RefObject<BottomSheetModal>}
       />

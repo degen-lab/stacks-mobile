@@ -6,9 +6,9 @@ import { ScrollView } from "react-native";
 import { Modal, Text, View, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 
-import WalletMenuItem from "../../wallet/wallet-menu-item";
+import { WalletMenuItem } from "./wallet-menu-item";
 
-type WalletAction = {
+export type WalletAction = {
   label: string;
   icon: LucideIcon;
   onPress: () => void;
