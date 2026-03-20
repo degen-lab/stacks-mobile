@@ -79,17 +79,12 @@ export const CheckboxIcon = ({ checked = false }: IconProps) => {
       style={{
         height: SIZE,
         width: SIZE,
-        borderColor,
         backgroundColor: checked ? checkedColor : "transparent",
       }}
       className="items-center justify-center rounded-[5px] border-2"
-      from={{ backgroundColor: "transparent", borderColor: "#CCCFD6" }}
-      animate={{
-        borderColor,
-      }}
-      transition={{
-        borderColor: { type: "timing", duration: 100 },
-      }}
+      from={{ borderColor: "#CCCFD6" }}
+      animate={{ borderColor }}
+      transition={{ borderColor: { type: "timing", duration: 100 } }}
     >
       <MotiView
         from={{ opacity: 0 }}

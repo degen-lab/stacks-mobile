@@ -4,11 +4,13 @@ import colors from "./colors";
 
 export { default as AnimatedStarSplash } from "./animated-star";
 export * from "./button";
+export * from "./accordion-card";
 export * from "./cards";
 export * from "./checkbox";
 export { colors };
 export * from "./cards/selection-card";
 export * from "./focus-aware-status-bar";
+export * from "./faq-help-modal";
 export * from "./image";
 export * from "./input";
 export * from "./link-underline";
@@ -40,6 +42,7 @@ export {
   View,
 } from "react-native";
 export { SafeAreaView } from "react-native-safe-area-context";
+export * from "./toggle";
 
 //Apply cssInterop to Svg to resolve className string into style
 cssInterop(Svg, {

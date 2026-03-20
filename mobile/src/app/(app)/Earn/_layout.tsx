@@ -22,6 +22,12 @@ export default function EarnLayout() {
           title: "Dual Stacking",
         }}
       />
+      <Stack.Screen
+        name="bridge"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

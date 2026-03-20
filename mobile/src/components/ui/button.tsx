@@ -47,7 +47,7 @@ const button = tv({
       },
       ghost: {
         container: "bg-transparent",
-        label: "text-black underline dark:text-white",
+        label: "text-black dark:text-white",
         indicator: "text-black dark:text-white",
       },
       iconCircle: {
@@ -89,6 +89,11 @@ const button = tv({
         container: "my-0 bg-neutral-100 border border-neutral-300 rounded-xl",
         label: "text-primary font-instrument-sans-medium text-sm",
         indicator: "text-primary",
+      },
+      sbtcBridgeCta: {
+        container: "my-0 rounded-xl bg-sand-850 active:opacity-90",
+        label: "text-sand-100 font-instrument-sans-medium text-base",
+        indicator: "text-sand-100",
       },
     },
     size: {

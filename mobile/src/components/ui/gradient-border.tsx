@@ -7,6 +7,7 @@ type GradientBorderProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
   borderRadius?: number;
   borderBottomRightRadius?: number;
+  borderWidth?: number;
   gradient: readonly [ColorValue, ColorValue, ...ColorValue[]];
   shadow?: ViewStyle;
   innerBackground?: string;
@@ -29,6 +30,7 @@ export default function GradientBorder({
   style,
   borderRadius = 12, // ~ rounded-lg
   borderBottomRightRadius = 12,
+  borderWidth = 1,
   gradient = colors.stacks.borderGradientBloodOrangeCard,
   shadow = shadows.bloodOrangeCard,
   innerBackground = "#EAE8E6",
@@ -43,13 +45,22 @@ export default function GradientBorder({
         // angle(-205deg) ≈ start/end like this:
         start={start}
         end={end}
-        style={[shadow, { borderRadius, borderBottomRightRadius, padding: 1 }]}
+        style={[
+          shadow,
+          { borderRadius, borderBottomRightRadius, padding: borderWidth },
+        ]}
       >
         <View
           style={[
             {
-              borderRadius,
-              borderBottomRightRadius,
+              borderRadius:
+                borderWidth > 1
+                  ? Math.max(borderRadius - borderWidth, 0)
+                  : borderRadius,
+              borderBottomRightRadius:
+                borderWidth > 1
+                  ? Math.max(borderBottomRightRadius - borderWidth, 0)
+                  : borderBottomRightRadius,
               backgroundColor: innerBackground,
             },
             { overflow: "hidden" },
