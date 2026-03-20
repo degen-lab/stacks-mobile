@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable } from "react-native";
 import { showMessage } from "react-native-flash-message";
-import { Modal, Text } from "@/components/ui";
+import { Modal, Text, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { useBroadcastBitcoinTransaction } from "@/api/bitcoin";
 import { fromSatsToBtc, MICRO_STX } from "@/lib/format/currency";
@@ -533,6 +533,7 @@ export function TransferSheet({
       headerLeft={getBackButton()}
       onDismiss={onClose}
       enablePanDownToClose={mode === "select"}
+      backgroundStyle={{ backgroundColor: colors.neutral[50] }}
     >
       {renderContent()}
     </Modal>

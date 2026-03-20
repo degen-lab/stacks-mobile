@@ -1,10 +1,13 @@
 import { useMemo } from "react";
 
+import { useSbtcInWallet } from "@/api/dual-stacking/contract";
 import { useSwapTokenList, type SwapToken } from "@/api/defi";
 import { useUserBalances } from "@/api/stacks/use-stacks-api";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
+import { principalArgFromAddress } from "@/lib/stacks/addresses";
 import type { SwapAsset } from "../types";
 import {
+  SBTC_TOKEN_ID,
   STX_TOKEN_ID,
   baseUnitsToDisplayString,
   getDefaultSourceTokenId,
@@ -40,8 +43,14 @@ export function useSwapAssets(options?: UseSwapAssetsOptions) {
   const tokenListQuery = useSwapTokenList({ enabled });
   const balancesQuery = useUserBalances({
     variables: { address: stxAddress ?? "" },
-    enabled: !!stxAddress,
+    enabled: enabled && !!stxAddress,
   });
+  const sbtcArgs = useMemo(
+    () => (enabled ? principalArgFromAddress(stxAddress) : []),
+    [enabled, stxAddress],
+  );
+  const sbtcBalanceQuery = useSbtcInWallet(sbtcArgs);
+  const sbtcBalanceBaseUnits = String(sbtcBalanceQuery.data ?? 0);
 
   const activeTokens = useMemo(() => {
     const uniqueTokens = new Map<string, SwapToken>();
@@ -72,7 +81,9 @@ export function useSwapAssets(options?: UseSwapAssetsOptions) {
     return activeTokens
       .map((token) => {
         let balanceBaseUnits = "0";
-        if (balances) {
+        if (token.tokenId === SBTC_TOKEN_ID) {
+          balanceBaseUnits = sbtcBalanceBaseUnits;
+        } else if (balances) {
           if (token.tokenId === STX_TOKEN_ID) {
             balanceBaseUnits = balances.stx.balance;
           } else if (token.tokenContract) {
@@ -83,7 +94,7 @@ export function useSwapAssets(options?: UseSwapAssetsOptions) {
         return buildSwapAsset(token, balanceBaseUnits);
       })
       .sort(sortSwapAssets);
-  }, [activeTokens, balancesQuery.data]);
+  }, [activeTokens, balancesQuery.data, sbtcBalanceBaseUnits]);
 
   const assetMap = useMemo(
     () => Object.fromEntries(assets.map((asset) => [asset.tokenId, asset])),
@@ -101,7 +112,14 @@ export function useSwapAssets(options?: UseSwapAssetsOptions) {
     assetMap,
     defaultSourceTokenId,
     isLoading:
-      isWalletLoading || tokenListQuery.isLoading || balancesQuery.isLoading,
-    error: tokenListQuery.error ?? balancesQuery.error ?? null,
+      isWalletLoading ||
+      tokenListQuery.isLoading ||
+      balancesQuery.isLoading ||
+      sbtcBalanceQuery.isLoading,
+    error:
+      tokenListQuery.error ??
+      balancesQuery.error ??
+      sbtcBalanceQuery.error ??
+      null,
   };
 }
