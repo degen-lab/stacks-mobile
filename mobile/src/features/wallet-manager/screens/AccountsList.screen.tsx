@@ -92,8 +92,7 @@ export default function AccountsListScreen() {
   const handleWalletReplaced = useCallback(async () => {
     await setActiveAccountIndex(0);
     await loadAccounts({ useLoading: false });
-    void queryClient.invalidateQueries({ queryKey: ["stacks-user-balances"] });
-    void queryClient.invalidateQueries({ queryKey: ["bitcoin-utxos"] });
+    queryClient.clear();
   }, [loadAccounts, queryClient, setActiveAccountIndex]);
 
   const handleDeleteBackup = useCallback(async () => {
