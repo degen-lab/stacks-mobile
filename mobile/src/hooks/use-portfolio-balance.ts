@@ -4,7 +4,6 @@ import { getSbtcBridgeConfig } from "@/api/sbtc-bridge/config";
 import { fromSatsToBtc } from "@/lib/format/currency";
 import { principalArgFromAddress } from "@/lib/stacks/addresses";
 import { divisorNetwork } from "@/lib/stacks/utils";
-import { principalCV } from "@stacks/transactions";
 import { useMemo } from "react";
 
 import { useBtcPrice } from "@/api/market/use-btc-price";
@@ -43,13 +42,9 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
     () => principalArgFromAddress(stxAddress),
     [stxAddress],
   );
-  const queryArgs = useMemo(
-    () => (stxAddress ? [principalCV(stxAddress)] : []),
-    [stxAddress],
-  );
   const { data: sbtcBalanceSats } = useBridgeSbtcBalance(
     config,
-    queryArgs,
+    principal,
     !!stxAddress,
   );
   const sbtcBalance = useMemo(

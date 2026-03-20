@@ -23,6 +23,7 @@ jest.mock("@/hooks/use-portfolio-balance", () => ({
     stxBalance: 0,
     btcBalance: 0,
     sbtcBalance: 0,
+    sbtcDefiBalance: 0,
   }),
 }));
 
