@@ -51,7 +51,7 @@ export function LeaderboardList({
   };
 
   const onMissingSubmission = () => {
-    router.push("/stacks-bridge");
+    router.navigate("/stacks-bridge");
   };
 
   return (

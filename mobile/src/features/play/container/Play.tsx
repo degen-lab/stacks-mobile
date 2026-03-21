@@ -38,7 +38,7 @@ export default function PlayScreen() {
     currentTournamentSubmissions?.weeklyContestSubmissionsForCurrentTournament
       .length;
   const navigateToStacksBridge = () => {
-    router.push("/stacks-bridge");
+    router.navigate("/stacks-bridge");
   };
 
   const openSkinSelector = () => {

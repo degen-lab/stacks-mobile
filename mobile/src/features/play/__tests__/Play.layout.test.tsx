@@ -34,6 +34,7 @@ jest.mock("@/features/play/components", () => {
       </Pressable>
     ),
     ChallengeCard: () => null,
+    PlayHelpModal: () => null,
     PowerUpsModal: (() => {
       const Component = React.forwardRef(
         (_props: Record<string, any>, _ref: React.Ref<BottomSheetModal>) => {

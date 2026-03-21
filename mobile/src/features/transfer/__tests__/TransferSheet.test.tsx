@@ -73,6 +73,9 @@ jest.mock("@/components/ui", () => ({
       jest.requireActual<typeof import("react-native")>("react-native");
     return <Text>{children}</Text>;
   },
+  colors:
+    jest.requireActual<typeof import("@/components/ui")>("@/components/ui")
+      .colors,
 }));
 
 jest.mock("@/components/ui/modal", () => ({

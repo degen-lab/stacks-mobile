@@ -230,7 +230,7 @@ export function TermsAndConditionsSheet({
           )}
           <View className="flex-row gap-3">
             <Button
-              variant="outline"
+              variant="ghost"
               size="lg"
               onPress={() => onOpenChange(false)}
               className="flex-1"
@@ -244,7 +244,7 @@ export function TermsAndConditionsSheet({
               onPress={handleAgree}
               disabled={!agreed || isPending}
               loading={isPending}
-              label={isPending ? "Saving..." : "Accept and Continue"}
+              label={isPending ? "Saving..." : "Accept"}
             />
           </View>
         </View>

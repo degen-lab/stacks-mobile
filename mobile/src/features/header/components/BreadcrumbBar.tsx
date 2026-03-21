@@ -131,7 +131,7 @@ function HeaderHelpButton({
         justifyContent: "center",
       }}
     >
-      <HelpCircle size={14} color={colors.secondary} />
+      <HelpCircle size={16} color={colors.secondary} />
     </Pressable>
   );
 }

@@ -9,24 +9,24 @@ import {
 
 const FAQ_ITEMS: readonly FaqHelpItem[] = [
   {
-    id: "what-is-earn",
-    title: "What can I do in Earn?",
-    body: "Earn brings together the main ways to put your assets to work in the app, including STX Stacking, Dual Stacking, and the sBTC Bridge.",
+    id: "what-can-i-do",
+    title: "What can I do here?",
+    body: "Put your crypto to work. Stack STX for BTC rewards, bridge your Bitcoin to Stacks, or do both for even more.",
   },
   {
-    id: "difference-between-features",
-    title: "What is the difference between these features?",
-    body: "Stacking locks STX to earn network rewards. Dual Stacking combines STX and sBTC participation for boosted rewards. The sBTC Bridge moves value between BTC and sBTC so you can use Bitcoin liquidity on Stacks.",
+    id: "what-is-stacking",
+    title: "Stacking",
+    body: "Lock your STX and earn BTC rewards every ~2 weeks.",
   },
   {
-    id: "which-assets-are-used",
-    title: "Which assets and addresses are used?",
-    body: "Stacking uses your STX wallet. The bridge uses both your Bitcoin and Stacks addresses. Dual Stacking uses your Stacks address and can include sBTC held in wallet or in supported DeFi positions.",
+    id: "what-is-dual-stacking",
+    title: "Dual Stacking",
+    body: "Stack STX and sBTC together for higher rewards than either alone.",
   },
   {
-    id: "where-should-i-start",
-    title: "Where should I start?",
-    body: "If you already hold STX, start with Stacking. If you want to bring Bitcoin into Stacks, use the sBTC Bridge. If you want to combine STX with sBTC for additional rewards, explore Dual Stacking.",
+    id: "what-is-sbtc-bridge",
+    title: "sBTC Bridge",
+    body: "Bring your BTC to Stacks. Bridge it to sBTC, earn with it, bridge back anytime.",
   },
 ] as const;
 
