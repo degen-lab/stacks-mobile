@@ -3,8 +3,15 @@ import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
 import { ScrollView } from "react-native";
 
-import { Modal, Text, View, colors } from "@/components/ui";
+import { Modal, View, colors } from "@/components/ui";
+import { BtcRouteLogo } from "@/components/ui/icons/btc-route-logo";
+import { StacksRouteLogo } from "@/components/ui/icons/stacks-route-logo";
 import { useModal } from "@/components/ui/modal";
+import { copyToClipboard } from "@/lib/clipboard";
+import {
+  BridgeAddressRow,
+  BridgeFieldCard,
+} from "@/features/sbtc-bridge/components/bridge-field-card";
 
 import { WalletMenuItem } from "./wallet-menu-item";
 
@@ -19,6 +26,7 @@ type WalletActionSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   address: string | null;
+  btcAddress?: string | null;
   actions: WalletAction[];
 };
 
@@ -26,6 +34,7 @@ export function WalletActionSheet({
   open,
   onOpenChange,
   address,
+  btcAddress,
   actions,
 }: WalletActionSheetProps) {
   const { ref, present, dismiss } = useModal();
@@ -53,13 +62,28 @@ export function WalletActionSheet({
     >
       <ScrollView className="flex-1" contentContainerClassName="px-6 pb-6">
         <View className="gap-4">
-          <View className="rounded-2xl border border-surface-secondary bg-neutral-100 p-4">
-            <Text className="font-instrument-sans text-xs uppercase tracking-wide text-secondary">
-              Connected wallet
-            </Text>
-            <Text className="mt-2 font-mono text-sm leading-6 text-primary">
-              {address ?? "Wallet unavailable"}
-            </Text>
+          <View className="gap-2">
+            {btcAddress ? (
+              <BridgeFieldCard label="Bitcoin">
+                <BridgeAddressRow
+                  leftSlot={<BtcRouteLogo size={20} />}
+                  address={btcAddress}
+                  onCopy={() =>
+                    void copyToClipboard(btcAddress, "Address copied")
+                  }
+                />
+              </BridgeFieldCard>
+            ) : null}
+
+            {address ? (
+              <BridgeFieldCard label="Stacks">
+                <BridgeAddressRow
+                  leftSlot={<StacksRouteLogo size={20} />}
+                  address={address}
+                  onCopy={() => void copyToClipboard(address, "Address copied")}
+                />
+              </BridgeFieldCard>
+            ) : null}
           </View>
 
           <View className="gap-2">

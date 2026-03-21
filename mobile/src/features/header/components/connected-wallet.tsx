@@ -1,8 +1,9 @@
 import {
   ArrowUpRight,
   ChevronDown,
-  Copy,
   Edit3,
+  UserRound,
+  Wallet,
   XCircle,
 } from "lucide-react-native";
 import { router } from "expo-router";
@@ -14,7 +15,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable } from "react-native";
 
 import { Text, View, colors } from "@/components/ui";
-import { copyToClipboard } from "@/lib/clipboard";
 import { useAuth } from "@/lib/store/auth";
 import { truncateAddress } from "@/lib/stacks/addresses";
 import { getExplorerUrl } from "@/lib/stacks/network";
@@ -34,6 +34,7 @@ type ConnectedWalletProps = {
 };
 
 type WalletTriggerProps = {
+  variant: ConnectedWalletVariant;
   buttonLabel: string;
   isConnected: boolean;
   isLoading: boolean;
@@ -42,7 +43,7 @@ type WalletTriggerProps = {
 
 function useWalletButtonState() {
   const { isAuthenticated } = useAuth();
-  const { stxAddress, isLoading } = useWalletAddresses();
+  const { stxAddress, btcAddress, isLoading } = useWalletAddresses();
 
   const isConnected = isAuthenticated && Boolean(stxAddress);
   const buttonLabel = isLoading
@@ -53,6 +54,7 @@ function useWalletButtonState() {
 
   return {
     stxAddress,
+    btcAddress,
     isConnected,
     isLoading,
     buttonLabel,
@@ -71,12 +73,6 @@ function useDefaultWalletActions(
     });
   }, [stxAddress]);
 
-  const copyAddress = useCallback(async () => {
-    if (!stxAddress) return;
-
-    await copyToClipboard(stxAddress, "Address copied to clipboard");
-  }, [stxAddress]);
-
   return useMemo(
     () =>
       [
@@ -89,19 +85,20 @@ function useDefaultWalletActions(
           },
         },
         {
-          label: "Copy address",
-          icon: Copy,
+          label: "Switch account",
+          icon: UserRound,
           onPress: () => {
             onAfterAction();
-            void copyAddress();
+            router.push("/settings/accounts");
           },
         },
       ] satisfies WalletAction[],
-    [copyAddress, onAfterAction, openInExplorer],
+    [onAfterAction, openInExplorer],
   );
 }
 
 function WalletTrigger({
+  variant,
   buttonLabel,
   isConnected,
   isLoading,
@@ -117,20 +114,28 @@ function WalletTrigger({
         isConnected ? "Open connected wallet actions" : "Connect wallet"
       }
     >
-      <Text className="font-instrument-sans text-xs font-semibold text-primary">
-        {buttonLabel}
-      </Text>
-      {isConnected ? (
+      {isConnected && variant === "default" ? (
         <View pointerEvents="none">
-          <ChevronDown size={14} color={colors.neutral[700]} />
+          <Wallet size={14} color={colors.neutral[700]} />
         </View>
-      ) : null}
+      ) : (
+        <>
+          <Text className="font-instrument-sans text-xs font-semibold text-primary">
+            {buttonLabel}
+          </Text>
+          {isConnected ? (
+            <View pointerEvents="none">
+              <ChevronDown size={14} color={colors.neutral[700]} />
+            </View>
+          ) : null}
+        </>
+      )}
     </Pressable>
   );
 }
 
 function DefaultConnectedWallet() {
-  const { stxAddress, isConnected, isLoading, buttonLabel } =
+  const { stxAddress, btcAddress, isConnected, isLoading, buttonLabel } =
     useWalletButtonState();
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
   const actions = useDefaultWalletActions(stxAddress, () =>
@@ -149,6 +154,7 @@ function DefaultConnectedWallet() {
   return (
     <>
       <WalletTrigger
+        variant="default"
         buttonLabel={buttonLabel}
         isConnected={isConnected}
         isLoading={isLoading}
@@ -159,6 +165,7 @@ function DefaultConnectedWallet() {
         open={isActionSheetOpen}
         onOpenChange={setIsActionSheetOpen}
         address={stxAddress}
+        btcAddress={btcAddress}
         actions={actions}
       />
     </>
@@ -166,12 +173,11 @@ function DefaultConnectedWallet() {
 }
 
 function DualStackingConnectedWallet() {
-  const { stxAddress, isConnected, isLoading, buttonLabel } =
+  const { stxAddress, btcAddress, isConnected, isLoading, buttonLabel } =
     useWalletButtonState();
   const { enrolledNextCycle } = useEnrollmentStatus();
   const {
     openInExplorer,
-    copyAddress,
     optOut,
     optOutSponsored,
     changeRewardAddress,
@@ -266,11 +272,11 @@ function DualStackingConnectedWallet() {
         },
       },
       {
-        label: "Copy address",
-        icon: Copy,
+        label: "Switch account",
+        icon: UserRound,
         onPress: () => {
           setIsActionSheetOpen(false);
-          void copyAddress();
+          router.push("/settings/accounts");
         },
       },
     ];
@@ -296,11 +302,12 @@ function DualStackingConnectedWallet() {
     }
 
     return items;
-  }, [copyAddress, enrolledNextCycle, openInExplorer]);
+  }, [enrolledNextCycle, openInExplorer]);
 
   return (
     <>
       <WalletTrigger
+        variant="dual-stacking"
         buttonLabel={buttonLabel}
         isConnected={isConnected}
         isLoading={isLoading}
@@ -311,6 +318,7 @@ function DualStackingConnectedWallet() {
         open={isActionSheetOpen}
         onOpenChange={setIsActionSheetOpen}
         address={stxAddress}
+        btcAddress={btcAddress}
         actions={actions}
       />
 

@@ -56,10 +56,10 @@ export function Header() {
     router.push("/settings/accounts");
   }, [router]);
 
-  const handlePressPointsDetails = useCallback(() => {
-    setPointsPopoverVisible(false);
-    router.push("/leaderboard");
-  }, [router]);
+  // const handlePressPointsDetails = useCallback(() => {
+  //   setPointsPopoverVisible(false);
+  //   router.push("/leaderboard");
+  // }, [router]);
 
   const handlePressPlay = useCallback(() => {
     setPointsPopoverVisible(false);

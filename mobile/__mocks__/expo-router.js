@@ -3,6 +3,7 @@ const React = require("react");
 const mockRouter = {
   replace: jest.fn(),
   push: jest.fn(),
+  navigate: jest.fn(),
   back: jest.fn(),
 };
 
