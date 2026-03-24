@@ -3,14 +3,18 @@ import { createQuery } from "react-query-kit";
 type BitcoinPriceResponse = {
   bitcoin?: {
     usd?: number;
+    usd_24h_change?: number;
   };
 };
 
-type Response = number | null;
+type Response = {
+  usd: number | null;
+  change24h: number | null;
+};
 type Variables = void;
 
 const BITCOIN_PRICE_URL =
-  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd";
+  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true";
 
 export const useBtcPrice = createQuery<Response, Variables>({
   queryKey: ["market-price", "bitcoin", "usd"],
@@ -20,6 +24,9 @@ export const useBtcPrice = createQuery<Response, Variables>({
       throw new Error("Failed to fetch BTC price");
     }
     const data = (await response.json()) as BitcoinPriceResponse;
-    return data.bitcoin?.usd ?? null;
+    return {
+      usd: data.bitcoin?.usd ?? null,
+      change24h: data.bitcoin?.usd_24h_change ?? null,
+    };
   },
 });
