@@ -72,7 +72,7 @@ export function StackStxSheet({
   return (
     <Modal
       ref={sheetRef}
-      snapPoints={["65%"]}
+      snapPoints={["75%"]}
       backgroundStyle={{
         backgroundColor:
           colorScheme === "dark" ? colors.charcoal[850] : colors.white,

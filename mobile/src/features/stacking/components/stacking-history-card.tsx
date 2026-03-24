@@ -163,7 +163,8 @@ export function StackingHistoryCard({
   isLoading = false,
   isError = false,
 }: Props) {
-  const { data: stxPrice } = useStacksPrice();
+  const { data: stxMarketData } = useStacksPrice();
+  const stxPrice = stxMarketData?.usd ?? null;
 
   if (isLoading && delegations.length === 0) {
     return (

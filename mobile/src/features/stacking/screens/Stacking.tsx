@@ -29,7 +29,11 @@ import { getActiveWalletAccount } from "@/lib/stacks/active-account";
 
 export function StackingScreen() {
   const { stackingInfo, daysPerCycle, calculate } = useStacking();
-  const { balance: stxBalance, lockedBalance } = useStxBalance();
+  const {
+    balance: stxBalance,
+    availableBalance: availableStxBalance,
+    lockedBalance,
+  } = useStxBalance();
   const { stxAddress: address } = useWalletAddresses();
   const { data: userProfile } = useUserProfile();
   const { selectedNetwork } = useSelectedNetwork();
@@ -348,7 +352,7 @@ export function StackingScreen() {
   });
 
   const poolState = {
-    stxBalance,
+    availableStxBalance,
     activePosition,
     stackingInfo,
     isMainnet,

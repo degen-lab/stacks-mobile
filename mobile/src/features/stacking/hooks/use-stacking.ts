@@ -7,7 +7,7 @@ import { AVERAGE_BLOCK_DURATION_SECONDS } from "@/lib/format/date";
 const DEFAULT_APY = 0.07;
 
 export function useStacking() {
-  const { data: stxPrice } = useStacksPrice();
+  const { data: stxMarketData } = useStacksPrice();
   const { data: poxInfo, isLoading: isLoadingPox } = usePoxData();
   const {
     nextCycleDate,
@@ -30,7 +30,7 @@ export function useStacking() {
     () => ({
       currentCycle: poxInfo?.current_cycle.id ?? 0,
       apy: DEFAULT_APY,
-      price: stxPrice ?? 0,
+      price: stxMarketData?.usd ?? 0,
       nextCycleStart: nextCycleDate ?? new Date(),
       timeTillNextCycle,
       nextRewardPhaseDate,
@@ -40,7 +40,7 @@ export function useStacking() {
     }),
     [
       poxInfo,
-      stxPrice,
+      stxMarketData?.usd,
       nextCycleDate,
       timeTillNextCycle,
       nextRewardPhaseDate,

@@ -14,7 +14,7 @@ import { StackingHistoryCard } from "../components/stacking-history-card";
 import type { UserStackingDataRow } from "@/api/stacking";
 
 interface PoolState {
-  stxBalance: number;
+  availableStxBalance: number;
   activePosition?: {
     lockedAmount: number;
     lockDuration: number;
@@ -111,7 +111,7 @@ export function StackingScreenLayout({
   stackingHistory,
 }: StackingScreenLayoutProps) {
   const {
-    stxBalance,
+    availableStxBalance,
     activePosition,
     stackingInfo,
     isMainnet,
@@ -236,7 +236,7 @@ export function StackingScreenLayout({
 
             <View className="mb-4">
               <StackingCalculator
-                availableBalance={stxBalance}
+                availableBalance={availableStxBalance}
                 activePosition={activePosition}
                 onUpdateChange={onUpdateChange}
                 calculate={calculate}
