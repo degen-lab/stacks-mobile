@@ -13,6 +13,7 @@ export * from "./focus-aware-status-bar";
 export * from "./faq-help-modal";
 export * from "./image";
 export * from "./input";
+export * from "./token-avatar";
 export * from "./link-underline";
 // export * from './list';
 export * from "./modal";

@@ -2,10 +2,9 @@ import { Check, Search } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, TextInput } from "react-native";
 
-import { Text, View, colors } from "@/components/ui";
+import { Text, TokenAvatar, View, colors } from "@/components/ui";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SwapAsset } from "../types";
-import { TokenAvatar } from "./token-avatar";
 
 function TokenRow({
   isSelected,

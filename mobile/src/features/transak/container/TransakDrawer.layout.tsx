@@ -1,7 +1,6 @@
 import React from "react";
 import { View, ActivityIndicator } from "react-native";
-import { colors } from "@/components/ui";
-import { StxCoin, BtcLogo } from "@/components/ui/icons";
+import { TokenAvatar, colors } from "@/components/ui";
 import { Numpad } from "@/components/ui/numpad";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import {
@@ -20,8 +19,18 @@ const ASSET_OPTIONS: {
   disabled?: boolean;
   visible?: boolean;
 }[] = [
-  { id: "STX", label: "Stacks", icon: <StxCoin size={24} />, visible: true },
-  { id: "BTC", label: "Bitcoin", icon: <BtcLogo size={24} />, visible: true },
+  {
+    id: "STX",
+    label: "Stacks",
+    icon: <TokenAvatar symbol="STX" size={24} />,
+    visible: true,
+  },
+  {
+    id: "BTC",
+    label: "Bitcoin",
+    icon: <TokenAvatar symbol="BTC" size={24} />,
+    visible: true,
+  },
   // { id: "USDC", label: "USDC", icon: <UsdcLogo size={24} />, visible: false },
 ];
 

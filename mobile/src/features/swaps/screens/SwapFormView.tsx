@@ -1,10 +1,9 @@
 import { ArrowUpDown, ChevronDown } from "lucide-react-native";
 import { Pressable, StyleSheet, TextInput } from "react-native";
 
-import { Button, Text, View, colors } from "@/components/ui";
+import { Button, Text, TokenAvatar, View, colors } from "@/components/ui";
 import type { SwapViewModel } from "../hooks/use-swap";
 import type { SwapAsset } from "../types";
-import { TokenAvatar } from "../components/token-avatar";
 
 type SwapFormViewProps = {
   swap: SwapViewModel;
