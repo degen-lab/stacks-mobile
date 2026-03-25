@@ -30,4 +30,5 @@ export const enqueueSponsoredTransactionSchema = z.object({
 
 export const createSponsoredTransactionSchema = z.object({
   originAddress: stacksAddressSchema,
+  defiOperationId: z.number().int().positive().optional(),
 });

@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   broadcastTransaction,
   deserializeTransaction,
+  PostConditionMode,
 } from "@stacks/transactions";
 
 import { useUpdateDefiOperation, type SwapParamsData } from "@/api/defi";
@@ -120,6 +121,7 @@ export function useSwapExecution() {
         functionName,
         functionArgs,
         postConditions,
+        postConditionMode: PostConditionMode.Deny,
         network: selectedNetwork,
         publicKey: account.publicKey,
         feeMicroStx: 0,
@@ -130,6 +132,7 @@ export function useSwapExecution() {
         originAddress: address,
         accountIndex,
         unsignedSerializedTx,
+        defiOperationId: swapParams.operation.id,
       });
 
       await invalidateBalances();

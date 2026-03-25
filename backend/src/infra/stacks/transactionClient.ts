@@ -331,7 +331,6 @@ export class TransactionClient implements TransactionClientPort {
       sponsorNonce,
     });
 
-    transaction.postConditionMode = PostConditionMode.Deny;
     const sponsoredTx = await sponsorTransaction({
       transaction,
       sponsorPrivateKey: ADMIN_PRIVATE_KEY,
