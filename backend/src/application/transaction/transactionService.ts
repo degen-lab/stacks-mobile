@@ -238,7 +238,7 @@ export class TransactionService {
 
     const parsedTransaction = parseSponsoredTransaction(
       serializedTx,
-      sponsoredRequest.defiOperation ?? null,
+      sponsoredRequest.defiOperation ?? undefined,
     );
     if (parsedTransaction.originAddress !== sponsoredRequest.originAddress) {
       throw new UnsupportedSponsoredTransactionError(
@@ -261,8 +261,6 @@ export class TransactionService {
       throw new UnsupportedSponsoredTransactionError(
         'Game submissions must use /transaction/create',
       );
-    } else if (parsedTransaction.kind === 'swap') {
-      // Fully validated by parseSponsoredTransaction against the linked DefiOperation.
     }
 
     sponsoredRequest.serializedTx = serializedTx;

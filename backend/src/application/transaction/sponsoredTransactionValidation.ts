@@ -81,7 +81,7 @@ function getConfiguredGameContractId(): string {
 
 export function parseSponsoredTransaction(
   serializedTx: string,
-  defiOperation?: DefiOperation | null,
+  defiOperation?: DefiOperation,
 ): SponsoredTxSummary {
   const transaction = deserializeTransaction(serializedTx);
   const network = getConfiguredNetwork();
