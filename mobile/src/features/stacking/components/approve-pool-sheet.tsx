@@ -113,7 +113,6 @@ export function ApprovePoolSheet({
             sponsoredLoading={isSponsoredLoading}
             walletLoading={isLoading}
           />
-
         </View>
       </ScrollView>
     </Modal>

@@ -71,7 +71,7 @@ const mockRewardRows = [
     statusLabel: "Earning",
     statusTone: "active" as const,
     value: 0.01,
-    valueToken: "btc" as const,
+    valueToken: "stx" as const,
   },
   {
     id: "dual-stacking" as const,
@@ -134,7 +134,7 @@ describe("EarnOverviewCard", () => {
             statusLabel: "Not active",
             statusTone: "inactive",
             value: 0,
-            valueToken: "btc",
+            valueToken: "stx",
           },
           {
             id: "dual-stacking",

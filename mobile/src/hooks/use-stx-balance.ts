@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { useUserBalances } from "@/api/stacks/use-stacks-api";
 import { MICRO_STX } from "@/lib/format/currency";
+import { useActiveAccountIndex } from "@/lib/store/settings";
 import { useWalletAddresses } from "./use-wallet-addresses";
 
 type UseStxBalanceResult = {
@@ -13,7 +14,11 @@ type UseStxBalanceResult = {
   refresh: () => void;
 };
 
-export const useStxBalance = (accountIndex = 0): UseStxBalanceResult => {
+export const useStxBalance = (
+  requestedAccountIndex?: number,
+): UseStxBalanceResult => {
+  const { activeAccountIndex } = useActiveAccountIndex();
+  const accountIndex = requestedAccountIndex ?? activeAccountIndex;
   const { stxAddress: address } = useWalletAddresses({ accountIndex });
 
   const { data, isLoading, error, refetch } = useUserBalances({

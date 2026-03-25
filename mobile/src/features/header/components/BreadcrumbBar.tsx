@@ -16,7 +16,7 @@ type HeaderHelpKind = "earn" | "bridge" | "stacking" | "dual-stacking";
 type BreadcrumbConfig = {
   crumbs: Crumb[];
   helpKind?: HeaderHelpKind;
-  walletVariant?: "default" | "dual-stacking";
+  walletVariant?: "default" | "dual-stacking" | "stacking";
 };
 
 function extractSegmentId(pathname: string, segment: string): string {
@@ -102,7 +102,7 @@ function getBreadcrumbConfig(
     return {
       crumbs: [{ label: "Earn", path: "/Earn" }, { label: "Stack STX" }],
       helpKind: "stacking",
-      walletVariant: "default",
+      walletVariant: "stacking",
     };
   }
   if (pathname.includes("/Earn/dual-stacking")) {

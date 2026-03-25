@@ -2,14 +2,17 @@ import type {
   DualStackingData,
   DualStackingStat,
 } from "@/api/dual-stacking/types";
+import type { UserStackingDataRow } from "@/api/stacking";
 import { fromSatsToBtc } from "@/lib/format/currency";
 
 import type { EarnRewardRowId, EarnRewardsSummary } from "../types";
 
 type BuildEarnRewardsSummaryArgs = {
   stats: DualStackingStat[] | null | undefined;
+  stackingRows: UserStackingDataRow[] | null | undefined;
   dualStackingData: DualStackingData[] | null | undefined;
   currentBtcPriceUsd: number | null;
+  currentStxPriceUsd: number | null;
   currentStackingApr: number | null;
   isEnrolledCurrentCycle: boolean;
   isEnrolledNextCycle: boolean;
@@ -23,22 +26,20 @@ export const EARN_REWARD_ROW_ROUTES: Record<EarnRewardRowId, string> = {
   "dual-stacking": "/Earn/dual-stacking",
 };
 
-function getCycleRewardBtc(stat: DualStackingStat | undefined) {
-  if (!stat) return 0;
-  return (
-    fromSatsToBtc(stat.rewardedSbtc) +
-    fromSatsToBtc(Number(stat.rewardedStacking ?? 0))
-  );
-}
-
-function getCycleSbtcRewardBtc(stat: DualStackingStat | undefined) {
+function getCycleDualStackingRewardBtc(stat: DualStackingStat | undefined) {
   if (!stat) return 0;
   return fromSatsToBtc(stat.rewardedSbtc);
 }
 
-function getCycleStxRewardBtc(stat: DualStackingStat | undefined) {
-  if (!stat) return 0;
-  return fromSatsToBtc(Number(stat.rewardedStacking ?? 0));
+function getTotalStackingRewardsStx(
+  stackingRows: UserStackingDataRow[] | null | undefined,
+) {
+  const rows = stackingRows ?? [];
+
+  return rows.reduce(
+    (total, row) => total + Number(row.rewardedStxAmount ?? 0),
+    0,
+  );
 }
 
 function getNextRewardDateLabel(
@@ -65,8 +66,10 @@ function getNextRewardDateLabel(
 
 export function buildEarnRewardsSummary({
   stats,
+  stackingRows,
   dualStackingData,
   currentBtcPriceUsd,
+  currentStxPriceUsd,
   currentStackingApr,
   isEnrolledCurrentCycle,
   isEnrolledNextCycle,
@@ -74,24 +77,29 @@ export function buildEarnRewardsSummary({
   hasActiveGameSubmission,
 }: BuildEarnRewardsSummaryArgs): EarnRewardsSummary {
   const normalizedStats = Array.isArray(stats) ? stats : [];
-
-  let cumulativeRewardsBtc = 0;
-  let cumulativeSbtcRewardsBtc = 0;
-  let cumulativeStxRewardsBtc = 0;
+  let cumulativeDualStackingRewardsBtc = 0;
 
   for (const stat of normalizedStats) {
-    cumulativeRewardsBtc += getCycleRewardBtc(stat);
-    cumulativeSbtcRewardsBtc += getCycleSbtcRewardBtc(stat);
-    cumulativeStxRewardsBtc += getCycleStxRewardBtc(stat);
+    cumulativeDualStackingRewardsBtc += getCycleDualStackingRewardBtc(stat);
   }
 
+  const cumulativeStackingRewardsStx = getTotalStackingRewardsStx(stackingRows);
   const stackingActive = lockedStxBalance > 0;
+  const dualStackingRewardsUsd =
+    currentBtcPriceUsd != null
+      ? cumulativeDualStackingRewardsBtc * currentBtcPriceUsd
+      : null;
+  const stackingRewardsUsd =
+    currentStxPriceUsd != null
+      ? cumulativeStackingRewardsStx * currentStxPriceUsd
+      : null;
+  const totalRewardsUsd =
+    dualStackingRewardsUsd == null && stackingRewardsUsd == null
+      ? null
+      : (dualStackingRewardsUsd ?? 0) + (stackingRewardsUsd ?? 0);
 
   return {
-    totalRewardsUsd:
-      currentBtcPriceUsd != null
-        ? cumulativeRewardsBtc * currentBtcPriceUsd
-        : null,
+    totalRewardsUsd,
     currentStackingApr,
     nextRewardDateLabel: getNextRewardDateLabel(dualStackingData),
     rows: [
@@ -108,8 +116,8 @@ export function buildEarnRewardsSummary({
         label: "STX Stacking",
         statusLabel: stackingActive ? "Earning" : "Not active",
         statusTone: stackingActive ? "active" : "inactive",
-        value: cumulativeStxRewardsBtc,
-        valueToken: "btc",
+        value: cumulativeStackingRewardsStx,
+        valueToken: "stx",
       },
       {
         id: "dual-stacking",
@@ -124,7 +132,7 @@ export function buildEarnRewardsSummary({
           : isEnrolledNextCycle
             ? "pending"
             : "inactive",
-        value: cumulativeSbtcRewardsBtc,
+        value: cumulativeDualStackingRewardsBtc,
         valueToken: "btc",
       },
     ],

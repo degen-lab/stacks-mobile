@@ -70,7 +70,8 @@ export function useSwapAssets(options?: UseSwapAssetsOptions) {
           balanceBaseUnits = sbtcBalanceBaseUnits;
         } else if (balances) {
           if (token.tokenId === STX_TOKEN_ID) {
-            const available = BigInt(balances.stx.balance) - BigInt(balances.stx.locked);
+            const available =
+              BigInt(balances.stx.balance) - BigInt(balances.stx.locked);
             balanceBaseUnits = (available > 0n ? available : 0n).toString();
           } else if (token.tokenContract) {
             balanceBaseUnits =

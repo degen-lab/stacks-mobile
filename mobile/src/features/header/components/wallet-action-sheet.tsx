@@ -28,6 +28,7 @@ type WalletActionSheetProps = {
   address: string | null;
   btcAddress?: string | null;
   actions: WalletAction[];
+  snapPoints?: string[];
 };
 
 export function WalletActionSheet({
@@ -36,6 +37,7 @@ export function WalletActionSheet({
   address,
   btcAddress,
   actions,
+  snapPoints = ["50%"],
 }: WalletActionSheetProps) {
   const { ref, present, dismiss } = useModal();
   const { colorScheme } = useColorScheme();
@@ -52,7 +54,7 @@ export function WalletActionSheet({
   return (
     <Modal
       ref={ref}
-      snapPoints={["50%"]}
+      snapPoints={snapPoints}
       backgroundStyle={{
         backgroundColor:
           colorScheme === "dark" ? colors.charcoal[850] : colors.white,

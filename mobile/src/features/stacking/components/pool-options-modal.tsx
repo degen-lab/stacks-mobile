@@ -15,7 +15,7 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   activePosition: StackingPosition | undefined;
-  onRevoke?: () => void;
+  onLeavePool?: () => void;
 };
 
 type ViewState = "main" | "advanced" | "change_address" | "leave_pool";
@@ -24,7 +24,7 @@ export function PoolOptionsModal({
   visible,
   onClose,
   activePosition,
-  onRevoke,
+  onLeavePool,
 }: Props) {
   const [currentView, setCurrentView] = useState<ViewState>("main");
   const [newRewardAddress, setNewRewardAddress] = useState("");
@@ -180,19 +180,18 @@ export function PoolOptionsModal({
           </Text>
         </View>
         <Text className="text-sm font-instrument-sans text-secondary leading-5">
-          Revoking your delegation will stop your rewards. You will receive your
-          locked STX back after the current cycle ends.
+          Leaving Fast Pool will revoke your current delegation and remove Fast
+          Pool&apos;s permission to manage your stacking rights. Your locked STX
+          will unlock after the current cycle ends.
         </Text>
       </View>
 
       <Button
-        label="Revoke Delegation"
+        label="Review leave transactions"
         variant="destructive"
         onPress={() => {
-          if (onRevoke) {
-            onRevoke();
-          }
           handleClose();
+          onLeavePool?.();
         }}
       />
     </View>

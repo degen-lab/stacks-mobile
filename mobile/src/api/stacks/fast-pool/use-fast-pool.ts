@@ -46,6 +46,14 @@ export const useFastPool = (userAddress?: string) => {
     },
   });
 
+  const disallowMutation = useMutation({
+    mutationFn: (fee?: number) => service.disallowContractCaller(fee),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stacking-status"] });
+      queryClient.invalidateQueries({ queryKey: ["stacking-allowance"] });
+    },
+  });
+
   return {
     status: statusQuery.data,
     isAllowed: allowanceQuery.data,
@@ -56,5 +64,9 @@ export const useFastPool = (userAddress?: string) => {
     approveAsync: approveMutation.mutateAsync,
     revoke: revokeMutation.mutate,
     revokeAsync: revokeMutation.mutateAsync,
+    isRevoking: revokeMutation.isPending,
+    disallow: disallowMutation.mutate,
+    disallowAsync: disallowMutation.mutateAsync,
+    isDisallowing: disallowMutation.isPending,
   };
 };

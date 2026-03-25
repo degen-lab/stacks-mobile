@@ -2,6 +2,7 @@ import {
   ArrowUpRight,
   ChevronDown,
   Edit3,
+  ExternalLink,
   UserRound,
   Wallet,
   XCircle,
@@ -24,10 +25,12 @@ import { useWalletActions } from "@/features/dual-stacking/hooks/use-wallet-acti
 import { ChangeRewardAddressSheet } from "@/features/dual-stacking/components/layout/modals/change-reward-address-sheet";
 import { TransactionStatusSheet } from "@/features/dual-stacking/components/layout/modals/transaction-status-sheet";
 import { UnenrollSheet } from "@/features/dual-stacking/components/layout/modals/unenroll-sheet";
+import { LeavePoolSheet } from "@/features/stacking/components/leave-pool-sheet";
+import { useFastPoolActions } from "@/features/stacking/hooks/use-fast-pool-actions";
 
 import { WalletActionSheet, type WalletAction } from "./wallet-action-sheet";
 
-export type ConnectedWalletVariant = "default" | "dual-stacking";
+export type ConnectedWalletVariant = "default" | "dual-stacking" | "stacking";
 
 type ConnectedWalletProps = {
   variant?: ConnectedWalletVariant;
@@ -404,10 +407,153 @@ function DualStackingConnectedWallet() {
   );
 }
 
-export function ConnectedWallet({ variant = "default" }: ConnectedWalletProps) {
-  return variant === "dual-stacking" ? (
-    <DualStackingConnectedWallet />
-  ) : (
-    <DefaultConnectedWallet />
+function StackingConnectedWallet() {
+  const { stxAddress, btcAddress, isConnected, isLoading, buttonLabel } =
+    useWalletButtonState();
+  const {
+    status: poolStatus,
+    selectedNetwork,
+    isAllowed,
+    poolContract,
+    poxContract,
+    revokeDelegation,
+    revokeDelegationSponsored,
+    disallowPoolPermission,
+    disallowPoolPermissionSponsored,
+  } = useFastPoolActions(stxAddress ?? undefined);
+  const isStacking = poolStatus?.isLocked ?? false;
+
+  const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
+  const [isLeavePoolOpen, setIsLeavePoolOpen] = useState(false);
+
+  const openFastPoolRewards = useCallback(async () => {
+    if (!stxAddress) return;
+    await openBrowserAsync(`https://fastpool.org/users/${stxAddress}`, {
+      presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
+    });
+  }, [stxAddress]);
+
+  const openInExplorer = useCallback(async () => {
+    if (!stxAddress) return;
+    await openBrowserAsync(getExplorerUrl(stxAddress).explorerUrl, {
+      presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
+    });
+  }, [stxAddress]);
+
+  const handlePrimaryPress = useCallback(() => {
+    if (!isConnected) {
+      router.push("/login");
+      return;
+    }
+    setIsActionSheetOpen(true);
+  }, [isConnected]);
+
+  const handleRevoke = useCallback(
+    async (feeMicroStx?: number) => revokeDelegation(feeMicroStx),
+    [revokeDelegation],
   );
+
+  const handleSponsoredRevoke = useCallback(
+    async (feeMicroStx?: number) => revokeDelegationSponsored(feeMicroStx),
+    [revokeDelegationSponsored],
+  );
+
+  const handleDisallow = useCallback(
+    async (feeMicroStx?: number) => disallowPoolPermission(feeMicroStx),
+    [disallowPoolPermission],
+  );
+
+  const handleSponsoredDisallow = useCallback(
+    async (feeMicroStx?: number) =>
+      disallowPoolPermissionSponsored(feeMicroStx),
+    [disallowPoolPermissionSponsored],
+  );
+
+  const actions = useMemo(() => {
+    const items: WalletAction[] = [
+      {
+        label: "Open in Explorer",
+        icon: ArrowUpRight,
+        onPress: () => {
+          setIsActionSheetOpen(false);
+          void openInExplorer();
+        },
+      },
+      {
+        label: "Switch account",
+        icon: UserRound,
+        onPress: () => {
+          setIsActionSheetOpen(false);
+          router.push("/settings/accounts");
+        },
+      },
+    ];
+
+    if (isStacking) {
+      items.push({
+        label: "See your rewards",
+        icon: ExternalLink,
+        onPress: () => {
+          setIsActionSheetOpen(false);
+          void openFastPoolRewards();
+        },
+      });
+    }
+
+    if (isStacking || isAllowed) {
+      items.push({
+        label: "Leave Pool",
+        icon: XCircle,
+        destructive: true,
+        onPress: () => {
+          setIsActionSheetOpen(false);
+          setIsLeavePoolOpen(true);
+        },
+      });
+    }
+
+    return items;
+  }, [isAllowed, isStacking, openInExplorer, openFastPoolRewards]);
+
+  return (
+    <>
+      <WalletTrigger
+        variant="stacking"
+        buttonLabel={buttonLabel}
+        isConnected={isConnected}
+        isLoading={isLoading}
+        onPress={handlePrimaryPress}
+      />
+
+      <WalletActionSheet
+        open={isActionSheetOpen}
+        onOpenChange={setIsActionSheetOpen}
+        address={stxAddress}
+        btcAddress={btcAddress}
+        actions={actions}
+        snapPoints={["62%"]}
+      />
+
+      <LeavePoolSheet
+        open={isLeavePoolOpen}
+        onOpenChange={setIsLeavePoolOpen}
+        network={selectedNetwork}
+        poolContract={poolContract}
+        poxContract={poxContract}
+        isStacking={isStacking}
+        isAllowed={Boolean(isAllowed)}
+        onGoBack={() => setIsActionSheetOpen(true)}
+        onRevoke={handleRevoke}
+        onSponsoredRevoke={handleSponsoredRevoke}
+        onDisallow={handleDisallow}
+        onSponsoredDisallow={handleSponsoredDisallow}
+      />
+    </>
+  );
+}
+
+export function ConnectedWallet({ variant = "default" }: ConnectedWalletProps) {
+  if (variant === "dual-stacking") return <DualStackingConnectedWallet />;
+  if (variant === "stacking") return <StackingConnectedWallet />;
+  return <DefaultConnectedWallet />;
 }

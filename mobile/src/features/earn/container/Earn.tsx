@@ -13,6 +13,8 @@ import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useBalanceVisibility } from "@/lib/store/balance-visibility";
 
 import { GetAssetSheet } from "@/features/transfer/components/get-asset-sheet";
+import { useUserStackingData } from "@/api/stacking";
+import { useUserProfile } from "@/api/user";
 import { buildEarnAssetRoute } from "../lib/asset-route";
 import { buildEarnNextStepCards } from "../lib/next-steps";
 import {
@@ -38,6 +40,7 @@ export default function EarnScreen() {
   const { openTransak } = useTransak();
   const { openTransfer } = useTransferSheet();
   const { isBalanceVisible } = useBalanceVisibility();
+  const { data: userProfile } = useUserProfile();
   const [selectedGetAsset, setSelectedGetAsset] =
     useState<EarnAcquisitionAsset | null>(null);
 
@@ -55,6 +58,11 @@ export default function EarnScreen() {
     variables: { address: stxAddress ?? "" },
     enabled: !!stxAddress,
   });
+  const { data: userStackingData = [], isLoading: isUserStackingDataLoading } =
+    useUserStackingData({
+      variables: { userId: userProfile?.id ?? 0 },
+      enabled: !!userProfile?.id,
+    });
   const {
     data: currentTournamentSubmissions,
     isLoading: currentTournamentSubmissionsLoading,
@@ -72,9 +80,11 @@ export default function EarnScreen() {
     () =>
       buildEarnRewardsSummary({
         stats: dualStackingStatsQuery.data,
+        stackingRows: userStackingData,
         dualStackingData,
         currentBtcPriceUsd:
           latestPricesQuery.data?.btc_price ?? portfolio.btcPriceUsd ?? null,
+        currentStxPriceUsd: portfolio.stxPriceUsd ?? null,
         currentStackingApr: latestPricesQuery.data?.stacking_apr ?? null,
         isEnrolledCurrentCycle: enrolledCurrentCycle,
         isEnrolledNextCycle: enrolledNextCycle,
@@ -90,7 +100,9 @@ export default function EarnScreen() {
       latestPricesQuery.data?.btc_price,
       latestPricesQuery.data?.stacking_apr,
       portfolio.btcPriceUsd,
+      portfolio.stxPriceUsd,
       portfolio.stxLockedBalance,
+      userStackingData,
     ],
   );
 
@@ -130,7 +142,9 @@ export default function EarnScreen() {
     enrollmentLoading;
 
   const isRewardsLoading =
-    isNextStepsLoading || currentTournamentSubmissionsLoading;
+    isNextStepsLoading ||
+    currentTournamentSubmissionsLoading ||
+    isUserStackingDataLoading;
   const portfolioTotalUsd = portfolio.usdBalanceOrNull;
 
   const handleBuyAsset = useCallback(

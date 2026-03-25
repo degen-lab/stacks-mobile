@@ -126,7 +126,7 @@ export class FastPoolService implements IPoolService {
     return this.walletKit.makeContractCall(
       this.poxContract,
       SC_FUNCTIONS.pox.publicFunctions.DISALLOW_CONTRACT_CALLER,
-      [],
+      getDisallowanceArgs(this.fastPoolContract),
       PostConditionMode.Allow,
       feeMicroStx,
       this.activeAccountIndex,
@@ -140,4 +140,8 @@ export const getDelegateArgs = (amountMicroStx: number) => {
 
 export const getAllowanceArgs = (poolContractAddress: string) => {
   return [principalCV(poolContractAddress), noneCV()];
+};
+
+export const getDisallowanceArgs = (poolContractAddress: string) => {
+  return [principalCV(poolContractAddress)];
 };

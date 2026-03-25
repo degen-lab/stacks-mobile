@@ -11,7 +11,10 @@ export const useSignTransaction = () => {
       const had0xPrefix = serializedTx.startsWith("0x");
       const txHex = had0xPrefix ? serializedTx.slice(2) : serializedTx;
       const transaction = deserializeTransaction(txHex);
-      const signedTx = await walletKit.signTransaction(accountIndex, transaction);
+      const signedTx = await walletKit.signTransaction(
+        accountIndex,
+        transaction,
+      );
       const signedTxHex = signedTx.serialize();
 
       return had0xPrefix ? `0x${signedTxHex}` : signedTxHex;
