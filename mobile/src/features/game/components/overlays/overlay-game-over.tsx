@@ -37,15 +37,21 @@ export default function GameOverOverlay({
   const raffleSubmissionsLeft =
     sponsoredSubmissionsLeft?.dailyRaffleSubmissionsLeft ?? 0;
   const hasRaffleEntries = raffleSubmissionsLeft > 0;
+  const hasPositiveScore = summary.score > 0;
   const canSubmitToRaffle =
-    hasRaffleEntries && summary.canSubmitScore && !summary.submittedRaffle;
+    hasRaffleEntries &&
+    summary.canSubmitScore &&
+    hasPositiveScore &&
+    !summary.submittedRaffle;
   const highscoreSubmitted = summary.submittedHighscore;
-  const canSubmitScore = summary.canSubmitScore;
+  const canSubmitScore = summary.canSubmitScore && hasPositiveScore;
   const submitStatusMessage = summary.submittedRaffle
     ? "Already submitted this run."
     : canSubmitScore
       ? undefined
-      : "Submit Phase not started.";
+      : !summary.canSubmitScore
+        ? "Submit Phase not started."
+        : "Score must be greater than 0.";
 
   const dailyStreak = userProfile?.streak ?? 0;
   const streakStats = calculateStreakStats({ streak: dailyStreak });

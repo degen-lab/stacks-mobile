@@ -13,6 +13,7 @@ const mockMutateAsync = jest.fn();
 const mockShowMessage = jest.fn();
 const mockUseSendFlow = jest.fn();
 const mockUsePrepareBtcSend = jest.fn();
+const mockUseTransfer = jest.fn();
 const mockSubmitBuiltWalletTransaction = jest.fn();
 const mockSubmitBuiltSponsoredTransaction = jest.fn();
 
@@ -73,6 +74,16 @@ jest.mock("@/components/ui", () => ({
       jest.requireActual<typeof import("react-native")>("react-native");
     return <Text>{children}</Text>;
   },
+  View: ({ children }: { children: ReactNode }) => {
+    const { View } =
+      jest.requireActual<typeof import("react-native")>("react-native");
+    return <View>{children}</View>;
+  },
+  TokenAvatar: ({ symbol }: { symbol: string }) => {
+    const { Text } =
+      jest.requireActual<typeof import("react-native")>("react-native");
+    return <Text>{symbol}</Text>;
+  },
   colors:
     jest.requireActual<typeof import("@/components/ui")>("@/components/ui")
       .colors,
@@ -98,14 +109,7 @@ jest.mock("@/lib/store/settings", () => ({
 }));
 
 jest.mock("../hooks/use-transfer", () => ({
-  useTransfer: () => ({
-    mode: "send",
-    setMode: mockSetMode,
-    stxAddress: "STX123",
-    btcAddress: "tb1qsender0000000000000000000000000000000",
-    getCurrentBalance: () => 0.25,
-    getCurrentBalanceIsLoading: () => false,
-  }),
+  useTransfer: (...args: unknown[]) => mockUseTransfer(...args),
 }));
 
 jest.mock("../hooks/use-send-flow", () => ({
@@ -145,6 +149,28 @@ jest.mock("../components/send/confirmation", () => ({
     );
   },
 }));
+
+jest.mock("../components/qr-code-view", () => ({
+  QRCodeView: ({ asset, address }: { asset: string; address: string }) => {
+    const { Text, View } =
+      jest.requireActual<typeof import("react-native")>("react-native");
+    return (
+      <View>
+        <Text>{asset} QR</Text>
+        <Text>{address}</Text>
+      </View>
+    );
+  },
+}));
+
+const defaultTransferState = {
+  mode: "send" as const,
+  setMode: mockSetMode,
+  stxAddress: "STX123",
+  btcAddress: "tb1qsender0000000000000000000000000000000",
+  getCurrentBalance: () => 0.25,
+  getCurrentBalanceIsLoading: () => false,
+};
 
 const defaultSendFlow = {
   currentStep: "confirm" as const,
@@ -186,6 +212,7 @@ describe("TransferSheet", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockMutateAsync.mockResolvedValue("b".repeat(64));
+    mockUseTransfer.mockReturnValue(defaultTransferState);
     mockUseSendFlow.mockReturnValue(defaultSendFlow);
     mockUsePrepareBtcSend.mockReturnValue(defaultPreparedBtcSend);
   });
@@ -292,5 +319,35 @@ describe("TransferSheet", () => {
       });
     });
     expect(mockMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("opens directly into the requested receive qr flow", async () => {
+    mockUseTransfer.mockReturnValue({
+      ...defaultTransferState,
+      mode: "receive" as const,
+    });
+
+    render(
+      <TransferSheet
+        open
+        onClose={jest.fn()}
+        request={{
+          mode: "receive",
+          receive: {
+            asset: "BTC",
+          },
+        }}
+        requestVersion={1}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Bitcoin Address QR")).toBeTruthy();
+    });
+
+    expect(screen.getByText("BTC QR")).toBeTruthy();
+    expect(
+      screen.getByText("tb1qsender0000000000000000000000000000000"),
+    ).toBeTruthy();
   });
 });

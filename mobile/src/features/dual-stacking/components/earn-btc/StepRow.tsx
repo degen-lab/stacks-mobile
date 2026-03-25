@@ -42,9 +42,19 @@ const LINK_ARROW_COLOR = "#0C0C0D";
 export default function StepRow({
   step,
   onPress,
+  leading,
+  compact,
+  forceTextVariant,
+  titleClassName,
+  descriptionClassName,
 }: {
   step: Step;
   onPress: () => void;
+  leading?: React.ReactNode;
+  compact?: boolean;
+  forceTextVariant?: CtaVariant;
+  titleClassName?: string;
+  descriptionClassName?: string;
 }) {
   const cta = step.cta;
   const isButton = cta.kind === "button";
@@ -55,27 +65,31 @@ export default function StepRow({
       : "primary";
 
   const isBoostStep = step.id === 3 || step.id === 4;
-  const textStyle = isBoostStep
-    ? CTA_TEXT_COLOR.secondary
-    : CTA_TEXT_COLOR[variant];
+  const resolvedTextVariant =
+    forceTextVariant ?? (isBoostStep ? ("secondary" as const) : variant);
+  const textStyle = CTA_TEXT_COLOR[resolvedTextVariant];
   const isDisabled = isButton && cta.variant === "disabled";
 
   return (
     <View
-      className={`relative flex-row items-start gap-4 rounded-xl p-4 ${CARD_STYLE[step.status]}`}
+      className={`relative flex-row items-start rounded-xl ${
+        compact ? "gap-3 p-3" : "gap-4 p-4"
+      } ${CARD_STYLE[step.status]}`}
     >
       {step.showNextBadge && <StepBadge isRecommended={isBoostStep} />}
-      <StepIndicator step={step} />
+      {leading ?? <StepIndicator step={step} />}
 
-      <View className="flex-1 gap-3">
+      <View className={`flex-1 ${compact ? "gap-1.5" : "gap-3"}`}>
         <View>
           <Text
-            className={`font-instrument-sans-medium text-base ${textStyle.title}`}
+            className={`font-instrument-sans-medium text-base ${textStyle.title} ${titleClassName ?? ""}`}
           >
             {step.title}
           </Text>
           <Text
-            className={`font-instrument-sans-medium text-xs leading-4 mt-0.5 ${textStyle.desc}`}
+            className={`font-instrument-sans-medium text-xs leading-4 ${
+              compact ? "mt-0" : "mt-0.5"
+            } ${textStyle.desc} ${descriptionClassName ?? ""}`}
           >
             {step.description}
           </Text>

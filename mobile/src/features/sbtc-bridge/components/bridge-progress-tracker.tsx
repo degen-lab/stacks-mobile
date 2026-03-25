@@ -1,10 +1,12 @@
 import * as React from "react";
 import { ActivityIndicator, Pressable } from "react-native";
-import { Check, ChevronsUpDown, Loader } from "lucide-react-native";
+import { ChevronsUpDown, Loader } from "lucide-react-native";
 
 import { Text, View, colors } from "@/components/ui";
 import { ClockCountdown } from "@/components/ui/icons/clock-countdown";
 import { LinkUnderline } from "@/components/ui/link-underline";
+import { StatusCircleIcon } from "@/components/ui/status-circle-icon";
+import { StepNumberCircleIcon } from "@/components/ui/step-number-circle-icon";
 
 import {
   formatBridgeProgressTiming,
@@ -16,31 +18,6 @@ import type { BridgeProgressMode, BridgeProgressStep } from "../utils/progress";
 
 const ICON_SIZE = 20;
 
-function NumberCircle({ n, filled = false }: { n: number; filled?: boolean }) {
-  return (
-    <View
-      style={{
-        width: ICON_SIZE,
-        height: ICON_SIZE,
-        borderRadius: ICON_SIZE / 2,
-        borderWidth: 1,
-        borderColor: filled ? colors.neutral[900] : colors.neutral[500],
-        backgroundColor: filled ? colors.neutral[900] : "transparent",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Text
-        className={`font-matter-sq-mono text-xs ${
-          filled ? "text-white" : "text-sand-500"
-        }`}
-      >
-        {n}
-      </Text>
-    </View>
-  );
-}
-
 function ProgressMarker({
   step,
   stepNumber,
@@ -51,20 +28,7 @@ function ProgressMarker({
   mode: BridgeProgressMode;
 }) {
   if (step.state === "complete") {
-    return (
-      <View
-        style={{
-          width: ICON_SIZE,
-          height: ICON_SIZE,
-          borderRadius: ICON_SIZE / 2,
-          backgroundColor: colors.success[600],
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Check size={14} color={colors.white} strokeWidth={2.5} />
-      </View>
-    );
+    return <StatusCircleIcon size={ICON_SIZE} iconSize={14} />;
   }
 
   if (step.state === "failed") {
@@ -88,7 +52,7 @@ function ProgressMarker({
 
   if (step.state === "active") {
     if (mode === "preview") {
-      return <NumberCircle n={stepNumber} />;
+      return <StepNumberCircleIcon value={stepNumber} size={ICON_SIZE} />;
     }
 
     return (
@@ -120,7 +84,7 @@ function ProgressMarker({
     );
   }
 
-  return <NumberCircle n={stepNumber} />;
+  return <StepNumberCircleIcon value={stepNumber} size={ICON_SIZE} />;
 }
 
 function useMinuteNow() {

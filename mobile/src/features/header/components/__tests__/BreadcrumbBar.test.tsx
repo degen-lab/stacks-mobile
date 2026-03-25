@@ -6,10 +6,12 @@ import { useModal } from "@/components/ui";
 import { BreadcrumbBar } from "../BreadcrumbBar";
 
 const mockUsePathname = jest.fn();
+const mockUseGlobalSearchParams = jest.fn();
 const mockPush = jest.fn();
 
 jest.mock("expo-router", () => ({
   usePathname: () => mockUsePathname(),
+  useGlobalSearchParams: () => mockUseGlobalSearchParams(),
   useRouter: () => ({ push: mockPush }),
 }));
 
@@ -50,6 +52,7 @@ describe("BreadcrumbBar", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUsePathname.mockReturnValue("/Earn/sbtc-bridge");
+    mockUseGlobalSearchParams.mockReturnValue({});
   });
 
   it("opens the bridge help sheet from the bridge home breadcrumb action", () => {
@@ -172,5 +175,44 @@ describe("BreadcrumbBar", () => {
     expect(bridgeHelpModal.present).not.toHaveBeenCalled();
     expect(stackingHelpModal.present).not.toHaveBeenCalled();
     expect(dualStackingHelpModal.present).not.toHaveBeenCalled();
+  });
+
+  it("renders the selected asset label on asset detail routes", () => {
+    mockUsePathname.mockReturnValue("/Earn/assets/stx");
+    mockUseGlobalSearchParams.mockReturnValue({ assetLabel: "Stacks" });
+
+    const earnHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
+    const bridgeHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
+    const stackingHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
+    const dualStackingHelpModal = {
+      ref: { current: null },
+      present: jest.fn(),
+      dismiss: jest.fn(),
+    };
+
+    jest
+      .mocked(useModal)
+      .mockReturnValueOnce(earnHelpModal as any)
+      .mockReturnValueOnce(bridgeHelpModal as any)
+      .mockReturnValueOnce(stackingHelpModal as any)
+      .mockReturnValueOnce(dualStackingHelpModal as any);
+
+    render(<BreadcrumbBar />);
+
+    expect(screen.getByText("Earn")).toBeTruthy();
+    expect(screen.getByText("Stacks")).toBeTruthy();
+    expect(screen.queryByLabelText("Help")).toBeNull();
   });
 });

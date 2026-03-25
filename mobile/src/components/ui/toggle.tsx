@@ -15,21 +15,25 @@ type ToggleProps<T extends string> = {
   options: ToggleOption<T>[];
   onChange: (value: T) => void;
   variant?: "default" | "card";
+  testIDPrefix?: string;
 };
 
 function ToggleItem<T extends string>({
   option,
   active,
   onPress,
+  testID,
   variant,
 }: {
   option: ToggleOption<T>;
   active: boolean;
   onPress: () => void;
+  testID?: string;
   variant: "default" | "card";
 }) {
   return (
     <TouchableOpacity
+      testID={testID}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
@@ -55,6 +59,7 @@ export function Toggle<T extends string>({
   options,
   onChange,
   variant = "default",
+  testIDPrefix,
 }: ToggleProps<T>) {
   return (
     <View
@@ -69,6 +74,9 @@ export function Toggle<T extends string>({
           option={option}
           active={value === option.value}
           onPress={() => onChange(option.value)}
+          testID={
+            testIDPrefix ? `${testIDPrefix}-${String(option.value)}` : undefined
+          }
           variant={variant}
         />
       ))}

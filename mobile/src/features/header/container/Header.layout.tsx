@@ -1,15 +1,23 @@
 import type { ImageSource } from "expo-image";
+import { Eye, EyeOff } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { InfoBadge, Pressable, Text, View } from "@/components/ui";
-import { BtcLogo } from "@/components/ui/icons/btc-logo";
 import { StreakIcon } from "@/components/ui/icons/streak";
-import { StxCoin } from "@/components/ui/icons/stx-coin";
 import { Avatar } from "../components/Avatar";
 import { BreadcrumbBar } from "../components/BreadcrumbBar";
 import { PointsPopover } from "../components/PointsPopover";
 import { ProfilePopover } from "../components/ProfilePopover";
 import { StreakPopover } from "../components/StreakPopover";
+
+export type EarnBalanceTrigger = {
+  value: number | string | null;
+  loading?: boolean;
+  isBalanceVisible: boolean;
+  onPress: () => void;
+  onToggleVisibility: () => void;
+  accessibilityLabel?: string;
+};
 
 type HeaderLayoutProps = {
   name: string;
@@ -19,11 +27,7 @@ type HeaderLayoutProps = {
   streakDays: import("@/lib/format/date").StreakDay[];
   loadingStreak: boolean;
   loadingPoints: boolean;
-  btcBalance: number;
-  stxBalance: number;
-  loadingBtc: boolean;
-  loadingStx: boolean;
-  isEarnScreen: boolean;
+  earnBalanceTrigger?: EarnBalanceTrigger | null;
   avatarSource: ImageSource;
   onPressProfile: () => void;
   onPressPoints: () => void;
@@ -50,11 +54,7 @@ export function HeaderLayout({
   streakDays,
   loadingStreak,
   loadingPoints,
-  btcBalance,
-  stxBalance,
-  loadingBtc,
-  loadingStx,
-  isEarnScreen,
+  earnBalanceTrigger,
   avatarSource,
   onPressProfile,
   onPressPoints,
@@ -73,45 +73,74 @@ export function HeaderLayout({
   onPressPlay,
 }: HeaderLayoutProps) {
   const insets = useSafeAreaInsets();
-  const formattedBtcBalance = Number.isFinite(btcBalance)
-    ? btcBalance.toFixed(8)
-    : "0.00000000";
-
   return (
     <View
       className="bg-surface-tertiary"
       accessibilityRole="header"
       style={{ paddingTop: insets.top }}
     >
-      <View className="flex-row items-center justify-between mx-4 py-4 border-b border-surface-secondary min-h-[60px]">
+      <View className="mx-4 flex-row items-center justify-between gap-3 border-b border-surface-secondary py-4 min-h-[60px]">
         <Pressable
-          className="flex-row items-center gap-3 rounded-full px-2 py-1"
+          className="min-w-0 flex-1 flex-row items-center gap-3 rounded-full px-2 py-1"
           onPress={onPressProfile}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Open profile quick actions"
         >
           <Avatar source={avatarSource} size="sm" className="bg-red-500" />
-          <View>
-            <Text className="font-matter text-lg text-primary dark:text-white">
+          <View className="min-w-0 flex-1">
+            <Text
+              className="font-matter text-lg text-primary dark:text-white"
+              numberOfLines={1}
+            >
               {name}
             </Text>
           </View>
         </Pressable>
 
-        <View className="flex-row items-center gap-2">
-          {isEarnScreen ? (
+        <View className="shrink-0 flex-row items-center gap-2">
+          {earnBalanceTrigger ? (
             <>
-              <InfoBadge
-                icon={<BtcLogo size={18} />}
-                value={formattedBtcBalance}
-                loading={loadingBtc}
-              />
-              <InfoBadge
-                icon={<StxCoin size={18} />}
-                value={stxBalance}
-                loading={loadingStx}
-              />
+              <Pressable
+                onPress={earnBalanceTrigger.onPress}
+                className="active:opacity-90"
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  earnBalanceTrigger.accessibilityLabel ??
+                  "Open balance details"
+                }
+              >
+                <InfoBadge
+                  label="Balance"
+                  value={earnBalanceTrigger.value}
+                  loading={earnBalanceTrigger.loading}
+                  labelClassName="text-secondary"
+                  valueClassName="font-instrument-sans-medium text-primary"
+                  containerClassName={
+                    earnBalanceTrigger.isBalanceVisible
+                      ? "border-feedback-green-150 bg-feedback-green-150 px-2.5"
+                      : "border-surface-secondary bg-transparent px-2.5"
+                  }
+                />
+              </Pressable>
+              <Pressable
+                onPress={earnBalanceTrigger.onToggleVisibility}
+                className="h-9 w-9 items-center justify-center rounded-lg border-2 border-surface-secondary bg-transparent active:opacity-90"
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  earnBalanceTrigger.isBalanceVisible
+                    ? "Hide balances"
+                    : "Show balances"
+                }
+              >
+                {earnBalanceTrigger.isBalanceVisible ? (
+                  <EyeOff size={16} color="#595754" />
+                ) : (
+                  <Eye size={16} color="#595754" />
+                )}
+              </Pressable>
             </>
           ) : (
             <>

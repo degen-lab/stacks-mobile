@@ -7,6 +7,7 @@ import { hiroApiClient } from "@/api/common/stacks-client";
 export type FtMetadata = {
   asset_identifier: string;
   decimals: number;
+  description?: string | null;
   image_canonical_uri: string | null;
   image_thumbnail_uri: string | null;
   image_uri: string | null;

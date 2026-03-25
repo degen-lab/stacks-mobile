@@ -73,6 +73,10 @@ export const useSubmissionActions = ({
       accountIndex,
       address: originAddress,
     } = await getActiveWalletAccount();
+    const submissionScore = runSummary?.score ?? score;
+    if (submissionScore <= 0) {
+      throw new Error("Score must be greater than 0.");
+    }
     const submissionType =
       submissionContext?.kind === "raffle"
         ? SubmissionType.Lottery
@@ -80,7 +84,7 @@ export const useSubmissionActions = ({
     const response = await createGameSubmissionTransactionMutation.mutateAsync({
       address: originAddress,
       publicKey: account.publicKey,
-      score: runSummary?.score ?? score,
+      score: submissionScore,
       submissionType,
       isSponsored: true,
     });
@@ -110,6 +114,9 @@ export const useSubmissionActions = ({
       address: originAddress,
     } = await getActiveWalletAccount();
     const submissionScore = runSummary?.score ?? score;
+    if (submissionScore <= 0) {
+      throw new Error("Score must be greater than 0.");
+    }
     const submissionType =
       submissionContext?.kind === "raffle"
         ? SubmissionType.Lottery

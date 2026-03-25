@@ -18,12 +18,23 @@ const mockModal = {
 
 jest.mock("@/hooks/use-portfolio-balance", () => ({
   usePortfolioBalance: () => ({
+    assets: [],
     usdBalance: mockUsdBalance,
+    usdBalanceOrNull: mockUsdBalance,
     hasBalance: mockHasBalance,
     stxBalance: 0,
+    stxLockedBalance: 0,
+    stxAvailableBalance: 0,
     btcBalance: 0,
     sbtcBalance: 0,
     sbtcDefiBalance: 0,
+    stxPriceUsd: null,
+    btcPriceUsd: null,
+    stxChange24hPercent: null,
+    btcChange24hPercent: null,
+    isLoading: false,
+    isBalanceLoading: false,
+    isPriceLoading: false,
   }),
 }));
 
@@ -43,10 +54,17 @@ jest.mock("../container/Home.layout", () => ({
 }));
 
 const mockOpenTransfer = jest.fn();
+const mockOpenSwap = jest.fn();
 
 jest.mock("@/features/transfer", () => ({
   useTransferSheet: () => ({
     openTransfer: mockOpenTransfer,
+  }),
+}));
+
+jest.mock("@/features/swaps", () => ({
+  useSwapSheet: () => ({
+    openSwap: mockOpenSwap,
   }),
 }));
 
@@ -56,15 +74,12 @@ jest.mock("@/features/transak/context/transak-context", () => ({
   }),
 }));
 
-jest.mock("@/features/earn/hooks/use-earn-actions", () => ({
-  useEarnActions: () => ({
-    handleBuy: jest.fn(),
-    handleSell: jest.fn(),
-    handleTransfer: jest.fn(),
-    handleSwap: jest.fn(),
-    handleBridge: jest.fn(),
+jest.mock(
+  "@/features/dual-stacking/components/layout/modals/mint-sbtc-sheet",
+  () => ({
+    MintSbtcSheet: () => null,
   }),
-}));
+);
 
 describe("HomeScreen", () => {
   beforeEach(() => {

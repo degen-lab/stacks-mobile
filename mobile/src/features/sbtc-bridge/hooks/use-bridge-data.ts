@@ -98,9 +98,9 @@ export function useBridgeOverviewMetrics() {
     [limits.data?.perDepositMinimum],
   );
   const marketCapUsd = useMemo(() => {
-    if (btcPrice.data == null) return null;
-    return supplyBtc * btcPrice.data;
-  }, [btcPrice.data, supplyBtc]);
+    if (btcPrice.data?.usd == null) return null;
+    return supplyBtc * btcPrice.data.usd;
+  }, [btcPrice.data?.usd, supplyBtc]);
 
   return {
     config,

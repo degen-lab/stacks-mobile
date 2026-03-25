@@ -1,8 +1,9 @@
-import { usePathname, useRouter } from "expo-router";
+import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
 import { HelpCircle } from "lucide-react-native";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { Pressable, Text, View, colors, useModal } from "@/components/ui";
+import { getEarnAssetBreadcrumbLabel } from "@/features/earn/lib/asset-route";
 import { truncateAddress } from "@/lib/stacks/addresses";
 import { EarnHelpModal } from "@/features/earn/components/earn-help-modal";
 import { ConnectedWallet } from "@/features/header/components/connected-wallet";
@@ -24,7 +25,10 @@ function extractSegmentId(pathname: string, segment: string): string {
   return parts[idx + 1] ?? "";
 }
 
-function getBreadcrumbConfig(pathname: string): BreadcrumbConfig | null {
+function getBreadcrumbConfig(
+  pathname: string,
+  assetLabel?: string | string[],
+): BreadcrumbConfig | null {
   const isEarnHome =
     pathname === "/Earn" ||
     pathname === "/(app)/Earn" ||
@@ -108,6 +112,15 @@ function getBreadcrumbConfig(pathname: string): BreadcrumbConfig | null {
       walletVariant: "dual-stacking",
     };
   }
+  if (pathname.includes("/Earn/assets/")) {
+    return {
+      crumbs: [
+        { label: "Earn", path: "/Earn" },
+        { label: getEarnAssetBreadcrumbLabel(assetLabel) },
+      ],
+      walletVariant: "default",
+    };
+  }
   return null;
 }
 
@@ -139,6 +152,9 @@ function HeaderHelpButton({
 export function BreadcrumbBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { assetLabel } = useGlobalSearchParams<{
+    assetLabel?: string | string[];
+  }>();
   const { ref: earnHelpModalRef, present: presentEarnHelp } = useModal();
   const { ref: bridgeHelpModalRef, present: presentBridgeHelp } = useModal();
   const { ref: stackingHelpModalRef, present: presentStackingHelp } =
@@ -146,7 +162,7 @@ export function BreadcrumbBar() {
   const { ref: dualStackingHelpModalRef, present: presentDualStackingHelp } =
     useModal();
 
-  const config = getBreadcrumbConfig(pathname);
+  const config = getBreadcrumbConfig(pathname, assetLabel);
   if (!config) return null;
 
   const handleHelpPress = () => {

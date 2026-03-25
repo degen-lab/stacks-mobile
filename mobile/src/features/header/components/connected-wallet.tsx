@@ -104,17 +104,23 @@ function WalletTrigger({
   isLoading,
   onPress,
 }: WalletTriggerProps) {
+  const isDefaultConnectedIcon = isConnected && variant === "default";
+
   return (
     <Pressable
       onPress={onPress}
       disabled={isLoading}
-      className="flex-row items-center gap-1 rounded-lg border-2 border-surface-secondary bg-neutral-100 px-3 py-1.5 active:opacity-80"
+      className={
+        isDefaultConnectedIcon
+          ? "h-9 w-9 items-center justify-center rounded-lg border-2 border-surface-secondary bg-transparent active:opacity-90"
+          : "flex-row items-center gap-1 rounded-lg border-2 border-surface-secondary bg-neutral-100 px-3 py-1.5 active:opacity-80"
+      }
       accessibilityRole="button"
       accessibilityLabel={
         isConnected ? "Open connected wallet actions" : "Connect wallet"
       }
     >
-      {isConnected && variant === "default" ? (
+      {isDefaultConnectedIcon ? (
         <View pointerEvents="none">
           <Wallet size={14} color={colors.neutral[700]} />
         </View>

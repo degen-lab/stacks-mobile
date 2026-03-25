@@ -2,17 +2,20 @@ import { useMemo } from "react";
 
 import { useSbtcInWallet } from "@/api/dual-stacking/contract";
 import { useSwapTokenList, type SwapToken } from "@/api/defi";
+import {
+  getFungibleTokenBalanceMap,
+  getUniqueActiveSwapTokens,
+} from "@/api/defi/token-utils";
 import { useUserBalances } from "@/api/stacks/use-stacks-api";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
-import { principalArgFromAddress } from "@/lib/stacks/addresses";
-import type { SwapAsset } from "../types";
 import {
   SBTC_TOKEN_ID,
   STX_TOKEN_ID,
   baseUnitsToDisplayString,
-  getDefaultSourceTokenId,
-  sortSwapAssets,
-} from "../utils";
+} from "@/lib/assets/tokens";
+import { principalArgFromAddress } from "@/lib/stacks/addresses";
+import type { SwapAsset } from "../types";
+import { getDefaultSourceTokenId, sortSwapAssets } from "../utils";
 
 function buildSwapAsset(token: SwapToken, balanceBaseUnits: string) {
   return {
@@ -53,30 +56,12 @@ export function useSwapAssets(options?: UseSwapAssetsOptions) {
   const sbtcBalanceBaseUnits = String(sbtcBalanceQuery.data ?? 0);
 
   const activeTokens = useMemo(() => {
-    const uniqueTokens = new Map<string, SwapToken>();
-
-    for (const token of tokenListQuery.data ?? []) {
-      if (token.status.toLowerCase() !== "active") continue;
-      if (uniqueTokens.has(token.tokenId)) continue;
-
-      uniqueTokens.set(token.tokenId, token);
-    }
-
-    return [...uniqueTokens.values()];
+    return getUniqueActiveSwapTokens(tokenListQuery.data);
   }, [tokenListQuery.data]);
 
   const assets = useMemo(() => {
     const balances = balancesQuery.data;
-
-    // Build a prefix→balance map once (O(M)) instead of scanning per token (O(N×M))
-    const ftBalanceMap = new Map<string, string>();
-    if (balances) {
-      for (const [assetId, entry] of Object.entries(balances.fungible_tokens)) {
-        const sep = assetId.indexOf("::");
-        if (sep !== -1)
-          ftBalanceMap.set(assetId.slice(0, sep).toLowerCase(), entry.balance);
-      }
-    }
+    const ftBalanceMap = getFungibleTokenBalanceMap(balances);
 
     return activeTokens
       .map((token) => {

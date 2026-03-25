@@ -71,6 +71,42 @@ export function formatBtcMetric(value: number) {
   });
 }
 
+type FormatUsdOptions = {
+  /** Use compact notation (e.g. "$1.2K") when |value| >= 1000. Default false. */
+  compact?: boolean;
+  maximumFractionDigits?: number;
+};
+
+/**
+ * Format a USD value for display.
+ * Returns "—" for null / non-finite values.
+ * e.g. 1234.5 -> "$1,234.50", 1_200_000 with compact -> "$1.2M"
+ */
+export function formatUsd(
+  value: number | null,
+  { compact = false, maximumFractionDigits = 2 }: FormatUsdOptions = {},
+): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return "—";
+  }
+
+  if (compact && Math.abs(value) >= 1_000) {
+    const sign = value < 0 ? "-" : "";
+    const compactValue = new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(Math.abs(value));
+    return `${sign}$${compactValue}`;
+  }
+
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits,
+  });
+}
+
 /**
  * Format a USD value in compact notation.
  * e.g. 1_200_000 -> "$1.2M"

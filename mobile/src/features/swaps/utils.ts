@@ -3,36 +3,12 @@ import type {
   SwapContractCallParams,
   SwapToken,
 } from "@/api/defi";
+import {
+  SBTC_TOKEN_ID,
+  STX_TOKEN_ID,
+  compareBaseUnitAmounts,
+} from "@/lib/assets/tokens";
 import type { SwapAsset } from "./types";
-
-export const STX_TOKEN_ID = "token-stx";
-export const SBTC_TOKEN_ID = "token-sbtc";
-
-export function baseUnitsToDisplayString(
-  value: string | number | bigint | null | undefined,
-  decimals: number,
-  maxFractionDigits = Math.min(decimals, 8),
-) {
-  if (value == null) return "0";
-
-  const normalized = String(value).trim();
-  if (!normalized) return "0";
-
-  const sign = normalized.startsWith("-") ? "-" : "";
-  const digits = sign ? normalized.slice(1) : normalized;
-  const padded =
-    decimals > 0 ? digits.padStart(decimals + 1, "0") : digits || "0";
-  const integerPart =
-    decimals > 0 ? padded.slice(0, -decimals) || "0" : padded || "0";
-  const fractionPart = decimals > 0 ? padded.slice(-decimals) : "";
-  const trimmedFraction = fractionPart
-    .slice(0, maxFractionDigits)
-    .replace(/0+$/, "");
-
-  return trimmedFraction
-    ? `${sign}${integerPart}.${trimmedFraction}`
-    : `${sign}${integerPart}`;
-}
 
 export function displayAmountToBaseUnits(
   input: string,
@@ -47,14 +23,6 @@ export function displayAmountToBaseUnits(
   const combined = `${wholePart}${fraction}`.replace(/^0+(?=\d)/, "");
 
   return combined || "0";
-}
-
-export function compareBaseUnitAmounts(left: string, right: string) {
-  const leftValue = BigInt(left || "0");
-  const rightValue = BigInt(right || "0");
-
-  if (leftValue === rightValue) return 0;
-  return leftValue > rightValue ? 1 : -1;
 }
 
 export function sortSwapAssets(left: SwapAsset, right: SwapAsset) {

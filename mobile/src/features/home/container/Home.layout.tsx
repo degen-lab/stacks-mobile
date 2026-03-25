@@ -4,11 +4,11 @@ import { View, Card } from "@/components/ui";
 import InviteFriendCard from "../components/invite-friend";
 import PortfolioSummary from "../components/portfolio";
 import { EmptyWalletModal } from "../components/empty-wallet-modal";
-import { ActionButtons } from "@/features/earn/components/action-buttons";
-import { EarnActions } from "@/features/earn/hooks/use-earn-actions";
+import { EarnActionButtons } from "@/features/home/components/action-buttons";
+import type { EarnQuickActions } from "@/features/earn/types";
 
 type HomeScreenLayoutProps = {
-  actions: EarnActions;
+  actions: EarnQuickActions;
   usdBalance: number;
   navigateToPortfolio: () => void;
   navigateToPlay: () => void;
@@ -32,7 +32,7 @@ export default function HomeScreenLayout({
     <View className="flex-1 px-4 py-6 bg-surface-tertiary">
       <PortfolioSummary balance={usdBalance} onPress={navigateToPortfolio} />
       <View className="mt-11">
-        <ActionButtons actions={actions} />
+        <EarnActionButtons actions={actions} />
       </View>
 
       <View className="mt-8 flex-row gap-3">

@@ -33,6 +33,26 @@ export const truncateAddress = (
   return `${address.slice(0, head)}...${address.slice(-tail)}`;
 };
 
+export const formatContractIdentifier = (
+  identifier: string,
+  head = 4,
+  tail = 4,
+): string => {
+  const [contractPrincipal, assetName] = identifier.split("::");
+  if (!contractPrincipal) return identifier;
+
+  const separatorIndex = contractPrincipal.indexOf(".");
+  if (separatorIndex === -1) {
+    const formattedAddress = truncateAddress(contractPrincipal, head, tail);
+    return assetName ? `${formattedAddress} :: ${assetName}` : formattedAddress;
+  }
+
+  const address = contractPrincipal.slice(0, separatorIndex);
+  const formattedAddress = truncateAddress(address, head, tail);
+
+  return assetName ? `${formattedAddress} :: ${assetName}` : formattedAddress;
+};
+
 export const principalHexFromAddress = (address: string | null): string =>
   address ? cvToHex(principalCV(address)) : "";
 

@@ -12,6 +12,7 @@ import { useTrackTx } from "../hooks/use-track-tx";
 import { CONTRACTS } from "@/lib/stacks/contracts";
 import { useFeeEstimation } from "@/api/stacks/use-fee";
 import { FeeOption } from "../components/fee-selector";
+import { GetAssetSheet } from "@/features/transfer/components/get-asset-sheet";
 import { StackingScreenLayout } from "./Stacking.layout";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import {
@@ -19,6 +20,7 @@ import {
   useUserStackingData,
 } from "@/api/stacking";
 import { useTransferSheet } from "@/features/transfer";
+import { useTransak } from "@/features/transak/context/transak-context";
 import { useUserProfile } from "@/api/user";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useSelectedNetwork } from "@/lib/store/settings";
@@ -38,6 +40,8 @@ export function StackingScreen() {
   const { data: userProfile } = useUserProfile();
   const { selectedNetwork } = useSelectedNetwork();
   const { openTransfer } = useTransferSheet();
+  const { openTransak } = useTransak();
+  const [getAssetSheetOpen, setGetAssetSheetOpen] = useState(false);
 
   const approvalSheetRef = useRef<BottomSheetModal>(null);
   const delegateSheetRef = useRef<BottomSheetModal>(null);
@@ -302,7 +306,7 @@ export function StackingScreen() {
 
   const handleStackOrIncrease = async () => {
     if (!hasSufficientFunds) {
-      openTransfer();
+      setGetAssetSheetOpen(true);
       return;
     }
 
@@ -409,13 +413,24 @@ export function StackingScreen() {
   };
 
   return (
-    <StackingScreenLayout
-      poolState={poolState}
-      formState={formState}
-      feeState={feeState}
-      uiState={uiState}
-      actions={actions}
-      stackingHistory={stackingHistory}
-    />
+    <>
+      <StackingScreenLayout
+        poolState={poolState}
+        formState={formState}
+        feeState={feeState}
+        uiState={uiState}
+        actions={actions}
+        stackingHistory={stackingHistory}
+      />
+      <GetAssetSheet
+        open={getAssetSheetOpen}
+        asset="STX"
+        onClose={() => setGetAssetSheetOpen(false)}
+        onBuy={() => openTransak("STX", "buy")}
+        onReceive={() =>
+          openTransfer({ mode: "receive", receive: { asset: "STX" } })
+        }
+      />
+    </>
   );
 }
