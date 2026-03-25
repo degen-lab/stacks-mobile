@@ -1,0 +1,1 @@
+export { DepositDetailScreen } from "./DepositDetail";

@@ -1,6 +1,5 @@
-import { View, Button, Text } from "@/components/ui";
+import { Button, Text, TokenAvatar, View } from "@/components/ui";
 import { Toggle } from "@/components/ui/toggle";
-import { StxCoin, BtcLogo } from "@/components/ui/icons";
 import type { FeeRateTier } from "../../hooks/use-prepare-btc-send";
 import type { SendFormData } from "../../types";
 import { TransactionFundingActions } from "@/components/transaction-funding-actions";
@@ -44,20 +43,12 @@ export function Confirmation({
   feeRatePerVbyte,
   onFeeRateTierChange,
 }: ConfirmationProps) {
-  const getAssetLogo = () => {
-    switch (formData.asset) {
-      case "STX":
-        return <StxCoin size={40} />;
-      case "BTC":
-      case "sBTC":
-        return <BtcLogo size={40} />;
-    }
-  };
-
   return (
     <View className="flex-1 px-5 pb-6">
       <View className="rounded-2xl p-6 border-2 border-surface-tertiary bg-surface-primary items-center mb-4">
-        <View className="mb-3">{getAssetLogo()}</View>
+        <View className="mb-3">
+          <TokenAvatar symbol={formData.asset} size={40} />
+        </View>
         <Text className="text-3xl font-matter font-bold text-primary">
           {formData.amount} {formData.asset}
         </Text>

@@ -1,17 +1,15 @@
 import { usePathname, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { HelpCircle } from "lucide-react-native";
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { useUserProfile } from "@/api/user";
-import { useBtcBalance } from "@/hooks/use-btc-balance";
-import { useStxBalance } from "@/hooks/use-stx-balance";
+import { formatUsd } from "@/lib/format/currency";
+import { usePortfolioBalance } from "@/hooks/use-portfolio-balance";
 import { calculateStreakDays } from "@/lib/format/date";
+import { maskDisplayValue } from "@/lib/format/mask-display-value";
+import { useBalanceVisibility } from "@/lib/store/balance-visibility";
 import { signOut as signOutAction, useAuth } from "@/lib/store/auth";
-import { useActiveAccountIndex } from "@/lib/store/settings";
-import { colors, useModal } from "@/components/ui";
-import ConnectWallet from "@/features/dual-stacking/components/wallet/wallet-connected";
-import { StackingGuideModal } from "@/features/stacking/components/stacking-guide-modal";
+import { buildEarnAssetRoute } from "@/features/earn/lib/asset-route";
+import { EarnBalancePopover } from "../components/EarnBalancePopover";
 import { HeaderLayout } from "./Header.layout";
 
 export function Header() {
@@ -19,56 +17,21 @@ export function Header() {
   const pathname = usePathname();
   const { userData } = useAuth();
   const { data: userProfile } = useUserProfile();
-  const { activeAccountIndex } = useActiveAccountIndex();
   const [profilePopoverVisible, setProfilePopoverVisible] = useState(false);
   const [pointsPopoverVisible, setPointsPopoverVisible] = useState(false);
   const [streakPopoverVisible, setStreakPopoverVisible] = useState(false);
+  const [balancePopoverVisible, setBalancePopoverVisible] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const { isBalanceVisible, toggleBalanceVisibility } = useBalanceVisibility();
+  const portfolio = usePortfolioBalance();
 
-  // Help modal for stacking guide
-  const { ref: stackingHelpModalRef, present: presentStackingHelp } =
-    useModal();
-
-  // Balance hooks
-  const { balance: btcBalance, isLoading: loadingBtc } = useBtcBalance();
-  const { balance: stxBalance, isLoading: loadingStx } =
-    useStxBalance(activeAccountIndex);
-
-  // Check if we're on the Earn screen
   const isEarnScreen =
     pathname.startsWith("/(app)/Earn") || pathname.startsWith("/Earn");
-  const isDualStackingScreen =
-    pathname.includes("/Earn/dual-stacking") ||
-    pathname.includes("/(app)/Earn/dual-stacking");
-
-  // Breadcrumb navigation for nested Earn routes
-  const breadcrumb = useMemo(() => {
-    if (pathname.includes("/Earn/stacking")) {
-      return {
-        parent: "Earn",
-        current: "Stack STX",
-        parentPath: "/Earn",
-        helpIcon: <HelpCircle size={14} color={colors.secondary} />,
-        onHelpPress: presentStackingHelp,
-      };
-    }
-    if (pathname.includes("/Earn/dual-stacking")) {
-      return {
-        parent: "Earn",
-        current: "Dual Stacking",
-        parentPath: "/Earn",
-      };
-    }
-    return null;
-  }, [pathname, presentStackingHelp]);
 
   const avatarSource = useMemo(
     () => (userData?.user.photo ? { uri: userData.user.photo } : {}),
     [userData?.user.photo],
   );
-  const headerName = userData?.user.name ?? "Stacks user";
-
-  const email = userData?.user.email ?? "";
 
   const streakDays = useMemo(
     () =>
@@ -79,20 +42,7 @@ export function Header() {
     [userProfile?.streak, userProfile?.lastStreakCompletionDate],
   );
 
-  const loadingStreak = !userProfile;
-  const loadingPoints = !userProfile;
-
-  const handlePressProfile = useCallback(() => {
-    setProfilePopoverVisible(true);
-  }, []);
-
-  const handlePressPoints = useCallback(() => {
-    setPointsPopoverVisible(true);
-  }, []);
-
-  const handlePressStreak = useCallback(() => {
-    setStreakPopoverVisible(true);
-  }, []);
+  const assets = portfolio.assets;
 
   const handlePressViewProfile = useCallback(() => {
     setProfilePopoverVisible(false);
@@ -109,15 +59,45 @@ export function Header() {
     router.push("/settings/accounts");
   }, [router]);
 
-  const handlePressPointsDetails = useCallback(() => {
-    setPointsPopoverVisible(false);
-    router.push("/leaderboard");
-  }, [router]);
-
   const handlePressPlay = useCallback(() => {
     setPointsPopoverVisible(false);
     router.push("/Play");
   }, [router]);
+
+  const handlePressAsset = useCallback(
+    (asset: (typeof assets)[number]) => {
+      setBalancePopoverVisible(false);
+      router.push(buildEarnAssetRoute(asset));
+    },
+    [router],
+  );
+
+  const earnBalanceTrigger = useMemo(() => {
+    if (!isEarnScreen) return null;
+
+    const formattedBalance = formatUsd(portfolio.usdBalanceOrNull, {
+      compact: true,
+    });
+
+    return {
+      value: isBalanceVisible
+        ? formattedBalance
+        : maskDisplayValue(formattedBalance),
+      loading: portfolio.isLoading,
+      isBalanceVisible,
+      onPress: () => setBalancePopoverVisible(true),
+      onToggleVisibility: () => {
+        void toggleBalanceVisibility();
+      },
+      accessibilityLabel: "Open balance details",
+    };
+  }, [
+    isBalanceVisible,
+    isEarnScreen,
+    portfolio.isLoading,
+    portfolio.usdBalanceOrNull,
+    toggleBalanceVisibility,
+  ]);
 
   const handlePressSignOut = useCallback(async () => {
     if (signingOut) return;
@@ -135,29 +115,18 @@ export function Header() {
   return (
     <>
       <HeaderLayout
-        name={headerName}
-        email={email}
+        name={userData?.user.name ?? "Stacks user"}
+        email={userData?.user.email ?? ""}
         points={userProfile?.points ?? null}
         streak={userProfile?.streak ?? null}
         streakDays={streakDays}
-        loadingStreak={loadingStreak}
-        loadingPoints={loadingPoints}
-        btcBalance={btcBalance}
-        stxBalance={stxBalance}
-        loadingBtc={loadingBtc}
-        loadingStx={loadingStx}
-        isEarnScreen={isEarnScreen}
-        breadcrumb={breadcrumb}
-        breadcrumbRightAccessory={
-          isDualStackingScreen ? <ConnectWallet /> : null
-        }
-        onBreadcrumbPress={() =>
-          breadcrumb && router.push(breadcrumb.parentPath as any)
-        }
+        loadingStreak={!userProfile}
+        loadingPoints={!userProfile}
+        earnBalanceTrigger={earnBalanceTrigger}
         avatarSource={avatarSource}
-        onPressProfile={handlePressProfile}
-        onPressPoints={handlePressPoints}
-        onPressStreak={handlePressStreak}
+        onPressProfile={() => setProfilePopoverVisible(true)}
+        onPressPoints={() => setPointsPopoverVisible(true)}
+        onPressStreak={() => setStreakPopoverVisible(true)}
         profilePopoverVisible={profilePopoverVisible}
         pointsPopoverVisible={pointsPopoverVisible}
         streakPopoverVisible={streakPopoverVisible}
@@ -169,12 +138,16 @@ export function Header() {
         onPressAccountHistory={handlePressAccountHistory}
         onPressSignOut={handlePressSignOut}
         signingOut={signingOut}
-        onPressPointsDetails={handlePressPointsDetails}
         onPressPlay={handlePressPlay}
       />
-
-      <StackingGuideModal
-        modalRef={stackingHelpModalRef as React.RefObject<BottomSheetModal>}
+      <EarnBalancePopover
+        visible={balancePopoverVisible}
+        onClose={() => setBalancePopoverVisible(false)}
+        totalBalanceUsd={portfolio.usdBalanceOrNull}
+        assets={assets}
+        loading={portfolio.isLoading}
+        isBalanceVisible={isBalanceVisible}
+        onPressAsset={handlePressAsset}
       />
     </>
   );

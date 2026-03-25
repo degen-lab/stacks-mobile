@@ -128,8 +128,10 @@ export const useGameSession = ({
         });
         const pointsEarned = response.data?.pointsEarned;
         const sessionScore = response.data?.sessionScore;
-        const isHighScore =
-          bestSubmittedScore === null
+        const hasPositiveScore = (sessionScore ?? 0) > 0;
+        const isHighScore = !hasPositiveScore
+          ? false
+          : bestSubmittedScore === null
             ? true
             : sessionScore > bestSubmittedScore;
 

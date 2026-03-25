@@ -30,7 +30,12 @@ export interface SendFlowRequest {
   locks?: Partial<SendFieldLocks>;
 }
 
+export interface ReceiveFlowRequest {
+  asset?: TransferAsset | null;
+}
+
 export interface TransferSheetRequest {
   mode?: Exclude<TransferMode, "select">;
   send?: SendFlowRequest;
+  receive?: ReceiveFlowRequest;
 }

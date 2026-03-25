@@ -68,6 +68,8 @@ export function CalculatorLayout({
   const [stxDisplayUsd, setStxDisplayUsd] = useState(false);
   const { width } = useWindowDimensions();
   const isWide = width >= 768;
+  const sbtcUnit = sbtcDisplayUsd ? "usd" : "crypto";
+  const stxUnit = stxDisplayUsd ? "usd" : "crypto";
 
   const sbtcDisplayValue = useMemo(() => {
     if (!sbtcDisplayUsd || !Number.isFinite(btcUsdPrice) || btcUsdPrice <= 0) {
@@ -146,6 +148,7 @@ export function CalculatorLayout({
       >
         <View className={isWide ? "flex-row gap-3" : "gap-3"}>
           <ProjectRewardsInput
+            key={`sbtc-${sbtcUnit}`}
             label="sBTC in Wallet"
             icon={
               sbtcDisplayUsd ? (
@@ -162,7 +165,7 @@ export function CalculatorLayout({
             maxDecimals={sbtcDisplayUsd ? 2 : 8}
             headerRight={
               <Toggle
-                value={sbtcDisplayUsd ? "usd" : "crypto"}
+                value={sbtcUnit}
                 options={[
                   { value: "crypto", label: "sBTC" },
                   { value: "usd", label: "USD" },
@@ -173,6 +176,7 @@ export function CalculatorLayout({
           />
 
           <ProjectRewardsInput
+            key={`stx-${stxUnit}`}
             label="STX Stacked"
             icon={
               stxDisplayUsd ? (
@@ -190,7 +194,7 @@ export function CalculatorLayout({
             maxDecimals={stxDisplayUsd ? 2 : 6}
             headerRight={
               <Toggle
-                value={stxDisplayUsd ? "usd" : "crypto"}
+                value={stxUnit}
                 options={[
                   { value: "crypto", label: "STX" },
                   { value: "usd", label: "USD" },

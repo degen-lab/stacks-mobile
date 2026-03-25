@@ -21,6 +21,8 @@ export interface BitcoinFeeRecommendation {
   minimumFee: number;
 }
 
+export type MempoolFeeRecommendation = BitcoinFeeRecommendation;
+
 export interface PreparedBitcoinSend {
   txId: string;
   rawTxHex: string;
@@ -32,3 +34,44 @@ export interface PreparedBitcoinSend {
   recipient: string;
   senderAddress: string;
 }
+
+export type MempoolTransaction = {
+  txid: string;
+  fee?: number;
+  weight?: number;
+  vsize?: number;
+  adjusted_vsize?: number;
+  status: {
+    confirmed: boolean;
+    block_height?: number;
+    block_hash?: string;
+    block_time?: number;
+  };
+  vin: {
+    prevout: {
+      scriptpubkey_address?: string;
+    };
+  }[];
+  vout: {
+    value: number;
+    scriptpubkey: string;
+    scriptpubkey_address?: string;
+  }[];
+};
+
+export type MempoolProjectedBlock = {
+  blockSize: number;
+  blockVSize: number;
+  nTx: number;
+  totalFees: number;
+  medianFee: number;
+  feeRange: number[];
+};
+
+export type MempoolRbfResponse = {
+  replacements?: {
+    tx?: {
+      txid: string;
+    };
+  };
+};

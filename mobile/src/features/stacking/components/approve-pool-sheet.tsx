@@ -1,6 +1,6 @@
 import React from "react";
 import { View, ScrollView } from "react-native";
-import { Button, Text, Modal, colors } from "@/components/ui";
+import { Text, Modal, colors } from "@/components/ui";
 import { FeeOption } from "./fee-selector";
 import { ContractTxDetails } from "@/components/contract-tx-details";
 import { useColorScheme } from "nativewind";
@@ -113,19 +113,6 @@ export function ApprovePoolSheet({
             sponsoredLoading={isSponsoredLoading}
             walletLoading={isLoading}
           />
-
-          <View className="mt-4">
-            <Button
-              label="Cancel"
-              variant="secondary"
-              size="lg"
-              onPress={() => {
-                onClose();
-                sheetRef.current?.dismiss();
-              }}
-              disabled={isLoading || isSponsoredLoading}
-            />
-          </View>
         </View>
       </ScrollView>
     </Modal>

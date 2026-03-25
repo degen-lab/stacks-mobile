@@ -14,13 +14,14 @@ import { StackingHistoryCard } from "../components/stacking-history-card";
 import type { UserStackingDataRow } from "@/api/stacking";
 
 interface PoolState {
-  stxBalance: number;
+  availableStxBalance: number;
   activePosition?: {
     lockedAmount: number;
     lockDuration: number;
     nextUnlockDays: number;
     status: "ACTIVE";
     poolName: string;
+    rewardedStxAmount?: number | null;
   };
   stackingInfo: {
     apy: number;
@@ -84,7 +85,7 @@ interface Actions {
   onSelectFee: (option: FeeOption) => void;
   onCustomFeeChange: (value: string) => void;
   setShowPoolOptions: (show: boolean) => void;
-  onRevoke?: () => void;
+  onLeavePool?: () => void;
 }
 
 interface StackingHistoryState {
@@ -111,7 +112,7 @@ export function StackingScreenLayout({
   stackingHistory,
 }: StackingScreenLayoutProps) {
   const {
-    stxBalance,
+    availableStxBalance,
     activePosition,
     stackingInfo,
     isMainnet,
@@ -158,7 +159,7 @@ export function StackingScreenLayout({
     onSelectFee,
     onCustomFeeChange,
     setShowPoolOptions,
-    onRevoke,
+    onLeavePool,
   } = actions;
   const { delegations, isLoading, isError } = stackingHistory;
   const getCtaLabel = () => {
@@ -227,7 +228,6 @@ export function StackingScreenLayout({
                 }
                 lockingTime="2-week cycles"
                 minimumStx={40}
-                onMenuPress={() => setShowPoolOptions(true)}
                 activePosition={activePosition}
                 price={stackingInfo.price}
                 timeTillRewardPhase={stackingInfo.timeTillRewardPhase}
@@ -236,7 +236,7 @@ export function StackingScreenLayout({
 
             <View className="mb-4">
               <StackingCalculator
-                availableBalance={stxBalance}
+                availableBalance={availableStxBalance}
                 activePosition={activePosition}
                 onUpdateChange={onUpdateChange}
                 calculate={calculate}
@@ -276,7 +276,7 @@ export function StackingScreenLayout({
         visible={showPoolOptions}
         onClose={() => setShowPoolOptions(false)}
         activePosition={activePosition}
-        onRevoke={onRevoke}
+        onLeavePool={onLeavePool}
       />
 
       <ApprovePoolSheet

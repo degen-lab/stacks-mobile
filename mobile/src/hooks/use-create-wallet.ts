@@ -26,7 +26,7 @@ export function useCreateWallet() {
   const createWallet = useCallback(
     async ({ password }: GoogleWalletFlowOptions): Promise<void> => {
       try {
-        await walletKit.createWallet(password);
+        await walletKit.createWallet();
         await walletKit.backupWallet(password);
         completeGoogleAuth(true);
         triggerHaptics("success");

@@ -1,8 +1,10 @@
 import { colors, Text } from "@/components/ui";
 import Chart from "@/components/ui/chart";
 import formatCurrency from "@/lib/format/currency";
+import { maskDisplayValue } from "@/lib/format/mask-display-value";
+import { useBalanceVisibility } from "@/lib/store/balance-visibility";
 import { ChevronRight, Eye, EyeOff } from "lucide-react-native";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Pressable, View } from "react-native";
 
 interface PortfolioSummaryProps {
@@ -11,26 +13,35 @@ interface PortfolioSummaryProps {
 }
 
 const PortfolioSummary = ({ balance, onPress }: PortfolioSummaryProps) => {
-  const [isVisible, setIsVisible] = useState(true);
+  const { isBalanceVisible, toggleBalanceVisibility } = useBalanceVisibility();
   const hasBalance = balance > 0;
   const { dollars, cents } = useMemo(() => {
-    if (!isVisible) {
-      return { dollars: "----", cents: ".--" };
-    }
+    const formatted = formatCurrency(balance);
 
-    return formatCurrency(balance);
-  }, [balance, isVisible]);
+    if (isBalanceVisible) return formatted;
+
+    return {
+      dollars: maskDisplayValue(formatted.dollars),
+      cents: maskDisplayValue(formatted.cents),
+    };
+  }, [balance, isBalanceVisible]);
   return (
     <View className="rounded-xl flex-row justify-between items-end">
       <View className="flex-1">
         <View className="flex-row items-center mb-2">
           <Text className="text-xl">Portfolio</Text>
           <Pressable
-            onPress={() => setIsVisible((prev) => !prev)}
+            onPress={() => {
+              void toggleBalanceVisibility();
+            }}
             className="p-2 -mr-2"
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isBalanceVisible ? "Hide balances" : "Show balances"
+            }
           >
-            {isVisible ? (
+            {isBalanceVisible ? (
               <EyeOff color={colors.neutral[600]} size={16} />
             ) : (
               <Eye color={colors.neutral[600]} size={16} />

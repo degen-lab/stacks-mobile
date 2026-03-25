@@ -56,6 +56,12 @@ module.exports = {
           'blood-orange': '#FC6432',
           'accent-400': '#FF8A64',
         },
+        'accent-bitcoin': {
+          600: '#E17C18',
+        },
+        'accent-stacks': {
+          700: '#9C310D',
+        },
         bitcoin: {
           DEFAULT: '#F7931A',
           50: '#FEF7EC',
@@ -86,11 +92,12 @@ module.exports = {
         'instrument-sans-bold': ['InstrumentSans-Bold', 'system-ui', 'sans-serif'],
         'dm-sans-extralight': ['DMSans-ExtraLight', 'system-ui', 'sans-serif'],
         'matter': ['Matter-Regular', 'system-ui', 'sans-serif'],
-        'matter-sq-mono': ['MatterSQMono-Medium', 'system-ui', 'monospace'],
+        'matter-sq-mono': ['MatterSQMono-Regular', 'system-ui', 'monospace'],
         'matter-mono': ['MatterMono-Regular', 'system-ui', 'monospace'],
       },
       boxShadow: {
         'elevation-light-m': '0 8px 16px 0 rgba(213, 211, 209, 0.4)',
+        'elevation-light-l': '0 16px 32px 0 rgba(183, 180, 176, 0.2)',
         'blood-orange': '0 8px 16px 0 rgba(252, 100, 50, 0.4)',
         'dual-stacking': '0 10px 30px -5px rgba(255, 152, 53, 0.5)',
         'cta-button': '0 8px 26px 0 rgba(255, 152, 53, 0.8)',

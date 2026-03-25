@@ -14,24 +14,35 @@ type ToggleProps<T extends string> = {
   value: T;
   options: ToggleOption<T>[];
   onChange: (value: T) => void;
+  variant?: "default" | "card";
+  testIDPrefix?: string;
 };
 
 function ToggleItem<T extends string>({
   option,
   active,
   onPress,
+  testID,
+  variant,
 }: {
   option: ToggleOption<T>;
   active: boolean;
   onPress: () => void;
+  testID?: string;
+  variant: "default" | "card";
 }) {
   return (
     <TouchableOpacity
+      testID={testID}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
       activeOpacity={0.7}
-      style={[styles.item, active ? styles.activeItem : styles.inactiveItem]}
+      style={[
+        styles.item,
+        active ? styles.activeItem : styles.inactiveItem,
+        variant === "card" ? styles.itemCard : null,
+      ]}
     >
       {option.icon}
       <Text
@@ -47,15 +58,26 @@ export function Toggle<T extends string>({
   value,
   options,
   onChange,
+  variant = "default",
+  testIDPrefix,
 }: ToggleProps<T>) {
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        variant === "card" ? styles.containerCard : null,
+      ]}
+    >
       {options.map((option) => (
         <ToggleItem
           key={option.value}
           option={option}
           active={value === option.value}
           onPress={() => onChange(option.value)}
+          testID={
+            testIDPrefix ? `${testIDPrefix}-${String(option.value)}` : undefined
+          }
+          variant={variant}
         />
       ))}
     </View>
@@ -93,5 +115,14 @@ const styles = StyleSheet.create({
   },
   inactiveItem: {
     backgroundColor: "transparent",
+  },
+  containerCard: {
+    borderRadius: 12,
+    borderColor: "#D5D3D1",
+    backgroundColor: "#F7F6F5",
+    padding: 6,
+  },
+  itemCard: {
+    borderRadius: 8,
   },
 });

@@ -1,5 +1,5 @@
 import type { UserProfile } from "@/api/user/types";
-import { ScrollView, Text } from "@/components/ui";
+import { ScrollView, Text, useModal, colors } from "@/components/ui";
 import { StackIcon } from "@/components/ui/icons/stack";
 import { SparkleIcon } from "@/components/ui/icons/sparkle";
 import { LeaderboardList } from "@/features/leaderboard/components/leaderboard-list";
@@ -9,12 +9,14 @@ import {
   ChallengeCard,
   GameCard,
   MenuButton,
+  PlayHelpModal,
   PowerUpsModal,
   SkinSelectorModal,
 } from "@/features/play/components";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { HelpCircle } from "lucide-react-native";
 import { RefObject } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 interface PlayLayoutProps {
   dailyStreakDescription: string;
@@ -48,6 +50,8 @@ export function PlayLayout({
   onOpenSkinSelector,
   onOpenPowerUps,
 }: PlayLayoutProps) {
+  const { ref: playHelpModalRef, present: presentPlayHelp } = useModal();
+
   return (
     <ScrollView
       className="flex-1 bg-surface-tertiary"
@@ -57,7 +61,23 @@ export function PlayLayout({
         paddingBottom: 20,
       }}
     >
-      <Text className="text-xl mb-3">Let&apos;s Play!</Text>
+      <View className="flex-row items-center gap-2 mb-3">
+        <Text className="text-xl">Let&apos;s Play!</Text>
+        <Pressable
+          onPress={presentPlayHelp}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Play help"
+          style={{
+            width: 24,
+            height: 24,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <HelpCircle size={16} color={colors.secondary} />
+        </Pressable>
+      </View>
       <GameCard
         title="Stacks Bridge"
         highscore={submittedHighscore ?? 0}
@@ -104,6 +124,9 @@ export function PlayLayout({
         availablePoints={userProfile?.points}
       />
       <PowerUpsModal ref={powerUpsModalRef} />
+      <PlayHelpModal
+        modalRef={playHelpModalRef as React.RefObject<BottomSheetModal>}
+      />
     </ScrollView>
   );
 }

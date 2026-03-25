@@ -80,7 +80,7 @@ describe("PlayScreen", () => {
     mockLayoutProps.current?.onOpenSkinSelector();
     mockLayoutProps.current?.onOpenPowerUps();
 
-    expect(__mockRouter.push).toHaveBeenCalledWith("/stacks-bridge");
+    expect(__mockRouter.navigate).toHaveBeenCalledWith("/stacks-bridge");
     expect(presentSkin).toHaveBeenCalled();
     expect(presentPowerUps).toHaveBeenCalled();
   });

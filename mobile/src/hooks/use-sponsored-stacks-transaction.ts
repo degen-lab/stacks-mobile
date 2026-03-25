@@ -22,6 +22,7 @@ type SubmitSponsoredTransactionOptions = {
   originAddress: string;
   accountIndex: number;
   unsignedSerializedTx: string;
+  defiOperationId?: number;
 };
 
 type SubmitPreparedSponsoredTransactionOptions = {
@@ -126,6 +127,7 @@ export function useSponsoredStacksTransaction() {
       originAddress,
       accountIndex,
       unsignedSerializedTx,
+      defiOperationId,
     }: SubmitSponsoredTransactionOptions): Promise<number> => {
       if (!userId) {
         throw new Error("User profile not available.");
@@ -133,6 +135,7 @@ export function useSponsoredStacksTransaction() {
 
       const response = await createSponsoredTransactionMutation.mutateAsync({
         originAddress,
+        defiOperationId,
       });
       const requestId = response.data?.requestId;
       if (!requestId) {

@@ -3,15 +3,15 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { showMessage } from "react-native-flash-message";
 import { formatMicroStx, MICRO_STX } from "@/lib/format/currency";
 import { useStacking } from "../hooks/use-stacking";
-import { useFastPool } from "@/api/stacks/fast-pool/use-fast-pool";
 import {
   getAllowanceArgs,
   getDelegateArgs,
 } from "@/api/stacks/fast-pool/fast-pool";
 import { useTrackTx } from "../hooks/use-track-tx";
-import { CONTRACTS } from "@/lib/stacks/contracts";
 import { useFeeEstimation } from "@/api/stacks/use-fee";
 import { FeeOption } from "../components/fee-selector";
+import { LeavePoolSheet } from "../components/leave-pool-sheet";
+import { GetAssetSheet } from "@/features/transfer/components/get-asset-sheet";
 import { StackingScreenLayout } from "./Stacking.layout";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import {
@@ -19,21 +19,34 @@ import {
   useUserStackingData,
 } from "@/api/stacking";
 import { useTransferSheet } from "@/features/transfer";
+import { useTransak } from "@/features/transak/context/transak-context";
 import { useUserProfile } from "@/api/user";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useSelectedNetwork } from "@/lib/store/settings";
-import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
-import { buildUnsignedContractCall } from "@/lib/stacks/transaction-builder";
-import { PostConditionMode } from "@stacks/transactions";
-import { getActiveWalletAccount } from "@/lib/stacks/active-account";
+import { useFastPoolActions } from "../hooks/use-fast-pool-actions";
 
 export function StackingScreen() {
   const { stackingInfo, daysPerCycle, calculate } = useStacking();
-  const { balance: stxBalance, lockedBalance } = useStxBalance();
+  const {
+    balance: stxBalance,
+    availableBalance: availableStxBalance,
+    lockedBalance,
+  } = useStxBalance();
   const { stxAddress: address } = useWalletAddresses();
   const { data: userProfile } = useUserProfile();
+  const {
+    data: userStackingData = [],
+    isLoading: isUserStackingDataLoading,
+    isError: isUserStackingDataError,
+  } = useUserStackingData({
+    variables: { userId: userProfile?.id ?? 0 },
+    enabled: !!userProfile?.id,
+  });
   const { selectedNetwork } = useSelectedNetwork();
   const { openTransfer } = useTransferSheet();
+  const { openTransak } = useTransak();
+  const [getAssetSheetOpen, setGetAssetSheetOpen] = useState(false);
+  const [isLeavePoolOpen, setIsLeavePoolOpen] = useState(false);
 
   const approvalSheetRef = useRef<BottomSheetModal>(null);
   const delegateSheetRef = useRef<BottomSheetModal>(null);
@@ -44,12 +57,36 @@ export function StackingScreen() {
     isAllowed,
     approveAsync,
     delegateAsync,
-    revokeAsync,
-  } = useFastPool(address ?? undefined);
-  const { submitSponsoredTransaction, isSubmittingSponsored } =
-    useSponsoredStacksTransaction();
+    isRevoking,
+    isDisallowing,
+    poolContract,
+    poxContract,
+    isSubmittingSponsored,
+    approvePoolSponsored,
+    delegateStxSponsored,
+    revokeDelegation,
+    revokeDelegationSponsored,
+    disallowPoolPermission,
+    disallowPoolPermissionSponsored,
+  } = useFastPoolActions(address ?? undefined);
 
   const isStacking = poolStatus?.isLocked ?? false;
+  const totalRewardedStx = useMemo(
+    () =>
+      userStackingData.reduce(
+        (total, delegation) =>
+          total + Number(delegation.rewardedStxAmount ?? 0),
+        0,
+      ),
+    [userStackingData],
+  );
+  const hasTrackedRewards = useMemo(
+    () =>
+      userStackingData.some(
+        (delegation) => delegation.rewardedStxAmount != null,
+      ),
+    [userStackingData],
+  );
 
   const activePosition = isStacking
     ? {
@@ -58,6 +95,7 @@ export function StackingScreen() {
         nextUnlockDays: daysPerCycle,
         status: "ACTIVE" as const,
         poolName: "Fast Pool",
+        rewardedStxAmount: hasTrackedRewards ? totalRewardedStx : undefined,
       }
     : undefined;
 
@@ -81,7 +119,6 @@ export function StackingScreen() {
     "approve" | "delegate" | null
   >(null);
 
-  const poolContract = CONTRACTS[selectedNetwork].stackingFastPool;
   const isMainnet = selectedNetwork === "mainnet";
   const [contractAddress, contractName] = poolContract.split(".");
 
@@ -206,22 +243,7 @@ export function StackingScreen() {
   const handleSponsoredApproval = async () => {
     setIsProcessing(true);
     try {
-      const { account, accountIndex, address } = await getActiveWalletAccount();
-      const unsignedSerializedTx = await buildUnsignedContractCall({
-        contractId: poolContract,
-        functionName: "allow-contract-caller",
-        functionArgs: getAllowanceArgs(poolContract),
-        network: selectedNetwork,
-        publicKey: account.publicKey,
-        feeMicroStx,
-        postConditionMode: PostConditionMode.Allow,
-        sponsored: true,
-      });
-      await submitSponsoredTransaction({
-        originAddress: address,
-        accountIndex,
-        unsignedSerializedTx,
-      });
+      await approvePoolSponsored(feeMicroStx);
 
       approvalSheetRef.current?.dismiss();
       setIsProcessing(false);
@@ -260,22 +282,7 @@ export function StackingScreen() {
     setIsProcessing(true);
     try {
       const amountMicroStx = Math.floor(totalStackingAmount * MICRO_STX);
-      const { account, accountIndex, address } = await getActiveWalletAccount();
-      const unsignedSerializedTx = await buildUnsignedContractCall({
-        contractId: poolContract,
-        functionName: "delegate-stx",
-        functionArgs: getDelegateArgs(amountMicroStx),
-        network: selectedNetwork,
-        publicKey: account.publicKey,
-        feeMicroStx,
-        postConditionMode: PostConditionMode.Allow,
-        sponsored: true,
-      });
-      await submitSponsoredTransaction({
-        originAddress: address,
-        accountIndex,
-        unsignedSerializedTx,
-      });
+      await delegateStxSponsored(amountMicroStx, feeMicroStx);
 
       delegateSheetRef.current?.dismiss();
       setIsProcessing(false);
@@ -298,7 +305,7 @@ export function StackingScreen() {
 
   const handleStackOrIncrease = async () => {
     if (!hasSufficientFunds) {
-      openTransfer();
+      setGetAssetSheetOpen(true);
       return;
     }
 
@@ -330,25 +337,29 @@ export function StackingScreen() {
     setPendingAmount(newAmount);
   };
 
-  const handleRevoke = async () => {
-    try {
-      await revokeAsync();
-    } catch (error) {
-      console.error("Failed to revoke delegation:", error);
-    }
+  const handleOpenLeavePool = () => {
+    setShowPoolOptions(false);
+    setIsLeavePoolOpen(true);
   };
 
-  const {
-    data: userStackingData = [],
-    isLoading: isUserStackingDataLoading,
-    isError: isUserStackingDataError,
-  } = useUserStackingData({
-    variables: { userId: userProfile?.id ?? 0 },
-    enabled: !!userProfile?.id,
-  });
+  const handleRevoke = async (leaveFeeMicroStx?: number) => {
+    return revokeDelegation(leaveFeeMicroStx);
+  };
+
+  const handleSponsoredRevoke = async (leaveFeeMicroStx?: number) => {
+    return revokeDelegationSponsored(leaveFeeMicroStx);
+  };
+
+  const handleDisallow = async (leaveFeeMicroStx?: number) => {
+    return disallowPoolPermission(leaveFeeMicroStx);
+  };
+
+  const handleSponsoredDisallow = async (leaveFeeMicroStx?: number) => {
+    return disallowPoolPermissionSponsored(leaveFeeMicroStx);
+  };
 
   const poolState = {
-    stxBalance,
+    availableStxBalance,
     activePosition,
     stackingInfo,
     isMainnet,
@@ -376,7 +387,8 @@ export function StackingScreen() {
 
   const uiState = {
     showPoolOptions,
-    isProcessing: isProcessing || isDelegatePending,
+    isProcessing:
+      isProcessing || isDelegatePending || isRevoking || isDisallowing,
     isSponsoredSubmitting: isSubmittingSponsored,
     isApprovalPending,
     isDelegatePending,
@@ -395,7 +407,7 @@ export function StackingScreen() {
     onSelectFee: setSelectedFeeOption,
     onCustomFeeChange: setCustomFee,
     setShowPoolOptions,
-    onRevoke: handleRevoke,
+    onLeavePool: handleOpenLeavePool,
   };
 
   const stackingHistory = {
@@ -405,13 +417,37 @@ export function StackingScreen() {
   };
 
   return (
-    <StackingScreenLayout
-      poolState={poolState}
-      formState={formState}
-      feeState={feeState}
-      uiState={uiState}
-      actions={actions}
-      stackingHistory={stackingHistory}
-    />
+    <>
+      <StackingScreenLayout
+        poolState={poolState}
+        formState={formState}
+        feeState={feeState}
+        uiState={uiState}
+        actions={actions}
+        stackingHistory={stackingHistory}
+      />
+      <GetAssetSheet
+        open={getAssetSheetOpen}
+        asset="STX"
+        onClose={() => setGetAssetSheetOpen(false)}
+        onBuy={() => openTransak("STX", "buy")}
+        onReceive={() =>
+          openTransfer({ mode: "receive", receive: { asset: "STX" } })
+        }
+      />
+      <LeavePoolSheet
+        open={isLeavePoolOpen}
+        onOpenChange={setIsLeavePoolOpen}
+        network={selectedNetwork}
+        poolContract={poolContract}
+        poxContract={poxContract}
+        isStacking={isStacking}
+        isAllowed={Boolean(isAllowed)}
+        onRevoke={handleRevoke}
+        onSponsoredRevoke={handleSponsoredRevoke}
+        onDisallow={handleDisallow}
+        onSponsoredDisallow={handleSponsoredDisallow}
+      />
+    </>
   );
 }

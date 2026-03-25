@@ -1,64 +1,86 @@
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  Text,
-  View,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui";
-import { StatsCards } from "@/features/earn/components/stats-cards";
-import { ActionButtons } from "@/features/earn/components/action-buttons";
-import { DeFiProtocolsList } from "@/features/earn/components/defi-protocols-list";
-import { EarnActions } from "@/features/earn/hooks/use-earn-actions";
+import { Text, View } from "@/components/ui";
+import { TokensList } from "@/features/earn/components/tokens/tokens-list";
+import { EarnNextStepsSection } from "@/features/earn/components/next-step/earn-next-steps-section";
+import { EarnOverviewCard } from "@/features/earn/components/portfolio/overview-card";
+import type {
+  EarnAssetSnapshot,
+  EarnNextStepCard,
+  EarnRewardRow,
+} from "@/features/earn/types";
 
-type EarnProps = {
-  totalBalance: string | null;
-  totalEarnings: number | null;
-  actions: EarnActions;
-  activeTab: string;
-  onTabChange: (value: string) => void;
+type EarnLayoutProps = {
+  assets: EarnAssetSnapshot[];
+  portfolioTotalUsd: number | null;
+  rewardsTotalUsd: number | null;
+  rewardRows: EarnRewardRow[];
+  nextStepCards: EarnNextStepCard[];
+  isLoading: boolean;
+  isRewardsLoading: boolean;
+  isNextStepsLoading: boolean;
+  isBalanceVisible: boolean;
+  onPressRewardRow: (row: EarnRewardRow) => void;
+  onPressNextStepCard: (card: EarnNextStepCard) => void;
+  onPressAsset: (asset: EarnAssetSnapshot) => void;
 };
 
 export default function EarnLayout({
-  totalBalance,
-  totalEarnings,
-  actions,
-  activeTab,
-  onTabChange,
-}: EarnProps) {
+  assets,
+  portfolioTotalUsd,
+  rewardsTotalUsd,
+  rewardRows,
+  nextStepCards,
+  isLoading,
+  isRewardsLoading,
+  isNextStepsLoading,
+  isBalanceVisible,
+  onPressRewardRow,
+  onPressNextStepCard,
+  onPressAsset,
+}: EarnLayoutProps) {
   return (
-    <SafeAreaView className=" bg-surface-tertiary" edges={["bottom"]}>
+    <SafeAreaView className="flex-1 bg-surface-tertiary" edges={[]}>
       <ScrollView
         className="px-4"
-        contentContainerStyle={{ paddingTop: 24, paddingBottom: 24, gap: 24 }}
+        contentContainerStyle={{ paddingTop: 18, paddingBottom: 32, gap: 18 }}
       >
-        <StatsCards totalBalance={totalBalance} totalEarnings={totalEarnings} />
-        <ActionButtons actions={actions} />
+        <View
+          testID="earn-portfolio-section"
+          className="rounded-[20px] border border-surface-secondary bg-sand-50 px-4 py-4"
+        >
+          <EarnOverviewCard
+            assets={assets}
+            portfolioTotalUsd={portfolioTotalUsd}
+            rewardsTotalUsd={rewardsTotalUsd}
+            rewardRows={rewardRows}
+            isLoading={isLoading}
+            isRewardsLoading={isRewardsLoading}
+            isBalanceVisible={isBalanceVisible}
+            onPressRewardRow={onPressRewardRow}
+            onPressAsset={onPressAsset}
+          />
+        </View>
 
-        <Tabs value={activeTab} onValueChange={onTabChange}>
-          <TabsList>
-            <TabsTrigger value="defi">Earn with DeFi</TabsTrigger>
-            <TabsTrigger value="assets">Assets</TabsTrigger>
-          </TabsList>
+        <EarnNextStepsSection
+          cards={nextStepCards}
+          isLoading={isNextStepsLoading}
+          onPressCard={onPressNextStepCard}
+        />
 
-          <TabsContent value="defi">
-            <DeFiProtocolsList />
-          </TabsContent>
+        <View testID="earn-assets-section" className="gap-3">
+          <Text className="font-matter text-xl leading-6 tracking-tight text-primary">
+            Your Assets
+          </Text>
 
-          <TabsContent value="assets">
-            <View className="py-10">
-              <Text className="text-2xl font-matter font-bold text-foreground text-center">
-                Assets
-              </Text>
-              <Text className="mt-2 text-lg text-secondary text-center">
-                Coming soon.
-              </Text>
-            </View>
-          </TabsContent>
-        </Tabs>
+          <TokensList
+            assets={assets}
+            isLoading={isLoading}
+            isBalanceVisible={isBalanceVisible}
+            onPressAsset={onPressAsset}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

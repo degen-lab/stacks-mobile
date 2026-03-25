@@ -1,10 +1,9 @@
 import { ArrowUpDown, ChevronDown } from "lucide-react-native";
 import { Pressable, StyleSheet, TextInput } from "react-native";
 
-import { Button, Text, View, colors } from "@/components/ui";
+import { Button, Text, TokenAvatar, View, colors } from "@/components/ui";
 import type { SwapViewModel } from "../hooks/use-swap";
 import type { SwapAsset } from "../types";
-import { TokenAvatar } from "../components/token-avatar";
 
 type SwapFormViewProps = {
   swap: SwapViewModel;
@@ -42,7 +41,9 @@ function SwapSection({
         className="flex-row items-center justify-between"
         style={{ minHeight: 28 }}
       >
-        <Text className="font-matter text-base text-primary">{label}</Text>
+        <Text className="font-instrument-sans-semibold text-sm text-secondary">
+          {label}
+        </Text>
         {action}
       </View>
 
@@ -90,7 +91,7 @@ function SwapSection({
         </View>
 
         <Pressable onPress={onSelectToken}>
-          <View className="flex-row items-center gap-2 rounded-full bg-white border-border-secondary border px-2.5 py-1.5">
+          <View className="flex-row items-center gap-2 rounded-full border-2 border-border-secondary px-2.5 py-1.5">
             <TokenAvatar
               icon={token?.icon}
               symbol={token?.symbol ?? "?"}
@@ -136,7 +137,7 @@ function SwapCard({
     : swap.destinationEmptyState;
 
   return (
-    <View className="overflow-hidden rounded-2xl bg-sand-100 mb-4">
+    <View className="overflow-hidden rounded-[20px] border border-border-secondary bg-sand-100 mb-4">
       <SwapSection
         label="You're paying"
         token={swap.sourceToken}
@@ -152,8 +153,8 @@ function SwapCard({
             variant="outline"
             size="sm"
             onPress={swap.onMax}
-            className="rounded-full border border-sand-300 bg-sand-100 px-3 py-1"
-            textClassName="text-xs font-instrument-sans text-primary"
+            className="rounded-lg border-2 border-border-secondary bg-transparent"
+            textClassName="text-xs font-instrument-sans-medium text-secondary"
           />
         }
       />
@@ -161,7 +162,7 @@ function SwapCard({
       <View className="flex-row items-center px-4">
         <View className="h-px flex-1 bg-surface-secondary" />
         <Pressable style={styles.flipButton} onPress={swap.onFlip}>
-          <ArrowUpDown size={16} color={colors.neutral[800]} />
+          <ArrowUpDown size={14} color={colors.secondary} />
         </Pressable>
         <View className="h-px flex-1 bg-surface-secondary" />
       </View>
@@ -224,10 +225,10 @@ const styles = StyleSheet.create({
   flipButton: {
     height: 32,
     width: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.neutral[300],
-    backgroundColor: colors.neutral[50],
+    borderRadius: 8,
+    backgroundColor: "#EAE8E6",
+    borderWidth: 2,
+    borderColor: "#D5D3D1",
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 8,

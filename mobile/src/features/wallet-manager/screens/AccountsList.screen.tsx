@@ -15,6 +15,7 @@ import {
 } from "@/lib/store/settings";
 import { getAddressForNetwork } from "@/lib/stacks/addresses";
 import { walletKit } from "@/lib/stacks/wallet";
+import { useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { showMessage } from "react-native-flash-message";
@@ -34,6 +35,7 @@ import { ViewMnemonicModal } from "../components/view-mnemonic-modal";
 
 export default function AccountsListScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { selectedNetwork } = useSelectedNetwork();
   const { activeAccountIndex, setActiveAccountIndex } = useActiveAccountIndex();
   const [hasBackup, setHasBackup] = useState(false);
@@ -90,7 +92,8 @@ export default function AccountsListScreen() {
   const handleWalletReplaced = useCallback(async () => {
     await setActiveAccountIndex(0);
     await loadAccounts({ useLoading: false });
-  }, [loadAccounts, setActiveAccountIndex]);
+    queryClient.clear();
+  }, [loadAccounts, queryClient, setActiveAccountIndex]);
 
   const handleDeleteBackup = useCallback(async () => {
     try {

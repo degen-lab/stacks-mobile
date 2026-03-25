@@ -8,6 +8,7 @@ export function PasswordInput({
   onPasswordChange,
   onToggleShowPassword,
   error,
+  placeholder,
   inputTestID,
   toggleTestID,
 }: {
@@ -16,6 +17,7 @@ export function PasswordInput({
   onPasswordChange: (password: string) => void;
   onToggleShowPassword: () => void;
   error?: string;
+  placeholder?: string;
   inputTestID?: string;
   toggleTestID?: string;
 }) {
@@ -25,7 +27,7 @@ export function PasswordInput({
         testID={inputTestID}
         value={password}
         onChangeText={onPasswordChange}
-        placeholder="Password"
+        placeholder={placeholder ?? "Password"}
         secureTextEntry={!showPassword}
         autoCapitalize="none"
         autoCorrect={false}

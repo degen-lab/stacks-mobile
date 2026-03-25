@@ -1,8 +1,5 @@
 import { useEffect } from "react";
-import {
-  openBrowserAsync,
-  WebBrowserPresentationStyle,
-} from "expo-web-browser";
+import { router } from "expo-router";
 
 import { Image, Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
@@ -41,30 +38,16 @@ export function StackingPoolSheet({ open, onOpenChange }: Props) {
           through Dual Stacking.
         </Text>
         <Text className="font-instrument-sans text-sm text-secondary leading-5">
-          You&apos;ll be redirected to Leather Earn to view active Stacking
-          pools.
+          You&apos;ll be redirected to our in-app Fast Pool stacking flow.
         </Text>
         <Button
-          label="Stack with Leather ↗"
+          label="Stack with Fast Pool"
           variant="default"
           size="lg"
           className="mt-1"
           onPress={() => {
             onOpenChange(false);
-            void openBrowserAsync("https://app.leather.io/stacking", {
-              presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-            });
-          }}
-        />
-        <Button
-          label="Liquid Stack with StackingDAO ↗"
-          variant="gameOutline"
-          size="lg"
-          onPress={() => {
-            onOpenChange(false);
-            void openBrowserAsync("https://app.stackingdao.com/", {
-              presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-            });
+            router.push("/Earn/stacking");
           }}
         />
       </View>

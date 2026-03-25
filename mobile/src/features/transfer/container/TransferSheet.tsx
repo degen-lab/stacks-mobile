@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable } from "react-native";
 import { showMessage } from "react-native-flash-message";
-import { Modal, Text } from "@/components/ui";
+import { Modal, Text, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { useBroadcastBitcoinTransaction } from "@/api/bitcoin";
 import { fromSatsToBtc, MICRO_STX } from "@/lib/format/currency";
@@ -71,6 +71,7 @@ export function TransferSheet({
   const [qrAddress, setQrAddress] = useState<string | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasOpenedRef = useRef(false);
+  const hasHandledRequestedReceiveRef = useRef(false);
   const currentAsset = sendFlow.formData.asset;
   const currentBalance = getCurrentBalance(currentAsset);
   const currentBalanceIsLoading = getCurrentBalanceIsLoading(currentAsset);
@@ -115,10 +116,37 @@ export function TransferSheet({
 
   const broadcastBitcoinTx = useBroadcastBitcoinTransaction(selectedNetwork);
 
-  const btcFeeDisplay = useMemo(() => {
-    if (!preparedBtcSend) return "0.00000000";
-    return fromSatsToBtc(preparedBtcSend.feeSats).toFixed(8);
-  }, [preparedBtcSend]);
+  const btcFeeDisplay = preparedBtcSend
+    ? fromSatsToBtc(preparedBtcSend.feeSats).toFixed(8)
+    : "0.00000000";
+
+  const getReceiveAddress = useCallback(
+    (asset: TransferAsset | null | undefined) => {
+      if (asset === "STX") return stxAddress;
+      if (asset === "BTC") return btcAddress;
+      return null;
+    },
+    [btcAddress, stxAddress],
+  );
+  const requestedReceiveAsset =
+    request?.mode === "receive" ? (request.receive?.asset ?? null) : null;
+  const requestedReceiveAddress = requestedReceiveAsset
+    ? getReceiveAddress(requestedReceiveAsset)
+    : null;
+  const pendingRequestedReceiveQrAsset =
+    open &&
+    !qrAsset &&
+    !qrAddress &&
+    !hasHandledRequestedReceiveRef.current &&
+    requestedReceiveAsset &&
+    requestedReceiveAddress
+      ? requestedReceiveAsset
+      : null;
+  const pendingRequestedReceiveQrAddress = pendingRequestedReceiveQrAsset
+    ? requestedReceiveAddress
+    : null;
+  const activeQrAsset = qrAsset ?? pendingRequestedReceiveQrAsset;
+  const activeQrAddress = qrAddress ?? pendingRequestedReceiveQrAddress;
 
   useEffect(() => {
     if (closeTimeoutRef.current) {
@@ -141,6 +169,7 @@ export function TransferSheet({
       reset();
       setQrAsset(null);
       setQrAddress(null);
+      hasHandledRequestedReceiveRef.current = false;
       closeTimeoutRef.current = null;
     }, 300);
 
@@ -155,6 +184,7 @@ export function TransferSheet({
   useEffect(() => {
     if (!open) return;
 
+    hasHandledRequestedReceiveRef.current = false;
     setQrAsset(null);
     setQrAddress(null);
 
@@ -165,8 +195,60 @@ export function TransferSheet({
       return;
     }
 
+    const requestedAsset =
+      request?.mode === "receive" ? request.receive?.asset : null;
+    const requestedAddress = getReceiveAddress(requestedAsset);
+
+    if (requestedAsset && requestedAddress) {
+      setQrAsset(requestedAsset);
+      setQrAddress(requestedAddress);
+      hasHandledRequestedReceiveRef.current = true;
+    }
+
     reset();
-  }, [initialMode, initialize, open, request, requestVersion, reset, setMode]);
+  }, [
+    getReceiveAddress,
+    initialMode,
+    initialize,
+    open,
+    request,
+    requestVersion,
+    reset,
+    setMode,
+  ]);
+
+  useEffect(() => {
+    if (
+      !open ||
+      mode !== "receive" ||
+      qrAsset ||
+      qrAddress ||
+      hasHandledRequestedReceiveRef.current
+    ) {
+      return;
+    }
+
+    const requestedAsset =
+      request?.mode === "receive" ? request.receive?.asset : null;
+    if (!requestedAsset) return;
+
+    const address = getReceiveAddress(requestedAsset);
+    if (!address) return;
+
+    setQrAsset(requestedAsset);
+    setQrAddress(address);
+    hasHandledRequestedReceiveRef.current = true;
+  }, [
+    getReceiveAddress,
+    btcAddress,
+    mode,
+    open,
+    qrAddress,
+    qrAsset,
+    request?.mode,
+    request?.receive?.asset,
+    stxAddress,
+  ]);
 
   const handleSelectMode = (selectedMode: "send" | "receive") => {
     setMode(selectedMode);
@@ -252,9 +334,17 @@ export function TransferSheet({
         transaction: deserializeTransaction(txHex),
         client: { baseUrl: getHiroApiBase(selectedNetwork) },
       });
+      const broadcastFailure = response as {
+        error?: string;
+        reason?: string;
+      };
 
-      if ("error" in response) {
-        throw new Error(response.reason ?? response.error);
+      if ("error" in broadcastFailure) {
+        throw new Error(
+          broadcastFailure.reason ??
+            broadcastFailure.error ??
+            "Unable to broadcast STX transaction",
+        );
       }
 
       void queryClient.invalidateQueries({
@@ -321,9 +411,13 @@ export function TransferSheet({
 
   const handleBack = () => {
     // If viewing QR code, go back to asset list
-    if (qrAsset && qrAddress) {
+    if (activeQrAsset && activeQrAddress) {
+      hasHandledRequestedReceiveRef.current = true;
       setQrAsset(null);
       setQrAddress(null);
+      if (!qrAsset && !qrAddress) {
+        setMode("receive");
+      }
       return;
     }
 
@@ -352,15 +446,19 @@ export function TransferSheet({
   };
 
   const handleCloseQR = () => {
+    hasHandledRequestedReceiveRef.current = true;
     setQrAsset(null);
     setQrAddress(null);
+    if (!qrAsset && !qrAddress) {
+      setMode("receive");
+    }
   };
 
   const getTitle = () => {
-    if (qrAsset && qrAddress) {
-      if (qrAsset === "STX") return "Stacks Address QR";
-      if (qrAsset === "BTC") return "Bitcoin Address QR";
-      if (qrAsset === "sBTC") return "sBTC Address QR";
+    if (activeQrAsset && activeQrAddress) {
+      if (activeQrAsset === "STX") return "Stacks Address QR";
+      if (activeQrAsset === "BTC") return "Bitcoin Address QR";
+      if (activeQrAsset === "sBTC") return "sBTC Address QR";
       return "QR Code";
     }
     if (mode === "select") return "Transfer";
@@ -377,7 +475,9 @@ export function TransferSheet({
   };
 
   const getBackButton = () => {
-    if (mode === "select") return undefined;
+    if (mode === "select" && !(activeQrAsset && activeQrAddress)) {
+      return undefined;
+    }
     return (
       <Pressable
         onPress={handleBack}
@@ -391,11 +491,11 @@ export function TransferSheet({
 
   const renderContent = () => {
     // Show QR code view if asset and address are selected
-    if (qrAsset && qrAddress) {
+    if (activeQrAsset && activeQrAddress) {
       return (
         <QRCodeView
-          asset={qrAsset}
-          address={qrAddress}
+          asset={activeQrAsset}
+          address={activeQrAddress}
           onClose={handleCloseQR}
         />
       );
@@ -511,7 +611,7 @@ export function TransferSheet({
   };
 
   const getSnapPoints = () => {
-    if (qrAsset && qrAddress) return ["70%"];
+    if (activeQrAsset && activeQrAddress) return ["70%"];
     if (mode === "select") return ["40%"];
     if (mode === "receive") return ["40%"];
     if (mode === "send") {
@@ -533,6 +633,7 @@ export function TransferSheet({
       headerLeft={getBackButton()}
       onDismiss={onClose}
       enablePanDownToClose={mode === "select"}
+      backgroundStyle={{ backgroundColor: colors.neutral[50] }}
     >
       {renderContent()}
     </Modal>

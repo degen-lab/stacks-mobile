@@ -1,5 +1,7 @@
+import { useEnrollmentStatus } from "../hooks/use-enrollment-status";
 import DualStackingLayout from "./DualStacking.layout";
 
 export default function DualStacking() {
-  return <DualStackingLayout />;
+  const { enrolledNextCycle } = useEnrollmentStatus();
+  return <DualStackingLayout isEnrolledNextCycle={enrolledNextCycle} />;
 }

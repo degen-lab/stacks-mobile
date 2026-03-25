@@ -104,6 +104,11 @@ export class DefiService {
       tokenOut: tokenOutId,
       amount,
     };
+    defiOperation.preparedContractCall = {
+      contractAddress: contractCallParams.contractAddress,
+      contractName: contractCallParams.contractName,
+      functionName: contractCallParams.functionName,
+    };
     defiOperation.status = TransactionStatus.NotBroadcasted;
     defiOperation.operationType = DefiOperationType.Swap;
     defiOperation.senderAddress = senderAddress;

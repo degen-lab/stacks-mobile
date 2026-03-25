@@ -307,7 +307,7 @@ describe("StacksBridgeEngine", () => {
       expect(afterRevive.stick.length).toBe(0);
     });
 
-    it("should track that player has revived (affects gameOver event)", () => {
+    it("should allow unlimited revives via ads (always shows revivePrompt when score > 0)", () => {
       // 1. Score > 0
       const renderState = engine.getRenderState();
       const platform0 = renderState.platforms[0];
@@ -322,10 +322,10 @@ describe("StacksBridgeEngine", () => {
 
       expect(engine.state.score).toBeGreaterThan(0);
 
-      // 2. Revive
+      // 2. Revive once
       engine.revive();
 
-      // 3. Fail
+      // 3. Fail again — should still get revivePrompt, not gameOver
       const failLength = Math.max(1, gap / 3);
       performMoveWithLength(engine, failLength);
 
@@ -338,9 +338,9 @@ describe("StacksBridgeEngine", () => {
       const gameOverEvent = events?.find((e) => e.type === "gameOver");
       const revivePromptEvent = events?.find((e) => e.type === "revivePrompt");
 
-      // Should be Game Over because we already revived
-      expect(gameOverEvent).toBeDefined();
-      expect(revivePromptEvent).toBeUndefined();
+      // Should offer another revive — no cap on ad revives
+      expect(revivePromptEvent).toBeDefined();
+      expect(gameOverEvent).toBeUndefined();
     });
   });
 

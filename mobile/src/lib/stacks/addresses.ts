@@ -20,19 +20,37 @@ export function getAddressForNetwork(
 }
 
 /**
- * Formats a Stacks address to show first 4 and last 4 characters
+ * Truncates a Stacks address to show the first `head` and last `tail` characters
  * @param address - The full address string (e.g., "ST13XJ4G348VGDRT5Z791J8GBTB9Z0ESPNCRAPN4E")
- * @returns Formatted address string (e.g., "ST13...APN4E")
+ * @returns Truncated address string (e.g., "ST13...APN4E")
  */
-export const formatAddress = (address: string): string => {
-  if (!address || address.length < 8) {
-    return address;
+export const truncateAddress = (
+  address: string,
+  head = 4,
+  tail = 4,
+): string => {
+  if (!address || address.length <= head + tail + 3) return address;
+  return `${address.slice(0, head)}...${address.slice(-tail)}`;
+};
+
+export const formatContractIdentifier = (
+  identifier: string,
+  head = 4,
+  tail = 4,
+): string => {
+  const [contractPrincipal, assetName] = identifier.split("::");
+  if (!contractPrincipal) return identifier;
+
+  const separatorIndex = contractPrincipal.indexOf(".");
+  if (separatorIndex === -1) {
+    const formattedAddress = truncateAddress(contractPrincipal, head, tail);
+    return assetName ? `${formattedAddress} :: ${assetName}` : formattedAddress;
   }
 
-  const first4 = address.slice(0, 4);
-  const last4 = address.slice(-4);
+  const address = contractPrincipal.slice(0, separatorIndex);
+  const formattedAddress = truncateAddress(address, head, tail);
 
-  return `${first4}...${last4}`;
+  return assetName ? `${formattedAddress} :: ${assetName}` : formattedAddress;
 };
 
 export const principalHexFromAddress = (address: string | null): string =>

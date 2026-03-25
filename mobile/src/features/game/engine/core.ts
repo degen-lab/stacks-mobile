@@ -215,7 +215,6 @@ export class StacksBridgeEngine {
   private perfect = false;
   private lastMoveDebug: MoveClientDebug | null = null;
   private score = 0;
-  private hasRevived = false;
 
   //TODO: check if this is needed
   private lastJumpSucceeded = true;
@@ -274,7 +273,6 @@ export class StacksBridgeEngine {
 
   revive() {
     this.performRevive();
-    this.hasRevived = true;
   }
 
   revivePowerUp() {
@@ -313,7 +311,6 @@ export class StacksBridgeEngine {
   private resetWorld() {
     this.moves = [];
     this.currentPressStart = null;
-    this.hasRevived = false;
     this.lastJumpSucceeded = true;
     this.idleStartTime = 0;
     this.engineTimeMs = 0;
@@ -647,7 +644,7 @@ export class StacksBridgeEngine {
     this.bridge.rotation += PHYSICS_CONFIG.ROTATE_SPEED * dt;
 
     if (this.hero.y > VISUAL_CONFIG.CANVAS_H + 100) {
-      if (!this.hasRevived && this.score > 0) {
+      if (this.score > 0) {
         events.push({ type: "revivePrompt", value: this.score });
       } else {
         events.push({

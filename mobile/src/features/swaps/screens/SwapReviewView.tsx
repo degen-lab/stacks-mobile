@@ -2,10 +2,9 @@ import { ArrowDown } from "lucide-react-native";
 import { ActivityIndicator } from "react-native";
 
 import { TransactionFundingActions } from "@/components/transaction-funding-actions";
-import { Text, View, colors } from "@/components/ui";
+import { Text, TokenAvatar, View, colors } from "@/components/ui";
 import { Toggle } from "@/components/ui/toggle";
 import type { SwapViewModel } from "../hooks/use-swap";
-import { TokenAvatar } from "../components/token-avatar";
 
 type SwapReviewViewProps = {
   swap: SwapViewModel;

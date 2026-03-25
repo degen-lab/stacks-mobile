@@ -35,8 +35,10 @@ export const buildRunSummary = ({
   const scoreMultiplier = GAMEPLAY_CONFIG.SCORE_MULTIPLIER;
   const totalScore = getDisplayScore(baseScore);
   const distance = Math.max(0, Math.round(baseScore * 0.8));
+  const hasPositiveScore = totalScore > 0;
   const isHighScore =
-    bestSubmittedScore === null ? true : totalScore > bestSubmittedScore;
+    hasPositiveScore &&
+    (bestSubmittedScore === null ? true : totalScore > bestSubmittedScore);
 
   return {
     score: totalScore,

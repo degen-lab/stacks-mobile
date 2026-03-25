@@ -85,7 +85,7 @@ export function SwapSheet({
           keyboardDismissMode="on-drag"
         >
           {swap.isLoading ? (
-            <View className="rounded-2xl bg-sand-100 px-5 py-10">
+            <View className="rounded-[20px] border border-border-secondary bg-sand-100 px-5 py-10">
               <Text className="text-center font-instrument-sans text-sm text-secondary">
                 Loading assets and swap markets…
               </Text>
@@ -105,7 +105,7 @@ export function SwapSheet({
       ref={ref}
       title={title}
       snapPoints={["74%", "88%", "90%"]}
-      backgroundStyle={{ backgroundColor: colors.white }}
+      backgroundStyle={{ backgroundColor: colors.neutral[50] }}
       enablePanDownToClose
       onDismiss={swap.onDismiss}
       headerLeft={

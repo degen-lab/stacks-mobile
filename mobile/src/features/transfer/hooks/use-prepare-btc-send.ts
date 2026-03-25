@@ -11,20 +11,9 @@ import {
 } from "@/lib/store/settings";
 import { prepareBitcoinSend } from "@/lib/bitcoin/send";
 import { getBitcoinWalletPayment } from "@/lib/bitcoin/wallet";
-import type { BitcoinFeeRecommendation } from "@/lib/bitcoin/types";
+import { pickFeeRate, type FeeRateTier } from "@/lib/bitcoin/fees";
 
-export type FeeRateTier = "economy" | "standard" | "fast";
-
-function pickFeeRate(rec: BitcoinFeeRecommendation, tier: FeeRateTier): number {
-  switch (tier) {
-    case "economy":
-      return rec.economyFee;
-    case "fast":
-      return rec.fastestFee;
-    default:
-      return rec.halfHourFee;
-  }
-}
+export type { FeeRateTier } from "@/lib/bitcoin/fees";
 
 type Params = {
   recipient: string;

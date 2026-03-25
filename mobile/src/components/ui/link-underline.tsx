@@ -7,7 +7,7 @@ import {
 import { ArrowRight, ArrowUpRight } from "lucide-react-native";
 import { Text } from "@/components/ui/text";
 
-type Direction = "up-right" | "right";
+type Direction = "up-right" | "right" | "none";
 type Variant =
   | "default"
   | "footerDashboard"
@@ -107,7 +107,7 @@ export function LinkUnderline({
           >
             {children}
           </Text>
-          {icon}
+          {direction !== "none" ? icon : null}
         </View>
         <View className={`h-px w-full ${styles.underline}`} />
       </View>

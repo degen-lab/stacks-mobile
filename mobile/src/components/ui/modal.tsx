@@ -45,6 +45,7 @@ import { Text } from "./text";
 
 type ModalProps = BottomSheetModalProps & {
   title?: string;
+  headerTitle?: React.ReactNode;
   showHandle?: boolean;
   handleColor?: string;
   handleBackgroundColor?: string;
@@ -56,6 +57,7 @@ type ModalRef = React.ForwardedRef<BottomSheetModal>;
 
 type ModalHeaderProps = {
   title?: string;
+  headerTitle?: React.ReactNode;
   headerLeft?: React.ReactNode;
   headerRight?: React.ReactNode;
 };
@@ -77,6 +79,7 @@ export const Modal = React.forwardRef(
     {
       snapPoints: _snapPoints = ["60%"],
       title,
+      headerTitle,
       detached = false,
       showHandle = true,
       handleColor = colors.neutral[300],
@@ -115,12 +118,20 @@ export const Modal = React.forwardRef(
           />
           <ModalHeader
             title={title}
+            headerTitle={headerTitle}
             headerLeft={headerLeft}
             headerRight={headerRight}
           />
         </View>
       ),
-      [title, handleColor, handleBackgroundColor, headerLeft, headerRight],
+      [
+        title,
+        headerTitle,
+        handleColor,
+        handleBackgroundColor,
+        headerLeft,
+        headerRight,
+      ],
     );
 
     const emptyHandle = React.useCallback(() => null, []);
@@ -190,16 +201,18 @@ const getDetachedProps = (detached: boolean) => {
 
 // eslint-disable-next-line react/display-name
 const ModalHeader = React.memo(
-  ({ title, headerLeft, headerRight }: ModalHeaderProps) => {
+  ({ title, headerTitle, headerLeft, headerRight }: ModalHeaderProps) => {
     return (
       <>
-        {title && (
+        {(headerTitle || title) && (
           <View className="flex-row items-center px-2 py-4">
             <View className="w-[48px] items-start">{headerLeft}</View>
-            <View className="flex-1">
-              <Text className="text-center text-2xl font-matter text-primary dark:text-white">
-                {title}
-              </Text>
+            <View className="flex-1 items-center">
+              {headerTitle ?? (
+                <Text className="text-center text-2xl font-matter text-primary dark:text-white">
+                  {title}
+                </Text>
+              )}
             </View>
             <View className="w-[48px] items-end">{headerRight}</View>
           </View>

@@ -1,46 +1,219 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "expo-router";
 
-import { useStacksPrice } from "@/api/market/use-stacks-price";
-import { useStxBalance } from "@/hooks/use-stx-balance";
-import { useActiveAccountIndex } from "@/lib/store/settings";
-import formatCurrency from "@/lib/format/currency";
-import { useEarnActions } from "../hooks/use-earn-actions";
-import { BridgeSheet } from "../components/bridge-sheet";
+import { useDualStackingStats } from "@/api/dual-stacking/use-dual-stacking-stats";
+import { useCurrentTournamentSubmissions } from "@/api/game/tournament";
+import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
+import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/use-coin-prices-for-yield";
+import { useDualStackingDataWithLatestCycle } from "@/features/dual-stacking/hooks/use-dual-stacking-data";
+import { useTransferSheet } from "@/features/transfer";
+import { useTransak } from "@/features/transak/context/transak-context";
+import { usePortfolioBalance } from "@/hooks/use-portfolio-balance";
+import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
+import { useBalanceVisibility } from "@/lib/store/balance-visibility";
+
+import { GetAssetSheet } from "@/features/transfer/components/get-asset-sheet";
+import { useUserStackingData } from "@/api/stacking";
+import { useUserProfile } from "@/api/user";
+import { buildEarnAssetRoute } from "../lib/asset-route";
+import { buildEarnNextStepCards } from "../lib/next-steps";
+import {
+  EARN_REWARD_ROW_ROUTES,
+  buildEarnRewardsSummary,
+} from "../lib/rewards";
+import type {
+  EarnAcquisitionAsset,
+  EarnNextStepCard,
+  EarnRewardRow,
+} from "../types";
 
 import EarnLayout from "./Earn.layout";
 
+const EARN_NEXT_STEP_ROUTES = {
+  bridge: "/Earn/sbtc-bridge",
+  stacking: "/Earn/stacking",
+  "dual-stacking": "/Earn/dual-stacking",
+} as const;
+
 export default function EarnScreen() {
-  const { activeAccountIndex } = useActiveAccountIndex();
-  const { balance: stxBalance } = useStxBalance(activeAccountIndex);
-  const { data: stxPriceUsd } = useStacksPrice();
+  const router = useRouter();
+  const { openTransak } = useTransak();
+  const { openTransfer } = useTransferSheet();
+  const { isBalanceVisible } = useBalanceVisibility();
+  const { data: userProfile } = useUserProfile();
+  const [selectedGetAsset, setSelectedGetAsset] =
+    useState<EarnAcquisitionAsset | null>(null);
 
-  const actions = useEarnActions();
-  const [activeTab, setActiveTab] = useState("defi");
+  const portfolio = usePortfolioBalance();
+  const {
+    enrolledCurrentCycle,
+    enrolledNextCycle,
+    isLoading: enrollmentLoading,
+  } = useEnrollmentStatus();
+  const { stxAddress } = useWalletAddresses();
+  const { dualStackingData, dualStackingDataLoading } =
+    useDualStackingDataWithLatestCycle();
+  const latestPricesQuery = useCoinPricesForYield();
+  const dualStackingStatsQuery = useDualStackingStats({
+    variables: { address: stxAddress ?? "" },
+    enabled: !!stxAddress,
+  });
+  const { data: userStackingData = [], isLoading: isUserStackingDataLoading } =
+    useUserStackingData({
+      variables: { userId: userProfile?.id ?? 0 },
+      enabled: !!userProfile?.id,
+    });
+  const {
+    data: currentTournamentSubmissions,
+    isLoading: currentTournamentSubmissionsLoading,
+  } = useCurrentTournamentSubmissions();
+  const isDualStackingStatsLoading = Boolean(
+    stxAddress && dualStackingStatsQuery.isLoading,
+  );
+  const hasActiveGameSubmission =
+    (currentTournamentSubmissions?.weeklyContestSubmissionsForCurrentTournament
+      ?.length ?? 0) > 0;
 
-  const totalBalanceUsd = useMemo(() => {
-    if (stxPriceUsd === null || stxPriceUsd === undefined) return null;
-    return stxBalance * stxPriceUsd;
-  }, [stxBalance, stxPriceUsd]);
+  const assets = portfolio.assets;
 
-  const formattedBalance = useMemo(() => {
-    if (totalBalanceUsd === null) return null;
-    const { dollars, cents } = formatCurrency(totalBalanceUsd);
-    return `${dollars}${cents}`;
-  }, [totalBalanceUsd]);
-  const totalEarnings = 0;
+  const rewardsSummary = useMemo(
+    () =>
+      buildEarnRewardsSummary({
+        stats: dualStackingStatsQuery.data,
+        stackingRows: userStackingData,
+        dualStackingData,
+        currentBtcPriceUsd:
+          latestPricesQuery.data?.btc_price ?? portfolio.btcPriceUsd ?? null,
+        currentStxPriceUsd: portfolio.stxPriceUsd ?? null,
+        currentStackingApr: latestPricesQuery.data?.stacking_apr ?? null,
+        isEnrolledCurrentCycle: enrolledCurrentCycle,
+        isEnrolledNextCycle: enrolledNextCycle,
+        lockedStxBalance: portfolio.stxLockedBalance,
+        hasActiveGameSubmission,
+      }),
+    [
+      dualStackingData,
+      dualStackingStatsQuery.data,
+      enrolledCurrentCycle,
+      hasActiveGameSubmission,
+      enrolledNextCycle,
+      latestPricesQuery.data?.btc_price,
+      latestPricesQuery.data?.stacking_apr,
+      portfolio.btcPriceUsd,
+      portfolio.stxPriceUsd,
+      portfolio.stxLockedBalance,
+      userStackingData,
+    ],
+  );
+
+  const nextStepCards = useMemo(
+    () =>
+      buildEarnNextStepCards({
+        btcBalance: portfolio.btcBalance,
+        sbtcBalance: portfolio.sbtcBalance + portfolio.sbtcDefiBalance,
+        totalStxBalance: portfolio.stxBalance,
+        availableStxBalance: portfolio.stxAvailableBalance,
+        lockedStxBalance: portfolio.stxLockedBalance,
+        isEnrolledCurrentCycle: enrolledCurrentCycle,
+        isEnrolledNextCycle: enrolledNextCycle,
+        nextRewardDateLabel: rewardsSummary.nextRewardDateLabel,
+        stackingApr: rewardsSummary.currentStackingApr,
+      }),
+    [
+      enrolledCurrentCycle,
+      enrolledNextCycle,
+      portfolio.btcBalance,
+      portfolio.sbtcBalance,
+      portfolio.sbtcDefiBalance,
+      portfolio.stxAvailableBalance,
+      portfolio.stxBalance,
+      portfolio.stxLockedBalance,
+      rewardsSummary.currentStackingApr,
+      rewardsSummary.nextRewardDateLabel,
+    ],
+  );
+
+  const isNextStepsLoading =
+    portfolio.isBalanceLoading ||
+    portfolio.isPriceLoading ||
+    dualStackingDataLoading ||
+    latestPricesQuery.isLoading ||
+    isDualStackingStatsLoading ||
+    enrollmentLoading;
+
+  const isRewardsLoading =
+    isNextStepsLoading ||
+    currentTournamentSubmissionsLoading ||
+    isUserStackingDataLoading;
+  const portfolioTotalUsd = portfolio.usdBalanceOrNull;
+
+  const handleBuyAsset = useCallback(
+    (asset: EarnAcquisitionAsset) => {
+      openTransak(asset, "buy");
+    },
+    [openTransak],
+  );
+
+  const handleReceiveAsset = useCallback(
+    (asset: EarnAcquisitionAsset) => {
+      openTransfer({
+        mode: "receive",
+        receive: { asset },
+      });
+    },
+    [openTransfer],
+  );
+
+  const handlePressRewardRow = useCallback(
+    (row: EarnRewardRow) => {
+      router.navigate(EARN_REWARD_ROW_ROUTES[row.id] as never);
+    },
+    [router],
+  );
+
+  const handlePressAsset = useCallback(
+    (asset: (typeof assets)[number]) => {
+      router.push(buildEarnAssetRoute(asset));
+    },
+    [router],
+  );
+
+  const handlePressNextStepCard = useCallback(
+    (card: EarnNextStepCard) => {
+      if (card.action.type === "acquire") {
+        setSelectedGetAsset(card.action.asset);
+        return;
+      }
+
+      if (card.action.type === "none") return;
+
+      router.push(EARN_NEXT_STEP_ROUTES[card.action.type]);
+    },
+    [router],
+  );
 
   return (
     <>
       <EarnLayout
-        totalBalance={formattedBalance}
-        totalEarnings={totalEarnings}
-        actions={actions}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        assets={assets}
+        portfolioTotalUsd={portfolioTotalUsd}
+        rewardsTotalUsd={rewardsSummary.totalRewardsUsd}
+        rewardRows={rewardsSummary.rows}
+        nextStepCards={nextStepCards}
+        isLoading={portfolio.isLoading}
+        isRewardsLoading={isRewardsLoading}
+        isNextStepsLoading={isNextStepsLoading}
+        isBalanceVisible={isBalanceVisible}
+        onPressRewardRow={handlePressRewardRow}
+        onPressNextStepCard={handlePressNextStepCard}
+        onPressAsset={handlePressAsset}
       />
-      <BridgeSheet
-        open={actions.bridgeSheetOpen}
-        onClose={() => actions.setBridgeSheetOpen(false)}
+      <GetAssetSheet
+        open={selectedGetAsset !== null}
+        asset={selectedGetAsset}
+        onClose={() => setSelectedGetAsset(null)}
+        onBuy={handleBuyAsset}
+        onReceive={handleReceiveAsset}
       />
     </>
   );

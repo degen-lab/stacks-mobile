@@ -30,6 +30,7 @@ import { TournamentStatusNotFoundError } from '../errors/rewardsErrors';
 import { TournamentStatus } from '../../domain/entities/tournamentStatus';
 import { NODE_ENV } from '../../shared/constants';
 import { DefiOperation } from '../../domain/entities/defiOperation';
+import { DefiOperationNotFoundError } from '../errors/defiErrors';
 import { SponsoredTransaction } from '../../domain/entities/sponsoredTransaction';
 import { parseSponsoredTransaction } from './sponsoredTransactionValidation';
 
@@ -148,10 +149,13 @@ export class TransactionService {
 
   /**
    * Creates a sponsored queue record for non-game flows that build the unsigned tx on mobile.
+   * When `defiOperationId` is supplied the request is bound to that swap operation and the
+   * validator later verifies the signed tx against the exact contract call that was prepared.
    */
   async createSponsoredTransactionRequest(
     userId: number,
     originAddress: string,
+    defiOperationId?: number,
   ): Promise<{ requestId: number; expiresAt: Date }> {
     const user = await this.entityManager.findOne(User, {
       where: { id: userId },
@@ -162,10 +166,43 @@ export class TransactionService {
       );
     }
 
+    let defiOperation: DefiOperation | null = null;
+    if (defiOperationId != null) {
+      defiOperation = await this.entityManager.findOne(DefiOperation, {
+        where: { id: defiOperationId, user: { id: userId } },
+      });
+      if (!defiOperation) {
+        throw new DefiOperationNotFoundError(
+          `Defi operation with id ${defiOperationId} not found for user with id ${userId}`,
+        );
+      }
+      if (defiOperation.status !== TransactionStatus.NotBroadcasted) {
+        throw new TransactionAlreadySubmittedError(
+          `Defi operation ${defiOperationId} has already been submitted`,
+        );
+      }
+      const existingSlot = await this.entityManager.findOne(
+        SponsoredTransaction,
+        {
+          where: { defiOperation: { id: defiOperationId } },
+        },
+      );
+      if (existingSlot) {
+        throw new TransactionAlreadySubmittedError(
+          `A sponsored request already exists for defi operation ${defiOperationId}`,
+        );
+      }
+    }
+
     const sponsoredRequest = await this.createSponsoredRequest(
       user,
       originAddress,
     );
+
+    if (defiOperation) {
+      sponsoredRequest.defiOperation = defiOperation;
+      await this.entityManager.save(sponsoredRequest);
+    }
 
     return {
       requestId: sponsoredRequest.id,
@@ -199,7 +236,10 @@ export class TransactionService {
 
     this.assertRequestNotExpired(sponsoredRequest);
 
-    const parsedTransaction = parseSponsoredTransaction(serializedTx);
+    const parsedTransaction = parseSponsoredTransaction(
+      serializedTx,
+      sponsoredRequest.defiOperation ?? undefined,
+    );
     if (parsedTransaction.originAddress !== sponsoredRequest.originAddress) {
       throw new UnsupportedSponsoredTransactionError(
         'Signed transaction sender does not match the sponsored request address',
@@ -313,7 +353,7 @@ export class TransactionService {
       SponsoredTransaction,
       {
         where: { status: TransactionStatus.Processing },
-        relations: ['submission'],
+        relations: ['submission', 'defiOperation'],
         take: 25,
         order: { createdAt: 'ASC' },
       },
@@ -338,6 +378,11 @@ export class TransactionService {
         );
         queuedTransaction.txId = txId;
         queuedTransaction.status = TransactionStatus.Pending;
+        if (queuedTransaction.defiOperation) {
+          queuedTransaction.defiOperation.txId = txId;
+          queuedTransaction.defiOperation.status = TransactionStatus.Pending;
+          await this.entityManager.save(queuedTransaction.defiOperation);
+        }
       } catch (error) {
         queuedTransaction.status = TransactionStatus.Failed;
         logger.error({
@@ -516,7 +561,7 @@ export class TransactionService {
       SponsoredTransaction,
       {
         where: { id: requestId },
-        relations: ['user', 'submission'],
+        relations: ['user', 'submission', 'defiOperation'],
       },
     );
 

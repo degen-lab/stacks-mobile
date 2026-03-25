@@ -85,7 +85,14 @@ export function BtcLogo({ size = 20, className, style }: BtcLogoProps) {
           y2="4.89438"
           gradientUnits="userSpaceOnUse"
         >
-          <Stop offset="0.276042" stopColor="white" stopOpacity="0.3" />
+          {[
+            <Stop
+              key="0"
+              offset="0.276042"
+              stopColor="white"
+              stopOpacity="0.3"
+            />,
+          ]}
         </LinearGradient>
       </Defs>
     </Svg>

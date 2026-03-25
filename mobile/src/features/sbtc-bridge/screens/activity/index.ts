@@ -1,0 +1,1 @@
+export { BridgeActivityScreen } from "./BridgeActivity";

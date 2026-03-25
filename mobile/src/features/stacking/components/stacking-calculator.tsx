@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { TextInput, Pressable, ScrollView } from "react-native";
-import { View, Text, colors, Button } from "@/components/ui";
-import { StxCoin } from "@/components/ui/icons/stx-coin";
+import { View, Text, TokenAvatar, colors, Button } from "@/components/ui";
 import GradientBorder from "@/components/ui/gradient-border";
 import { SvgUri } from "react-native-svg";
 import { useSvgAsset } from "@/hooks/use-svg-asset";
@@ -109,9 +108,13 @@ export function StackingCalculator({
   const currentTotalEarningsUsd = currentTotalEarningsStx * price;
 
   const earningsDeltaUsd = totalEarningsUsd - currentTotalEarningsUsd;
+  const maxStackingAmount = activePosition
+    ? activePosition.lockedAmount + availableBalance
+    : availableBalance;
+  const availableLabel = activePosition ? "Available to add" : "Available";
 
   const handleMax = () => {
-    setStxAmount(availableBalance.toFixed(2));
+    setStxAmount(maxStackingAmount.toFixed(2));
   };
 
   const handlePeriodSelect = (period: (typeof LOCK_PERIODS)[number]) => {
@@ -150,7 +153,7 @@ export function StackingCalculator({
       <View className="mb-4 rounded-2xl border border-surface-secondary bg-sand-100 p-4">
         <View className="flex-row items-center justify-between mb-2">
           <View className="flex-1 flex-row items-center gap-2">
-            <StxCoin size={32} />
+            <TokenAvatar symbol="STX" size={32} />
             <TextInput
               className="flex-1 border-0 bg-transparent p-0 text-3xl leading-9 dark:text-white font-matter"
               placeholder="0"
@@ -174,7 +177,7 @@ export function StackingCalculator({
             ≈ ${usdValue}
           </Text>
           <Text className="text-sm font-instrument-sans text-secondary">
-            Available: {availableBalance.toFixed(2)} STX
+            {availableLabel}: {availableBalance.toFixed(2)} STX
           </Text>
         </View>
       </View>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { initializeAds } from "@/lib/ads/initialize-ads";
 import { hydrateAuth } from "@/lib/store/auth";
+import { loadBalanceVisibility } from "@/lib/store/balance-visibility";
 import { useGameStore } from "@/lib/store/game";
 import { loadSettings } from "@/lib/store/settings";
 import { loadSelectedTheme } from "@/lib/theme/use-selected-theme";
@@ -18,6 +19,7 @@ export function useAppBootstrap() {
       try {
         await Promise.all([
           hydrateAuth(),
+          loadBalanceVisibility(),
           loadSelectedTheme(),
           loadSettings(),
           useGameStore.getState().hydrateSelectedSkin(),

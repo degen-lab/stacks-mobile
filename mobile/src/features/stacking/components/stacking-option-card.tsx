@@ -1,6 +1,5 @@
 import { Pressable, View, Image } from "react-native";
-import { Text, colors } from "@/components/ui";
-import { MoreVertical } from "lucide-react-native";
+import { Text } from "@/components/ui";
 import type { StackingPosition } from "../types";
 
 type Props = {
@@ -13,7 +12,6 @@ type Props = {
   registrationClosesIn?: string;
   lockingTime?: string;
   minimumStx?: number;
-  onMenuPress?: () => void;
   activePosition?: StackingPosition;
   price?: number;
   timeTillRewardPhase?: string;
@@ -29,7 +27,6 @@ export function StackingOptionCard({
   registrationClosesIn,
   lockingTime = "2-week cycles",
   minimumStx = 40,
-  onMenuPress,
   activePosition,
   price = 0,
   timeTillRewardPhase,
@@ -85,21 +82,11 @@ export function StackingOptionCard({
           </View>
         </View>
 
-        {isActive ? (
-          <Pressable
-            onPress={onMenuPress}
-            className="h-8 w-8 items-center justify-center rounded-full border border-sand-300 bg-sand-100"
-            hitSlop={8}
-          >
-            <MoreVertical size={14} color={colors.neutral[900]} />
-          </Pressable>
-        ) : (
-          <View className="rounded-full bg-secondary/10 px-2.5 py-1">
-            <Text className="text-xs font-instrument-sans-medium text-secondary">
-              {(apy * 100).toFixed(0)}% APY
-            </Text>
-          </View>
-        )}
+        <View className="rounded-full bg-secondary/10 px-2.5 py-1">
+          <Text className="text-xs font-instrument-sans-medium text-secondary">
+            {(apy * 100).toFixed(0)}% APY
+          </Text>
+        </View>
       </View>
 
       {/* Details Section */}

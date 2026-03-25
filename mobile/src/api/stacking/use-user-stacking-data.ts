@@ -1,6 +1,7 @@
 import type { AxiosError } from "axios";
 import { createQuery } from "react-query-kit";
 
+import { fromUstxToStx } from "@/lib/format/currency";
 import { gameClient } from "../common";
 import type { UserStackingDataResponse, UserStackingDataRow } from "./types";
 import { normalizeStackingStatus } from "./status";
@@ -19,11 +20,14 @@ export const useUserStackingData = createQuery<Response, Variables, AxiosError>(
       const rows =
         response.data.data ??
         (response.data as { data: UserStackingDataRow[] })?.data ??
-        [] ??
         [];
 
       return rows.map((row) => ({
         ...row,
+        rewardedStxAmount:
+          row.rewardedStxAmount == null
+            ? null
+            : fromUstxToStx(row.rewardedStxAmount),
         txStatus: normalizeStackingStatus(row.txStatus),
       }));
     },

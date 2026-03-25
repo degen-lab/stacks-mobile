@@ -1,5 +1,10 @@
-import { View, Text, Button, SelectionCard } from "@/components/ui";
-import { StxCoin, BtcLogo } from "@/components/ui/icons";
+import {
+  Button,
+  SelectionCard,
+  Text,
+  TokenAvatar,
+  View,
+} from "@/components/ui";
 import { Copy, QrCode } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { copyToClipboard } from "@/lib/clipboard";
@@ -9,12 +14,12 @@ const ASSETS = [
   {
     id: "STX" as const,
     name: "Stacks",
-    logo: <StxCoin size={32} />,
+    symbol: "STX",
   },
   {
     id: "BTC" as const,
     name: "Bitcoin",
-    logo: <BtcLogo size={32} />,
+    symbol: "BTC",
   },
 ];
 
@@ -56,7 +61,7 @@ export function ReceiveAssetList({
         return (
           <SelectionCard
             key={asset.id}
-            icon={asset.logo}
+            icon={<TokenAvatar symbol={asset.symbol} size={32} />}
             title={asset.name}
             subtitle={
               address ? (

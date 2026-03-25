@@ -16,11 +16,13 @@ import { useSelectedNetwork } from "@/lib/store/settings";
 import type { FeeOption } from "@/features/stacking/components/fee-selector";
 import type { SwapAsset, SwapSheetRequest, SwapSheetStep } from "../types";
 import {
+  STX_TOKEN_ID,
   baseUnitsToDisplayString,
   compareBaseUnitAmounts,
+} from "@/lib/assets/tokens";
+import {
   displayAmountToBaseUnits,
   getMinimumReceivedBaseUnits,
-  STX_TOKEN_ID,
   sortSwapAssets,
 } from "../utils";
 import { useSwapAssets } from "./use-swap-assets";

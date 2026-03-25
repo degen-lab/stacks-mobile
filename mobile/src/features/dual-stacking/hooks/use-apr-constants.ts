@@ -38,7 +38,7 @@ export function useAprConstants() {
     totalSbtcDefi !== undefined &&
     stxStacked !== undefined;
   const shouldQueryRewards =
-    !!stxAddress && (!enrolledNextCycle || hasRewardBalances);
+    !!stxAddress && !!enrolledNextCycle && hasRewardBalances;
 
   const rewardsParams = useMemo(
     () => ({

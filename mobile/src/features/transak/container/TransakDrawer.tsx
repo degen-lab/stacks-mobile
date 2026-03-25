@@ -9,7 +9,7 @@ import {
 import { View } from "react-native";
 import { showMessage } from "react-native-flash-message";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Modal, Text, Button } from "@/components/ui";
+import { Modal, Text, Button, colors } from "@/components/ui";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
   TransakQuoteError,
@@ -366,6 +366,7 @@ export function TransakDrawer({ drawerRef }: Props) {
       }
       onDismiss={handleDismiss}
       footerComponent={!isCheckout ? renderFooter : undefined}
+      backgroundStyle={{ backgroundColor: colors.neutral[50] }}
     >
       <TransakDrawerLayout
         isCheckout={isCheckout}

@@ -9,6 +9,9 @@ type InfoBadgeProps = {
   label?: string;
   value: number | string | null;
   loading?: boolean;
+  labelClassName?: string;
+  valueClassName?: string;
+  containerClassName?: string;
 };
 
 export function InfoBadge({
@@ -16,6 +19,9 @@ export function InfoBadge({
   label,
   value,
   loading = false,
+  labelClassName = "text-secondary",
+  valueClassName = "text-primary",
+  containerClassName = "",
 }: InfoBadgeProps) {
   const displayValue = useMemo(() => {
     if (value === null || value === undefined) return "—";
@@ -37,7 +43,7 @@ export function InfoBadge({
   if (loading) {
     return (
       <View
-        className={`flex-row items-center ${gapClass} rounded-lg border-2 border-sand-300 bg-transparent px-3 py-1.5`}
+        className={`flex-row items-center ${gapClass} rounded-lg border-2 border-sand-300 bg-transparent px-3 py-1.5 ${containerClassName}`}
       >
         <Skeleton className="h-4 w-20 rounded" />
       </View>
@@ -46,15 +52,21 @@ export function InfoBadge({
 
   return (
     <View
-      className={`flex-row items-center ${gapClass} rounded-lg border-2 border-surface-secondary bg-transparent px-3 py-1.5`}
+      className={`flex-row items-center ${gapClass} rounded-lg border-2 border-surface-secondary bg-transparent px-3 py-1.5 ${containerClassName}`}
     >
       {icon}
       {hasLabel ? (
-        <Text className="font-instrument-sans text-sm text-secondary">
+        <Text
+          className={`font-instrument-sans text-sm ${labelClassName}`}
+          numberOfLines={1}
+        >
           {label}
         </Text>
       ) : null}
-      <Text className="font-instrument-sans text-sm text-primary">
+      <Text
+        className={`font-instrument-sans text-sm ${valueClassName}`}
+        numberOfLines={1}
+      >
         {displayValue}
       </Text>
     </View>

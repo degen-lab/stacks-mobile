@@ -1,0 +1,1 @@
+export { WithdrawalDetailScreen } from "./WithdrawalDetail";

@@ -7,8 +7,8 @@ const mockLayoutProps: { current: Record<string, any> | null } = {
   current: null,
 };
 
-let mockStxBalance = 0;
-let mockStxPriceUsd: number | undefined = undefined;
+let mockUsdBalance = 0;
+let mockHasBalance = false;
 
 const mockModal = {
   ref: { current: null },
@@ -16,18 +16,25 @@ const mockModal = {
   dismiss: jest.fn(),
 };
 
-jest.mock("@/hooks/use-stx-balance", () => ({
-  useStxBalance: () => ({
-    balance: mockStxBalance,
+jest.mock("@/hooks/use-portfolio-balance", () => ({
+  usePortfolioBalance: () => ({
+    assets: [],
+    usdBalance: mockUsdBalance,
+    usdBalanceOrNull: mockUsdBalance,
+    hasBalance: mockHasBalance,
+    stxBalance: 0,
+    stxLockedBalance: 0,
+    stxAvailableBalance: 0,
+    btcBalance: 0,
+    sbtcBalance: 0,
+    sbtcDefiBalance: 0,
+    stxPriceUsd: null,
+    btcPriceUsd: null,
+    stxChange24hPercent: null,
+    btcChange24hPercent: null,
     isLoading: false,
-    error: null,
-    refresh: jest.fn(),
-  }),
-}));
-
-jest.mock("@/api/market/use-stacks-price", () => ({
-  useStacksPrice: () => ({
-    data: mockStxPriceUsd,
+    isBalanceLoading: false,
+    isPriceLoading: false,
   }),
 }));
 
@@ -47,10 +54,17 @@ jest.mock("../container/Home.layout", () => ({
 }));
 
 const mockOpenTransfer = jest.fn();
+const mockOpenSwap = jest.fn();
 
 jest.mock("@/features/transfer", () => ({
   useTransferSheet: () => ({
     openTransfer: mockOpenTransfer,
+  }),
+}));
+
+jest.mock("@/features/swaps", () => ({
+  useSwapSheet: () => ({
+    openSwap: mockOpenSwap,
   }),
 }));
 
@@ -60,25 +74,31 @@ jest.mock("@/features/transak/context/transak-context", () => ({
   }),
 }));
 
+jest.mock(
+  "@/features/dual-stacking/components/layout/modals/mint-sbtc-sheet",
+  () => ({
+    MintSbtcSheet: () => null,
+  }),
+);
+
 describe("HomeScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockLayoutProps.current = null;
-    mockStxBalance = 0;
-    mockStxPriceUsd = undefined;
+    mockUsdBalance = 0;
+    mockHasBalance = false;
   });
 
   it("passes the computed USD balance to the layout", () => {
-    mockStxBalance = 3;
-    mockStxPriceUsd = 4;
+    mockUsdBalance = 75_012;
 
     render(<HomeScreen />);
 
-    expect(mockLayoutProps.current?.usdBalance).toBe(12);
+    expect(mockLayoutProps.current?.usdBalance).toBe(75_012);
   });
 
-  it("routes to earn when balance is available", () => {
-    mockStxBalance = 1;
+  it("routes to earn when any supported balance is available", () => {
+    mockHasBalance = true;
 
     render(<HomeScreen />);
 
@@ -91,8 +111,6 @@ describe("HomeScreen", () => {
   });
 
   it("opens empty wallet modal when balance is zero", () => {
-    mockStxBalance = 0;
-
     render(<HomeScreen />);
     mockLayoutProps.current?.navigateToPortfolio();
 
