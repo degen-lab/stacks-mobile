@@ -8,11 +8,9 @@ jest.mock("victory-native", () => {
   return {
     PolarChart: ({ children }: { children: ReactNode }) => <>{children}</>,
     Pie: {
-      Chart: ({
-        children,
-      }: {
-        children: (() => ReactNode) | ReactNode;
-      }) => <>{typeof children === "function" ? children() : children}</>,
+      Chart: ({ children }: { children: (() => ReactNode) | ReactNode }) => (
+        <>{typeof children === "function" ? children() : children}</>
+      ),
       Slice: () => null,
       SliceAngularInset: () => null,
     },

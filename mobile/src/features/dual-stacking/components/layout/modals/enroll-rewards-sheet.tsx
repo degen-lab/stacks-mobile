@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { ScrollView } from "react-native";
 import { useColorScheme } from "nativewind";
 
-import { Button, Modal, Text, View, colors } from "@/components/ui";
+import { Modal, Text, View, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { ContractTxDetails } from "@/components/contract-tx-details";
 import { FeeOption } from "@/features/stacking/components/fee-selector";
@@ -100,16 +100,6 @@ export function EnrollRewardsSheet({
             sponsoredLoading={isSponsoredSubmitting}
             walletLoading={isSubmitting}
           />
-
-          <View className="mt-4">
-            <Button
-              label="Cancel"
-              variant="secondary"
-              size="lg"
-              onPress={() => onOpenChange(false)}
-              disabled={isSubmitting || isSponsoredSubmitting}
-            />
-          </View>
         </View>
       </ScrollView>
     </Modal>
