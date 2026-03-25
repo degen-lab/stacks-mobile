@@ -130,6 +130,7 @@ export default function transactionPostRoutes(
           await transactionService.createSponsoredTransactionRequest(
             user.id,
             body.data.originAddress,
+            body.data.defiOperationId,
           );
 
         return reply.status(200).send({

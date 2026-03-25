@@ -1,10 +1,12 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { DefiOperation } from './defiOperation';
 import { Submission } from './submission';
 import { User } from './user';
 import { TransactionStatus } from './enums';
@@ -46,6 +48,14 @@ export class SponsoredTransaction {
 
   @Column({ type: 'timestamp' })
   expiresAt: Date;
+
+  @ManyToOne(() => DefiOperation, {
+    nullable: true,
+    onDelete: 'SET NULL',
+    eager: false,
+  })
+  @JoinColumn({ name: 'defiOperationId' })
+  defiOperation?: DefiOperation | null;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

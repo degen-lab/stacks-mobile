@@ -15,6 +15,12 @@ export class DefiOperation extends BaseAppEntity {
   operationType: DefiOperationType;
   @Column({ type: 'jsonb', nullable: true })
   metadata: DefiOperationMetadata;
+  @Column({ type: 'jsonb', nullable: true })
+  preparedContractCall?: {
+    contractAddress: string;
+    contractName: string;
+    functionName: string;
+  } | null;
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
   @ManyToOne(() => User, (user) => user.defiOperationList, {

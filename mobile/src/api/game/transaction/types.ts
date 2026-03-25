@@ -58,6 +58,7 @@ export type BroadcastSponsoredTransactionResponse = {
 
 export type CreateSponsoredTransactionRequest = {
   originAddress: string;
+  defiOperationId?: number;
 };
 
 export type CreateSponsoredTransactionResponse = {

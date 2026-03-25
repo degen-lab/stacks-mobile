@@ -10,6 +10,8 @@ import {
 } from '@stacks/transactions';
 import { GAME_CONTRACT_ADDRESS, STACKS_NETWORK } from '../../shared/constants';
 import { UnsupportedSponsoredTransactionError } from '../errors/sponsoredTransactionErrors';
+import { DefiOperation } from '../../domain/entities/defiOperation';
+import { DefiOperationType } from '../../domain/entities/enums';
 
 const SUPPORTED_CONTRACT_CALLS: Record<
   string,
@@ -56,6 +58,12 @@ export type SponsoredTxSummary =
       functionName: string;
     }
   | {
+      kind: 'swap';
+      originAddress: string;
+      contractId: string;
+      functionName: string;
+    }
+  | {
       kind: 'stx_transfer';
       originAddress: string;
       recipient: string;
@@ -73,6 +81,7 @@ function getConfiguredGameContractId(): string {
 
 export function parseSponsoredTransaction(
   serializedTx: string,
+  defiOperation?: DefiOperation,
 ): SponsoredTxSummary {
   const transaction = deserializeTransaction(serializedTx);
   const network = getConfiguredNetwork();
@@ -104,6 +113,11 @@ export function parseSponsoredTransaction(
   );
 
   if (isTokenTransferPayload(transaction.payload)) {
+    if (defiOperation) {
+      throw new UnsupportedSponsoredTransactionError(
+        'STX transfers cannot be sponsored via a swap defi operation',
+      );
+    }
     return {
       kind: 'stx_transfer',
       originAddress,
@@ -125,6 +139,30 @@ export function parseSponsoredTransaction(
         contractId,
         functionName,
       };
+    }
+
+    if (defiOperation?.operationType === DefiOperationType.Swap) {
+      const prepared = defiOperation.preparedContractCall;
+      if (!prepared) {
+        throw new UnsupportedSponsoredTransactionError(
+          'DefiOperation has no stored contract call — cannot validate sponsorship',
+        );
+      }
+      const expectedContractId = `${prepared.contractAddress}.${prepared.contractName}`;
+      if (
+        contractId !== expectedContractId ||
+        functionName !== prepared.functionName
+      ) {
+        throw new UnsupportedSponsoredTransactionError(
+          `Signed transaction (${contractId}.${functionName}) does not match prepared swap (${expectedContractId}.${prepared.functionName})`,
+        );
+      }
+      if (defiOperation.senderAddress !== originAddress) {
+        throw new UnsupportedSponsoredTransactionError(
+          'Swap transaction sender does not match the DefiOperation sender address',
+        );
+      }
+      return { kind: 'swap', originAddress, contractId, functionName };
     }
 
     const supportedCalls = SUPPORTED_CONTRACT_CALLS[STACKS_NETWORK] ?? {};
