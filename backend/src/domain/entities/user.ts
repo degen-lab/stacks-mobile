@@ -38,6 +38,14 @@ export class User extends BaseAppEntity {
   isBlackListed: boolean;
   @Column({ type: 'text', nullable: true })
   photoUri?: string;
+  @Column({ type: 'bool', nullable: true })
+  analyticsConsent: boolean | null;
+  @Column({ type: 'bool', nullable: true })
+  adsPersonalizationConsent: boolean | null;
+  @Column({ type: 'varchar', nullable: true })
+  consentVersion: string | null;
+  @Column({ type: 'timestamp', nullable: true })
+  consentUpdatedAt: Date | null;
   @OneToMany(() => FraudAttempt, (fraudAttempt) => fraudAttempt.user, {
     cascade: true,
     nullable: true,

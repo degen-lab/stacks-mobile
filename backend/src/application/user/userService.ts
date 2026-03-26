@@ -228,6 +228,32 @@ export class UserService {
     return user;
   }
 
+  async updateConsent(
+    userId: number,
+    consent: {
+      analytics: boolean;
+      adsPersonalization: boolean;
+      version: string;
+    },
+  ): Promise<User> {
+    const user = await this.entityManager.findOne(User, {
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UserNotFoundError(
+        `Invalid id, user with id ${userId} not found`,
+      );
+    }
+
+    user.analyticsConsent = consent.analytics;
+    user.adsPersonalizationConsent = consent.adsPersonalization;
+    user.consentVersion = consent.version;
+    user.consentUpdatedAt = new Date();
+
+    return await this.entityManager.save(user);
+  }
+
   async getDailySubmissionsLeft(userId: number): Promise<{
     dailyRaffleSubmissionsLeft: number;
     dailyWeeklyContestSubmissionsLeft: number;

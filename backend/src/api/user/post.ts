@@ -67,6 +67,12 @@ export default async function userPostRoutes(
             streak: user.streak,
             points: user.points,
             isNewUser,
+            consent: {
+              analytics: user.analyticsConsent,
+              adsPersonalization: user.adsPersonalizationConsent,
+              version: user.consentVersion,
+              updatedAt: user.consentUpdatedAt?.toISOString() ?? null,
+            },
           },
         });
       } catch (error) {

@@ -109,11 +109,19 @@ export default function userGetRoutes(
             referralCode: userProfile.referralCode,
             streak: userProfile.streak,
             points: userProfile.points,
+            createdAt: userProfile.createdAt.toISOString(),
             lastStreakCompletionDate:
               userProfile.lastStreakCompletionDate instanceof Date
                 ? userProfile.lastStreakCompletionDate.toISOString()
                 : userProfile.lastStreakCompletionDate || null,
             items: serializedItems,
+            itemsCount: serializedItems.length,
+            consent: {
+              analytics: userProfile.analyticsConsent,
+              adsPersonalization: userProfile.adsPersonalizationConsent,
+              version: userProfile.consentVersion,
+              updatedAt: userProfile.consentUpdatedAt?.toISOString() ?? null,
+            },
           },
         });
       } catch (error) {
