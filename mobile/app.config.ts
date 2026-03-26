@@ -25,6 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: Env.BUNDLE_ID,
+    googleServicesFile: `./firebase/${Env.APP_ENV}/GoogleService-Info.plist`,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -41,6 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#E6F4FE',
     },
     package: Env.PACKAGE,
+    googleServicesFile: `./firebase/${Env.APP_ENV}/google-services.json`,
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
   },
@@ -50,6 +52,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     favicon: './src/assets/images/favicon.png',
   },
   plugins: [
+    [
+      'expo-build-properties',
+      {
+        ios: {
+          useFrameworks: 'static',
+          forceStaticLinking: ['RNFBApp', 'RNFBAnalytics'],
+        },
+      },
+    ],
     [
       'expo-splash-screen',
       {
@@ -63,21 +74,29 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     [
-        '@react-native-google-signin/google-signin',
-        {
-          iosUrlScheme: `${Env.GOOGLE_IOS_URL_SCHEME}`,
-        },
-      ],
+      '@react-native-google-signin/google-signin',
+      {
+        iosUrlScheme: `${Env.GOOGLE_IOS_URL_SCHEME}`,
+      },
+    ],
+    [
+      'expo-tracking-transparency',
+      {
+        userTrackingPermission:
+          'Allow StacksApp to use data to show more relevant ads. Declining still keeps sponsored transactions available.',
+      },
+    ],
     'react-native-edge-to-edge',
     [
-      "react-native-google-mobile-ads",
+      'react-native-google-mobile-ads',
       {
-        "androidAppId": Env.ANDROID_ADMOB_APP_ID,
-        "iosAppId": Env.IOS_ADMOB_APP_ID
-      }
+        androidAppId: Env.ANDROID_ADMOB_APP_ID,
+        iosAppId: Env.IOS_ADMOB_APP_ID,
+      },
     ],
+    '@react-native-firebase/app',
     'expo-router',
-    ],
+  ],
   extra: {
     ...ClientEnv,
     eas: {
@@ -85,4 +104,3 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
 });
-

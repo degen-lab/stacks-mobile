@@ -9,6 +9,7 @@ import {
 type UseRewardedAdOptions = {
   adUnitId: string;
   keywords?: string[];
+  requestNonPersonalizedAdsOnly?: boolean;
   serverSideVerificationOptions?: {
     userId?: string;
     customData?: string;
@@ -31,6 +32,7 @@ type UseRewardedAdState = {
 export default function useRewardedAd({
   adUnitId,
   keywords = ["game", "reward"],
+  requestNonPersonalizedAdsOnly = false,
   serverSideVerificationOptions,
   loadOnMount = true,
   onEarnedReward,
@@ -42,9 +44,15 @@ export default function useRewardedAd({
     () =>
       RewardedAd.createForAdRequest(adUnitId, {
         keywords,
+        requestNonPersonalizedAdsOnly,
         serverSideVerificationOptions,
       }),
-    [adUnitId, keywords, serverSideVerificationOptions],
+    [
+      adUnitId,
+      keywords,
+      requestNonPersonalizedAdsOnly,
+      serverSideVerificationOptions,
+    ],
   );
 
   const [loaded, setLoaded] = useState(false);

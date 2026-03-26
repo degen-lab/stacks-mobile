@@ -81,7 +81,7 @@ describe("WalletRestore screen", () => {
     jest.restoreAllMocks();
   });
 
-  it("restores wallet and routes home", async () => {
+  it("restores wallet and routes to home", async () => {
     mockRestoreWallet.mockResolvedValue(undefined);
 
     const { getByTestId } = render(<WalletRestore />);

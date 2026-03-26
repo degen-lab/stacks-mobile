@@ -2,6 +2,7 @@ import type { User } from "@degenlab/stacks-wallet-kit-core";
 import { create } from "zustand";
 
 import type { UserData as BackendUserData } from "@/api/auth";
+import { resetConsentStore } from "@/lib/store/consent";
 import { getItem, removeItem, setItem } from "@/lib/storage/storage";
 import { walletKit } from "@/lib/stacks/wallet";
 
@@ -42,6 +43,7 @@ interface AuthState {
     userData: BackendUserData | null,
     referralUsed: boolean,
   ) => Promise<void>;
+  setBackendUserData: (userData: BackendUserData | null) => Promise<void>;
 }
 
 const useAuthStore = create<AuthState>((set, get) => ({
@@ -95,6 +97,8 @@ const useAuthStore = create<AuthState>((set, get) => ({
       await removeItem(USER_DATA_KEY);
       await removeItem(BACKEND_TOKEN_KEY);
       await removeItem(BACKEND_USER_KEY);
+      await removeItem(REFERRAL_USED_KEY);
+      await resetConsentStore();
     } catch (error) {
       console.error("Sign out failed:", error);
     }
@@ -207,6 +211,23 @@ const useAuthStore = create<AuthState>((set, get) => ({
       });
     } catch (error) {
       console.error("Failed to persist backend session:", error);
+      throw error;
+    }
+  },
+
+  setBackendUserData: async (userData: BackendUserData | null) => {
+    try {
+      if (userData) {
+        await setItem(BACKEND_USER_KEY, userData);
+      } else {
+        await removeItem(BACKEND_USER_KEY);
+      }
+
+      set({
+        backendUserData: userData,
+      });
+    } catch (error) {
+      console.error("Failed to persist backend user:", error);
       throw error;
     }
   },

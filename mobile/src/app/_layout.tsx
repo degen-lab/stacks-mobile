@@ -16,6 +16,7 @@ import { ReferralHeader } from "@/features/referral/components/referral-header";
 import { SwapSheetProvider } from "@/features/swaps";
 import { TransferSheetProvider } from "@/features/transfer";
 import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
+import { ConsentController } from "@/lib/consent/consent-controller";
 import { fontConfig } from "@/lib/fonts";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";
 
@@ -42,10 +43,12 @@ export default function RootLayout() {
 
   return (
     <Providers>
+      <ConsentController />
       <Stack>
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
         {/* <Stack.Screen name="onboarding" options={{ headerShown: false }} /> */}
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="privacy-consent" options={{ headerShown: false }} />
         <Stack.Screen name="stacks-bridge" options={{ headerShown: false }} />
         <Stack.Screen name="wallet-new" options={{ headerShown: false }} />
         <Stack.Screen name="wallet-restore" options={{ headerShown: false }} />
@@ -60,6 +63,10 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="settings/display"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="settings/privacy-ads"
           options={{ headerShown: false }}
         />
         <Stack.Screen name="profile" options={{ headerShown: false }} />

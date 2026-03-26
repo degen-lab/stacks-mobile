@@ -1,6 +1,9 @@
 jest.mock("@react-native-async-storage/async-storage", () =>
-  require("@react-native-async-storage/async-storage/jest/async-storage-mock")
+  require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );
+
+global.setImmediate ??= (callback, ...args) => setTimeout(callback, 0, ...args);
+global.clearImmediate ??= (handle) => clearTimeout(handle);
 
 jest.mock("@react-native-google-signin/google-signin", () => ({
   GoogleSignin: {
@@ -17,4 +20,23 @@ jest.mock("@react-native-google-signin/google-signin", () => ({
     IN_PROGRESS: "IN_PROGRESS",
     PLAY_SERVICES_NOT_AVAILABLE: "PLAY_SERVICES_NOT_AVAILABLE",
   },
+}));
+
+jest.mock("@react-native-firebase/analytics", () => {
+  const analyticsInstance = {
+    setAnalyticsCollectionEnabled: jest.fn(() => Promise.resolve()),
+    logScreenView: jest.fn(() => Promise.resolve()),
+    logEvent: jest.fn(() => Promise.resolve()),
+  };
+
+  return () => analyticsInstance;
+});
+
+jest.mock("expo-tracking-transparency", () => ({
+  getTrackingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "undetermined" }),
+  ),
+  requestTrackingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "denied" }),
+  ),
 }));

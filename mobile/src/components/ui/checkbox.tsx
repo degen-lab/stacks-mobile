@@ -198,7 +198,9 @@ export const SwitchIcon = ({ checked = false }: IconProps) => {
     ? THUMB_OFFSET
     : WIDTH - THUMB_WIDTH - THUMB_OFFSET;
 
-  const backgroundColor = checked ? colors.primary[300] : colors.charcoal[400];
+  const backgroundColor = checked
+    ? colors.stacks.bloodOrange
+    : colors.charcoal[400];
 
   return (
     <View className="w-[50px] justify-center">
