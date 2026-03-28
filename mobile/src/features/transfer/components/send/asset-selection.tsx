@@ -1,14 +1,14 @@
 import { View } from "@/components/ui";
 import { SharedAssetSelection } from "../shared-asset-selection";
-import type { TransferAsset } from "../../types";
+import type { AppToken } from "@/lib/assets/tokens";
 
 type AssetSelectionProps = {
-  onSelectAsset: (asset: TransferAsset) => void;
+  onSelectAsset: (asset: AppToken) => void;
   onNext: () => void;
 };
 
 export function AssetSelection({ onSelectAsset, onNext }: AssetSelectionProps) {
-  const handleSelectAsset = (asset: TransferAsset) => {
+  const handleSelectAsset = (asset: AppToken) => {
     onSelectAsset(asset);
     setTimeout(() => {
       onNext();

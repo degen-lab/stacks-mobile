@@ -3,8 +3,4 @@ export {
   TransferSheetProvider,
   useTransferSheet,
 } from "./provider/transfer-sheet-provider";
-export type {
-  TransferAsset,
-  TransferMode,
-  TransferSheetRequest,
-} from "./types";
+export type { TransferMode, TransferSheetRequest } from "./types";

@@ -1,9 +1,9 @@
 import { View, Button, Text } from "@/components/ui";
 import { Numpad } from "@/components/ui/numpad";
-import type { TransferAsset } from "../../types";
+import type { AppToken } from "@/lib/assets/tokens";
 
 type AmountInputProps = {
-  asset: TransferAsset | null;
+  asset: AppToken | null;
   amount: string;
   balance: number;
   balanceIsLoading?: boolean;

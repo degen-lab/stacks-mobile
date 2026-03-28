@@ -1,9 +1,9 @@
-import type { TransferAsset } from "../../types";
+import type { AppToken } from "@/lib/assets/tokens";
 import { View, Button, Text } from "@/components/ui";
 import { Input } from "@/components/ui/input";
 
 type RecipientInputProps = {
-  asset: TransferAsset | null;
+  asset: AppToken | null;
   recipient: string;
   memo: string;
   onRecipientChange: (value: string) => void;

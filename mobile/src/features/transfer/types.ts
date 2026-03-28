@@ -1,4 +1,4 @@
-export type TransferAsset = "STX" | "BTC" | "sBTC";
+import type { AppToken } from "@/lib/assets/tokens";
 
 export type TransferMode = "select" | "send" | "receive";
 
@@ -14,7 +14,7 @@ export interface SendFieldLocks {
 }
 
 export interface SendFormData {
-  asset: TransferAsset | null;
+  asset: AppToken | null;
   recipient: string;
   memo: string;
   amount: string;
@@ -22,7 +22,7 @@ export interface SendFormData {
 }
 
 export interface SendFlowRequest {
-  asset?: TransferAsset | null;
+  asset?: AppToken | null;
   recipient?: string;
   memo?: string;
   amount?: string;
@@ -31,7 +31,7 @@ export interface SendFlowRequest {
 }
 
 export interface ReceiveFlowRequest {
-  asset?: TransferAsset | null;
+  asset?: AppToken | null;
 }
 
 export interface TransferSheetRequest {
