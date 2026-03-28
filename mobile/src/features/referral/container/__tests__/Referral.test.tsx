@@ -106,6 +106,7 @@ describe("ReferralContainer", () => {
       referralCode: "ABC12345",
       streak: 0,
       points: 0,
+      isNewUser: false,
       consent: {
         analytics: false,
         adsPersonalization: false,

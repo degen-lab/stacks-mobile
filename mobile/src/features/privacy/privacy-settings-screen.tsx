@@ -5,11 +5,13 @@ import { ScreenHeader, View } from "@/components/ui";
 import { ConsentPreferencesForm } from "@/features/privacy/consent-preferences-form";
 import { CURRENT_CONSENT_VERSION } from "@/lib/consent/types";
 import { useConsentActions } from "@/lib/consent/use-consent-actions";
+import { useAuth } from "@/lib/store/auth";
 import { useConsentStore } from "@/lib/store/consent";
 
 export default function PrivacySettingsScreen() {
-  const consent = useConsentStore((state) => state.consent);
-  const consentHydrated = useConsentStore((state) => state.hasHydrated);
+  const { backendUserData } = useAuth();
+  const { hasHydrated: consentHydrated, pendingSync } = useConsentStore();
+  const consent = pendingSync?.localConsent ?? backendUserData?.consent ?? null;
   const { isSaving, saveConsent } = useConsentActions();
 
   const [analyticsEnabled, setAnalyticsEnabled] = useState(

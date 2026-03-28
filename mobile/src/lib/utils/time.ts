@@ -29,6 +29,20 @@ export function blocksToTime(
   };
 }
 
+export function formatTimeUntil(
+  timeUntil: Pick<TimeUntil, "days" | "hours" | "minutes">,
+) {
+  if (timeUntil.days > 0) {
+    return `${timeUntil.days}d ${timeUntil.hours}h`;
+  }
+
+  if (timeUntil.hours > 0) {
+    return `${timeUntil.hours}h ${timeUntil.minutes}m`;
+  }
+
+  return `${Math.max(0, timeUntil.minutes)} mins`;
+}
+
 export function timeUntilBlock(
   currentHeight: number | bigint,
   targetHeight: number | bigint,

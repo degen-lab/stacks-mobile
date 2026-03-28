@@ -27,7 +27,6 @@ export type EarnRewardRow = {
 export type EarnRewardsSummary = {
   totalRewardsUsd: number | null;
   currentStackingApr: number | null;
-  nextRewardDateLabel: string | null;
   rows: EarnRewardRow[];
 };
 

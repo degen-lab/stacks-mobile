@@ -10,7 +10,7 @@ describe("buildEarnNextStepCards", () => {
       lockedStxBalance: 0,
       isEnrolledCurrentCycle: false,
       isEnrolledNextCycle: false,
-      nextRewardDateLabel: null,
+      nextRewardPhaseLabel: null,
       stackingApr: 8.4,
     });
 
@@ -26,7 +26,7 @@ describe("buildEarnNextStepCards", () => {
       lockedStxBalance: 0,
       isEnrolledCurrentCycle: false,
       isEnrolledNextCycle: false,
-      nextRewardDateLabel: null,
+      nextRewardPhaseLabel: null,
       stackingApr: 8.4,
     });
 

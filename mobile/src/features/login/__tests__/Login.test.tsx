@@ -125,7 +125,7 @@ describe("LoginScreen", () => {
     fetchQuery.mockResolvedValue({ isNewUser: false });
     mutateAsync.mockResolvedValue({
       token: "token",
-      data: { id: "backend-user" },
+      data: { id: "backend-user", isNewUser: false },
     });
 
     const { getByTestId } = render(<LoginScreen />);
@@ -140,7 +140,6 @@ describe("LoginScreen", () => {
         }),
       );
       expect(setBackendSession).toHaveBeenCalledTimes(1);
-
       expect(__mockRouter.replace).toHaveBeenCalledWith("/wallet-new");
     });
   });
@@ -150,7 +149,7 @@ describe("LoginScreen", () => {
     fetchQuery.mockResolvedValue({ isNewUser: false });
     mutateAsync.mockResolvedValue({
       token: "token",
-      data: { id: "backend-user" },
+      data: { id: "backend-user", isNewUser: false },
     });
 
     const { getByTestId } = render(<LoginScreen />);
@@ -202,7 +201,7 @@ describe("LoginScreen", () => {
     fetchQuery.mockResolvedValue({ isNewUser: true });
     mutateAsync.mockResolvedValue({
       token: "token",
-      data: { id: "backend-user" },
+      data: { id: "backend-user", isNewUser: true },
     });
 
     const { getByTestId } = render(<LoginScreen />);
@@ -234,7 +233,7 @@ describe("LoginScreen", () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult(false));
     mutateAsync.mockResolvedValue({
       token: "token",
-      data: { id: "backend-user" },
+      data: { id: "backend-user", isNewUser: false },
     });
 
     const { getByTestId } = render(<LoginScreen />);
@@ -252,7 +251,7 @@ describe("LoginScreen", () => {
     fetchQuery.mockResolvedValue({ isNewUser: true });
     mutateAsync.mockResolvedValue({
       token: "token",
-      data: { id: "backend-user" },
+      data: { id: "backend-user", isNewUser: true },
     });
 
     const { getByTestId } = render(<LoginScreen />);
@@ -275,7 +274,7 @@ describe("LoginScreen", () => {
     fetchQuery.mockRejectedValue(new Error("network down")); // Failure
     mutateAsync.mockResolvedValue({
       token: "token",
-      data: { id: "backend-user" },
+      data: { id: "backend-user", isNewUser: false },
     });
 
     const { getByTestId } = render(<LoginScreen />);

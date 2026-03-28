@@ -1,5 +1,6 @@
 import { Button, Modal, ScrollView, Text, View } from "@/components/ui";
 import { WarningLabel } from "@/components/warning-label";
+import { trackEvent } from "@/lib/analytics";
 import { useActiveAccountIndex } from "@/lib/store/settings";
 import { walletKit } from "@/lib/stacks/wallet";
 import { PasswordInput } from "@/features/login/components/password-input";
@@ -348,6 +349,8 @@ export const ReplaceBackupModal = forwardRef<
               // Create new backup
               await walletKit.backupWallet(password);
 
+              void trackEvent("replace_cloud_backup");
+
               showMessage({
                 message: "Wallet replaced and backed up successfully",
                 type: "success",
@@ -358,6 +361,9 @@ export const ReplaceBackupModal = forwardRef<
             } catch (error: any) {
               console.error("Failed to replace wallet:", error);
               if (error?.code === "BACKUP_ALREADY_EXISTS") {
+                void trackEvent("replace_cloud_backup_failed", {
+                  reason: "backup_already_exists",
+                });
                 showMessage({
                   message:
                     "Backup already exists. Wallet was replaced locally.",

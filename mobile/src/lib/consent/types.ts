@@ -1,4 +1,4 @@
-export const CURRENT_CONSENT_VERSION = "v4";
+export const CURRENT_CONSENT_VERSION = "v1";
 
 export type ConsentDto = {
   analytics: boolean | null;
@@ -21,19 +21,13 @@ export type PendingConsentSync = {
 
 export function createLocalConsent(
   decision: ConsentDecision,
-  updatedAt: string = new Date().toISOString(),
+  updatedAt = new Date().toISOString(),
 ): ConsentDto {
-  return {
-    analytics: decision.analytics,
-    adsPersonalization: decision.adsPersonalization,
-    version: decision.version,
-    updatedAt,
-  };
+  return { ...decision, updatedAt };
 }
 
 export function isConsentCurrent(consent: ConsentDto | null | undefined) {
   if (!consent) return false;
-
   return (
     consent.version === CURRENT_CONSENT_VERSION &&
     consent.analytics !== null &&

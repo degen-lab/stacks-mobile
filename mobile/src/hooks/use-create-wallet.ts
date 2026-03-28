@@ -49,7 +49,6 @@ export function useRestoreWallet() {
   const restoreWallet = useCallback(
     async ({ password }: GoogleWalletFlowOptions): Promise<void> => {
       try {
-        // walletKit handles all storage internally
         await walletKit.retrieveWallet(password);
         completeGoogleAuth(true);
         triggerHaptics("success");

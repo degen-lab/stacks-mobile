@@ -22,15 +22,13 @@ jest.mock("@react-native-google-signin/google-signin", () => ({
   },
 }));
 
-jest.mock("@react-native-firebase/analytics", () => {
-  const analyticsInstance = {
-    setAnalyticsCollectionEnabled: jest.fn(() => Promise.resolve()),
-    logScreenView: jest.fn(() => Promise.resolve()),
-    logEvent: jest.fn(() => Promise.resolve()),
-  };
-
-  return () => analyticsInstance;
-});
+jest.mock("@react-native-firebase/analytics", () => ({
+  getAnalytics: jest.fn(() => ({})),
+  setAnalyticsCollectionEnabled: jest.fn(() => Promise.resolve()),
+  logEvent: jest.fn(() => Promise.resolve()),
+  setUserId: jest.fn(() => Promise.resolve()),
+  setUserProperties: jest.fn(() => Promise.resolve()),
+}));
 
 jest.mock("expo-tracking-transparency", () => ({
   getTrackingPermissionsAsync: jest.fn(() =>

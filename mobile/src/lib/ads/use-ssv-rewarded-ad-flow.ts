@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import useRewardedAd from "./use-rewarded-ad";
+import { trackEvent } from "@/lib/analytics";
 
 type SsvData = { userId: string; customData: string };
 
@@ -56,10 +57,14 @@ export function useSsvRewardedAdFlow<TPayload>(
     loadOnMount: false,
     requestNonPersonalizedAdsOnly,
     serverSideVerificationOptions: ssvData ?? undefined,
+    onAdOpened: () => {
+      void trackEvent("sponsored_ad_shown");
+    },
     onEarnedReward: async () => {
       const payload = pendingRef.current;
       if (!payload) return;
       rewardedRef.current = true;
+      void trackEvent("sponsored_ad_earned");
       try {
         await onEarnedRef.current(payload);
       } catch (error) {
@@ -76,10 +81,12 @@ export function useSsvRewardedAdFlow<TPayload>(
         rewardedRef.current = false;
         return;
       }
+      void trackEvent("sponsored_ad_dismissed");
       onCanceledRef.current();
       clear();
     },
     onAdError: (error) => {
+      void trackEvent("sponsored_ad_failed");
       onErrorRef.current(new Error(error?.message ?? "Ad failed to load."));
       clear();
     },

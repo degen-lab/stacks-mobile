@@ -1,42 +1,40 @@
-import analytics from "@react-native-firebase/analytics";
+import {
+  getAnalytics,
+  logEvent,
+  setAnalyticsCollectionEnabled,
+  setUserId,
+  setUserProperties,
+} from "@react-native-firebase/analytics";
 
-let analyticsCollectionEnabled = false;
-
-export async function setAnalyticsEnabled(enabled: boolean) {
-  analyticsCollectionEnabled = enabled;
-
-  try {
-    await analytics().setAnalyticsCollectionEnabled(enabled);
-  } catch (error) {
-    console.warn("Failed to update analytics collection state:", error);
-  }
+export async function firebaseSetEnabled(enabled: boolean) {
+  await setAnalyticsCollectionEnabled(getAnalytics(), enabled);
 }
 
-export async function trackScreenView(pathname: string) {
-  if (!analyticsCollectionEnabled) return;
-
-  const normalizedPath = pathname.replace(/^\//, "").replace(/\//g, "_");
-  const screenName = normalizedPath.length > 0 ? normalizedPath : "home";
-
-  try {
-    await analytics().logScreenView({
-      screen_name: screenName,
-      screen_class: screenName,
-    });
-  } catch (error) {
-    console.warn("Failed to track screen view:", error);
-  }
+export async function firebaseTrackScreen(screenName: string) {
+  await logEvent(getAnalytics(), "screen_view", {
+    screen_name: screenName,
+    screen_class: screenName,
+  });
 }
 
-export async function logAnalyticsEvent(
+export async function firebaseLogEvent(
   name: string,
   params?: Record<string, string | number | boolean | null | undefined>,
 ) {
-  if (!analyticsCollectionEnabled) return;
+  await logEvent(getAnalytics(), name, params);
+}
 
-  try {
-    await analytics().logEvent(name, params);
-  } catch (error) {
-    console.warn(`Failed to log analytics event "${name}":`, error);
-  }
+export async function firebaseSetUserContext(
+  userId: string,
+  properties: Record<string, string>,
+) {
+  await setUserId(getAnalytics(), userId);
+  await setUserProperties(getAnalytics(), properties);
+}
+
+export async function firebaseClearUserContext(
+  properties: Record<string, null>,
+) {
+  await setUserId(getAnalytics(), null);
+  await setUserProperties(getAnalytics(), properties);
 }

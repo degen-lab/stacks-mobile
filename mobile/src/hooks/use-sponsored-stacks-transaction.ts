@@ -1,22 +1,17 @@
-import {
-  getTrackingPermissionsAsync,
-  requestTrackingPermissionsAsync,
-} from "expo-tracking-transparency";
 import { useCallback, useRef } from "react";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 
 import {
   useBroadcastSponsoredTransactionMutation,
   useCreateSponsoredTransactionMutation,
 } from "@/api/game/transaction";
 import { useUserProfile } from "@/api/user";
+import { requestIosAdTracking } from "@/lib/ads/ios-tracking-permission";
 import { getRewardedAdUnitId } from "@/lib/ads/rewarded-ad-unit";
-import {
-  CURRENT_CONSENT_VERSION,
-  type ConsentDecision,
-} from "@/lib/consent/types";
+import { CURRENT_CONSENT_VERSION } from "@/lib/consent/types";
 import { useConsentActions } from "@/lib/consent/use-consent-actions";
 import { useSsvRewardedAdFlow } from "@/lib/ads/use-ssv-rewarded-ad-flow";
+import { useAuth } from "@/lib/store/auth";
 import { useConsentStore } from "@/lib/store/consent";
 import { useSignTransaction } from "./use-sign-transaction";
 
@@ -46,42 +41,12 @@ type SubmitPreparedSponsoredTransactionOptions = {
 const toError = (error: unknown) =>
   error instanceof Error ? error : new Error(String(error));
 
-function showIosTrackingPrePrompt() {
-  return new Promise<boolean>((resolve) => {
-    let settled = false;
-
-    const settle = (value: boolean) => {
-      if (settled) return;
-      settled = true;
-      resolve(value);
-    };
-
-    Alert.alert(
-      "Allow personalized ads?",
-      "iOS will ask for tracking permission. If you decline, sponsored transactions will still work with non-personalized ads.",
-      [
-        {
-          text: "Keep non-personalized ads",
-          style: "cancel",
-          onPress: () => settle(false),
-        },
-        {
-          text: "Continue",
-          onPress: () => settle(true),
-        },
-      ],
-      {
-        cancelable: true,
-        onDismiss: () => settle(false),
-      },
-    );
-  });
-}
-
 export function useSponsoredStacksTransaction() {
   const { data: userProfile } = useUserProfile();
   const userId = userProfile?.id;
-  const consent = useConsentStore((state) => state.consent);
+  const { backendUserData } = useAuth();
+  const pendingSync = useConsentStore((state) => state.pendingSync);
+  const consent = pendingSync?.localConsent ?? backendUserData?.consent ?? null;
   const createSponsoredTransactionMutation =
     useCreateSponsoredTransactionMutation();
   const broadcastSponsoredTransactionMutation =
@@ -128,52 +93,23 @@ export function useSponsoredStacksTransaction() {
     });
 
   const getRewardedAdRequestOptions = useCallback(async () => {
-    if (consent?.adsPersonalization !== true) {
+    if (consent?.adsPersonalization !== true || Platform.OS !== "ios") {
       return {
-        requestNonPersonalizedAdsOnly: true,
+        requestNonPersonalizedAdsOnly: consent?.adsPersonalization !== true,
       };
     }
 
-    if (Platform.OS !== "ios") {
-      return {
-        requestNonPersonalizedAdsOnly: false,
-      };
-    }
+    const tracking = await requestIosAdTracking();
 
-    const permission = await getTrackingPermissionsAsync();
-
-    if (permission.status === "granted") {
-      return {
-        requestNonPersonalizedAdsOnly: false,
-      };
-    }
-
-    if (permission.status !== "undetermined") {
-      return {
-        requestNonPersonalizedAdsOnly: true,
-      };
-    }
-
-    const shouldRequestTracking = await showIosTrackingPrePrompt();
-    if (!shouldRequestTracking) {
-      const nextConsent: ConsentDecision = {
+    if (tracking === "declined") {
+      await saveConsent({
         analytics: consent?.analytics === true,
         adsPersonalization: false,
         version: CURRENT_CONSENT_VERSION,
-      };
-
-      await saveConsent(nextConsent);
-
-      return {
-        requestNonPersonalizedAdsOnly: true,
-      };
+      });
     }
 
-    const requestedPermission = await requestTrackingPermissionsAsync();
-
-    return {
-      requestNonPersonalizedAdsOnly: requestedPermission.status !== "granted",
-    };
+    return { requestNonPersonalizedAdsOnly: tracking !== "granted" };
   }, [consent?.adsPersonalization, consent?.analytics, saveConsent]);
 
   const submitPreparedSponsoredTransaction = useCallback(

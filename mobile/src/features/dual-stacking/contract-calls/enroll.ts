@@ -12,6 +12,7 @@ import {
 } from "@/lib/stacks/utils";
 import { useSettingsStore } from "@/lib/store/settings";
 import { walletKit } from "@/lib/stacks/wallet";
+import { trackEvent } from "@/lib/analytics";
 
 export const contractEnroll = async (
   rewardsAddress?: string,
@@ -30,7 +31,7 @@ export const contractEnroll = async (
     ? [someCV(principalCV(rewardsAddress))]
     : [noneCV()];
 
-  return walletKit.makeContractCall(
+  const txId = await walletKit.makeContractCall(
     contractId,
     enrollFunction,
     convertedArgs,
@@ -38,4 +39,6 @@ export const contractEnroll = async (
     feeMicroStx,
     accountIndex,
   );
+  void trackEvent("dual_stacking_enrolled");
+  return txId;
 };

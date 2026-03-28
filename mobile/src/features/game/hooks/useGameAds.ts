@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 
 import { getRewardedAdUnitId } from "@/lib/ads/rewarded-ad-unit";
 import useRewardedAd from "@/lib/ads/use-rewarded-ad";
+import { trackEvent } from "@/lib/analytics";
 
 type UseGameAdsOptions = {
   onReviveEarned: () => void;
@@ -18,16 +19,19 @@ export const useGameAds = ({
   const handleAdEarned = useCallback(() => {
     adRewardedRef.current = true;
     setIsWatchingAd(false);
+    void trackEvent("revive_ad_earned");
     onReviveEarned();
   }, [onReviveEarned]);
 
   const handleAdOpened = useCallback(() => {
     setIsWatchingAd(true);
+    void trackEvent("revive_ad_shown");
   }, []);
 
   const handleAdClosed = useCallback(() => {
     setIsWatchingAd(false);
     if (!adRewardedRef.current) {
+      void trackEvent("revive_ad_dismissed");
       onReviveDeclined();
     }
     adRewardedRef.current = false;

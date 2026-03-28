@@ -12,11 +12,10 @@ import { useConsentStore } from "@/lib/store/consent";
 
 export default function PrivacyConsentScreen() {
   const router = useRouter();
-  const { isAuthenticated, hasHydrated } = useAuth();
-  const consent = useConsentStore((state) => state.consent);
-  const consentHydrated = useConsentStore((state) => state.hasHydrated);
+  const { backendUserData, isAuthenticated, hasHydrated } = useAuth();
+  const { hasHydrated: consentHydrated, pendingSync } = useConsentStore();
+  const consent = pendingSync?.localConsent ?? backendUserData?.consent ?? null;
   const { isSaving, saveConsent } = useConsentActions();
-
   const analyticsModal = useModal();
   const analyticsModalPresentedRef = useRef(false);
   const [analyticsDecision, setAnalyticsDecision] = useState<boolean | null>(
@@ -29,6 +28,7 @@ export default function PrivacyConsentScreen() {
       router.replace("/login");
       return;
     }
+    if (!backendUserData) return;
     if (!needsConsentGate(consent)) {
       router.replace("/");
       return;
@@ -38,8 +38,9 @@ export default function PrivacyConsentScreen() {
     analyticsModal.present();
   }, [
     analyticsModal,
-    consent,
+    backendUserData,
     consentHydrated,
+    consent,
     hasHydrated,
     isAuthenticated,
     router,
@@ -69,7 +70,7 @@ export default function PrivacyConsentScreen() {
     router.replace("/");
   };
 
-  if (!hasHydrated || !consentHydrated) {
+  if (!hasHydrated || !consentHydrated || !backendUserData) {
     return null;
   }
 

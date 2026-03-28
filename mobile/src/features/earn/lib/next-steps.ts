@@ -16,20 +16,27 @@ function sortByPriority(
 
 function selectCandidates(args: BuildEarnNextStepCardsArgs) {
   const selected = sortByPriority(buildActionableCandidates(args)).slice(0, 2);
-
-  if (selected.length !== 1) {
-    return selected;
-  }
-
   const preview = sortByPriority(
     buildPreviewCandidates({
       sbtcBalance: args.sbtcBalance,
       totalStxBalance: args.totalStxBalance,
       lockedStxBalance: args.lockedStxBalance,
     }),
-  ).find((candidate) => candidate.id !== selected[0]?.id);
+  );
 
-  return preview ? [...selected, preview] : selected;
+  if (selected.length === 0) {
+    return preview.slice(0, 2);
+  }
+
+  if (selected.length !== 1) {
+    return selected;
+  }
+
+  const secondaryPreview = preview.find(
+    (candidate) => candidate.id !== selected[0]?.id,
+  );
+
+  return secondaryPreview ? [...selected, secondaryPreview] : selected;
 }
 
 function getCardStatus(
@@ -41,8 +48,12 @@ function getCardStatus(
     cards.length === 2 &&
     cards[0]?.id === "get-stx" &&
     cards[1]?.id === "get-btc";
+  const hasOnlyPreviewCards = cards.every(
+    (candidate) => candidate.kind === "preview",
+  );
 
   if (card.kind === "success") return "success";
+  if (hasOnlyPreviewCards && index === 0) return "primary";
   if (card.kind === "preview") return "preview";
   return isAcquirePair || index === 0 ? "primary" : "secondary";
 }
@@ -53,7 +64,7 @@ export function buildEarnNextStepCards(
   const selected = selectCandidates(args);
   const cards = selected.length
     ? selected
-    : [buildSuccessCandidate(args.nextRewardDateLabel)];
+    : [buildSuccessCandidate(args.nextRewardPhaseLabel)];
 
   return cards.map((card, index) => ({
     id: card.id,

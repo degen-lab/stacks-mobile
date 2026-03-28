@@ -21,7 +21,7 @@ import {
 import { usePrepareStxSend } from "../hooks/use-prepare-stx-send";
 import { useTransfer } from "../hooks/use-transfer";
 import { useSendFlow } from "../hooks/use-send-flow";
-import type { TransferAsset, TransferSheetRequest } from "../types";
+import type { TransferSheetRequest } from "../types";
 import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
 import { useSignTransaction } from "@/hooks/use-sign-transaction";
 import { buildUnsignedStxTransfer } from "@/lib/stacks/transaction-builder";
@@ -32,6 +32,7 @@ import {
   deserializeTransaction,
 } from "@stacks/transactions";
 import { useQueryClient } from "@tanstack/react-query";
+import { trackEvent } from "@/lib/analytics";
 
 type TransferSheetProps = {
   open: boolean;
@@ -67,7 +68,7 @@ export function TransferSheet({
   const sendFlow = useSendFlow();
   const { initialize, reset } = sendFlow;
   const [feeRateTier, setFeeRateTier] = useState<FeeRateTier>("standard");
-  const [qrAsset, setQrAsset] = useState<TransferAsset | null>(null);
+  const [qrAsset, setQrAsset] = useState<AppToken | null>(null);
   const [qrAddress, setQrAddress] = useState<string | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasOpenedRef = useRef(false);
@@ -121,7 +122,7 @@ export function TransferSheet({
     : "0.00000000";
 
   const getReceiveAddress = useCallback(
-    (asset: TransferAsset | null | undefined) => {
+    (asset: AppToken | null | undefined) => {
       if (asset === "STX") return stxAddress;
       if (asset === "BTC") return btcAddress;
       return null;
@@ -255,6 +256,8 @@ export function TransferSheet({
   };
 
   const handleSendTransaction = async () => {
+    const token = sendFlow.formData.asset;
+    if (token) void trackEvent("transfer_initiated", { token });
     if (sendFlow.formData.asset === "BTC") {
       if (!preparedBtcSend) {
         showMessage({
@@ -272,6 +275,10 @@ export function TransferSheet({
         const txId = await broadcastBitcoinTx.mutateAsync(
           preparedBtcSend.rawTxHex,
         );
+        void trackEvent("transfer_completed", {
+          token: "BTC",
+          method: "wallet",
+        });
         showMessage({
           message: "Bitcoin transaction submitted",
           description: txId,
@@ -350,6 +357,7 @@ export function TransferSheet({
       void queryClient.invalidateQueries({
         queryKey: ["stacks-user-balances"],
       });
+      void trackEvent("transfer_completed", { token: "STX", method: "wallet" });
       showMessage({
         message: "STX transaction submitted",
         description: response.txid,
@@ -369,6 +377,7 @@ export function TransferSheet({
 
   const handleSponsoredSendTransaction = async () => {
     if (sendFlow.formData.asset !== "STX") return;
+    void trackEvent("transfer_initiated", { token: "STX" });
 
     try {
       const amountMicroStx = Math.round(
@@ -393,6 +402,10 @@ export function TransferSheet({
 
       void queryClient.invalidateQueries({
         queryKey: ["stacks-user-balances"],
+      });
+      void trackEvent("transfer_completed", {
+        token: "STX",
+        method: "sponsored",
       });
       showMessage({
         message: "STX transfer queued",
@@ -440,7 +453,7 @@ export function TransferSheet({
     }
   };
 
-  const handleShowQR = (asset: TransferAsset, address: string) => {
+  const handleShowQR = (asset: AppToken, address: string) => {
     setQrAsset(asset);
     setQrAddress(address);
   };

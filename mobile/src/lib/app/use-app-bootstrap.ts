@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { initializeAds } from "@/lib/ads/initialize-ads";
 import { hydrateAuth } from "@/lib/store/auth";
 import { loadBalanceVisibility } from "@/lib/store/balance-visibility";
+import { useConsentStore } from "@/lib/store/consent";
 import { useGameStore } from "@/lib/store/game";
 import { loadSettings } from "@/lib/store/settings";
 import { loadSelectedTheme } from "@/lib/theme/use-selected-theme";
@@ -17,14 +18,14 @@ export function useAppBootstrap() {
 
     const initApp = async () => {
       try {
+        await hydrateAuth();
         await Promise.all([
-          hydrateAuth(),
           loadBalanceVisibility(),
           loadSelectedTheme(),
           loadSettings(),
           useGameStore.getState().hydrateSelectedSkin(),
-          // TODO: add consent before initializing ads
-          initializeAds(), // Initialize Google Mobile Ads SDK
+          useConsentStore.getState().hydrate(),
+          initializeAds(),
         ]);
       } catch (error) {
         console.error("Failed to initialize app:", error);

@@ -7,6 +7,7 @@ import {
 } from "@/lib/stacks/utils";
 import { useSettingsStore } from "@/lib/store/settings";
 import { walletKit } from "@/lib/stacks/wallet";
+import { trackEvent } from "@/lib/analytics";
 
 export const contractOptOut = async (
   feeMicroStx?: number,
@@ -17,7 +18,7 @@ export const contractOptOut = async (
   const functionName = SC_FUNCTIONS[contractType].publicFunctions.OPT_OUT;
   const accountIndex = useSettingsStore.getState().activeAccountIndex;
 
-  return walletKit.makeContractCall(
+  const txId = await walletKit.makeContractCall(
     contractId,
     functionName,
     [],
@@ -25,4 +26,6 @@ export const contractOptOut = async (
     feeMicroStx,
     accountIndex,
   );
+  void trackEvent("dual_stacking_opted_out");
+  return txId;
 };

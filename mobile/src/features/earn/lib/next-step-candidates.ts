@@ -17,7 +17,7 @@ export type BuildEarnNextStepCardsArgs = {
   lockedStxBalance: number;
   isEnrolledCurrentCycle: boolean;
   isEnrolledNextCycle: boolean;
-  nextRewardDateLabel: string | null;
+  nextRewardPhaseLabel: string | null;
   stackingApr: number | null;
 };
 
@@ -44,7 +44,7 @@ function buildAcquireCandidate(
     return {
       id: "get-btc",
       title: "Get BTC",
-      description: "Buy or receive BTC to bridge into sBTC rewards.",
+      description: `Bridge BTC to sBTC to earn Dual Stacking rewards.`,
       action: { type: "acquire", asset: "BTC" },
       ...options,
     };
@@ -53,7 +53,7 @@ function buildAcquireCandidate(
   return {
     id: "get-stx",
     title: "Get STX",
-    description: `Buy or receive at least ${MIN_STACKING_STX} STX to start stacking.`,
+    description: `You need at least ${MIN_STACKING_STX} STX to start stacking.`,
     action: { type: "acquire", asset: "STX" },
     ...options,
   };
@@ -138,13 +138,13 @@ function buildDualStackingPreviewCandidate(): EarnNextStepCandidate {
 }
 
 export function buildSuccessCandidate(
-  nextRewardDateLabel: string | null,
+  nextRewardPhaseLabel: string | null,
 ): EarnNextStepCandidate {
   return {
     id: "all-set",
     title: "You're all set",
-    description: nextRewardDateLabel
-      ? `Next payout expected around ${nextRewardDateLabel}.`
+    description: nextRewardPhaseLabel
+      ? `Next rewards phase starts in ${nextRewardPhaseLabel}.`
       : "Your earn setup is ready.",
     kind: "success",
     priority: 99,
@@ -210,18 +210,11 @@ export function buildPreviewCandidates({
     candidates.push(buildDualStackingPreviewCandidate());
   }
 
-  if (
-    totalStxBalance > 0 &&
-    totalStxBalance < MIN_STACKING_STX &&
-    !isStacking
-  ) {
-    candidates.push(buildStackingPreviewCandidate());
-  }
-
-  if (totalStxBalance === 0 && !isStacking) {
+  if (totalStxBalance < MIN_STACKING_STX && !isStacking) {
     candidates.push(
-      buildAcquireCandidate("STX", { kind: "preview", priority: 3 }),
+      buildAcquireCandidate("STX", { kind: "preview", priority: 1 }),
     );
+    candidates.push(buildStackingPreviewCandidate());
   }
 
   return candidates;
