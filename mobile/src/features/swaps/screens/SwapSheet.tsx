@@ -7,17 +7,11 @@ import {
   StyleSheet,
 } from "react-native";
 
-import {
-  Modal,
-  ScrollView,
-  Text,
-  View,
-  colors,
-  useModal,
-} from "@/components/ui";
+import { Modal, ScrollView, colors, useModal } from "@/components/ui";
 import { useSwap } from "../hooks/use-swap";
 import type { SwapSheetRequest } from "../types";
 import { SwapFormView } from "./SwapFormView";
+import { SwapFormSkeleton } from "./SwapFormView.skeleton";
 import { SwapPickerView } from "./SwapPickerView";
 import { SwapReviewView } from "./SwapReviewView";
 
@@ -85,11 +79,7 @@ export function SwapSheet({
           keyboardDismissMode="on-drag"
         >
           {swap.isLoading ? (
-            <View className="rounded-[20px] border border-border-secondary bg-sand-100 px-5 py-10">
-              <Text className="text-center font-instrument-sans text-sm text-secondary">
-                Loading assets and swap markets…
-              </Text>
-            </View>
+            <SwapFormSkeleton />
           ) : swap.step === "review" ? (
             <SwapReviewView swap={swap} />
           ) : (
