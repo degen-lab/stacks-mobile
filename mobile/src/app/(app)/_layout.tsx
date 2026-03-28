@@ -12,7 +12,7 @@ export default function TabLayout() {
   const consentHydrated = useConsentStore((state) => state.hasHydrated);
   const insets = useSafeAreaInsets();
   const androidBottomInset =
-    Platform.OS === "android" ? Math.max(insets.bottom, 12) : 0;
+    Platform.OS === "android" ? Math.min(insets.bottom, 32) : 0;
 
   if (!hasHydrated) return null;
   if (!isAuthenticated) return <Redirect href="/login" />;
