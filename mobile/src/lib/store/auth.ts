@@ -139,17 +139,15 @@ const useAuthStore = create<AuthState>((set, get) => ({
       ]);
 
       if (persistedToken) {
-        // User has authenticated with Google before
-        // Verify they still have wallet accounts
         const [accounts, backup] = await Promise.all([
-          walletKit.getWalletAccounts(),
-          walletKit.hasBackup(),
+          walletKit.getWalletAccounts().catch(() => null),
+          walletKit.hasBackup().catch(() => false),
         ]);
-        const hasAccounts = accounts && accounts.length > 0;
+        const hasAccounts = accounts ? accounts.length > 0 : !!persistedUser;
 
         set({
           accessToken: persistedToken,
-          isAuthenticated: hasAccounts, // Only authenticated if they have accounts
+          isAuthenticated: hasAccounts,
           authMethod: hasAccounts ? "google" : "none",
           hasHydrated: true,
           hasBackup: backup,

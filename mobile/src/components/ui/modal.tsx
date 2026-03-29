@@ -35,6 +35,7 @@ import type {
 import { BottomSheetModal, useBottomSheet } from "@gorhom/bottom-sheet";
 import * as React from "react";
 import { Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -90,6 +91,7 @@ export const Modal = React.forwardRef(
     }: ModalProps,
     ref: ModalRef,
   ) => {
+    const { bottom: bottomInset } = useSafeAreaInsets();
     const detachedProps = React.useMemo(
       () => getDetachedProps(detached),
       [detached],
@@ -146,6 +148,7 @@ export const Modal = React.forwardRef(
         backdropComponent={props.backdropComponent || renderBackdrop}
         enableDynamicSizing={false}
         handleComponent={showHandle ? renderHandleComponent : emptyHandle}
+        bottomInset={detached ? undefined : bottomInset}
       />
     );
   },

@@ -12,7 +12,8 @@ import {
 } from "./utils";
 
 export default function PowerUpsContainer() {
-  const { data: userProfile } = useUserProfile();
+  const { data: userProfile, isLoading: isUserProfileLoading } =
+    useUserProfile();
   const purchaseMutation = useStorePurchaseMutation();
   const { data: storeItems } = useStoreItems();
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +71,7 @@ export default function PowerUpsContainer() {
       powerUps={powerUps}
       ownedQuantities={itemQuantities}
       points={userProfile?.points ?? null}
-      isPointsLoading={userProfile === undefined}
+      isPointsLoading={isUserProfileLoading}
       onPurchase={handlePurchase}
       purchaseError={error}
       pendingVariant={pendingVariant}
