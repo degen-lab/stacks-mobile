@@ -1,5 +1,5 @@
 import type { ImageSource } from "expo-image";
-import { LogOut, Settings, User } from "lucide-react-native";
+import { LogOut, Settings } from "lucide-react-native";
 
 import { Text, View } from "@/components/ui";
 import { Popover } from "@/components/ui/popover";
@@ -14,7 +14,6 @@ type ProfilePopoverProps = {
   email: string;
   avatarSource: ImageSource;
   onPressSettings: () => void;
-  onPressViewProfile: () => void;
   onPressAccountHistory?: () => void;
   onPressSignOut: () => void;
   signingOut: boolean;
@@ -27,19 +26,10 @@ export function ProfilePopover({
   email,
   avatarSource,
   onPressSettings,
-  onPressViewProfile,
   onPressSignOut,
   signingOut,
 }: ProfilePopoverProps) {
   const items: MenuItemProps[] = [
-    {
-      label: "View profile",
-      icon: <User size={18} className="text-primary dark:text-white" />,
-      onPress: () => {
-        onClose();
-        onPressViewProfile();
-      },
-    },
     {
       label: "Settings",
       icon: <Settings size={18} className="text-primary dark:text-white" />,

@@ -45,11 +45,6 @@ export function Header() {
 
   const assets = portfolio.assets;
 
-  const handlePressViewProfile = useCallback(() => {
-    setProfilePopoverVisible(false);
-    router.push("/profile");
-  }, [router]);
-
   const handlePressSettings = useCallback(() => {
     setProfilePopoverVisible(false);
     router.push("/settings");
@@ -134,7 +129,6 @@ export function Header() {
         onCloseProfilePopover={() => setProfilePopoverVisible(false)}
         onClosePointsPopover={() => setPointsPopoverVisible(false)}
         onCloseStreakPopover={() => setStreakPopoverVisible(false)}
-        onPressViewProfile={handlePressViewProfile}
         onPressSettings={handlePressSettings}
         onPressAccountHistory={handlePressAccountHistory}
         onPressSignOut={handlePressSignOut}

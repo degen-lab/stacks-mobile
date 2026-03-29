@@ -38,7 +38,6 @@ type HeaderLayoutProps = {
   onCloseProfilePopover: () => void;
   onClosePointsPopover: () => void;
   onCloseStreakPopover: () => void;
-  onPressViewProfile: () => void;
   onPressSettings: () => void;
   onPressAccountHistory?: () => void;
   onPressSignOut: () => void;
@@ -65,7 +64,6 @@ export function HeaderLayout({
   onCloseProfilePopover,
   onClosePointsPopover,
   onCloseStreakPopover,
-  onPressViewProfile,
   onPressSettings,
   onPressAccountHistory,
   onPressSignOut,
@@ -185,7 +183,6 @@ export function HeaderLayout({
         name={name}
         email={email}
         onPressSettings={onPressSettings}
-        onPressViewProfile={onPressViewProfile}
         onPressAccountHistory={onPressAccountHistory}
         onPressSignOut={onPressSignOut}
         signingOut={signingOut}

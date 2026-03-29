@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 
-import { Button, ScreenHeader, ScrollView, Text, View } from "@/components/ui";
+import { ScreenHeader, ScrollView, Text, View } from "@/components/ui";
 
 import { HelpItem } from "../components/help-item";
 import { Item } from "../components/item";
@@ -16,7 +16,10 @@ export default function SettingsScreen() {
   return (
     <View className="flex-1 bg-surface-tertiary">
       <ScreenHeader title="Settings" />
-      <ScrollView className="flex-1 px-4 pt-6">
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="grow justify-between px-4 pt-6 pb-8"
+      >
         <View className="overflow-hidden rounded-2xl border border-surface-secondary bg-white">
           <Item
             label="Wallet"
@@ -39,19 +42,11 @@ export default function SettingsScreen() {
           <HelpItem />
         </View>
 
-        <View className="mt-6 items-center">
+        <View className="items-center">
           <Text className="text-sm text-secondary">Version {version}</Text>
           <Text className="mt-1 text-sm text-secondary">
             Device ID: {deviceId}
           </Text>
-        </View>
-        <View className="mt-5">
-          <Button
-            variant="outline"
-            size="lg"
-            label="Lock App"
-            onPress={() => {}}
-          />
         </View>
       </ScrollView>
     </View>
