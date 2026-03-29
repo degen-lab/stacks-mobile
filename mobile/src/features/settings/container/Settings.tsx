@@ -31,8 +31,12 @@ export default function SettingsScreen() {
           /> */}
           <View className="mx-4 border-b border-surface-secondary" />
           <SecurityItem />
-          <View className="mx-4 border-b border-surface-secondary" />
-          <NetworkItem />
+          {__DEV__ && (
+            <>
+              <View className="mx-4 border-b border-surface-secondary" />
+              <NetworkItem />
+            </>
+          )}
           <View className="mx-4 border-b border-surface-secondary" />
           <Item
             label="Privacy"
