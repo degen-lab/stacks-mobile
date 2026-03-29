@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import * as React from "react";
-import { Button, Modal, Text, View } from "@/components/ui";
+import { Button, Image, Modal, Text, View } from "@/components/ui";
 
 type EmptyWalletModalProps = {
   onBuyCrypto: () => void;
@@ -21,7 +21,10 @@ export const EmptyWalletModal = React.forwardRef<
     >
       <View className="flex-1 px-6 pb-8">
         <View className="items-center mb-10 mt-4">
-          <View className="h-[72px] w-[190px] rounded-md bg-neutral-200" />
+          <Image
+            source={require("@/assets/images/empty-wallet.png")}
+            className="h-[72px] w-[190px]"
+          />
         </View>
 
         <Text className="text-center text-2xl font-matter text-primary dark:text-white mb-3">
