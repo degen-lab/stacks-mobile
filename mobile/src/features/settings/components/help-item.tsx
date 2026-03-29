@@ -1,7 +1,14 @@
 import React from "react";
 
+import {
+  openBrowserAsync,
+  WebBrowserPresentationStyle,
+} from "expo-web-browser";
+import { showMessage } from "react-native-flash-message";
 import { Options, useModal } from "@/components/ui";
 import type { OptionType } from "@/components/ui/select";
+import { PRIVACY_URL, TERMS_URL } from "@/lib/app/links";
+import { openBugReportEmail } from "@/lib/app/support";
 
 import { Item } from "./item";
 
@@ -14,27 +21,38 @@ const HELP_OPTIONS: OptionType[] = [
 export const HelpItem = () => {
   const modal = useModal();
 
+  const openWebsiteUrl = React.useCallback(async (url: string) => {
+    await openBrowserAsync(url, {
+      presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
+    });
+  }, []);
+
   const onSelect = React.useCallback(
     async (option: OptionType) => {
       modal.dismiss();
 
-      // TODO: Implement actual navigation/actions for each option
-      switch (option.value) {
-        case "privacy-policy":
-          // TODO: Navigate to privacy policy page or open external link
-          // Example: await Linking.openURL("https://example.com/privacy");
-          break;
-        case "terms-of-service":
-          // TODO: Navigate to terms of service page or open external link
-          // Example: await Linking.openURL("https://example.com/terms");
-          break;
-        case "report-bug":
-          // TODO: Open bug report form or email client
-          // Example: await Linking.openURL("mailto:support@example.com");
-          break;
+      try {
+        switch (option.value) {
+          case "privacy-policy":
+            await openWebsiteUrl(PRIVACY_URL);
+            break;
+          case "terms-of-service":
+            await openWebsiteUrl(TERMS_URL);
+            break;
+          case "report-bug":
+            await openBugReportEmail();
+            break;
+        }
+      } catch (error) {
+        console.error("Failed to open help action", error);
+        showMessage({
+          message: "Couldn't open that action",
+          type: "danger",
+          duration: 4000,
+        });
       }
     },
-    [modal],
+    [modal, openWebsiteUrl],
   );
 
   return (

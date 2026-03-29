@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "@/components/ui";
+import { TERMS_URL } from "@/lib/app/links";
 
 type LoginLayoutProps = {
   onGoogleSignIn: () => void;
@@ -60,7 +61,7 @@ export default function LoginLayout({
 
           <Text className="mt-8 text-center text-base text-secondary px-4 font-instrument-sans">
             By proceeding, you agree with{" "}
-            <ExternalLink href="https://mobile.stacks.co/terms-and-conditions">
+            <ExternalLink href={TERMS_URL}>
               <Text className="text-primary underline">Terms of Use</Text>
             </ExternalLink>
           </Text>
