@@ -615,7 +615,11 @@ export class StacksBridgeEngine {
     const stickTip = currentPlatform.rightFloat + this.bridge.length;
     const heroFront = this.hero.x + VISUAL_CONFIG.HERO_SIZE;
 
-    const hit = p1 && stickTip >= p1.xFloat && stickTip <= p1.rightFloat;
+    const hit =
+      this.lastJumpSucceeded &&
+      p1 &&
+      stickTip >= p1.xFloat &&
+      stickTip <= p1.rightFloat;
     const hasLanded =
       hit &&
       p1 &&
