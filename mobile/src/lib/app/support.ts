@@ -11,7 +11,7 @@ export function buildBugReportMailtoUrl() {
   const deviceName = Constants.deviceName ?? "Unknown";
   const osVersion = String(Platform.Version);
 
-  const subject = `Bug report - Stacks Mobile ${version}`;
+  const subject = `Bug report - Enter Stacks ${version}`;
   const body = [
     "What happened?",
     "",

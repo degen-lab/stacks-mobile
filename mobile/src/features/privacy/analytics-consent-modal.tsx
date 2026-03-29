@@ -24,7 +24,7 @@ export function AnalyticsConsentModal({ modalRef, onAllow, onDecline }: Props) {
           </View>
 
           <Text className="mt-6 text-center text-3xl font-matter text-primary">
-            Help improve Stacks Mobile
+            Help improve Enter Stacks
           </Text>
 
           <Text className="mt-3 text-center text-base font-instrument-sans leading-7 text-secondary">

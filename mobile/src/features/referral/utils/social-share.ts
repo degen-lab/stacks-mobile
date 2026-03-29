@@ -2,7 +2,7 @@
 const REFERRAL_LANDING_URL = "https://stacks.co";
 
 export const buildShareMessage = (referralCode: string) =>
-  `Join me on Stacks Mobile! Use code ${referralCode} for 100 bonus points: ${REFERRAL_LANDING_URL}`;
+  `Join me on Enter Stacks! Use code ${referralCode} for 100 bonus points: ${REFERRAL_LANDING_URL}`;
 
 export const socialShareTargets = (message: string) => {
   const encodedMessage = encodeURIComponent(message);
