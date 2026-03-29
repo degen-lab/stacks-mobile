@@ -130,7 +130,7 @@ function buildDualStackingPreviewCandidate(): EarnNextStepCandidate {
   return {
     id: "dual-stacking",
     title: "Enroll in Dual Stacking",
-    description: "You're stacking. Add sBTC to unlock the boost.",
+    description: "You're stacking. Add sBTC to get more rewards.",
     kind: "preview",
     priority: 1,
     action: { type: "dual-stacking" },

@@ -257,7 +257,7 @@ function getSwapTokenMetadata(token: SwapToken): PortfolioAssetMetadata {
 export function usePortfolioBalance(): UsePortfolioBalanceResult {
   const { activeAccountIndex } = useActiveAccountIndex();
   const { selectedNetwork } = useSelectedNetwork();
-  const { stxAddress } = useWalletAddresses({
+  const { stxAddress, isLoading: isWalletLoading } = useWalletAddresses({
     accountIndex: activeAccountIndex,
   });
   const balancesQuery = useUserBalances({
@@ -502,7 +502,11 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
   const hasBalance = useMemo(() => hasDetectedBalance, [hasDetectedBalance]);
 
   const isBalanceLoading =
-    balancesQuery.isLoading || loadingBtc || loadingSbtc || loadingSbtcDefi;
+    isWalletLoading ||
+    balancesQuery.isLoading ||
+    loadingBtc ||
+    loadingSbtc ||
+    loadingSbtcDefi;
   const isPriceLoading = loadingStxPrice || loadingBtcPrice;
   const isAssetLoading =
     tokenListQuery.isLoading ||

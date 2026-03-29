@@ -18,7 +18,7 @@ type UseEnrollmentStatus = {
 };
 
 export function useEnrollmentStatus(): UseEnrollmentStatus {
-  const { stxAddress } = useWalletAddresses();
+  const { stxAddress, isLoading: isWalletLoading } = useWalletAddresses();
   const principalArg = principalArgFromAddress(stxAddress);
   const {
     data: isEnrolledNow,
@@ -42,7 +42,7 @@ export function useEnrollmentStatus(): UseEnrollmentStatus {
     enrolled,
     enrolledCurrentCycle: isEnrolledNow as boolean,
     enrolledNextCycle: isEnrolledNext as boolean,
-    isLoading: isLoadingNow || isLoadingNext,
+    isLoading: isWalletLoading || isLoadingNow || isLoadingNext,
     isError: isErrorNow || isErrorNext,
   };
 }

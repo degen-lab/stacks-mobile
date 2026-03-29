@@ -19,7 +19,13 @@ export const useBtcBalance = (
 ): UseBtcBalanceResult => {
   const { activeAccountIndex } = useActiveAccountIndex();
   const accountIndex = requestedAccountIndex ?? activeAccountIndex;
-  const { btcAddress, network } = useWalletAddresses({ accountIndex });
+  const {
+    btcAddress,
+    network,
+    isLoading: isWalletLoading,
+  } = useWalletAddresses({
+    accountIndex,
+  });
 
   const { data, isLoading, error, refetch } = useBitcoinUtxos({
     address: btcAddress,
@@ -35,7 +41,7 @@ export const useBtcBalance = (
   return {
     balance: fromSatsToBtc(balanceSats),
     balanceSats,
-    isLoading,
+    isLoading: isWalletLoading || isLoading,
     error: error?.message ?? null,
     refresh: refetch,
   };

@@ -19,7 +19,10 @@ export const useStxBalance = (
 ): UseStxBalanceResult => {
   const { activeAccountIndex } = useActiveAccountIndex();
   const accountIndex = requestedAccountIndex ?? activeAccountIndex;
-  const { stxAddress: address } = useWalletAddresses({ accountIndex });
+  const { stxAddress: address, isLoading: isWalletLoading } =
+    useWalletAddresses({
+      accountIndex,
+    });
 
   const { data, isLoading, error, refetch } = useUserBalances({
     variables: { address: address ?? "" },
@@ -49,7 +52,7 @@ export const useStxBalance = (
 
   return {
     ...balanceData,
-    isLoading,
+    isLoading: isWalletLoading || isLoading,
     error: error?.message ?? null,
     refresh: refetch,
   };
