@@ -29,7 +29,7 @@ export const POWER_UPS: PowerUp[] = [
     variant: ItemVariant.DropPoint,
     title: "Drop Point",
     description: "Shows where the bridge will land before building it.",
-    price: 50,
+    price: 75,
     Icon: RulerIcon,
   },
 ];

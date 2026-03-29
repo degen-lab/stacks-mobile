@@ -16,7 +16,7 @@ export const storeItems: Record<ItemVariant, StoreItem> = {
     category: ItemCategory.consumable,
     name: 'Drop Point',
     description: 'Preview where your bridge will land.',
-    price: 50,
+    price: 75,
   },
   [ItemVariant.PurpleSkin]: {
     itemType: ItemType.Skin,
@@ -24,7 +24,7 @@ export const storeItems: Record<ItemVariant, StoreItem> = {
     category: ItemCategory.unique,
     name: 'Purple Skin',
     description: 'A purple skin for your character.',
-    price: 1000,
+    price: 2000,
   },
   [ItemVariant.BlackSkin]: {
     itemType: ItemType.Skin,
@@ -32,6 +32,6 @@ export const storeItems: Record<ItemVariant, StoreItem> = {
     category: ItemCategory.unique,
     name: 'Black Skin',
     description: 'A black skin for your character.',
-    price: 2000,
+    price: 5000,
   },
 };

@@ -44,13 +44,13 @@ describe("buildAvailableSkins", () => {
         itemType: 1,
         variant: ItemVariant.PurpleSkin,
         name: "Purple",
-        price: 250,
+        price: 2000,
       }),
       buildStoreItem({
         itemType: 1,
         variant: ItemVariant.BlackSkin,
         name: "Onyx",
-        price: 500,
+        price: 5000,
       }),
       buildStoreItem({
         itemType: 0,
@@ -63,9 +63,9 @@ describe("buildAvailableSkins", () => {
 
     expect(skinIds).toEqual(["orange", "purple", "black"]);
     expect(skins[1]?.name).toBe("Purple");
-    expect(skins[1]?.cost).toBe(250);
+    expect(skins[1]?.cost).toBe(2000);
     expect(skins[2]?.name).toBe("Onyx");
-    expect(skins[2]?.cost).toBe(500);
+    expect(skins[2]?.cost).toBe(5000);
   });
 
   it("falls back to asset names when store items omit names", () => {
@@ -74,7 +74,7 @@ describe("buildAvailableSkins", () => {
         itemType: 1,
         variant: ItemVariant.PurpleSkin,
         name: "Purple",
-        price: 250,
+        price: 2000,
       }),
     ];
 
@@ -82,7 +82,7 @@ describe("buildAvailableSkins", () => {
     const purpleSkin = skins.find((skin) => skin.id === "purple");
 
     expect(purpleSkin?.name).toBe("Purple");
-    expect(purpleSkin?.cost).toBe(250);
+    expect(purpleSkin?.cost).toBe(2000);
   });
 });
 
@@ -120,7 +120,7 @@ describe("SkinSelectorLayout", () => {
           itemType: 1,
           variant: ItemVariant.PurpleSkin,
           name: "Purple",
-          price: 250,
+          price: 2000,
         }),
       ],
     } as any);
@@ -136,7 +136,7 @@ describe("SkinSelectorLayout", () => {
     );
 
     expect(screen.getByTestId("skin-selector-status")).toHaveTextContent(
-      "Tap to unlock for 250 points",
+      "Tap to unlock for 2,000 points",
     );
   });
 });
