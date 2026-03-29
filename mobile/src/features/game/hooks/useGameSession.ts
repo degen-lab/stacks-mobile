@@ -6,6 +6,7 @@ import {
   useValidateSessionMutation,
 } from "@/api/game";
 import type { ItemVariant } from "@/lib/enums";
+import { trackEvent } from "@/lib/analytics";
 
 import { getBaseScore } from "../utils/scoreCalculation";
 import { GAMEPLAY_CONFIG } from "../config";
@@ -75,6 +76,7 @@ export const useGameSession = ({
       if (!isActiveRef.current || token !== startTokenRef.current) return;
       const hashedSeed = parseSeedToNumber(session.seed);
       engine.start(hashedSeed);
+      void trackEvent("game_started");
       updateScore(0);
       setOverlay("PLAYING");
       setRunSummary(null);
@@ -149,6 +151,7 @@ export const useGameSession = ({
           };
         });
 
+        void trackEvent("game_completed", { score: sessionScore ?? 0 });
         runSubmittedRef.current = true;
       } catch (error) {
         console.error("Failed to validate session", error);

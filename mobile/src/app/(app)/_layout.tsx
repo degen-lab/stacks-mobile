@@ -2,18 +2,21 @@ import { HapticTab } from "@/components/haptic-tab";
 import { EarnIcon, GamepadIcon, HomeIcon } from "@/components/ui/icons";
 import { Header } from "@/features/header";
 import { useAuth } from "@/lib/store/auth";
+import { useConsentStore } from "@/lib/store/consent";
 import { Redirect, Tabs } from "expo-router";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const { isAuthenticated, hasHydrated } = useAuth();
+  const consentHydrated = useConsentStore((state) => state.hasHydrated);
   const insets = useSafeAreaInsets();
   const androidBottomInset =
-    Platform.OS === "android" ? Math.max(insets.bottom, 12) : 0;
+    Platform.OS === "android" ? Math.min(insets.bottom, 32) : 0;
 
   if (!hasHydrated) return null;
   if (!isAuthenticated) return <Redirect href="/login" />;
+  if (!consentHydrated) return null;
 
   return (
     <Tabs

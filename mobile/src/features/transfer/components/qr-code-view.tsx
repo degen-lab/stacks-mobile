@@ -5,10 +5,10 @@ import { GradientBorderMultiple } from "@/components/ui/gradient-border-multiple
 import colors from "@/components/ui/colors";
 import { Copy } from "lucide-react-native";
 import { copyToClipboard } from "@/lib/clipboard";
-import type { TransferAsset } from "../types";
+import type { AppToken } from "@/lib/assets/tokens";
 
 type QRCodeViewProps = {
-  asset: TransferAsset;
+  asset: AppToken;
   address: string;
   onClose: () => void;
 };

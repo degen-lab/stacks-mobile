@@ -28,6 +28,7 @@ import {
 } from "react-native";
 import type { WalletAccount } from "@degenlab/stacks-wallet-kit-core";
 
+import { trackEvent } from "@/lib/analytics";
 import { AccountCard } from "../components/account-card";
 import { ReplaceBackupModal } from "../components/replace-backup-modal";
 import { SaveBackupModal } from "../components/save-backup-modal";
@@ -153,6 +154,7 @@ export default function AccountsListScreen() {
   const handleAddAccount = async () => {
     try {
       await walletKit.createAccount();
+      void trackEvent("account_added");
       shouldScrollToEndRef.current = true;
       await loadAccounts({ useLoading: false });
       showMessage({
@@ -175,6 +177,7 @@ export default function AccountsListScreen() {
 
   const handleSetActive = async (accountIndex: number) => {
     await setActiveAccountIndex(accountIndex);
+    void trackEvent("account_switched");
     showMessage({
       message: `Account ${accountIndex + 1} is now active`,
       type: "success",

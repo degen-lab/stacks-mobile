@@ -10,6 +10,7 @@ import {
   buildShareMessage,
   socialShareTargets,
 } from "@/features/referral/utils/social-share";
+import { trackEvent } from "@/lib/analytics";
 import { useI18nSettings } from "@/hooks/use-i18n-settings";
 import { formatFriendlyDate, isToday } from "@/lib/format/date";
 import { useAuth } from "@/lib/store/auth";
@@ -43,6 +44,11 @@ export default function ReferralContainer() {
 
     try {
       await Share.share({ message: buildShareMessage(referralCode) });
+      void trackEvent("share", {
+        method: "link",
+        content_type: "referral",
+        item_id: "referral",
+      });
     } catch (error) {
       console.error("Share failed", error);
     }
@@ -60,6 +66,11 @@ export default function ReferralContainer() {
 
       if (supported) {
         await Linking.openURL(url);
+        void trackEvent("share", {
+          method: "link",
+          content_type: "referral",
+          item_id: "referral",
+        });
       } else {
         await handleShare();
       }

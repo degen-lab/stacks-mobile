@@ -17,3 +17,9 @@ export const registerOrLoginSchema = z.object({
     .optional(),
   photoUri: z.string().optional(),
 });
+
+export const updateConsentSchema = z.object({
+  analytics: z.boolean(),
+  adsPersonalization: z.boolean(),
+  version: z.string().min(1),
+});

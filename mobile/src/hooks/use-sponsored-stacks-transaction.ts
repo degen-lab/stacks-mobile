@@ -1,11 +1,18 @@
+import { useCallback, useRef } from "react";
+import { Platform } from "react-native";
+
 import {
   useBroadcastSponsoredTransactionMutation,
   useCreateSponsoredTransactionMutation,
 } from "@/api/game/transaction";
 import { useUserProfile } from "@/api/user";
+import { requestIosAdTracking } from "@/lib/ads/ios-tracking-permission";
 import { getRewardedAdUnitId } from "@/lib/ads/rewarded-ad-unit";
+import { CURRENT_CONSENT_VERSION } from "@/lib/consent/types";
+import { useConsentActions } from "@/lib/consent/use-consent-actions";
 import { useSsvRewardedAdFlow } from "@/lib/ads/use-ssv-rewarded-ad-flow";
-import { useCallback, useRef } from "react";
+import { useAuth } from "@/lib/store/auth";
+import { useConsentStore } from "@/lib/store/consent";
 import { useSignTransaction } from "./use-sign-transaction";
 
 type QueuedSponsoredTransaction = {
@@ -37,10 +44,14 @@ const toError = (error: unknown) =>
 export function useSponsoredStacksTransaction() {
   const { data: userProfile } = useUserProfile();
   const userId = userProfile?.id;
+  const { backendUserData } = useAuth();
+  const pendingSync = useConsentStore((state) => state.pendingSync);
+  const consent = pendingSync?.localConsent ?? backendUserData?.consent ?? null;
   const createSponsoredTransactionMutation =
     useCreateSponsoredTransactionMutation();
   const broadcastSponsoredTransactionMutation =
     useBroadcastSponsoredTransactionMutation();
+  const { saveConsent } = useConsentActions();
   const signTransaction = useSignTransaction();
   const pendingRequestRef = useRef<PendingSponsoredRequest | null>(null);
 
@@ -81,6 +92,26 @@ export function useSponsoredStacksTransaction() {
       },
     });
 
+  const getRewardedAdRequestOptions = useCallback(async () => {
+    if (consent?.adsPersonalization !== true || Platform.OS !== "ios") {
+      return {
+        requestNonPersonalizedAdsOnly: consent?.adsPersonalization !== true,
+      };
+    }
+
+    const tracking = await requestIosAdTracking();
+
+    if (tracking === "declined") {
+      await saveConsent({
+        analytics: consent?.analytics === true,
+        adsPersonalization: false,
+        version: CURRENT_CONSENT_VERSION,
+      });
+    }
+
+    return { requestNonPersonalizedAdsOnly: tracking !== "granted" };
+  }, [consent?.adsPersonalization, consent?.analytics, saveConsent]);
+
   const submitPreparedSponsoredTransaction = useCallback(
     async ({
       requestId,
@@ -100,6 +131,8 @@ export function useSponsoredStacksTransaction() {
         unsignedSerializedTx,
         accountIndex,
       );
+      const { requestNonPersonalizedAdsOnly } =
+        await getRewardedAdRequestOptions();
 
       return new Promise<number>((resolve, reject) => {
         pendingRequestRef.current = {
@@ -116,10 +149,11 @@ export function useSponsoredStacksTransaction() {
             userId: String(userId),
             customData: String(requestId),
           },
+          requestNonPersonalizedAdsOnly,
         );
       });
     },
-    [queueSponsoredAd, signTransaction, userId],
+    [getRewardedAdRequestOptions, queueSponsoredAd, signTransaction, userId],
   );
 
   const submitSponsoredTransaction = useCallback(

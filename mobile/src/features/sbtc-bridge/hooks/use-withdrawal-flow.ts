@@ -31,6 +31,7 @@ import {
   encodeClarityRecipientToBitcoinAddress,
   outputScriptHexToBitcoinAddress,
 } from "../utils/address";
+import { trackEvent } from "@/lib/analytics";
 import { hexToBytes } from "../utils/bytes";
 import {
   estimateWithdrawalMaxFee,
@@ -174,6 +175,7 @@ export function useSubmitWithdrawal(
           ? (response as { txid: string }).txid
           : null;
 
+      if (txId) void trackEvent("bridge_withdrawal_initiated");
       if (!txId) {
         const rejectedResponse = response as {
           reason?: string;

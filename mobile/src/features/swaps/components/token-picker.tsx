@@ -1,12 +1,13 @@
 import { Check, Search } from "lucide-react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, StyleSheet, TextInput } from "react-native";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pressable, StyleSheet, TextInput } from "react-native";
 
 import { Text, TokenAvatar, View, colors } from "@/components/ui";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SwapAsset } from "../types";
 
-function TokenRow({
+const TokenRow = memo(function TokenRow({
   isSelected,
   token,
   onPress,
@@ -37,7 +38,7 @@ function TokenRow({
       </View>
     </Pressable>
   );
-}
+});
 
 function TokenRowSkeleton() {
   return (
@@ -91,8 +92,19 @@ export function TokenPicker({
     );
   }, [search, tokens]);
 
+  const renderItem = useCallback(
+    ({ item }: { item: SwapAsset }) => (
+      <TokenRow
+        token={item}
+        isSelected={item.tokenId === selectedTokenId}
+        onPress={() => onSelect(item)}
+      />
+    ),
+    [selectedTokenId, onSelect],
+  );
+
   return (
-    <View className="gap-3">
+    <View className="flex-1 gap-3">
       <View className="flex-row items-center gap-2.5 rounded-xl border border-surface-secondary bg-sand-100 px-4 py-3">
         <Search size={15} color={colors.neutral[400]} />
         <TextInput
@@ -115,7 +127,8 @@ export function TokenPicker({
           ))}
         </View>
       ) : (
-        <FlatList
+        <BottomSheetFlatList
+          style={styles.list}
           data={filtered}
           keyExtractor={(token) => token.tokenId}
           keyboardShouldPersistTaps="handled"
@@ -123,13 +136,7 @@ export function TokenPicker({
           initialNumToRender={12}
           maxToRenderPerBatch={10}
           windowSize={5}
-          renderItem={({ item }) => (
-            <TokenRow
-              token={item}
-              isSelected={item.tokenId === selectedTokenId}
-              onPress={() => onSelect(item)}
-            />
-          )}
+          renderItem={renderItem}
           ListEmptyComponent={
             <View className="py-10">
               <Text className="text-center font-instrument-sans text-sm text-secondary">
@@ -144,6 +151,9 @@ export function TokenPicker({
 }
 
 const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
   listContent: {
     gap: 8,
   },

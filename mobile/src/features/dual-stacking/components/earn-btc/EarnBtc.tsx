@@ -24,6 +24,7 @@ import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
 import { contractEnroll } from "../../contract-calls/enroll";
 import { getActiveWalletAccount } from "@/lib/stacks/active-account";
+import type { TransactionMethod } from "@/lib/enums";
 import { fromSatsToBtc } from "@/lib/format/currency";
 import { buildUnsignedContractCall } from "@/lib/stacks/transaction-builder";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
@@ -49,9 +50,9 @@ export default function EarnBtcContainer({
     useSponsoredStacksTransaction();
   const [isSubmittingEnroll, setIsSubmittingEnroll] = useState(false);
   const [enrollTxId, setEnrollTxId] = useState<string | null>(null);
-  const [enrollFunding, setEnrollFunding] = useState<
-    "wallet" | "sponsored" | null
-  >(null);
+  const [enrollFunding, setEnrollFunding] = useState<TransactionMethod | null>(
+    null,
+  );
 
   const [isEnrollSheetOpen, setIsEnrollSheetOpen] = useState(false);
   const [isMintSbtcSheetOpen, setIsMintSbtcSheetOpen] = useState(false);

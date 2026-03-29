@@ -26,6 +26,8 @@ import { buildUnsignedContractCall } from "@/lib/stacks/transaction-builder";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
 import { useSelectedNetwork } from "@/lib/store/settings";
 import { getActiveWalletAccount } from "@/lib/stacks/active-account";
+import { trackEvent } from "@/lib/analytics";
+import type { TransactionMethod } from "@/lib/enums";
 import { contractOptOut } from "../contract-calls/opt-out";
 import { contractChangeRewardsAddress } from "../contract-calls/change-reward-address";
 
@@ -40,9 +42,9 @@ export function useWalletActions() {
   const [optOutStatus, setOptOutStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
-  const [optOutFunding, setOptOutFunding] = useState<
-    "wallet" | "sponsored" | null
-  >(null);
+  const [optOutFunding, setOptOutFunding] = useState<TransactionMethod | null>(
+    null,
+  );
 
   const [changeAddressTxId, setChangeAddressTxId] = useState<string | null>(
     null,
@@ -52,9 +54,8 @@ export function useWalletActions() {
   const [changeAddressStatus, setChangeAddressStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
-  const [changeAddressFunding, setChangeAddressFunding] = useState<
-    "wallet" | "sponsored" | null
-  >(null);
+  const [changeAddressFunding, setChangeAddressFunding] =
+    useState<TransactionMethod | null>(null);
 
   const contractType = getContractTypeForCycle(FUTURE_MIGRATION_ID);
   const contractId = CONTRACTS[selectedNetwork][contractType];
@@ -242,6 +243,7 @@ export function useWalletActions() {
         unsignedSerializedTx,
       });
 
+      void trackEvent("dual_stacking_change_reward_address");
       setIsChangeAddressSubmitting(false);
       setChangeAddressStatus("success");
       scheduleDualStackingRefresh();

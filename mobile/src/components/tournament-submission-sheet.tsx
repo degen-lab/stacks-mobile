@@ -19,9 +19,9 @@ import {
   ContractTxDetails,
   type ContractArgument,
 } from "./contract-tx-details";
+import type { TransactionMethod } from "@/lib/enums";
 
 type SheetState = "initial" | "submitting" | "error";
-type SubmissionMethod = "sponsored" | "wallet";
 
 type TournamentSubmissionSheetProps = {
   score: number;
@@ -92,9 +92,8 @@ export const TournamentSubmissionSheet = React.forwardRef<
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === "dark";
     const [sheetState, setSheetState] = React.useState<SheetState>("initial");
-    const [lastMethod, setLastMethod] = React.useState<SubmissionMethod | null>(
-      null,
-    );
+    const [lastMethod, setLastMethod] =
+      React.useState<TransactionMethod | null>(null);
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
 
@@ -168,7 +167,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
     );
 
     const handleSubmit = React.useCallback(
-      async (method: SubmissionMethod) => {
+      async (method: TransactionMethod) => {
         setLastMethod(method);
         setErrorMessage(null);
         setSheetState("submitting");

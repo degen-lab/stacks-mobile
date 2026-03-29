@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { UserService } from '../../application/user/userService';
 import userPostRoutes from './post';
 import userGetRoutes from './get';
+import userPutRoutes from './put';
 
 export default async function userRoutes(
   app: FastifyInstance,
@@ -15,6 +16,9 @@ export default async function userRoutes(
     userService,
   });
   app.register(userGetRoutes, {
+    userService,
+  });
+  app.register(userPutRoutes, {
     userService,
   });
 }

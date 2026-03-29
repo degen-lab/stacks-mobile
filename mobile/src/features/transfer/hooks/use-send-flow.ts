@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import type {
-  TransferAsset,
+  AppToken,
   SendStep,
   SendFormData,
   SendFieldLocks,
@@ -41,7 +41,7 @@ export function useSendFlow() {
   const [locks, setLocks] = useState<SendFieldLocks>(DEFAULT_LOCKS);
 
   const updateAsset = useCallback(
-    (asset: TransferAsset) => {
+    (asset: AppToken) => {
       if (locks.asset) return;
       setFormData((prev) => ({ ...prev, asset }));
     },

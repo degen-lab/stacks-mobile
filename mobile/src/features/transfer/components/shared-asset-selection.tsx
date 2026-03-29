@@ -1,5 +1,5 @@
 import { SelectionCard, Text, TokenAvatar, View } from "@/components/ui";
-import type { TransferAsset } from "../types";
+import type { AppToken } from "@/lib/assets/tokens";
 
 const ASSETS = [
   {
@@ -23,7 +23,7 @@ const ASSETS = [
 ];
 
 type SharedAssetSelectionProps = {
-  onSelectAsset: (asset: TransferAsset) => void;
+  onSelectAsset: (asset: AppToken) => void;
 };
 
 export function SharedAssetSelection({

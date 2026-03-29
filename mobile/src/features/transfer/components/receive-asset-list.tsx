@@ -8,7 +8,7 @@ import {
 import { Copy, QrCode } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { copyToClipboard } from "@/lib/clipboard";
-import type { TransferAsset } from "../types";
+import type { AppToken } from "@/lib/assets/tokens";
 
 const ASSETS = [
   {
@@ -26,7 +26,7 @@ const ASSETS = [
 type ReceiveAssetListProps = {
   stxAddress: string | null;
   btcAddress: string | null;
-  onShowQR: (asset: TransferAsset, address: string) => void;
+  onShowQR: (asset: AppToken, address: string) => void;
 };
 
 export function ReceiveAssetList({
@@ -34,7 +34,7 @@ export function ReceiveAssetList({
   btcAddress,
   onShowQR,
 }: ReceiveAssetListProps) {
-  const getAddress = (assetId: TransferAsset) => {
+  const getAddress = (assetId: AppToken) => {
     switch (assetId) {
       case "STX":
         return stxAddress;
@@ -45,7 +45,7 @@ export function ReceiveAssetList({
     }
   };
 
-  const handleQR = (asset: TransferAsset, address: string) => {
+  const handleQR = (asset: AppToken, address: string) => {
     Haptics.selectionAsync();
     onShowQR(asset, address);
   };

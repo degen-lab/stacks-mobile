@@ -42,6 +42,7 @@ interface AuthState {
     userData: BackendUserData | null,
     referralUsed: boolean,
   ) => Promise<void>;
+  setBackendUserData: (userData: BackendUserData | null) => Promise<void>;
 }
 
 const useAuthStore = create<AuthState>((set, get) => ({
@@ -89,26 +90,35 @@ const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
-    try {
-      await walletKit.signOut();
-      await removeItem(ACCESS_TOKEN_KEY);
-      await removeItem(USER_DATA_KEY);
-      await removeItem(BACKEND_TOKEN_KEY);
-      await removeItem(BACKEND_USER_KEY);
-    } catch (error) {
-      console.error("Sign out failed:", error);
-    }
     set({
       authMethod: "none",
       accessToken: null,
       backendToken: null,
       isAuthenticated: false,
+      isAuthenticating: false,
       hasHydrated: true,
       hasBackup: false,
       userData: null,
       backendUserData: null,
       referralUsed: false,
     });
+
+    const cleanupSettlements = await Promise.allSettled([
+      walletKit.signOut(),
+      removeItem(ACCESS_TOKEN_KEY),
+      removeItem(USER_DATA_KEY),
+      removeItem(BACKEND_TOKEN_KEY),
+      removeItem(BACKEND_USER_KEY),
+      removeItem(REFERRAL_USED_KEY),
+    ]);
+
+    const failedCleanup = cleanupSettlements.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+
+    if (failedCleanup) {
+      console.error("Sign out failed:", failedCleanup.reason);
+    }
   },
 
   hydrate: async () => {
@@ -129,32 +139,40 @@ const useAuthStore = create<AuthState>((set, get) => ({
       ]);
 
       if (persistedToken) {
-        // User has authenticated with Google before
-        // Verify they still have wallet accounts
-        const accounts = await walletKit.getWalletAccounts();
-        const hasAccounts = accounts && accounts.length > 0;
+        const [accounts, backup] = await Promise.all([
+          walletKit.getWalletAccounts().catch(() => null),
+          walletKit.hasBackup().catch(() => false),
+        ]);
+        const hasAccounts = accounts ? accounts.length > 0 : !!persistedUser;
 
         set({
           accessToken: persistedToken,
-          isAuthenticated: hasAccounts, // Only authenticated if they have accounts
+          isAuthenticated: hasAccounts,
           authMethod: hasAccounts ? "google" : "none",
           hasHydrated: true,
+          hasBackup: backup,
           userData: persistedUser ?? null,
           backendToken: persistedBackendToken ?? null,
           backendUserData: persistedBackendUser ?? null,
           referralUsed: persistedReferralUsed ?? false,
         });
       } else {
+        await Promise.all([
+          removeItem(BACKEND_TOKEN_KEY),
+          removeItem(BACKEND_USER_KEY),
+          removeItem(REFERRAL_USED_KEY),
+        ]);
+
         // No persisted token, user is not authenticated
         set({
           accessToken: null,
-          backendToken: persistedBackendToken ?? null,
+          backendToken: null,
           isAuthenticated: false,
           authMethod: "none",
           hasHydrated: true,
           userData: null,
-          backendUserData: persistedBackendUser ?? null,
-          referralUsed: persistedReferralUsed ?? false,
+          backendUserData: null,
+          referralUsed: false,
         });
       }
     } catch (error) {
@@ -210,6 +228,23 @@ const useAuthStore = create<AuthState>((set, get) => ({
       throw error;
     }
   },
+
+  setBackendUserData: async (userData: BackendUserData | null) => {
+    try {
+      if (userData) {
+        await setItem(BACKEND_USER_KEY, userData);
+      } else {
+        await removeItem(BACKEND_USER_KEY);
+      }
+
+      set({
+        backendUserData: userData,
+      });
+    } catch (error) {
+      console.error("Failed to persist backend user:", error);
+      throw error;
+    }
+  },
 }));
 
 export function useAuth(): AuthState {
@@ -221,4 +256,5 @@ export const signIn = () => useAuthStore.getState().signInWithGoogle();
 export const getBackendToken = () => useAuthStore.getState().backendToken;
 export const hydrateAuth = async () => {
   await useAuthStore.getState().hydrate();
+  return useAuthStore.getState().backendUserData;
 };

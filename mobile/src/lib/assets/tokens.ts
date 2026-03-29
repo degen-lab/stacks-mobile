@@ -1,6 +1,8 @@
 export const STX_TOKEN_ID = "token-stx";
 export const SBTC_TOKEN_ID = "token-sbtc";
 
+export type AppToken = "STX" | "BTC" | "sBTC";
+
 export function baseUnitsToDisplayString(
   value: string | number | bigint | null | undefined,
   decimals: number,

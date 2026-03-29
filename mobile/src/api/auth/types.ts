@@ -1,9 +1,12 @@
+import type { ConsentDto } from "@/lib/consent/types";
+
 export type UserData = {
   id: number;
   nickname: string;
   referralCode: string;
   streak: number;
   points: number;
+  consent: ConsentDto;
 };
 
 export type AuthRequest = {

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { trackEvent } from "@/lib/analytics";
 import {
   broadcastTransaction,
   deserializeTransaction,
@@ -40,6 +41,7 @@ export function useSwapExecution() {
   const executeSwap = useCallback(
     async ({ swapParams, feeMicroStx }: ExecuteSwapOptions) => {
       setIsExecuting(true);
+      void trackEvent("swap_initiated");
 
       try {
         const { account, accountIndex } = await getActiveWalletAccount();
@@ -96,7 +98,7 @@ export function useSwapExecution() {
         });
 
         await invalidateBalances();
-
+        void trackEvent("swap_completed", { method: "wallet" });
         return txId;
       } finally {
         setIsExecuting(false);
@@ -107,6 +109,7 @@ export function useSwapExecution() {
 
   const executeSwapSponsored = useCallback(
     async ({ swapParams }: ExecuteSwapOptions) => {
+      void trackEvent("swap_initiated");
       const { account, accountIndex, address } = await getActiveWalletAccount();
       const {
         contractAddress,
@@ -136,6 +139,7 @@ export function useSwapExecution() {
       });
 
       await invalidateBalances();
+      void trackEvent("swap_completed", { method: "sponsored" });
     },
     [invalidateBalances, selectedNetwork, submitSponsoredTransaction],
   );

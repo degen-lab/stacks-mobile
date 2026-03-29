@@ -1,3 +1,5 @@
+export type TransactionMethod = "wallet" | "sponsored";
+
 export enum ItemType {
   PowerUp = "PowerUp",
   Skin = "Skin",

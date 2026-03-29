@@ -1,5 +1,6 @@
 import type { PurchaseType } from "@/lib/enums";
 import { ItemVariant } from "@/lib/enums";
+import type { ConsentDto } from "@/lib/consent/types";
 
 export type UserItem = {
   id: number;
@@ -25,6 +26,7 @@ export function getItemVariant(item: UserItem): ItemVariant | null {
 export type UserProfile = {
   id: number;
   nickname: string;
+  photoUri?: string | null;
   referralCode: string;
   streak: number;
   points: number;
@@ -32,6 +34,7 @@ export type UserProfile = {
   lastStreakCompletionDate: string | null; // ISO string or null
   items?: UserItem[];
   itemsCount: number;
+  consent: ConsentDto;
 };
 
 export type UserProfileApiResponse = {
@@ -59,4 +62,16 @@ export type IsNewUserApiResponse = {
   success: boolean;
   message: string;
   data: IsNewUserData;
+};
+
+export type UpdateUserConsentRequest = {
+  analytics: boolean;
+  adsPersonalization: boolean;
+  version: string;
+};
+
+export type UpdateUserConsentApiResponse = {
+  success: boolean;
+  message: string;
+  data: ConsentDto;
 };

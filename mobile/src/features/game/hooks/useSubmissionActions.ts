@@ -1,6 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback } from "react";
 
+import { trackEvent } from "@/lib/analytics";
+
 import { useCreateGameSubmissionTransactionMutation } from "@/api/game/transaction";
 import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
 import { useSubmitStacksTransaction } from "@/hooks/use-submit-stacks-transaction";
@@ -140,6 +142,11 @@ export const useSubmissionActions = ({
       linkedSubmissionId: unsigned.submission.id,
     });
 
+    const eventName =
+      submissionContext?.kind === "raffle"
+        ? "raffle_entered"
+        : "score_submitted";
+    void trackEvent(eventName, { method: "wallet" });
     return String(unsigned.submission.id);
   }, [
     createGameSubmissionTransactionMutation,

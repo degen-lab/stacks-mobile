@@ -1,3 +1,5 @@
+import type { AppToken } from "@/lib/assets/tokens";
+
 const PORTFOLIO_LOCALE = "en-US";
 
 export type PortfolioAssetKind = "btc" | "stx" | "sbtc" | "sip10";
@@ -100,7 +102,9 @@ export function getPortfolioAssetPriceChangeUsd(asset: PortfolioAssetSnapshot) {
   return asset.unitPriceUsd - previousPrice;
 }
 
-export function getPortfolioAssetTransferAsset(asset: PortfolioAssetSnapshot) {
+export function getPortfolioAssetTransferAsset(
+  asset: PortfolioAssetSnapshot,
+): AppToken | null {
   const normalizedSymbol = asset.symbol.trim().toUpperCase();
 
   if (normalizedSymbol === "BTC") return "BTC" as const;

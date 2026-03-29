@@ -106,6 +106,13 @@ describe("ReferralContainer", () => {
       referralCode: "ABC12345",
       streak: 0,
       points: 0,
+      isNewUser: false,
+      consent: {
+        analytics: false,
+        adsPersonalization: false,
+        version: "v1",
+        updatedAt: "2024-01-01T00:00:00.000Z",
+      },
     };
 
     jest.mocked(useAuth).mockReturnValue({
@@ -119,11 +126,13 @@ describe("ReferralContainer", () => {
       userData: null,
       backendUserData: mockBackendUserData,
       referralUsed: false,
+      setHasBackup: jest.fn(),
       signInWithGoogle: jest.fn(),
       signOut: jest.fn(),
       hydrate: jest.fn(),
       completeGoogleAuth: jest.fn(),
       setBackendSession: jest.fn(),
+      setBackendUserData: jest.fn(),
     });
     jest
       .mocked(useActiveReferrals)
@@ -131,6 +140,7 @@ describe("ReferralContainer", () => {
     jest.mocked(useI18nSettings).mockReturnValue({
       locale: "en-US",
       timeZone: "UTC",
+      countryCode: "US",
     });
     jest.mocked(formatFriendlyDate).mockReturnValue("Jan 1, 2024");
     jest.mocked(isToday).mockImplementation((value) => value === "2024-01-02");

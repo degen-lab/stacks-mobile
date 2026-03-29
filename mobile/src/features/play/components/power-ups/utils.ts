@@ -22,14 +22,14 @@ export const POWER_UPS: PowerUp[] = [
     variant: ItemVariant.Revive,
     title: "Revive",
     description: "Revive and continue after a failed move.",
-    price: 15,
+    price: 50,
     Icon: HeartIcon,
   },
   {
     variant: ItemVariant.DropPoint,
     title: "Drop Point",
     description: "Shows where the bridge will land before building it.",
-    price: 15,
+    price: 50,
     Icon: RulerIcon,
   },
 ];

@@ -1,7 +1,4 @@
-import type {
-  DualStackingData,
-  DualStackingStat,
-} from "@/api/dual-stacking/types";
+import type { DualStackingStat } from "@/api/dual-stacking/types";
 import type { UserStackingDataRow } from "@/api/stacking";
 import { fromSatsToBtc } from "@/lib/format/currency";
 
@@ -10,7 +7,6 @@ import type { EarnRewardRowId, EarnRewardsSummary } from "../types";
 type BuildEarnRewardsSummaryArgs = {
   stats: DualStackingStat[] | null | undefined;
   stackingRows: UserStackingDataRow[] | null | undefined;
-  dualStackingData: DualStackingData[] | null | undefined;
   currentBtcPriceUsd: number | null;
   currentStxPriceUsd: number | null;
   currentStackingApr: number | null;
@@ -42,32 +38,9 @@ function getTotalStackingRewardsStx(
   );
 }
 
-function getNextRewardDateLabel(
-  dualStackingData: DualStackingData[] | null | undefined,
-) {
-  const cycles = dualStackingData ?? [];
-  const nextCycle = cycles
-    .filter(
-      (c) => Number.isFinite(c.end_time) && c.end_time * 1000 >= Date.now(),
-    )
-    .sort((a, b) => a.end_time - b.end_time)[0];
-  const fallbackCycle = cycles
-    .slice()
-    .sort((a, b) => b.end_time - a.end_time)[0];
-  const source = nextCycle ?? fallbackCycle;
-
-  if (!source?.end_time) return null;
-
-  return new Date(source.end_time * 1000).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
-
 export function buildEarnRewardsSummary({
   stats,
   stackingRows,
-  dualStackingData,
   currentBtcPriceUsd,
   currentStxPriceUsd,
   currentStackingApr,
@@ -101,7 +74,6 @@ export function buildEarnRewardsSummary({
   return {
     totalRewardsUsd,
     currentStackingApr,
-    nextRewardDateLabel: getNextRewardDateLabel(dualStackingData),
     rows: [
       {
         id: "bridge-game",

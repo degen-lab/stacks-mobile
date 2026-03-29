@@ -39,13 +39,14 @@ export default function LoginScreen() {
       }
 
       const googleUser = googleResult.userData.user;
+      const trimmedReferralCode = referralCode.trim();
 
       try {
         const response = await authMutation.mutateAsync({
           googleId: googleUser.id,
           nickName: googleUser.name || googleUser.givenName || "",
           photoUri: googleUser.photo || undefined,
-          referralCode: referralCode || undefined,
+          referralCode: trimmedReferralCode || undefined,
         });
         await setBackendSession(response.token, response.data, true);
 
@@ -75,6 +76,7 @@ export default function LoginScreen() {
 
   const handleGoogleSignIn = useCallback(async () => {
     if (isAuthenticating || isCheckingNewUser || authMutation.isPending) return;
+
     try {
       const result = await signInWithGoogle();
       if (!result?.userData?.user) {
@@ -84,7 +86,7 @@ export default function LoginScreen() {
 
       const googleUser = result.userData.user;
       if (referralUsed) {
-        handleAuthComplete("", result);
+        void handleAuthComplete("", result);
         return;
       }
 
@@ -97,11 +99,11 @@ export default function LoginScreen() {
         if (data.isNewUser) {
           referralModal.present();
         } else {
-          handleAuthComplete("", result);
+          void handleAuthComplete("", result);
         }
       } catch (err) {
         console.error(err);
-        handleAuthComplete("", result);
+        void handleAuthComplete("", result);
       } finally {
         setIsCheckingNewUser(false);
       }
@@ -129,10 +131,10 @@ export default function LoginScreen() {
       <ReferralCodeModal
         ref={referralModal.ref}
         onConfirm={handleAuthComplete}
-        onSkip={() => handleAuthComplete("")}
+        onSkip={() => void handleAuthComplete("")}
         onDismiss={() => {
           referralModal.onDismiss();
-          handleAuthComplete("");
+          void handleAuthComplete("");
         }}
         loading={authMutation.isPending}
       />

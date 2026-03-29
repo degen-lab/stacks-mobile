@@ -37,7 +37,7 @@ describe("CreateWallet screen", () => {
     mockSignOut.mockResolvedValue(undefined);
   });
 
-  it("creates wallet and routes home", async () => {
+  it("creates wallet and routes to home", async () => {
     mockCreateWallet.mockResolvedValue(undefined);
 
     const { getByTestId } = render(<CreateWallet />);

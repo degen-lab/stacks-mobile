@@ -46,6 +46,7 @@ import {
   getBridgeReclaimPubkey,
   useBridgeWalletPayment,
 } from "./use-bridge-data";
+import { trackEvent } from "@/lib/analytics";
 
 const DEPOSIT_MAX_FEE_SATS = 80_000;
 const EMILY_REGISTRATION_MAX_ATTEMPTS = 3;
@@ -332,6 +333,7 @@ export function useSubmitDeposit(config: SbtcBridgeConfig) {
         prepared.rawTxHex,
         config.network,
       );
+      void trackEvent("bridge_deposit_initiated");
       const txId = broadcastTxId || prepared.txId;
 
       await upsertStoredBridgeDeposit(

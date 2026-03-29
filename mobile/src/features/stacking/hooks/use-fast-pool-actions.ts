@@ -3,6 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { showMessage } from "react-native-flash-message";
 import { PostConditionMode, type ClarityValue } from "@stacks/transactions";
 
+import { trackEvent } from "@/lib/analytics";
+
 import {
   getAllowanceArgs,
   getDelegateArgs,
@@ -71,6 +73,7 @@ export function useFastPoolActions(userAddress?: string) {
     async (feeMicroStx?: number) => {
       try {
         await revokeAsync(feeMicroStx);
+        void trackEvent("stacking_revoked");
         return true;
       } catch (error) {
         console.error("Failed to revoke delegation:", error);
@@ -95,6 +98,7 @@ export function useFastPoolActions(userAddress?: string) {
           description: "Your sponsored revocation will be broadcast shortly.",
           type: "success",
         });
+        void trackEvent("stacking_revoked");
         return true;
       } catch (error) {
         console.error("Failed to sponsor delegation revocation:", error);
@@ -108,6 +112,7 @@ export function useFastPoolActions(userAddress?: string) {
     async (feeMicroStx?: number) => {
       try {
         await disallowAsync(feeMicroStx);
+        void trackEvent("stacking_disallowed");
         return true;
       } catch (error) {
         console.error("Failed to remove Fast Pool permission:", error);
@@ -134,6 +139,7 @@ export function useFastPoolActions(userAddress?: string) {
             "Your sponsored disallow transaction will be broadcast shortly.",
           type: "success",
         });
+        void trackEvent("stacking_disallowed");
         return true;
       } catch (error) {
         console.error("Failed to sponsor Fast Pool permission removal:", error);
@@ -152,6 +158,7 @@ export function useFastPoolActions(userAddress?: string) {
         feeMicroStx,
       });
       invalidateFastPoolState();
+      void trackEvent("stacking_approve_contract_caller");
     },
     [invalidateFastPoolState, poolContract, poxContract, sponsorContractCall],
   );
@@ -166,6 +173,9 @@ export function useFastPoolActions(userAddress?: string) {
         feeMicroStx,
       });
       invalidateFastPoolState();
+      void trackEvent("stacking_stx_delegated", {
+        amount_micro_stx: amountMicroStx,
+      });
     },
     [invalidateFastPoolState, poolContract, sponsorContractCall],
   );

@@ -3,7 +3,7 @@ import { useActiveAccountIndex } from "@/lib/store/settings";
 import { useBtcBalance } from "@/hooks/use-btc-balance";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
-import type { TransferAsset, TransferMode } from "../types";
+import type { TransferMode } from "../types";
 
 export function useTransfer() {
   const [mode, setMode] = useState<TransferMode>("select");
@@ -17,7 +17,7 @@ export function useTransfer() {
   const { balance: btcBalance, isLoading: btcBalanceIsLoading } =
     useBtcBalance(activeAccountIndex);
 
-  const getCurrentBalance = (asset: TransferAsset | null) => {
+  const getCurrentBalance = (asset: AppToken | null) => {
     switch (asset) {
       case "STX":
         return stxBalance;
@@ -30,7 +30,7 @@ export function useTransfer() {
     }
   };
 
-  const getCurrentBalanceIsLoading = (asset: TransferAsset | null) => {
+  const getCurrentBalanceIsLoading = (asset: AppToken | null) => {
     switch (asset) {
       case "STX":
         return stxBalanceIsLoading;

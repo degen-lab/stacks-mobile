@@ -5,6 +5,7 @@ import {
   FUTURE_MIGRATION_ID,
   getContractTypeForCycle,
 } from "@/lib/stacks/utils";
+import { trackEvent } from "@/lib/analytics";
 import { useSettingsStore } from "@/lib/store/settings";
 import { walletKit } from "@/lib/stacks/wallet";
 import { isValidPrincipal } from "@/lib/stacks/addresses";
@@ -27,7 +28,7 @@ export const contractChangeRewardsAddress = async (
   const convertedArgs = [principalCV(normalizedAddress)];
   const accountIndex = useSettingsStore.getState().activeAccountIndex;
 
-  return walletKit.makeContractCall(
+  const txId = await walletKit.makeContractCall(
     contractId,
     functionName,
     convertedArgs,
@@ -35,4 +36,6 @@ export const contractChangeRewardsAddress = async (
     feeMicroStx,
     accountIndex,
   );
+  void trackEvent("dual_stacking_change_reward_address");
+  return txId;
 };
