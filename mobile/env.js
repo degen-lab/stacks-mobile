@@ -39,7 +39,7 @@ require('dotenv').config({
 
 // TODO: Replace these values with your own
 const BUNDLE_ID = 'com.stacksapp'; // ios bundle id
-const PACKAGE = 'com.stacksapptest'; // android package name
+const PACKAGE = 'com.stacksapp'; // android package name
 const NAME = 'StacksApp'; // app name
 const EXPO_ACCOUNT_OWNER = 'degenlab'; // expo account owner
 const SCHEME = 'stacksapp'; // app scheme

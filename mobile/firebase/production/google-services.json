@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "699077676132",
+    "project_id": "stacks-mobile-480714",
+    "storage_bucket": "stacks-mobile-480714.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699077676132:android:779a2b2fb9759975602371",
+        "android_client_info": {
+          "package_name": "com.stacksapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA02O5uHIzIHA3iOvCo3jxYp_18askurA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699077676132:android:7b06e18e88bf889f602371",
+        "android_client_info": {
+          "package_name": "com.stacksapp.development"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA02O5uHIzIHA3iOvCo3jxYp_18askurA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
