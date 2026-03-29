@@ -68,6 +68,7 @@ describe("PowerUpsContainer", () => {
       isPending: false,
     });
     mockUseUserProfile.mockReturnValue({
+      isLoading: false,
       data: {
         points: 50,
         items: [
