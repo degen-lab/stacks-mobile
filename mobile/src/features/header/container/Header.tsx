@@ -16,7 +16,8 @@ export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { userData } = useAuth();
-  const { data: userProfile } = useUserProfile();
+  const { data: userProfile, isLoading: isUserProfileLoading } =
+    useUserProfile();
   const [profilePopoverVisible, setProfilePopoverVisible] = useState(false);
   const [pointsPopoverVisible, setPointsPopoverVisible] = useState(false);
   const [streakPopoverVisible, setStreakPopoverVisible] = useState(false);
@@ -120,8 +121,8 @@ export function Header() {
         points={userProfile?.points ?? null}
         streak={userProfile?.streak ?? null}
         streakDays={streakDays}
-        loadingStreak={!userProfile}
-        loadingPoints={!userProfile}
+        loadingStreak={isUserProfileLoading}
+        loadingPoints={isUserProfileLoading}
         earnBalanceTrigger={earnBalanceTrigger}
         avatarSource={avatarSource}
         onPressProfile={() => setProfilePopoverVisible(true)}

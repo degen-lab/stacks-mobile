@@ -10,7 +10,7 @@ type SwapPickerViewProps = {
 export function SwapPickerView({ swap }: SwapPickerViewProps) {
   return (
     <KeyboardAvoidingView
-      className="flex-1 px-4 pt-2"
+      style={{ flex: 1, paddingHorizontal: 16, paddingTop: 8 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
     >

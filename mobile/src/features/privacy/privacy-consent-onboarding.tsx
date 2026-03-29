@@ -59,8 +59,8 @@ export function PrivacyConsentOnboarding({
           Help us incentivize{"\n"}the ecosystem
         </Text>
         <Text className="mt-4 text-base leading-7 text-secondary">
-          Personalized ads earn us significantly more — directly funding
-          sponsored transactions for you.
+          Personalized ads earn us more — directly funding sponsored
+          transactions for you.
         </Text>
 
         <View className="mt-8 gap-7">

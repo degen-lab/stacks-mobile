@@ -27,11 +27,7 @@ import { useBtcBalance } from "@/hooks/use-btc-balance";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useI18nSettings } from "@/hooks/use-i18n-settings";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
-import {
-  BottomSheetModal,
-  BottomSheetFooter,
-  BottomSheetFooterProps,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import type { AssetOption, TransakDrawerRef } from "../types";
 import { parseWalletRedirectionPayload } from "../utils/wallet-redirection";
 import { TransakDrawerLayout } from "./TransakDrawer.layout";
@@ -314,43 +310,28 @@ export function TransakDrawer({ drawerRef }: Props) {
     ? { widgetUrl: checkoutUrl }
     : ({} as TransakConfig);
 
-  const renderFooter = useCallback(
-    (props: BottomSheetFooterProps) => (
-      <BottomSheetFooter {...props} bottomInset={insets.bottom}>
-        <View className="px-5 pb-4 pt-2">
-          <Button
-            label="Continue"
-            variant="gamePrimary"
-            size="lg"
-            onPress={handleContinue}
-            loading={isLoadingQuote || isCreatingSession}
-            disabled={
-              !isValidAmount ||
-              isOutsideLimits ||
-              exceedsWalletBalance ||
-              isFeatureDisabled ||
-              (!!quoteError && !isOutsideLimits && !isFeatureDisabled) ||
-              isLoadingQuote ||
-              isCreatingSession
-            }
-          />
-          <Text className="text-center text-xs text-secondary mt-3 font-instrument-sans">
-            Powered by Transak • Secure Payment
-          </Text>
-        </View>
-      </BottomSheetFooter>
-    ),
-    [
-      handleContinue,
-      insets.bottom,
-      isCreatingSession,
-      isLoadingQuote,
-      isValidAmount,
-      quoteError,
-      isOutsideLimits,
-      exceedsWalletBalance,
-      isFeatureDisabled,
-    ],
+  const continueButton = (
+    <View className="px-5 pb-4 pt-2">
+      <Button
+        label="Continue"
+        variant="gamePrimary"
+        size="lg"
+        onPress={handleContinue}
+        loading={isLoadingQuote || isCreatingSession}
+        disabled={
+          !isValidAmount ||
+          isOutsideLimits ||
+          exceedsWalletBalance ||
+          isFeatureDisabled ||
+          (!!quoteError && !isOutsideLimits && !isFeatureDisabled) ||
+          isLoadingQuote ||
+          isCreatingSession
+        }
+      />
+      <Text className="text-center text-xs text-secondary mt-3 font-instrument-sans">
+        Powered by Transak • Secure Payment
+      </Text>
+    </View>
   );
 
   return (
@@ -365,7 +346,6 @@ export function TransakDrawer({ drawerRef }: Props) {
           : undefined
       }
       onDismiss={handleDismiss}
-      footerComponent={!isCheckout ? renderFooter : undefined}
       backgroundStyle={{ backgroundColor: colors.neutral[50] }}
     >
       <TransakDrawerLayout
@@ -388,6 +368,7 @@ export function TransakDrawer({ drawerRef }: Props) {
         isValidAmount={isValidAmount}
         availableBalance={sellAvailableBalance}
         bottomInset={insets.bottom}
+        footer={!isCheckout ? continueButton : null}
       />
     </Modal>
   );
