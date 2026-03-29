@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+#
+# 🔗 Links:
+# Composite actions docs: https://docs.github.com/en/actions/creating-actions/creating-a-composite-action
+
+# ✍️ Description:
+# Composite action used by mobile EAS workflows to install Node, pnpm, and `mobile/` dependencies.
+# Bump Node or pnpm here to update every workflow that uses this action.
+
+# 👀 Example usage:
+#       - name: 📦 Setup Node + PNPM + install deps
+#         uses: ./.github/actions/setup-node-pnpm-install
+
+name: 'Setup Node + PNPM + Install Dependencies'
+description: 'Setup Node + PNPM + Install Dependencies'
+runs:
+  using: 'composite'
+  steps:
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10.16.1
+        run_install: false
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: 📦 Install Project Dependencies
+      run: pnpm install --frozen-lockfile
+      working-directory: mobile
+      shell: bash

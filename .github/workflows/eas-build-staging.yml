@@ -1,0 +1,129 @@
+# ✍️ Description:
+# Trigger EAS staging builds (internal distribution, APK on Android) from the Actions tab.
+# Same flow as production, but uses the `staging` EAS profile and `APP_ENV=staging`.
+#
+# 🚨 GitHub secrets required:
+#   - EXPO_TOKEN — https://expo.dev/settings/access-tokens
+#   - STACKS_MOBILE_ENV_STAGING — full multiline contents of `mobile/.env.staging`
+#
+# 📁 Repository contents required:
+#   - `mobile/firebase/staging/google-services.json`
+#   - `mobile/firebase/staging/GoogleService-Info.plist`
+
+name: EAS Staging Build (Android & iOS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        description: 'Platform to build'
+        required: true
+        default: 'all'
+        options:
+          - all
+          - ios
+          - android
+      version:
+        description: 'Build message label (defaults to full commit SHA)'
+        required: false
+        default: ''
+
+jobs:
+  build-android:
+    name: EAS Staging Build (Android)
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android' }}
+    env:
+      APP_ENV: staging
+    steps:
+      - name: Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: 📦 Checkout project repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📝 Write mobile/.env.staging
+        working-directory: mobile
+        env:
+          ENV_BODY: ${{ secrets.STACKS_MOBILE_ENV_STAGING }}
+        run: |
+          if [ -z "$ENV_BODY" ]; then
+            echo "Set repository secret STACKS_MOBILE_ENV_STAGING to the full contents of .env.staging (see mobile/.env.example)."
+            exit 1
+          fi
+          echo "$ENV_BODY" > .env.staging
+
+      - name: 🔥 Verify Firebase files for staging
+        run: |
+          test -f "mobile/firebase/${APP_ENV}/google-services.json" \
+            && test -f "mobile/firebase/${APP_ENV}/GoogleService-Info.plist" \
+            || { echo "Missing Firebase config under mobile/firebase/${APP_ENV}/"; exit 1; }
+
+      - name: 📦 Setup Node + PNPM + install deps
+        uses: ./.github/actions/setup-node-pnpm-install
+
+      - name: ⏱️ EAS Build (Android)
+        uses: ./.github/actions/eas-build
+        with:
+          APP_ENV: staging
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          VERSION: ${{ github.event.inputs.version != '' && github.event.inputs.version || github.sha }}
+          ANDROID: true
+          IOS: false
+          AUTO_SUBMIT_ANDROID: false
+
+  build-ios:
+    name: EAS Staging Build (iOS)
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'ios' }}
+    env:
+      APP_ENV: staging
+    steps:
+      - name: Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: 📦 Checkout project repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📝 Write mobile/.env.staging
+        working-directory: mobile
+        env:
+          ENV_BODY: ${{ secrets.STACKS_MOBILE_ENV_STAGING }}
+        run: |
+          if [ -z "$ENV_BODY" ]; then
+            echo "Set repository secret STACKS_MOBILE_ENV_STAGING to the full contents of .env.staging (see mobile/.env.example)."
+            exit 1
+          fi
+          echo "$ENV_BODY" > .env.staging
+
+      - name: 🔥 Verify Firebase files for staging
+        run: |
+          test -f "mobile/firebase/${APP_ENV}/google-services.json" \
+            && test -f "mobile/firebase/${APP_ENV}/GoogleService-Info.plist" \
+            || { echo "Missing Firebase config under mobile/firebase/${APP_ENV}/"; exit 1; }
+
+      - name: 📦 Setup Node + PNPM + install deps
+        uses: ./.github/actions/setup-node-pnpm-install
+
+      - name: ⏱️ EAS Build (iOS)
+        uses: ./.github/actions/eas-build
+        with:
+          APP_ENV: staging
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          VERSION: ${{ github.event.inputs.version != '' && github.event.inputs.version || github.sha }}
+          ANDROID: false
+          IOS: true
+          AUTO_SUBMIT_IOS: false

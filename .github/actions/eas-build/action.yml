@@ -1,0 +1,90 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+#
+# 🔗 Links:
+# EAS Build docs: https://docs.expo.dev/eas-update/github-actions/
+
+# ✍️ Description:
+# Composite action: run Expo prebuild for `APP_ENV`, then trigger EAS Build for Android and/or iOS.
+# Inputs:
+#   `APP_ENV` — development | staging | production (must match `mobile/package.json` prebuild/build scripts).
+#   `AUTO_SUBMIT_IOS` / `AUTO_SUBMIT_ANDROID` — pass `--auto-submit` when true.
+#   `EXPO_TOKEN` — Expo access token (https://expo.dev/settings/access-tokens).
+#   `VERSION` — label used in the EAS build message.
+#   `ANDROID` / `IOS` — enable each platform build.
+#
+# Expect `mobile/.env.${APP_ENV}` to exist before this action runs (workflows write it from secrets).
+
+# 👀 Example usage:
+#      - name: ⏱️ EAS Build
+#        uses: ./.github/actions/eas-build
+#        with:
+#          APP_ENV: production
+#          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+#          VERSION: ${{ github.sha }}
+#          IOS: false
+
+name: 'Setup EAS Build + Trigger Build'
+description: 'Setup EAS Build + Trigger Build'
+inputs:
+  APP_ENV:
+    description: 'APP_ENV (one of): development, staging, production'
+    required: true
+    default: 'staging'
+  AUTO_SUBMIT_IOS:
+    description: 'Auto-submit iOS build to TestFlight/App Store (one of): true, false'
+    required: true
+    default: 'false'
+  AUTO_SUBMIT_ANDROID:
+    description: 'Auto-submit Android build to Play Store (one of): true, false'
+    required: true
+    default: 'false'
+  ANDROID:
+    description: 'run for ANDROID (one of): true, false'
+    required: true
+    default: 'true'
+  VERSION:
+    description: 'VERSION'
+    required: true
+    default: '0.0.0'
+  IOS:
+    description: 'run for IOS (one of): true, false'
+    required: true
+    default: 'false'
+  EXPO_TOKEN:
+    description: 'EXPO_TOKEN'
+    required: true
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 💯 Check for EXPO_TOKEN
+      run: |
+        if [ -z "${{ inputs.EXPO_TOKEN }}" ]; then
+          echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+          exit 1
+        fi
+      shell: bash
+
+    - name: 📦 Setup Expo and EAS
+      uses: expo/expo-github-action@v8
+      with:
+        eas-version: latest
+        token: ${{ inputs.EXPO_TOKEN }}
+
+    - name: ⚙️ Run Prebuild
+      run: pnpm prebuild:${{ inputs.APP_ENV }}
+      working-directory: mobile
+      shell: bash
+
+    - name: 📱 Run Android Build
+      if: ${{ inputs.ANDROID == 'true' }}
+      run: pnpm build:${{ inputs.APP_ENV }}:android --non-interactive ${{ inputs.AUTO_SUBMIT_ANDROID == 'true' && '--auto-submit' || '' }} --message "Build ${{ inputs.APP_ENV }} ${{ inputs.VERSION }}"
+      working-directory: mobile
+      shell: bash
+
+    - name: 📱 Run IOS Build
+      if: ${{ inputs.IOS == 'true' }}
+      run: pnpm build:${{ inputs.APP_ENV }}:ios --non-interactive --clear-cache ${{ inputs.AUTO_SUBMIT_IOS == 'true' && '--auto-submit' || '' }} --message "Build ${{ inputs.APP_ENV }} ${{ inputs.VERSION }}"
+      working-directory: mobile
+      shell: bash

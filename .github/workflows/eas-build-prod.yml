@@ -1,0 +1,131 @@
+# ✍️ Description:
+# Trigger EAS production builds (store profile) from the Actions tab.
+# Uses `.github/actions/eas-build` after installing dependencies under `mobile/`.
+#
+# 🚨 GitHub secrets required:
+#   - EXPO_TOKEN — https://expo.dev/settings/access-tokens
+#   - STACKS_MOBILE_ENV_PRODUCTION — full multiline contents of `mobile/.env.production`
+#     (same keys as `mobile/.env.example`, plus `EAS_PROJECT_ID`).
+#
+# 📁 Repository contents required:
+#   - `mobile/firebase/production/google-services.json`
+#   - `mobile/firebase/production/GoogleService-Info.plist`
+#     (`app.config.ts` points Google services at `./firebase/${APP_ENV}/...`.)
+
+name: EAS Production Build (Android & iOS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        description: 'Platform to build'
+        required: true
+        default: 'all'
+        options:
+          - all
+          - ios
+          - android
+      version:
+        description: 'Build message label (defaults to full commit SHA)'
+        required: false
+        default: ''
+
+jobs:
+  build-android:
+    name: EAS Production Build (Android)
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android' }}
+    env:
+      APP_ENV: production
+    steps:
+      - name: Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: 📦 Checkout project repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📝 Write mobile/.env.production
+        working-directory: mobile
+        env:
+          ENV_BODY: ${{ secrets.STACKS_MOBILE_ENV_PRODUCTION }}
+        run: |
+          if [ -z "$ENV_BODY" ]; then
+            echo "Set repository secret STACKS_MOBILE_ENV_PRODUCTION to the full contents of .env.production (see mobile/.env.example)."
+            exit 1
+          fi
+          echo "$ENV_BODY" > .env.production
+
+      - name: 🔥 Verify Firebase files for production
+        run: |
+          test -f "mobile/firebase/${APP_ENV}/google-services.json" \
+            && test -f "mobile/firebase/${APP_ENV}/GoogleService-Info.plist" \
+            || { echo "Missing Firebase config under mobile/firebase/${APP_ENV}/"; exit 1; }
+
+      - name: 📦 Setup Node + PNPM + install deps
+        uses: ./.github/actions/setup-node-pnpm-install
+
+      - name: ⏱️ EAS Build (Android)
+        uses: ./.github/actions/eas-build
+        with:
+          APP_ENV: production
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          VERSION: ${{ github.event.inputs.version != '' && github.event.inputs.version || github.sha }}
+          ANDROID: true
+          IOS: false
+          AUTO_SUBMIT_ANDROID: false
+
+  build-ios:
+    name: EAS Production Build (iOS)
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'ios' }}
+    env:
+      APP_ENV: production
+    steps:
+      - name: Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: 📦 Checkout project repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📝 Write mobile/.env.production
+        working-directory: mobile
+        env:
+          ENV_BODY: ${{ secrets.STACKS_MOBILE_ENV_PRODUCTION }}
+        run: |
+          if [ -z "$ENV_BODY" ]; then
+            echo "Set repository secret STACKS_MOBILE_ENV_PRODUCTION to the full contents of .env.production (see mobile/.env.example)."
+            exit 1
+          fi
+          echo "$ENV_BODY" > .env.production
+
+      - name: 🔥 Verify Firebase files for production
+        run: |
+          test -f "mobile/firebase/${APP_ENV}/google-services.json" \
+            && test -f "mobile/firebase/${APP_ENV}/GoogleService-Info.plist" \
+            || { echo "Missing Firebase config under mobile/firebase/${APP_ENV}/"; exit 1; }
+
+      - name: 📦 Setup Node + PNPM + install deps
+        uses: ./.github/actions/setup-node-pnpm-install
+
+      - name: ⏱️ EAS Build (iOS)
+        uses: ./.github/actions/eas-build
+        with:
+          APP_ENV: production
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          VERSION: ${{ github.event.inputs.version != '' && github.event.inputs.version || github.sha }}
+          ANDROID: false
+          IOS: true
+          AUTO_SUBMIT_IOS: true
