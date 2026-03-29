@@ -2,7 +2,7 @@ import React from "react";
 import { View, ActivityIndicator } from "react-native";
 import { TokenAvatar, colors } from "@/components/ui";
 import { Numpad } from "@/components/ui/numpad";
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { BottomSheetView } from "@gorhom/bottom-sheet";
 import {
   TransakWebView,
   type OnTransakEvent,
@@ -54,6 +54,7 @@ export interface TransakDrawerLayoutProps {
   isValidAmount: boolean;
   availableBalance: number;
   bottomInset: number;
+  footer?: React.ReactNode;
 }
 
 export function TransakDrawerLayout({
@@ -74,6 +75,7 @@ export function TransakDrawerLayout({
   isValidAmount,
   availableBalance,
   bottomInset,
+  footer,
 }: TransakDrawerLayoutProps) {
   const visibleAssets = ASSET_OPTIONS.filter(
     (a) => a.visible && !(action === "sell" && a.id === "STX"),
@@ -107,38 +109,30 @@ export function TransakDrawerLayout({
   }
 
   return (
-    <BottomSheetScrollView
-      contentContainerStyle={{
-        paddingTop: 8,
-        paddingBottom: bottomInset + 24,
-      }}
-    >
-      <View className="flex-1 px-5">
-        <View className="flex-1 justify-start gap-6">
-          <View>
-            <AssetSelector
-              options={visibleAssets}
-              selectedAsset={asset}
-              onSelect={onAssetSelect}
-            />
-            <TransakAmountDisplay
-              action={action}
-              amount={amount}
-              asset={asset}
-              isLoadingQuote={isLoadingQuote}
-              quoteAmount={quoteAmount}
-              quoteUnit={quoteUnit}
-              quoteError={quoteError}
-              quoteMessage={quoteMessage}
-              isValidAmount={isValidAmount}
-              availableBalance={availableBalance}
-            />
-          </View>
-          <View>
-            <Numpad value={amount} onChange={onAmountChange} mode="decimal" />
-          </View>
+    <BottomSheetView style={{ paddingTop: 8 }}>
+      <View className="px-5 gap-6">
+        <View>
+          <AssetSelector
+            options={visibleAssets}
+            selectedAsset={asset}
+            onSelect={onAssetSelect}
+          />
+          <TransakAmountDisplay
+            action={action}
+            amount={amount}
+            asset={asset}
+            isLoadingQuote={isLoadingQuote}
+            quoteAmount={quoteAmount}
+            quoteUnit={quoteUnit}
+            quoteError={quoteError}
+            quoteMessage={quoteMessage}
+            isValidAmount={isValidAmount}
+            availableBalance={availableBalance}
+          />
         </View>
+        <Numpad value={amount} onChange={onAmountChange} mode="decimal" />
       </View>
-    </BottomSheetScrollView>
+      <View style={{ paddingTop: 8, paddingBottom: bottomInset }}>{footer}</View>
+    </BottomSheetView>
   );
 }
