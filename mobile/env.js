@@ -184,7 +184,8 @@ let parsed = merged.safeParse(_env);
 const EAS_ENV_PULL_STUBS = {
   GOOGLE_WEB_CLIENT_ID: 'eas-env-pull-pending',
   GOOGLE_IOS_CLIENT_ID: 'eas-env-pull-pending',
-  GOOGLE_IOS_URL_SCHEME: 'eas-env-pull-pending',
+  // @react-native-google-signin/google-signin (no Firebase) requires this prefix for expo config.
+  GOOGLE_IOS_URL_SCHEME: 'com.googleusercontent.apps.eas-env-pull-pending',
   API_URL: 'https://example.com',
   ANDROID_ADMOB_APP_ID: 'ca-app-pub-0000000000000000~0000000000',
   ANDROID_REWARDS_AD_MOBIN_KEY: 'eas-env-pull-pending',
