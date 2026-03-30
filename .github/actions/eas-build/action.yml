@@ -73,7 +73,7 @@ runs:
         token: ${{ inputs.EXPO_TOKEN }}
 
     - name: ⚙️ Run Prebuild
-      run: pnpm prebuild:${{ inputs.APP_ENV }}
+      run: EXPO_NO_DOTENV=1 pnpm prebuild:${{ inputs.APP_ENV }}
       working-directory: mobile
       shell: bash
 
