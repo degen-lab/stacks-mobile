@@ -92,7 +92,8 @@ runs:
             exit 1
             ;;
         esac
-        eas env:pull --environment "$EAS_ENV" --non-interactive
+        # EAS CLI defaults --path to .env.local; CI expects .env then renames to .env.${APP_ENV}.
+        eas env:pull --environment "$EAS_ENV" --non-interactive --path .env
         test -f .env || { echo "eas env:pull did not create .env — check EXPO_TOKEN and EAS variables for environment: $EAS_ENV"; exit 1; }
         mv .env ".env.${{ inputs.APP_ENV }}"
         f=".env.${{ inputs.APP_ENV }}"
