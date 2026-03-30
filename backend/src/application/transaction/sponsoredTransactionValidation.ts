@@ -76,7 +76,7 @@ function getConfiguredNetwork() {
 }
 
 function getConfiguredGameContractId(): string {
-  return GAME_CONTRACT_ADDRESS.replace(/\.clar$/, '');
+  return GAME_CONTRACT_ADDRESS;
 }
 
 export function parseSponsoredTransaction(

@@ -73,12 +73,12 @@ brew services start redis
 
 ## Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root. **Use `.env.example` as the full template** (same keys and shape); values below are illustrative.
 
 ```env
-NODE_ENV=production
-PORT=3000
+NODE_ENV=development
 JWT_SECRET=your_jwt_secret_key
+PORT=7070
 
 # Database
 DB_TYPE=postgres
@@ -88,20 +88,38 @@ DB_USER=stacks_user
 DB_PASSWORD=your_password
 DB_NAME=stacks_app
 
+REFERRAL_BONUS=100
+
+# Stacks (testnet | mainnet)
+STACKS_NETWORK=testnet
+ADMIN_ADDRESS=your_admin_stx_address
+# Contract id: <deployerAddress>.<on-chain contract name>
+GAME_CONTRACT_ADDRESS=ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.my-game-contract
+SEND_REWARDS_CONTRACT_ADDRESS=ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.send-rewards
+ADMIN_PRIVATE_KEY=your_admin_private_key
+ADMIN_PUBLIC_KEY=your_admin_public_key
+
 # Redis
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
 
-# Stacks Network
-STACKS_NETWORK=testnet
-CONTRACT_ADDRESS=your_contract_address
-ADMIN_PRIVATE_KEY=your_admin_private_key
-ADMIN_ADDRESS=your_admin_address
-ADMIN_PUBLIC_KEY=your_admin_public_key
+# Transak, referrers, GitHub API — see .env.example
+TRANSAK_API_KEY=
+TRANSAK_API_SECRET=
+ANDROID_REFERRER_DOMAIN=
+IOS_REFFERRER_DOMAIN=
+GITHUB_API_KEY=
 
-# Referral
-REFERRAL_BONUS=100
+FAST_POOL_STX_ADDRESS=SP21YTSM60CAY6D011EZVEVNKXVW8FVZE198XEFFP.pox4-fast-pool-v3
+
+# Bitflow — see .env.example
+BITFLOW_API_HOST=
+BITFLOW_API_KEY=
+READONLY_CALL_API_HOST=
+READONLY_cALL_API_KEY=
+KEEPER_API_KEY=
+KEEPER_API_HOST=
 ```
 
 ## Installation
