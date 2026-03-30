@@ -120,19 +120,16 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
         "https://dual-stacking-v2-server.degenlab.io/dual-stacking-server",
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
       "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
-      game: Env.API_URL || "http://localhost:7070",
     },
     testnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
       defi: "http://localhost:8081",
       "coin-prices": "https://testnet-services.degenlab.io",
-      game: Env.API_URL || "http://localhost:7070",
     },
     devnet: {
       "dual-stacking": "http://localhost:8080",
       defi: "http://localhost:8081",
       "coin-prices": "http://localhost:8082",
-      game: Env.API_URL || "http://localhost:7070",
     },
   },
   staging: {
@@ -141,21 +138,16 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
         "https://dual-stacking-v2-server.degenlab.io/dual-stacking-server",
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
       "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
-      // TODO: Update with real staging URL
-      game: "https://blokx-backend.mockingthis.com",
     },
     testnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
       defi: "https://testnet-services.degenlab.io/defi-server",
       "coin-prices": "https://testnet-services.degenlab.io",
-      // TODO: Update with real staging URL
-      game: "https://blokx-backend.mockingthis.com",
     },
     devnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/yield-server",
       defi: "https://testnet-services.degenlab.io/defi-server",
       "coin-prices": "https://testnet-services.degenlab.io",
-      game: "https://blokx-backend.mockingthis.com",
     },
   },
   production: {
@@ -164,20 +156,16 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
         "https://dual-stacking-v2-server.degenlab.io/dual-stacking-server",
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
       "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
-      // TODO: Update with real prod URL
-      game: "https://api.blokx.com",
     },
     testnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
       defi: "https://testnet-services.degenlab.io/defi-server",
       "coin-prices": "https://testnet-services.degenlab.io",
-      game: "https://api.blokx.com",
     },
     devnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/yield-server",
       defi: "https://testnet-services.degenlab.io/defi-server",
       "coin-prices": "https://testnet-services.degenlab.io",
-      game: "https://api.blokx.com",
     },
   },
 };
@@ -187,6 +175,10 @@ export const getBackendServer = (
   network: NetworkType = getCurrentNetwork(),
   env: AppEnv = getCurrentEnv(),
 ) => {
+  if (service === "game") {
+    return adjustUrlForAndroid(validateUrl(Env.API_URL, "API_URL"));
+  }
+
   const baseUrl = BACKEND_URLS[env][network]?.[service];
 
   if (!baseUrl) {
