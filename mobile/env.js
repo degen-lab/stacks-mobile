@@ -22,6 +22,11 @@
 const z = require('zod');
 const packageJSON = require('./package.json');
 const path = require('path');
+const appJson = require('./app.json');
+
+/** Public Expo project id — needed for `eas env:pull` before `.env.*` exists (EAS reads config → GraphQL). */
+const EAS_PROJECT_ID_FALLBACK =
+  appJson.expo?.extra?.eas?.projectId ?? undefined;
 
 const APP_ENV = process.env.APP_ENV ?? 'development';
 
@@ -161,7 +166,7 @@ const _clientEnv = {
  */
 const _buildTimeEnv = {
   EXPO_ACCOUNT_OWNER,
-  EAS_PROJECT_ID: process.env.EAS_PROJECT_ID,
+  EAS_PROJECT_ID: process.env.EAS_PROJECT_ID ?? EAS_PROJECT_ID_FALLBACK,
   // ADD YOUR ENV VARS HERE TOO
 };
 
@@ -190,7 +195,6 @@ const EAS_ENV_PULL_STUBS = {
   ANDROID_ADMOB_APP_ID: 'ca-app-pub-0000000000000000~0000000000',
   ANDROID_REWARDS_AD_MOBIN_KEY: 'eas-env-pull-pending',
   TRANSAK_STAGING_API_KEY: 'eas-env-pull-pending',
-  EAS_PROJECT_ID: '00000000-0000-0000-0000-000000000000',
 };
 
 if (parsed.success === false) {
