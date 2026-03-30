@@ -179,7 +179,7 @@ if (parsed.success === false) {
   const easWorkerHint =
     'EAS Build worker: add missing keys in Expo → Environment variables for this profile’s environment (see eas.json `environment`: staging → preview, production → production).';
   const ciRunnerHint =
-    'GitHub Actions: `.github/actions/eas-build` runs `eas env:pull` before `eas build`. Expo **Secret** variables are not included in pull — use **Sensitive** or plaintext for keys needed at `expo config` time.';
+    'GitHub Actions: `eas env:pull` uses **preview** for APP_ENV=staging and **production** for APP_ENV=production. On expo.dev, each variable must list that environment (checkbox under Environments), or pull will omit it. **Secret** visibility is never pulled — use **Sensitive** or plaintext for config-time keys.';
 
   let where;
   if (process.env.EAS_BUILD === 'true') {

@@ -91,6 +91,14 @@ runs:
         eas env:pull --environment "$EAS_ENV" --non-interactive
         test -f .env || { echo "eas env:pull did not create .env — check EXPO_TOKEN and EAS variables for environment: $EAS_ENV"; exit 1; }
         mv .env ".env.${{ inputs.APP_ENV }}"
+        f=".env.${{ inputs.APP_ENV }}"
+        n=$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$f" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "${n:-0}" -lt 1 ]; then
+          echo "After eas env:pull, $f has no KEY=value lines."
+          echo "In Expo → Environment variables, each name must include the **$EAS_ENV** environment (staging CI uses preview; production CI uses production)."
+          exit 1
+        fi
+        echo "Pulled $n variable lines into $f (values not shown)."
       working-directory: mobile
       shell: bash
 
