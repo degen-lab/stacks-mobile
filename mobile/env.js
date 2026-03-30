@@ -25,6 +25,13 @@ const path = require('path');
 
 const APP_ENV = process.env.APP_ENV ?? 'development';
 
+/**
+ * `eas env:pull` resolves app.config.ts before it writes `.env.*`, so strict validation would fail
+ * (chicken-and-egg). CI sets this only for the pull step; real values load on the next command.
+ */
+const skipEnvValidateForEasPull =
+  process.env.STACKS_SKIP_ENV_VALIDATE === '1';
+
 // eslint-disable-next-line no-undef
 const envPath = path.resolve(__dirname, `.env.${APP_ENV}`);
 
@@ -171,33 +178,70 @@ const _env = {
 };
 
 const merged = buildTime.merge(client);
-const parsed = merged.safeParse(_env);
+let parsed = merged.safeParse(_env);
+
+/** Placeholders so app.config.ts can load during `eas env:pull` only (see STACKS_SKIP_ENV_VALIDATE). */
+const EAS_ENV_PULL_STUBS = {
+  GOOGLE_WEB_CLIENT_ID: 'eas-env-pull-pending',
+  GOOGLE_IOS_CLIENT_ID: 'eas-env-pull-pending',
+  GOOGLE_IOS_URL_SCHEME: 'eas-env-pull-pending',
+  API_URL: 'https://example.com',
+  ANDROID_ADMOB_APP_ID: 'ca-app-pub-0000000000000000~0000000000',
+  ANDROID_REWARDS_AD_MOBIN_KEY: 'eas-env-pull-pending',
+  TRANSAK_STAGING_API_KEY: 'eas-env-pull-pending',
+  EAS_PROJECT_ID: '00000000-0000-0000-0000-000000000000',
+};
 
 if (parsed.success === false) {
-  const fieldErrors = parsed.error.flatten().fieldErrors;
-  const localHint = `Local dev: add missing keys to mobile/.env.${APP_ENV} (see .env.example). Clear Metro with pnpm start -- -c if needed.`;
-  const easWorkerHint =
-    'EAS Build worker: add missing keys in Expo → Environment variables for this profile’s environment (see eas.json `environment`: staging → preview, production → production).';
-  const ciRunnerHint =
-    'GitHub Actions: `eas env:pull` uses **preview** for APP_ENV=staging and **production** for APP_ENV=production. On expo.dev, each variable must list that environment (checkbox under Environments), or pull will omit it. **Secret** visibility is never pulled — use **Sensitive** or plaintext for config-time keys.';
-
-  let where;
-  if (process.env.EAS_BUILD === 'true') {
-    where = easWorkerHint;
-  } else if (process.env.GITHUB_ACTIONS === 'true') {
-    where = `${ciRunnerHint}\n${easWorkerHint}`;
-  } else {
-    where = localHint;
+  if (skipEnvValidateForEasPull) {
+    const patched = { ..._env };
+    for (const [key, stub] of Object.entries(EAS_ENV_PULL_STUBS)) {
+      if (patched[key] === undefined || patched[key] === '') {
+        patched[key] = stub;
+      }
+    }
+    parsed = merged.safeParse(patched);
   }
 
-  console.error('❌ Invalid environment variables:', fieldErrors, `\n${where}`);
-  throw new Error(
-    'Invalid environment variables — see message above for where to define them.'
-  );
+  if (parsed.success === false) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const localHint = `Local dev: add missing keys to mobile/.env.${APP_ENV} (see .env.example). Clear Metro with pnpm start -- -c if needed.`;
+    const easWorkerHint =
+      'EAS Build worker: add missing keys in Expo → Environment variables for this profile’s environment (see eas.json `environment`: staging → preview, production → production).';
+    const ciRunnerHint =
+      'GitHub Actions: `eas env:pull` uses **preview** for APP_ENV=staging and **production** for APP_ENV=production. On expo.dev, each variable must list that environment (checkbox under Environments), or pull will omit it. **Secret** visibility is never pulled — use **Sensitive** or plaintext for config-time keys.';
+
+    let where;
+    if (process.env.EAS_BUILD === 'true') {
+      where = easWorkerHint;
+    } else if (process.env.GITHUB_ACTIONS === 'true') {
+      where = `${ciRunnerHint}\n${easWorkerHint}`;
+    } else {
+      where = localHint;
+    }
+
+    console.error('❌ Invalid environment variables:', fieldErrors, `\n${where}`);
+    throw new Error(
+      'Invalid environment variables — see message above for where to define them.'
+    );
+  }
 }
 
 const Env = parsed.data;
-const ClientEnv = client.parse(_clientEnv);
+
+const clientEnvForParse = skipEnvValidateForEasPull
+  ? (() => {
+      const out = { ..._clientEnv };
+      for (const [key, stub] of Object.entries(EAS_ENV_PULL_STUBS)) {
+        if (key in out && (out[key] === undefined || out[key] === '')) {
+          out[key] = stub;
+        }
+      }
+      return out;
+    })()
+  : _clientEnv;
+
+const ClientEnv = client.parse(clientEnvForParse);
 
 module.exports = {
   Env,

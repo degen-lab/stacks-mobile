@@ -18,6 +18,8 @@
 # Pull map: staging → preview, production → production, development → development (matches eas.json `environment`).
 # Expo **Secret** visibility vars are not included in `env:pull` — use **Sensitive** or plaintext for keys
 # required at `expo config` time. https://docs.expo.dev/eas/environment-variables/
+# `STACKS_SKIP_ENV_VALIDATE=1` only for `eas env:pull`: the CLI loads app.config.ts before writing `.env`;
+# env.js would otherwise fail validation (chicken-and-egg). Build steps do not set this flag.
 
 # 👀 Example usage:
 #      - name: ⏱️ EAS Build
@@ -78,6 +80,8 @@ runs:
         token: ${{ inputs.EXPO_TOKEN }}
 
     - name: 🔐 Pull EAS env for expo config on runner
+      env:
+        STACKS_SKIP_ENV_VALIDATE: '1'
       run: |
         case "${{ inputs.APP_ENV }}" in
           staging) EAS_ENV=preview ;;
