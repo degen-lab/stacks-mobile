@@ -27,6 +27,9 @@ const envPath = path.resolve(__dirname, `.env.${APP_ENV}`);
 
 require('dotenv').config({
   path: envPath,
+  // Expo CLI may preload a default .env file before app.config.ts runs.
+  // Always prefer the env file selected by APP_ENV for deterministic builds.
+  override: true,
 });
 
 /**

@@ -142,20 +142,20 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
       "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
       // TODO: Update with real staging URL
-      game: "https://staging-api.blokx.com",
+      game: "https://blokx-backend.mockingthis.com",
     },
     testnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
       defi: "https://testnet-services.degenlab.io/defi-server",
       "coin-prices": "https://testnet-services.degenlab.io",
       // TODO: Update with real staging URL
-      game: "https://staging-api.blokx.com",
+      game: "https://blokx-backend.mockingthis.com",
     },
     devnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/yield-server",
       defi: "https://testnet-services.degenlab.io/defi-server",
       "coin-prices": "https://testnet-services.degenlab.io",
-      game: "https://staging-api.blokx.com",
+      game: "https://blokx-backend.mockingthis.com",
     },
   },
   production: {
