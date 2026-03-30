@@ -1,9 +1,12 @@
 # ✍️ Description:
 # Trigger EAS staging builds (internal distribution, APK on Android) from the Actions tab.
-# Uses the `staging` EAS profile (`environment`: preview in eas.json). Prebuild runs on EAS only;
-# configure variables in Expo: Project → Environment variables → **preview** (see mobile/.env.example keys).
+# Uses the `staging` EAS profile (`environment`: preview in eas.json).
 #
-# 🚨 GitHub secrets required:
+# App env vars: **only from Expo** (Project → Environment variables → **preview**). CI runs
+# `eas env:pull` before `eas build` so `expo config` on the runner matches EAS; do **not** store
+# API_URL / Google keys / etc. in GitHub secrets for this workflow.
+#
+# 🚨 GitHub secret (Expo API login only, not app configuration):
 #   - EXPO_TOKEN — https://expo.dev/settings/access-tokens
 #
 # 📁 Repository contents required:

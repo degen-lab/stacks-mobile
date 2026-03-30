@@ -1,9 +1,11 @@
 # ✍️ Description:
 # Trigger EAS production builds (store profile) from the Actions tab.
-# Prebuild runs on EAS only; configure variables in Expo: Project → Environment variables → **production**
-# (same keys as `mobile/.env.example`, plus `EAS_PROJECT_ID`).
 #
-# 🚨 GitHub secrets required:
+# App env vars: **only from Expo** (Project → Environment variables → **production**; same keys as
+# `mobile/.env.example`, including `EAS_PROJECT_ID`). CI runs `eas env:pull` before `eas build`.
+# Do **not** duplicate those values in GitHub secrets for this workflow.
+#
+# 🚨 GitHub secret (Expo API login only, not app configuration):
 #   - EXPO_TOKEN — https://expo.dev/settings/access-tokens
 #
 # 📁 Repository contents required:

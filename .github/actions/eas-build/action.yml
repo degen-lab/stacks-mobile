@@ -5,6 +5,9 @@
 
 # ✍️ Description:
 # Composite action: trigger EAS Build for Android and/or iOS (prebuild runs on EAS only).
+# **App configuration comes from Expo only:** `eas env:pull` syncs EAS Environment Variables to
+# `.env.${APP_ENV}` on the runner (GitHub does not hold API_URL, Google keys, etc.—only `EXPO_TOKEN`
+# is passed from GitHub for Expo API auth).
 # Inputs:
 #   `APP_ENV` — development | staging | production (must match `mobile/package.json` build scripts / EAS profile).
 #   `AUTO_SUBMIT_IOS` / `AUTO_SUBMIT_ANDROID` — pass `--auto-submit` when true.
@@ -12,9 +15,9 @@
 #   `VERSION` — label used in the EAS build message.
 #   `ANDROID` / `IOS` — enable each platform build.
 #
-# Env for `app.config` / `env.js` must be set as EAS Environment Variables for the profile’s `environment`
-# in eas.json (`preview` for staging, `production` for production). See:
-# https://docs.expo.dev/eas/environment-variables/
+# Pull map: staging → preview, production → production, development → development (matches eas.json `environment`).
+# Expo **Secret** visibility vars are not included in `env:pull` — use **Sensitive** or plaintext for keys
+# required at `expo config` time. https://docs.expo.dev/eas/environment-variables/
 
 # 👀 Example usage:
 #      - name: ⏱️ EAS Build
@@ -73,6 +76,23 @@ runs:
       with:
         eas-version: latest
         token: ${{ inputs.EXPO_TOKEN }}
+
+    - name: 🔐 Pull EAS env for expo config on runner
+      run: |
+        case "${{ inputs.APP_ENV }}" in
+          staging) EAS_ENV=preview ;;
+          production) EAS_ENV=production ;;
+          development) EAS_ENV=development ;;
+          *)
+            echo "Unsupported APP_ENV for EAS env pull: ${{ inputs.APP_ENV }}"
+            exit 1
+            ;;
+        esac
+        eas env:pull --environment "$EAS_ENV" --non-interactive
+        test -f .env || { echo "eas env:pull did not create .env — check EXPO_TOKEN and EAS variables for environment: $EAS_ENV"; exit 1; }
+        mv .env ".env.${{ inputs.APP_ENV }}"
+      working-directory: mobile
+      shell: bash
 
     - name: 📱 Run Android Build
       if: ${{ inputs.ANDROID == 'true' }}

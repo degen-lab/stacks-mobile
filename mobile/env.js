@@ -12,8 +12,11 @@
 
 /**
  * 1st part: Import packages and Load your env variables
- * we use dotenv to load the correct variables from the .env file based on the APP_ENV variable (default is development)
- * APP_ENV is passed as an inline variable while executing the command, for example: APP_ENV=staging pnpm build:android
+ * - Local / CI without EAS: load `.env.${APP_ENV}` via dotenv (override: true for deterministic file wins).
+ * - EAS Build workers: skip dotenv — variables come from Project → Environment variables for the profile’s
+ *   `environment` in eas.json (`preview` / `production` / `development`). See:
+ *   https://docs.expo.dev/eas/environment-variables/
+ * APP_ENV is set by eas.json `env` per profile or via shell, e.g. APP_ENV=staging pnpm start
  */
 
 const z = require('zod');
@@ -25,12 +28,16 @@ const APP_ENV = process.env.APP_ENV ?? 'development';
 // eslint-disable-next-line no-undef
 const envPath = path.resolve(__dirname, `.env.${APP_ENV}`);
 
-require('dotenv').config({
-  path: envPath,
-  // Expo CLI may preload a default .env file before app.config.ts runs.
-  // Always prefer the env file selected by APP_ENV for deterministic builds.
-  override: true,
-});
+const isEasBuild = process.env.EAS_BUILD === 'true';
+
+if (!isEasBuild) {
+  require('dotenv').config({
+    path: envPath,
+    // Expo CLI may preload a default .env file before app.config.ts runs.
+    // Always prefer the env file selected by APP_ENV for deterministic builds.
+    override: true,
+  });
+}
 
 /**
  * 2nd part: Define some static variables for the app
