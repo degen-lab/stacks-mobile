@@ -17,6 +17,7 @@ export class SponsoredTransaction {
   id: number;
 
   @ManyToOne(() => User, (user) => user.sponsoredTransactions, {
+    nullable: false,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
