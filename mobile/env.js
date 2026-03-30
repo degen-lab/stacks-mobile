@@ -174,14 +174,25 @@ const merged = buildTime.merge(client);
 const parsed = merged.safeParse(_env);
 
 if (parsed.success === false) {
-  console.error(
-    '❌ Invalid environment variables:',
-    parsed.error.flatten().fieldErrors,
-    `\n❌ Missing variables in .env.${APP_ENV} file, Make sure all required variables are defined in the .env.${APP_ENV} file.`,
-    `\n💡 Tip: If you recently updated the .env.${APP_ENV} file and the error still persists, try restarting the server with the -c flag to clear the cache.`
-  );
+  const fieldErrors = parsed.error.flatten().fieldErrors;
+  const localHint = `Local dev: add missing keys to mobile/.env.${APP_ENV} (see .env.example). Clear Metro with pnpm start -- -c if needed.`;
+  const easWorkerHint =
+    'EAS Build worker: add missing keys in Expo → Environment variables for this profile’s environment (see eas.json `environment`: staging → preview, production → production).';
+  const ciRunnerHint =
+    'GitHub Actions: `.github/actions/eas-build` runs `eas env:pull` before `eas build`. Expo **Secret** variables are not included in pull — use **Sensitive** or plaintext for keys needed at `expo config` time.';
+
+  let where;
+  if (process.env.EAS_BUILD === 'true') {
+    where = easWorkerHint;
+  } else if (process.env.GITHUB_ACTIONS === 'true') {
+    where = `${ciRunnerHint}\n${easWorkerHint}`;
+  } else {
+    where = localHint;
+  }
+
+  console.error('❌ Invalid environment variables:', fieldErrors, `\n${where}`);
   throw new Error(
-    'Invalid environment variables, Check terminal for more details '
+    'Invalid environment variables — see message above for where to define them.'
   );
 }
 
