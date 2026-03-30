@@ -8,6 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
+      "environment": "development",
       "env": {
         "APP_ENV": "development"
       }
@@ -22,6 +23,7 @@
     "staging": {
       "distribution": "internal",
       "channel": "staging",
+      "environment": "preview",
       "android": {
         "buildType": "apk"
       },
@@ -31,14 +33,20 @@
     },
     "production": {
       "distribution": "store",
-      "autoIncrement": true,
       "channel": "production",
+      "environment": "production",
+      "autoIncrement": true,
       "env": {
         "APP_ENV": "production"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleTeamId": "3GTZV85AXU",
+        "bundleIdentifier": "com.stacksapp"
+      }
+    }
   }
 }

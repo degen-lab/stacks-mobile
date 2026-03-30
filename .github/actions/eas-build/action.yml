@@ -4,15 +4,17 @@
 # EAS Build docs: https://docs.expo.dev/eas-update/github-actions/
 
 # ✍️ Description:
-# Composite action: run Expo prebuild for `APP_ENV`, then trigger EAS Build for Android and/or iOS.
+# Composite action: trigger EAS Build for Android and/or iOS (prebuild runs on EAS only).
 # Inputs:
-#   `APP_ENV` — development | staging | production (must match `mobile/package.json` prebuild/build scripts).
+#   `APP_ENV` — development | staging | production (must match `mobile/package.json` build scripts / EAS profile).
 #   `AUTO_SUBMIT_IOS` / `AUTO_SUBMIT_ANDROID` — pass `--auto-submit` when true.
 #   `EXPO_TOKEN` — Expo access token (https://expo.dev/settings/access-tokens).
 #   `VERSION` — label used in the EAS build message.
 #   `ANDROID` / `IOS` — enable each platform build.
 #
-# Expect `mobile/.env.${APP_ENV}` to exist before this action runs (workflows write it from secrets).
+# Env for `app.config` / `env.js` must be set as EAS Environment Variables for the profile’s `environment`
+# in eas.json (`preview` for staging, `production` for production). See:
+# https://docs.expo.dev/eas/environment-variables/
 
 # 👀 Example usage:
 #      - name: ⏱️ EAS Build
@@ -71,11 +73,6 @@ runs:
       with:
         eas-version: latest
         token: ${{ inputs.EXPO_TOKEN }}
-
-    - name: ⚙️ Run Prebuild
-      run: EXPO_NO_DOTENV=1 pnpm prebuild:${{ inputs.APP_ENV }}
-      working-directory: mobile
-      shell: bash
 
     - name: 📱 Run Android Build
       if: ${{ inputs.ANDROID == 'true' }}

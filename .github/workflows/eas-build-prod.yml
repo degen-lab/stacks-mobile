@@ -1,11 +1,10 @@
 # ✍️ Description:
 # Trigger EAS production builds (store profile) from the Actions tab.
-# Uses `.github/actions/eas-build` after installing dependencies under `mobile/`.
+# Prebuild runs on EAS only; configure variables in Expo: Project → Environment variables → **production**
+# (same keys as `mobile/.env.example`, plus `EAS_PROJECT_ID`).
 #
 # 🚨 GitHub secrets required:
 #   - EXPO_TOKEN — https://expo.dev/settings/access-tokens
-#   - STACKS_MOBILE_ENV_PRODUCTION — full multiline contents of `mobile/.env.production`
-#     (same keys as `mobile/.env.example`, plus `EAS_PROJECT_ID`).
 #
 # 📁 Repository contents required:
 #   - `mobile/firebase/production/google-services.json`
@@ -51,17 +50,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 📝 Write mobile/.env.production
-        working-directory: mobile
-        env:
-          ENV_BODY: ${{ secrets.STACKS_MOBILE_ENV_PRODUCTION }}
-        run: |
-          if [ -z "$ENV_BODY" ]; then
-            echo "Set repository secret STACKS_MOBILE_ENV_PRODUCTION to the full contents of .env.production (see mobile/.env.example)."
-            exit 1
-          fi
-          echo "$ENV_BODY" > .env.production
-
       - name: 🔥 Verify Firebase files for production
         run: |
           test -f "mobile/firebase/${APP_ENV}/google-services.json" \
@@ -99,17 +87,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: 📝 Write mobile/.env.production
-        working-directory: mobile
-        env:
-          ENV_BODY: ${{ secrets.STACKS_MOBILE_ENV_PRODUCTION }}
-        run: |
-          if [ -z "$ENV_BODY" ]; then
-            echo "Set repository secret STACKS_MOBILE_ENV_PRODUCTION to the full contents of .env.production (see mobile/.env.example)."
-            exit 1
-          fi
-          echo "$ENV_BODY" > .env.production
 
       - name: 🔥 Verify Firebase files for production
         run: |
