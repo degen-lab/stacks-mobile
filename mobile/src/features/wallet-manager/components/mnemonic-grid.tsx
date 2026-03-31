@@ -1,6 +1,6 @@
-import { ScrollView, Text, View } from "@/components/ui";
-import { ScrollView as NativeScrollView, TextInput } from "react-native";
-import { useRef } from "react";
+import { Text, View } from "@/components/ui";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { TextInput } from "react-native";
 
 interface MnemonicWordGridProps {
   words: string[];
@@ -21,14 +21,12 @@ export function MnemonicWordGrid({
   maxHeight = 380,
   invalidWordIndices = [],
 }: MnemonicWordGridProps) {
-  const scrollRef = useRef<NativeScrollView | null>(null);
   const displayWords = words.length
     ? words
     : Array.from({ length: wordCount }, () => "");
 
   return (
-    <ScrollView
-      ref={scrollRef}
+    <BottomSheetScrollView
       style={{ maxHeight }}
       showsVerticalScrollIndicator={true}
     >
@@ -93,6 +91,6 @@ export function MnemonicWordGrid({
           );
         })}
       </View>
-    </ScrollView>
+    </BottomSheetScrollView>
   );
 }

@@ -1,5 +1,4 @@
 import { Button, Modal, Text, View } from "@/components/ui";
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { WarningLabel } from "@/components/warning-label";
 import { trackEvent } from "@/lib/analytics";
 import { useActiveAccountIndex } from "@/lib/store/settings";
@@ -168,24 +167,22 @@ function MnemonicStep({
         ) : null}
       </View>
 
-      <View className="mb-4">
-        <Text className="mb-2 text-base font-instrument-sans-medium text-primary">
-          Mnemonic Passphrase (Optional)
-        </Text>
-        <PasswordInput
-          password={mnemonicPassphrase}
-          showPassword={showMnemonicPassphrase}
-          onPasswordChange={onPassphraseChange}
-          onToggleShowPassword={onToggleShowPassphrase}
-          placeholder="Passphrase"
-          inputTestID="replace-wallet-passphrase-input"
-          toggleTestID="replace-wallet-passphrase-toggle"
-        />
-        <Text className="mt-2 text-sm font-instrument-sans text-secondary">
-          Only enter this if the original wallet used one. A different
-          passphrase creates a different wallet from the same words.
-        </Text>
-      </View>
+      {__DEV__ ? (
+        <View className="">
+          <Text className="mb-2 text-base font-instrument-sans-medium text-primary">
+            Mnemonic Passphrase (Optional)
+          </Text>
+          <PasswordInput
+            password={mnemonicPassphrase}
+            showPassword={showMnemonicPassphrase}
+            onPasswordChange={onPassphraseChange}
+            onToggleShowPassword={onToggleShowPassphrase}
+            placeholder="Passphrase"
+            inputTestID="replace-wallet-passphrase-input"
+            toggleTestID="replace-wallet-passphrase-toggle"
+          />
+        </View>
+      ) : null}
 
       <Button
         variant="default"
@@ -343,7 +340,7 @@ export const ReplaceBackupModal = forwardRef<
               // Store the new wallet (replaces local wallet + accounts)
               await walletKit.storeExistingWallet(
                 mnemonic,
-                mnemonicPassphrase || undefined,
+                __DEV__ ? mnemonicPassphrase || undefined : undefined,
               );
               await setActiveAccountIndex(0);
 
@@ -399,7 +396,7 @@ export const ReplaceBackupModal = forwardRef<
   return (
     <Modal
       ref={ref}
-      enableDynamicSizing={true}
+      snapPoints={["85%"]}
       title="Replace Cloud Backup"
       headerLeft={
         step === "password" ? (
@@ -420,7 +417,7 @@ export const ReplaceBackupModal = forwardRef<
         }
       }}
     >
-      <BottomSheetScrollView contentContainerClassName="px-4 pb-8">
+      <View className="px-4 pb-8">
         {step === "mnemonic" ? (
           <MnemonicStep
             words={mnemonicWords}
@@ -458,7 +455,7 @@ export const ReplaceBackupModal = forwardRef<
             />
           </View>
         )}
-      </BottomSheetScrollView>
+      </View>
     </Modal>
   );
 });

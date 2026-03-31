@@ -9,10 +9,12 @@ import { Copy, Eye, EyeOff } from "lucide-react-native";
 import { forwardRef, useCallback, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { showMessage } from "react-native-flash-message";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MnemonicWordGrid } from "./mnemonic-grid";
 
 export const ViewMnemonicModal = forwardRef<BottomSheetModal>((_, ref) => {
   const { securityMethod } = useSecurityMethod();
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const [mnemonic, setMnemonic] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -98,61 +100,57 @@ export const ViewMnemonicModal = forwardRef<BottomSheetModal>((_, ref) => {
         }
       }}
     >
-      <View className="flex-1 px-4 pb-8">
+      <View
+        className="px-4"
+        style={{ paddingBottom: Math.max(32, bottomInset + 16) }}
+      >
+        <View className="mb-4">
+          <WarningLabel
+            label="Keep this private. Anyone can access your funds with it."
+          />
+        </View>
+
+        <View className="mb-3 flex-row items-center justify-between">
+          <Text className="text-lg font-instrument-sans-medium text-primary">
+            Recovery Phrase
+          </Text>
+          {mnemonic ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<Copy size={16} className="text-primary" />}
+              label="Copy"
+              onPress={handleCopyMnemonic}
+            />
+          ) : null}
+        </View>
+
+        <View className="mb-4">
+          <MnemonicWordGrid words={words} revealed={revealed} />
+        </View>
+
         {loading ? (
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-base font-instrument-sans text-secondary">
-              Loading...
-            </Text>
-          </View>
+          <Text className="text-base font-instrument-sans text-secondary text-center">
+            Loading...
+          </Text>
         ) : mnemonic ? (
-          <>
-            <View className="mb-4">
-              <WarningLabel
-                label={`Keep this private. Anyone can access your funds with it.`}
-              />
-            </View>
-
-            <View className="mb-3 flex-row items-center justify-between">
-              <Text className="text-lg font-instrument-sans-medium text-primary">
-                Recovery Phrase
-              </Text>
-              <Button
-                variant="ghost"
-                size="sm"
-                leftIcon={<Copy size={16} className="text-primary" />}
-                label="Copy"
-                onPress={handleCopyMnemonic}
-                disabled={!mnemonic}
-              />
-            </View>
-
-            <View className="mb-3">
-              <MnemonicWordGrid words={words} revealed={revealed} />
-            </View>
-
-            <View className="gap-3">
-              <Button
-                variant="default"
-                size="lg"
-                leftIcon={
-                  revealed ? (
-                    <EyeOff size={18} className="text-white" />
-                  ) : (
-                    <Eye size={18} className="text-white" />
-                  )
-                }
-                label={revealed ? "Hide mnemonic" : "Reveal mnemonic"}
-                onPress={() => setRevealed((prev) => !prev)}
-              />
-            </View>
-          </>
+          <Button
+            variant="default"
+            size="lg"
+            leftIcon={
+              revealed ? (
+                <EyeOff size={18} className="text-white" />
+              ) : (
+                <Eye size={18} className="text-white" />
+              )
+            }
+            label={revealed ? "Hide mnemonic" : "Reveal mnemonic"}
+            onPress={() => setRevealed((prev) => !prev)}
+          />
         ) : (
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-base font-instrument-sans text-secondary text-center">
-              Failed to load recovery phrase
-            </Text>
-          </View>
+          <Text className="text-base font-instrument-sans text-secondary text-center">
+            Failed to load recovery phrase
+          </Text>
         )}
       </View>
     </Modal>
