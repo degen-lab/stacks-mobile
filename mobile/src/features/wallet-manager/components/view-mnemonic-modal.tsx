@@ -105,9 +105,7 @@ export const ViewMnemonicModal = forwardRef<BottomSheetModal>((_, ref) => {
         style={{ paddingBottom: Math.max(32, bottomInset + 16) }}
       >
         <View className="mb-4">
-          <WarningLabel
-            label="Keep this private. Anyone can access your funds with it."
-          />
+          <WarningLabel label="Keep this private. Anyone can access your funds with it." />
         </View>
 
         <View className="mb-3 flex-row items-center justify-between">

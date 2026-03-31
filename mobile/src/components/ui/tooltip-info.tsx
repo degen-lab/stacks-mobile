@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Modal, Pressable, View, useWindowDimensions } from "react-native";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { Info } from "lucide-react-native";
 
 import { Text } from "@/components/ui/text";
@@ -46,8 +52,14 @@ const tooltipClasses = {
   buttonShape: "",
 } as const;
 
-const baseClasses =
-  "items-center justify-center transition-colors active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 dark:focus-visible:ring-white/30 focus-visible:ring-offset-2";
+const baseClasses = [
+  "items-center justify-center rounded-full active:opacity-70",
+  Platform.OS === "web"
+    ? "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 dark:focus-visible:ring-white/30 focus-visible:ring-offset-2"
+    : "",
+]
+  .filter(Boolean)
+  .join(" ");
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);

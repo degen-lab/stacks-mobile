@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable } from "react-native";
 import { showMessage } from "react-native-flash-message";
 import { Modal, Text, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { useBroadcastBitcoinTransaction } from "@/api/bitcoin";
 import { fromSatsToBtc, MICRO_STX } from "@/lib/format/currency";
+import type { AppToken } from "@/lib/assets/tokens";
+import { walletKit } from "@/lib/stacks/wallet";
 import { useSelectedNetwork } from "@/lib/store/settings";
 import { getBitcoinAddressError } from "@/lib/bitcoin/validation";
 import { TransferModeSelector } from "../components/transfer-mode-selector";
@@ -19,17 +21,26 @@ import {
   type FeeRateTier,
 } from "../hooks/use-prepare-btc-send";
 import { usePrepareStxSend } from "../hooks/use-prepare-stx-send";
+import { usePrepareFtSend } from "../hooks/use-prepare-ft-send";
 import { useTransfer } from "../hooks/use-transfer";
 import { useSendFlow } from "../hooks/use-send-flow";
 import type { TransferSheetRequest } from "../types";
 import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
 import { useSignTransaction } from "@/hooks/use-sign-transaction";
-import { buildUnsignedStxTransfer } from "@/lib/stacks/transaction-builder";
+import {
+  buildUnsignedContractCall,
+  buildUnsignedStxTransfer,
+} from "@/lib/stacks/transaction-builder";
 import { getActiveWalletAccount } from "@/lib/stacks/active-account";
+import { CONTRACTS } from "@/lib/stacks/contracts";
 import { getHiroApiBase } from "@/lib/stacks/network";
 import {
   broadcastTransaction,
   deserializeTransaction,
+  noneCV,
+  PostConditionMode,
+  standardPrincipalCV,
+  uintCV,
 } from "@stacks/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import { trackEvent } from "@/lib/analytics";
@@ -115,16 +126,61 @@ export function TransferSheet({
       currentAsset === "STX",
   });
 
+  const sbtcContractId = CONTRACTS[selectedNetwork].sbtc;
+  const isSbtcAvailable = Boolean(sbtcContractId);
+  const sendAssetAvailability = useMemo(
+    () => ({
+      sBTC: isSbtcAvailable
+        ? { enabled: true }
+        : { enabled: false, disabledLabel: "Unavailable" },
+    }),
+    [isSbtcAvailable],
+  );
+  const {
+    data: preparedSbtcSend,
+    isLoading: preparingSbtcSend,
+    error: preparedSbtcSendError,
+  } = usePrepareFtSend({
+    contractId: sbtcContractId,
+    recipient: sendFlow.formData.recipient,
+    amount: sendFlow.formData.amount,
+    decimals: 8,
+    senderAddress: stxAddress ?? "",
+    network: selectedNetwork,
+    enabled:
+      open &&
+      mode === "send" &&
+      sendFlow.currentStep === "confirm" &&
+      currentAsset === "sBTC" &&
+      isSbtcAvailable,
+  });
+
   const broadcastBitcoinTx = useBroadcastBitcoinTransaction(selectedNetwork);
 
   const btcFeeDisplay = preparedBtcSend
     ? fromSatsToBtc(preparedBtcSend.feeSats).toFixed(8)
     : "0.00000000";
+  const buildSbtcTransferArgs = useCallback(
+    (amountSats: number, senderAddress: string, recipient: string) => [
+      uintCV(amountSats),
+      standardPrincipalCV(senderAddress),
+      standardPrincipalCV(recipient),
+      noneCV(),
+    ],
+    [],
+  );
+  const invalidateSbtcState = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ["sbtc"] });
+    void queryClient.invalidateQueries({
+      queryKey: ["sbtc-bridge", "balance"],
+    });
+  }, [queryClient]);
 
   const getReceiveAddress = useCallback(
     (asset: AppToken | null | undefined) => {
       if (asset === "STX") return stxAddress;
       if (asset === "BTC") return btcAddress;
+      if (asset === "sBTC") return stxAddress;
       return null;
     },
     [btcAddress, stxAddress],
@@ -295,11 +351,68 @@ export function TransferSheet({
       return;
     }
 
-    if (sendFlow.formData.asset !== "STX") {
-      showMessage({
-        message: `${sendFlow.formData.asset} transfers are not available yet`,
-        type: "warning",
-      });
+    if (sendFlow.formData.asset === "sBTC") {
+      if (!isSbtcAvailable) {
+        showMessage({
+          message: "sBTC transfers are unavailable on this network",
+          type: "danger",
+        });
+        return;
+      }
+
+      if (!preparedSbtcSend) {
+        showMessage({
+          message: "Unable to estimate sBTC fee",
+          description:
+            preparedSbtcSendError instanceof Error
+              ? preparedSbtcSendError.message
+              : "Try again in a few seconds.",
+          type: "danger",
+        });
+        return;
+      }
+
+      try {
+        const amountSats = Math.round(
+          (Number(sendFlow.formData.amount) || 0) * 1e8,
+        );
+        const { accountIndex, address } = await getActiveWalletAccount();
+        setIsSubmittingWallet(true);
+        const txid = await walletKit.makeContractCall(
+          sbtcContractId,
+          "transfer",
+          buildSbtcTransferArgs(
+            amountSats,
+            address,
+            sendFlow.formData.recipient,
+          ),
+          PostConditionMode.Allow,
+          preparedSbtcSend.feeMicroStx,
+          accountIndex,
+        );
+        if (!txid) {
+          throw new Error("Unable to broadcast sBTC transaction.");
+        }
+        invalidateSbtcState();
+        void trackEvent("transfer_completed", {
+          token: "sBTC",
+          method: "wallet",
+        });
+        showMessage({
+          message: "sBTC transaction submitted",
+          description: txid,
+          type: "success",
+        });
+        onClose();
+      } catch (error) {
+        showMessage({
+          message: "sBTC transaction failed",
+          description: error instanceof Error ? error.message : String(error),
+          type: "danger",
+        });
+      } finally {
+        setIsSubmittingWallet(false);
+      }
       return;
     }
 
@@ -316,11 +429,11 @@ export function TransferSheet({
     }
 
     try {
-      setIsSubmittingWallet(true);
       const amountMicroStx = Math.round(
         (Number(sendFlow.formData.amount) || 0) * MICRO_STX,
       );
       const { account, accountIndex } = await getActiveWalletAccount();
+      setIsSubmittingWallet(true);
       const unsignedSerializedTx = await buildUnsignedStxTransfer({
         recipient: sendFlow.formData.recipient,
         amountMicroStx,
@@ -329,7 +442,6 @@ export function TransferSheet({
         memo: sendFlow.formData.memo || undefined,
         feeMicroStx: preparedStxSend.feeMicroStx,
       });
-
       const signedTxHex = await signTransaction(
         unsignedSerializedTx,
         accountIndex,
@@ -376,10 +488,72 @@ export function TransferSheet({
   };
 
   const handleSponsoredSendTransaction = async () => {
-    if (sendFlow.formData.asset !== "STX") return;
-    void trackEvent("transfer_initiated", { token: "STX" });
+    const token = sendFlow.formData.asset;
+    if (token !== "STX" && token !== "sBTC") return;
+    void trackEvent("transfer_initiated", { token });
 
     try {
+      if (token === "sBTC") {
+        if (!isSbtcAvailable) {
+          showMessage({
+            message: "sBTC transfers are unavailable on this network",
+            type: "danger",
+          });
+          return;
+        }
+
+        if (!preparedSbtcSend) {
+          showMessage({
+            message: "Unable to estimate sBTC fee",
+            description:
+              preparedSbtcSendError instanceof Error
+                ? preparedSbtcSendError.message
+                : "Try again in a few seconds.",
+            type: "danger",
+          });
+          return;
+        }
+
+        const amountSats = Math.round(
+          (Number(sendFlow.formData.amount) || 0) * 1e8,
+        );
+        const { account, accountIndex, address } =
+          await getActiveWalletAccount();
+        const unsignedSerializedTx = await buildUnsignedContractCall({
+          contractId: sbtcContractId,
+          functionName: "transfer",
+          functionArgs: buildSbtcTransferArgs(
+            amountSats,
+            address,
+            sendFlow.formData.recipient,
+          ),
+          network: selectedNetwork,
+          publicKey: account.publicKey,
+          feeMicroStx: preparedSbtcSend.feeMicroStx,
+          sponsored: true,
+          postConditionMode: PostConditionMode.Allow,
+        });
+
+        await submitSponsoredTransaction({
+          originAddress: address,
+          accountIndex,
+          unsignedSerializedTx,
+        });
+
+        invalidateSbtcState();
+        void trackEvent("transfer_completed", {
+          token: "sBTC",
+          method: "sponsored",
+        });
+        showMessage({
+          message: "sBTC transfer queued",
+          description: "Your sponsored transfer will be broadcast shortly.",
+          type: "success",
+        });
+        onClose();
+        return;
+      }
+
       const amountMicroStx = Math.round(
         (Number(sendFlow.formData.amount) || 0) * MICRO_STX,
       );
@@ -390,7 +564,7 @@ export function TransferSheet({
         network: selectedNetwork,
         publicKey: account.publicKey,
         memo: sendFlow.formData.memo || undefined,
-        feeMicroStx: 1000,
+        feeMicroStx: preparedStxSend?.feeMicroStx ?? 1000,
         sponsored: true,
       });
 
@@ -534,6 +708,7 @@ export function TransferSheet({
           <AssetSelection
             onSelectAsset={sendFlow.updateAsset}
             onNext={sendFlow.nextStep}
+            assetAvailability={sendAssetAvailability}
           />
         );
       case "amount":
@@ -571,12 +746,15 @@ export function TransferSheet({
             fee={
               sendFlow.formData.asset === "BTC"
                 ? btcFeeDisplay
-                : (preparedStxSend?.feeDisplay ?? "...")
+                : sendFlow.formData.asset === "sBTC"
+                  ? (preparedSbtcSend?.feeDisplay ?? "...")
+                  : (preparedStxSend?.feeDisplay ?? "...")
             }
             feeAsset={sendFlow.formData.asset === "BTC" ? "BTC" : "STX"}
             onConfirm={handleSendTransaction}
             onConfirmSponsored={
-              sendFlow.formData.asset === "STX"
+              sendFlow.formData.asset === "STX" ||
+              sendFlow.formData.asset === "sBTC"
                 ? handleSponsoredSendTransaction
                 : undefined
             }
@@ -592,24 +770,32 @@ export function TransferSheet({
                 ? preparingBtcSend ||
                   !preparedBtcSend ||
                   broadcastBitcoinTx.isPending
-                : preparingStxSend ||
-                  !preparedStxSend ||
-                  isSubmittingWallet ||
-                  isSubmittingSponsored
+                : sendFlow.formData.asset === "sBTC"
+                  ? preparingSbtcSend || !preparedSbtcSend || isSubmittingWallet
+                  : preparingStxSend ||
+                    !preparedStxSend ||
+                    isSubmittingWallet ||
+                    isSubmittingSponsored
             }
             error={
-              preparedBtcSendError instanceof Error
-                ? preparedBtcSendError.message
-                : preparedStxSendError instanceof Error
-                  ? preparedStxSendError.message
-                  : null
+              sendFlow.formData.asset === "sBTC" && !isSbtcAvailable
+                ? "sBTC transfers are unavailable on this network."
+                : preparedBtcSendError instanceof Error
+                  ? preparedBtcSendError.message
+                  : preparedSbtcSendError instanceof Error
+                    ? preparedSbtcSendError.message
+                    : preparedStxSendError instanceof Error
+                      ? preparedStxSendError.message
+                      : null
             }
             info={
               preparingBtcSend
                 ? "Preparing Bitcoin transaction..."
-                : preparingStxSend
-                  ? "Estimating STX fee..."
-                  : null
+                : preparingSbtcSend
+                  ? "Estimating sBTC fee..."
+                  : preparingStxSend
+                    ? "Estimating STX fee..."
+                    : null
             }
             feeRateTier={
               sendFlow.formData.asset === "BTC" ? feeRateTier : undefined

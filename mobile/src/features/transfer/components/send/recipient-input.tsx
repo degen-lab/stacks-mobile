@@ -28,7 +28,12 @@ export function RecipientInput({
   memoLocked = false,
 }: RecipientInputProps) {
   const supportsMemo = asset === "STX";
-  const assetLabel = asset ?? "crypto";
+  const recipientPlaceholder =
+    asset === "sBTC"
+      ? "Enter STX address"
+      : asset
+        ? `Enter ${asset} address`
+        : "Enter crypto address";
 
   return (
     <View className="flex-1 px-5 pb-6">
@@ -38,7 +43,7 @@ export function RecipientInput({
             Recipient Address
           </Text>
           <Input
-            placeholder={`Enter ${assetLabel} address`}
+            placeholder={recipientPlaceholder}
             value={recipient}
             onChangeText={onRecipientChange}
             autoCapitalize="none"

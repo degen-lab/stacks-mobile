@@ -6,48 +6,66 @@ const ASSETS = [
     id: "STX" as const,
     name: "Stacks",
     symbol: "STX",
-    disabled: false,
   },
   {
     id: "BTC" as const,
     name: "Bitcoin",
     symbol: "BTC",
-    disabled: false,
   },
   {
     id: "sBTC" as const,
     name: "sBTC",
     symbol: "sBTC",
-    disabled: true,
   },
 ];
 
+export type AssetAvailability = {
+  enabled?: boolean;
+  disabledLabel?: string;
+};
+
+export type AssetAvailabilityMap = Partial<Record<AppToken, AssetAvailability>>;
+
+const DEFAULT_ASSET_AVAILABILITY: Record<AppToken, AssetAvailability> = {
+  STX: { enabled: true },
+  BTC: { enabled: true },
+  sBTC: { enabled: false, disabledLabel: "Coming soon" },
+};
+
 type SharedAssetSelectionProps = {
   onSelectAsset: (asset: AppToken) => void;
+  assetAvailability?: AssetAvailabilityMap;
 };
 
 export function SharedAssetSelection({
   onSelectAsset,
+  assetAvailability,
 }: SharedAssetSelectionProps) {
   return (
     <View className="gap-3">
-      {ASSETS.map((asset) => (
-        <SelectionCard
-          key={asset.id}
-          icon={<TokenAvatar symbol={asset.symbol} size={32} />}
-          title={asset.name}
-          subtitle={asset.symbol}
-          disabled={asset.disabled}
-          onPress={() => onSelectAsset(asset.id)}
-          rightContent={
-            asset.disabled ? (
-              <Text className="text-xs font-instrument-sans text-secondary">
-                Coming soon
-              </Text>
-            ) : undefined
-          }
-        />
-      ))}
+      {ASSETS.map((asset) => {
+        const availability =
+          assetAvailability?.[asset.id] ?? DEFAULT_ASSET_AVAILABILITY[asset.id];
+        const disabledLabel = availability.disabledLabel;
+
+        return (
+          <SelectionCard
+            key={asset.id}
+            icon={<TokenAvatar symbol={asset.symbol} size={32} />}
+            title={asset.name}
+            subtitle={asset.symbol}
+            disabled={disabled}
+            onPress={() => onSelectAsset(asset.id)}
+            rightContent={
+              disabled && disabledLabel ? (
+                <Text className="text-xs font-instrument-sans text-secondary">
+                  {disabledLabel}
+                </Text>
+              ) : undefined
+            }
+          />
+        );
+      })}
     </View>
   );
 }

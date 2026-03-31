@@ -13,15 +13,26 @@ const mockMutateAsync = jest.fn();
 const mockShowMessage = jest.fn();
 const mockUseSendFlow = jest.fn();
 const mockUsePrepareBtcSend = jest.fn();
+const mockUsePrepareStxSend = jest.fn();
+const mockUsePrepareFtSend = jest.fn();
 const mockUseTransfer = jest.fn();
-const mockSubmitBuiltWalletTransaction = jest.fn();
 const mockSubmitBuiltSponsoredTransaction = jest.fn();
+const mockSignTransaction = jest.fn();
+const mockBuildUnsignedContractCall = jest.fn();
+const mockBuildUnsignedStxTransfer = jest.fn();
+const mockBroadcastTransaction = jest.fn();
+const mockDeserializeTransaction = jest.fn();
+const mockMakeContractCall = jest.fn();
 
 jest.mock("@/hooks/use-sponsored-stacks-transaction", () => ({
   useSponsoredStacksTransaction: () => ({
     submitSponsoredTransaction: mockSubmitBuiltSponsoredTransaction,
     isSubmittingSponsored: false,
   }),
+}));
+
+jest.mock("@/hooks/use-sign-transaction", () => ({
+  useSignTransaction: () => mockSignTransaction,
 }));
 
 jest.mock("@/lib/stacks/active-account", () => ({
@@ -33,21 +44,37 @@ jest.mock("@/lib/stacks/active-account", () => ({
   }),
 }));
 
-jest.mock("@/hooks/use-sign-transaction", () => ({
-  useSignTransaction: () => mockSubmitBuiltWalletTransaction,
+jest.mock("@/lib/stacks/transaction-builder", () => ({
+  buildUnsignedContractCall: (...args: unknown[]) =>
+    mockBuildUnsignedContractCall(...args),
+  buildUnsignedStxTransfer: (...args: unknown[]) =>
+    mockBuildUnsignedStxTransfer(...args),
+}));
+
+jest.mock("@/lib/stacks/wallet", () => ({
+  walletKit: {
+    makeContractCall: (...args: unknown[]) => mockMakeContractCall(...args),
+  },
 }));
 
 jest.mock("@stacks/transactions", () => ({
-  broadcastTransaction: jest.fn().mockResolvedValue({ txid: "stx-txid-abc" }),
-  deserializeTransaction: jest.fn().mockReturnValue({}),
+  noneCV: jest.fn(() => ({ type: "none" })),
+  standardPrincipalCV: jest.fn((value: unknown) => ({
+    type: "principal",
+    value,
+  })),
+  uintCV: jest.fn((value: unknown) => ({ type: "uint", value })),
+  broadcastTransaction: (...args: unknown[]) =>
+    mockBroadcastTransaction(...args),
+  deserializeTransaction: (...args: unknown[]) =>
+    mockDeserializeTransaction(...args),
+  PostConditionMode: {
+    Allow: "allow",
+  },
 }));
 
 jest.mock("../hooks/use-prepare-stx-send", () => ({
-  usePrepareStxSend: () => ({
-    data: { feeMicroStx: 1500, feeDisplay: "0.001500" },
-    isLoading: false,
-    error: null,
-  }),
+  usePrepareStxSend: (...args: unknown[]) => mockUsePrepareStxSend(...args),
 }));
 
 jest.mock("@tanstack/react-query", () => ({
@@ -108,6 +135,18 @@ jest.mock("@/lib/store/settings", () => ({
   useSelectedNetwork: () => ({ selectedNetwork: "testnet" }),
 }));
 
+jest.mock("@/lib/stacks/contracts", () => ({
+  CONTRACTS: {
+    testnet: {
+      sbtc: "ST000000000000000000002AMW42H.sbtc-token",
+    },
+  },
+}));
+
+jest.mock("@/lib/stacks/network", () => ({
+  getHiroApiBase: () => "https://api.testnet.hiro.so",
+}));
+
 jest.mock("../hooks/use-transfer", () => ({
   useTransfer: (...args: unknown[]) => mockUseTransfer(...args),
 }));
@@ -120,15 +159,21 @@ jest.mock("../hooks/use-prepare-btc-send", () => ({
   usePrepareBtcSend: (...args: unknown[]) => mockUsePrepareBtcSend(...args),
 }));
 
+jest.mock("../hooks/use-prepare-ft-send", () => ({
+  usePrepareFtSend: (...args: unknown[]) => mockUsePrepareFtSend(...args),
+}));
+
 jest.mock("../components/send/confirmation", () => ({
   Confirmation: ({
     onConfirm,
+    onConfirmSponsored,
     fee,
     feeAsset,
     info,
     feeRatePerVbyte,
   }: {
     onConfirm: () => void;
+    onConfirmSponsored?: () => void;
     fee: string;
     feeAsset: string;
     info?: string | null;
@@ -142,9 +187,20 @@ jest.mock("../components/send/confirmation", () => ({
         <Text>{feeAsset}</Text>
         {info ? <Text>{info}</Text> : null}
         {feeRatePerVbyte != null ? <Text>{feeRatePerVbyte} sat/vB</Text> : null}
-        <Pressable onPress={onConfirm}>
-          <Text>Confirm transfer</Text>
-        </Pressable>
+        {onConfirmSponsored ? (
+          <>
+            <Pressable onPress={onConfirm}>
+              <Text>Use wallet funds</Text>
+            </Pressable>
+            <Pressable onPress={onConfirmSponsored}>
+              <Text>Watch an ad</Text>
+            </Pressable>
+          </>
+        ) : (
+          <Pressable onPress={onConfirm}>
+            <Text>Confirm transfer</Text>
+          </Pressable>
+        )}
       </View>
     );
   },
@@ -208,13 +264,40 @@ const defaultPreparedBtcSend = {
   error: null,
 };
 
+const defaultPreparedStxSend = {
+  data: {
+    feeMicroStx: 1500,
+    feeDisplay: "0.001500",
+  },
+  isLoading: false,
+  error: null,
+};
+
+const defaultPreparedFtSend = {
+  data: {
+    feeMicroStx: 2500,
+    feeDisplay: "0.002500",
+  },
+  isLoading: false,
+  error: null,
+};
+
 describe("TransferSheet", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockMutateAsync.mockResolvedValue("b".repeat(64));
+    mockUsePrepareStxSend.mockReturnValue(defaultPreparedStxSend);
+    mockSignTransaction.mockResolvedValue("0xsigned-stx");
+    mockBuildUnsignedContractCall.mockResolvedValue("0xunsigned-sbtc");
+    mockBuildUnsignedStxTransfer.mockResolvedValue("0xunsigned-stx");
+    mockBroadcastTransaction.mockResolvedValue({ txid: "stx-txid-abc" });
+    mockDeserializeTransaction.mockReturnValue({});
+    mockSubmitBuiltSponsoredTransaction.mockResolvedValue(123);
+    mockMakeContractCall.mockResolvedValue("sbtc-wallet-txid");
     mockUseTransfer.mockReturnValue(defaultTransferState);
     mockUseSendFlow.mockReturnValue(defaultSendFlow);
     mockUsePrepareBtcSend.mockReturnValue(defaultPreparedBtcSend);
+    mockUsePrepareFtSend.mockReturnValue(defaultPreparedFtSend);
   });
 
   it("broadcasts the prepared BTC transaction from the confirmation step", async () => {
@@ -263,6 +346,101 @@ describe("TransferSheet", () => {
     });
   });
 
+  it("broadcasts an STX wallet transfer using the prepared fee", async () => {
+    const onClose = jest.fn();
+    mockUseSendFlow.mockReturnValue({
+      ...defaultSendFlow,
+      formData: {
+        ...defaultSendFlow.formData,
+        asset: "STX" as const,
+        amount: "1.5",
+        recipient: "ST2J8EVYHP3K9V56GX7C9R9B1JVEFQFX6BSP8X7A1",
+        memo: "hello",
+      },
+    });
+
+    render(<TransferSheet open onClose={onClose} requestVersion={1} />);
+
+    fireEvent.press(screen.getByText("Use wallet funds"));
+
+    await waitFor(() => {
+      expect(mockBuildUnsignedStxTransfer).toHaveBeenCalledWith({
+        recipient: "ST2J8EVYHP3K9V56GX7C9R9B1JVEFQFX6BSP8X7A1",
+        amountMicroStx: 1_500_000,
+        network: "testnet",
+        publicKey: "abc123",
+        memo: "hello",
+        feeMicroStx: 1500,
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockSignTransaction).toHaveBeenCalledWith("0xunsigned-stx", 0);
+    });
+
+    await waitFor(() => {
+      expect(mockBroadcastTransaction).toHaveBeenCalledWith({
+        transaction: {},
+        client: { baseUrl: "https://api.testnet.hiro.so" },
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockShowMessage).toHaveBeenCalledWith({
+        message: "STX transaction submitted",
+        description: "stx-txid-abc",
+        type: "success",
+      });
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the sponsored STX transfer flow working", async () => {
+    const onClose = jest.fn();
+    mockUseSendFlow.mockReturnValue({
+      ...defaultSendFlow,
+      formData: {
+        ...defaultSendFlow.formData,
+        asset: "STX" as const,
+        amount: "2",
+        recipient: "ST2J8EVYHP3K9V56GX7C9R9B1JVEFQFX6BSP8X7A1",
+      },
+    });
+
+    render(<TransferSheet open onClose={onClose} requestVersion={1} />);
+
+    fireEvent.press(screen.getByText("Watch an ad"));
+
+    await waitFor(() => {
+      expect(mockBuildUnsignedStxTransfer).toHaveBeenCalledWith({
+        recipient: "ST2J8EVYHP3K9V56GX7C9R9B1JVEFQFX6BSP8X7A1",
+        amountMicroStx: 2_000_000,
+        network: "testnet",
+        publicKey: "abc123",
+        memo: undefined,
+        feeMicroStx: 1500,
+        sponsored: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockSubmitBuiltSponsoredTransaction).toHaveBeenCalledWith({
+        originAddress: "STX123",
+        accountIndex: 0,
+        unsignedSerializedTx: "0xunsigned-stx",
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockShowMessage).toHaveBeenCalledWith({
+        message: "STX transfer queued",
+        description: "Your sponsored transfer will be broadcast shortly.",
+        type: "success",
+      });
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("shows an error message when broadcast fails", async () => {
     mockMutateAsync.mockRejectedValue(new Error("Network error"));
     const onClose = jest.fn();
@@ -281,23 +459,87 @@ describe("TransferSheet", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("shows a warning when trying to send a non-BTC, non-STX asset", async () => {
+  it("submits an sBTC transfer through walletKit.makeContractCall", async () => {
+    const onClose = jest.fn();
     mockUseSendFlow.mockReturnValue({
       ...defaultSendFlow,
-      formData: { ...defaultSendFlow.formData, asset: "sBTC" as const },
+      formData: {
+        ...defaultSendFlow.formData,
+        asset: "sBTC" as const,
+        recipient: "ST2J8EVYHP3K9V56GX7C9R9B1JVEFQFX6BSP8X7A1",
+      },
     });
 
-    render(<TransferSheet open onClose={jest.fn()} requestVersion={1} />);
+    render(<TransferSheet open onClose={onClose} requestVersion={1} />);
 
-    fireEvent.press(screen.getByText("Confirm transfer"));
+    fireEvent.press(screen.getByText("Use wallet funds"));
+
+    await waitFor(() => {
+      expect(mockMakeContractCall).toHaveBeenCalledWith(
+        "ST000000000000000000002AMW42H.sbtc-token",
+        "transfer",
+        expect.any(Array),
+        "allow",
+        2500,
+        0,
+      );
+    });
 
     await waitFor(() => {
       expect(mockShowMessage).toHaveBeenCalledWith({
-        message: "sBTC transfers are not available yet",
-        type: "warning",
+        message: "sBTC transaction submitted",
+        description: "sbtc-wallet-txid",
+        type: "success",
       });
     });
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the sponsored sBTC transfer flow working", async () => {
+    const onClose = jest.fn();
+    mockUseSendFlow.mockReturnValue({
+      ...defaultSendFlow,
+      formData: {
+        ...defaultSendFlow.formData,
+        asset: "sBTC" as const,
+        amount: "0.25",
+        recipient: "ST2J8EVYHP3K9V56GX7C9R9B1JVEFQFX6BSP8X7A1",
+      },
+    });
+
+    render(<TransferSheet open onClose={onClose} requestVersion={1} />);
+
+    fireEvent.press(screen.getByText("Watch an ad"));
+
+    await waitFor(() => {
+      expect(mockBuildUnsignedContractCall).toHaveBeenCalledWith({
+        contractId: "ST000000000000000000002AMW42H.sbtc-token",
+        functionName: "transfer",
+        functionArgs: expect.any(Array),
+        network: "testnet",
+        publicKey: "abc123",
+        feeMicroStx: 2500,
+        sponsored: true,
+        postConditionMode: "allow",
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockSubmitBuiltSponsoredTransaction).toHaveBeenCalledWith({
+        originAddress: "STX123",
+        accountIndex: 0,
+        unsignedSerializedTx: "0xunsigned-sbtc",
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockShowMessage).toHaveBeenCalledWith({
+        message: "sBTC transfer queued",
+        description: "Your sponsored transfer will be broadcast shortly.",
+        type: "success",
+      });
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("shows an error when transaction could not be prepared", async () => {

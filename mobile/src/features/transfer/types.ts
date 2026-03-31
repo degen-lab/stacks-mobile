@@ -14,7 +14,7 @@ export interface SendFieldLocks {
 }
 
 export interface SendFormData {
-  asset: AppToken | null;
+  asset: AppToken;
   recipient: string;
   memo: string;
   amount: string;
