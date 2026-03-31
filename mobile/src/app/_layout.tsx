@@ -18,6 +18,7 @@ import { TransferSheetProvider } from "@/features/transfer";
 import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
 import { ConsentController } from "@/lib/consent/consent-controller";
 import { fontConfig } from "@/lib/fonts";
+import { BiometricSessionGate } from "@/lib/security/biometric-session-gate";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";
 
 import { TransakProvider } from "@/features/transak/context/transak-context";
@@ -102,6 +103,7 @@ function Providers({ children }: { children: React.ReactNode }) {
                 </SwapSheetProvider>
               </TransferSheetProvider>
               <FlashMessage position="top" />
+              <BiometricSessionGate />
             </BottomSheetModalProvider>
           </APIProvider>
         </ThemeProvider>

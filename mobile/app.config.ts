@@ -65,11 +65,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'expo-splash-screen',
       {
         backgroundColor: '#ffffff',
-        image: './src/assets/images/stacks-mobile-logo.png',
-        imageWidth: 200,
-        resizeMode: 'contain',
         dark: {
           backgroundColor: '#000000',
+        },
+        ios: {
+          image: './src/assets/images/stacks-mobile-logo.png',
+          imageWidth: 200,
+          resizeMode: 'contain',
+          dark: {
+            backgroundColor: '#000000',
+          },
+        },
+        android: {
+          image: './src/assets/images/android-icon-foreground.png',
+          imageWidth: 150,
+          resizeMode: 'contain',
         },
       },
     ],
