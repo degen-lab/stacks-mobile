@@ -4,6 +4,7 @@ import type { ViewStyle } from "react-native";
 
 import { Text, View } from "@/components/ui";
 import { Avatar } from "@/features/header/components/Avatar";
+import { getLeaderboardDisplayName } from "@/features/leaderboard/utils";
 
 export type PodiumPlaceProps = {
   rank: number;
@@ -66,6 +67,7 @@ export function PodiumPlace({
   const gradientColors = getGradientColors(rank);
   const isFirstPlace = rank === 1;
   const useGradient = isFirstPlace && gradientColors !== null;
+  const displayName = getLeaderboardDisplayName(name);
   const borderWidth = 2;
   const borderColors: [string, string] = ["#F7F6F5", "#FF9835"];
   const borderLocations: [number, number] = [0.37, 1];
@@ -103,11 +105,14 @@ export function PodiumPlace({
 
   return (
     <View className="items-center flex-1">
-      <View className="items-center -mb-8 z-10">
-        <Text className="text-sm matter mb-0.5 text-secondary dark:text-white">
-          {name}
+      <View className="items-center -mb-8 z-10 w-full px-1">
+        <Text
+          className="mb-0.5 max-w-[96px] text-center text-sm matter text-secondary dark:text-white"
+          numberOfLines={2}
+        >
+          {displayName}
         </Text>
-        <Text className="text-sm font-instrument-sans mb-2 text-secondary dark:text-white">
+        <Text className="mb-2 text-sm font-instrument-sans text-secondary dark:text-white">
           {score.toLocaleString()}
         </Text>
         <View

@@ -4,6 +4,7 @@ import { Pressable, Text, View, colors } from "@/components/ui";
 import { TrophyIcon } from "@/components/ui/icons/trophy-icon";
 import { Avatar } from "@/features/header/components/Avatar";
 import type { LeaderboardUser } from "@/features/leaderboard/types";
+import { getLeaderboardDisplayName } from "@/features/leaderboard/utils";
 
 export type LeaderboardItemProps = {
   user: LeaderboardUser;
@@ -32,6 +33,8 @@ export function LeaderboardItem({
         : user.tier === "Bronze"
           ? "#B06A3B"
           : null;
+  const displayName = getLeaderboardDisplayName(user.name);
+
   return (
     <Pressable onPress={onMissingSubmission} disabled={!onMissingSubmission}>
       <View
@@ -45,9 +48,12 @@ export function LeaderboardItem({
           </Text>
         </View>
         <Avatar source={user.photoUri || fallbackAvatar} size="xs" />
-        <View className="ml-2 flex-1 flex-row items-center gap-1">
-          <Text className="text-sm font-instrument-sans text-secondary">
-            {user.name}
+        <View className="ml-2 min-w-0 flex-1 flex-row items-center gap-1">
+          <Text
+            className="min-w-0 shrink text-sm font-instrument-sans text-secondary"
+            numberOfLines={1}
+          >
+            {displayName}
           </Text>
           {medalColor ? <TrophyIcon size={14} color={medalColor} /> : null}
         </View>

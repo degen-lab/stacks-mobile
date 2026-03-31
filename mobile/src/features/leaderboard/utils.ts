@@ -3,6 +3,9 @@ import type { LeaderboardUser } from "@/features/leaderboard/types";
 
 type Tier = LeaderboardUser["tier"];
 
+export const getLeaderboardDisplayName = (name: string) =>
+  name.trim().split(/\s+/).slice(0, 2).join(" ");
+
 const buildTierMap = (data: LeaderboardData): Map<number, Tier> => {
   const tierMap = new Map<number, Tier>();
   data.gold.forEach((submission) => tierMap.set(submission.id, "Gold"));
