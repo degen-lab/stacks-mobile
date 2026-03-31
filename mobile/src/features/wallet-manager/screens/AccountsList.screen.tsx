@@ -9,6 +9,7 @@ import {
 } from "@/components/ui";
 import { WarningSheet } from "@/components/warning-sheet";
 import { useDeleteGoogleBackup } from "@/hooks/use-create-wallet";
+import { getBitcoinAddressForAccount } from "@/lib/bitcoin/addresses";
 import { useAuth } from "@/lib/store/auth";
 import {
   useActiveAccountIndex,
@@ -36,6 +37,12 @@ import { ReplaceBackupModal } from "../components/replace-backup-modal";
 import { SaveBackupModal } from "../components/save-backup-modal";
 import { ViewMnemonicModal } from "../components/view-mnemonic-modal";
 
+type AccountListItem = {
+  account: WalletAccount;
+  stxAddress: string;
+  btcAddress: string | null;
+};
+
 export default function AccountsListScreen() {
   const router = useRouter();
   const { bottom: bottomInset } = useSafeAreaInsets();
@@ -43,7 +50,7 @@ export default function AccountsListScreen() {
   const { hasBackup, setHasBackup } = useAuth();
   const { selectedNetwork } = useSelectedNetwork();
   const { activeAccountIndex, setActiveAccountIndex } = useActiveAccountIndex();
-  const [accounts, setAccounts] = useState<WalletAccount[]>([]);
+  const [accounts, setAccounts] = useState<AccountListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
   const scrollViewRef = useRef<NativeScrollView | null>(null);
@@ -67,8 +74,36 @@ export default function AccountsListScreen() {
         if (useLoading) {
           setLoading(true);
         }
-        const walletAccounts = await walletKit.getWalletAccounts();
-        setAccounts(walletAccounts as WalletAccount[]);
+        const walletAccounts = (await walletKit.getWalletAccounts()) as
+          | WalletAccount[]
+          | [];
+        const nextAccounts = await Promise.all(
+          walletAccounts.map(async (account) => {
+            const stxAddress = getAddressForNetwork(account, selectedNetwork);
+            try {
+              const btcAddress = await getBitcoinAddressForAccount(
+                account.index,
+                selectedNetwork,
+              );
+              return {
+                account,
+                stxAddress,
+                btcAddress,
+              };
+            } catch (error) {
+              console.error(
+                `Failed to load bitcoin address for account ${account.index}:`,
+                error,
+              );
+              return {
+                account,
+                stxAddress,
+                btcAddress: null,
+              };
+            }
+          }),
+        );
+        setAccounts(nextAccounts);
       } catch (error) {
         console.error("Failed to load accounts:", error);
         showMessage({
@@ -81,7 +116,7 @@ export default function AccountsListScreen() {
         }
       }
     },
-    [],
+    [selectedNetwork],
   );
 
   const handleWalletReplaced = useCallback(async () => {
@@ -215,16 +250,13 @@ export default function AccountsListScreen() {
                   scrollEventThrottle={16}
                 >
                   <View className="gap-2.5">
-                    {accounts.map((account) => {
-                      const address = getAddressForNetwork(
-                        account,
-                        selectedNetwork,
-                      );
+                    {accounts.map(({ account, stxAddress, btcAddress }) => {
                       return (
                         <AccountCard
                           key={account.index}
                           accountIndex={account.index}
-                          address={address}
+                          stxAddress={stxAddress}
+                          btcAddress={btcAddress}
                           isActive={account.index === activeAccountIndex}
                           onPress={() => handleAccountPress(account.index)}
                           onSetActive={

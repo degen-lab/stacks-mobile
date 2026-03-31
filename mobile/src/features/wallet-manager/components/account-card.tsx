@@ -1,22 +1,18 @@
 import { Button, Pressable, Text, View } from "@/components/ui";
 import { GradientBorderMultiple } from "@/components/ui/gradient-border-multiple";
-import {
-  Check,
-  Wallet,
-  Briefcase,
-  Coins,
-  CreditCard,
-  Gem,
-  Sparkles,
-} from "lucide-react-native";
+import { BtcRouteLogo } from "@/components/ui/icons/btc-route-logo";
+import { StacksRouteLogo } from "@/components/ui/icons/stacks-route-logo";
+import { truncateAddress } from "@/lib/stacks/addresses";
 import { GestureResponderEvent } from "react-native";
 
+import { getAccountIcon } from "./account-icon";
+
 // TODO: Future enhancement - Allow users to select custom icons for their accounts
-const ACCOUNT_ICONS = [Wallet, Briefcase, Coins, CreditCard, Gem, Sparkles];
 
 type AccountCardProps = {
   accountIndex: number;
-  address: string;
+  stxAddress: string;
+  btcAddress?: string | null;
   balance?: string;
   isActive?: boolean;
   onPress: () => void;
@@ -25,17 +21,21 @@ type AccountCardProps = {
 
 export const AccountCard = ({
   accountIndex,
-  address,
+  stxAddress,
+  btcAddress,
   balance,
   isActive = false,
   onPress,
   onSetActive,
 }: AccountCardProps) => {
-  const truncatedAddress = address
-    ? `${address.slice(0, 8)}...${address.slice(-8)}`
+  const truncatedStxAddress = stxAddress
+    ? truncateAddress(stxAddress, 8, 8)
+    : "Loading...";
+  const truncatedBtcAddress = btcAddress
+    ? truncateAddress(btcAddress, 8, 8)
     : "Loading...";
 
-  const IconComponent = ACCOUNT_ICONS[accountIndex % ACCOUNT_ICONS.length];
+  const IconComponent = getAccountIcon(accountIndex);
 
   const activeLayers = [
     {
@@ -87,13 +87,23 @@ export const AccountCard = ({
               <Text className="font-matter text-base text-primary">
                 Account {accountIndex + 1}
               </Text>
-              {isActive && <Check size={14} className="text-orange-600" />}
             </View>
-            <Text className="text-xs font-instrument-sans text-secondary">
-              {truncatedAddress}
-            </Text>
+            <View className="mt-1 gap-1">
+              <View className="flex-row items-center gap-2">
+                <StacksRouteLogo size={14} />
+                <Text className="flex-1 text-xs font-instrument-sans text-secondary">
+                  {truncatedStxAddress}
+                </Text>
+              </View>
+              <View className="flex-row items-center gap-2">
+                <BtcRouteLogo size={14} />
+                <Text className="flex-1 text-xs font-instrument-sans text-secondary">
+                  {truncatedBtcAddress}
+                </Text>
+              </View>
+            </View>
             {balance && (
-              <Text className="mt-0.5 text-xs font-instrument-sans-medium text-secondary">
+              <Text className="mt-1 text-xs font-instrument-sans-medium text-secondary">
                 {balance} STX
               </Text>
             )}

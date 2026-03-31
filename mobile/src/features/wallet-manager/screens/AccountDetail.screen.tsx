@@ -1,4 +1,7 @@
 import { Button, ScreenHeader, ScrollView, Text, View } from "@/components/ui";
+import { BtcRouteLogo } from "@/components/ui/icons/btc-route-logo";
+import { StacksRouteLogo } from "@/components/ui/icons/stacks-route-logo";
+import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { getAddressForNetwork } from "@/lib/stacks/addresses";
 import {
   useActiveAccountIndex,
@@ -6,12 +9,18 @@ import {
 } from "@/lib/store/settings";
 import { walletKit } from "@/lib/stacks/wallet";
 import { copyToClipboard } from "@/lib/clipboard";
+import {
+  BridgeAddressRow,
+  BridgeFieldCard,
+} from "@/features/sbtc-bridge/components/bridge-field-card";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Copy, Wallet, Check, Trash } from "lucide-react-native";
+import { Check, Trash } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { showMessage } from "react-native-flash-message";
 import type { WalletAccount } from "@degenlab/stacks-wallet-kit-core";
+
+import { getAccountIcon } from "../components/account-icon";
 
 export default function AccountDetailScreen() {
   const router = useRouter();
@@ -25,6 +34,13 @@ export default function AccountDetailScreen() {
 
   const accountIndex = parseInt(id ?? "0", 10);
   const isActive = accountIndex === activeAccountIndex;
+  const {
+    stxAddress,
+    btcAddress,
+    isLoading: areAddressesLoading,
+  } = useWalletAddresses({
+    accountIndex,
+  });
 
   const loadAccount = useCallback(async () => {
     try {
@@ -49,13 +65,6 @@ export default function AccountDetailScreen() {
     loadAccount();
   }, [loadAccount]);
 
-  const handleCopyAddress = async () => {
-    if (account) {
-      const address = getAddressForNetwork(account, selectedNetwork);
-      await copyToClipboard(address, "Address copied to clipboard");
-    }
-  };
-
   const handleSetActive = async () => {
     await setActiveAccountIndex(accountIndex);
     showMessage({
@@ -65,8 +74,11 @@ export default function AccountDetailScreen() {
   };
 
   const address = account
-    ? getAddressForNetwork(account, selectedNetwork)
-    : undefined;
+    ? (stxAddress ?? getAddressForNetwork(account, selectedNetwork))
+    : null;
+  const bitcoinAddress =
+    btcAddress ?? (areAddressesLoading ? "Loading..." : null);
+  const AccountIcon = getAccountIcon(accountIndex);
 
   const handleRemoveAccount = useCallback(async () => {
     try {
@@ -149,9 +161,7 @@ export default function AccountDetailScreen() {
 
   return (
     <View className="flex-1 bg-surface-tertiary">
-      <ScreenHeader
-        title={account ? `Account ${account.index + 1}` : "Account Details"}
-      />
+      <ScreenHeader title="Account Details" />
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-base font-instrument-sans text-secondary">
@@ -168,35 +178,48 @@ export default function AccountDetailScreen() {
         <ScrollView className="flex-1 px-4 pt-5">
           <View className="w-full rounded-lg border border-surface-secondary bg-sand-100 p-5">
             <View className="mb-4 items-center">
-              <View className="mb-3 h-16 w-16 items-center justify-center rounded-full bg-sand-200">
-                <Wallet size={32} className="text-primary" />
+              <View
+                className={`mb-3 h-16 w-16 items-center justify-center rounded-full ${
+                  isActive ? "bg-stacks-blood-orange" : "bg-sand-200"
+                }`}
+              >
+                <AccountIcon
+                  size={32}
+                  className={isActive ? "text-white" : "text-primary"}
+                />
               </View>
-              <View className="flex-row items-center gap-2">
-                <Text className="font-matter text-2xl text-primary">
-                  Account {account.index + 1}
-                </Text>
-                {isActive && (
-                  <View className="rounded-full bg-black px-3 py-1">
-                    <Text className="text-xs font-instrument-sans-medium text-white">
-                      Active
-                    </Text>
-                  </View>
-                )}
-              </View>
+              <Text className="font-matter text-2xl text-primary">
+                Account {account.index + 1}
+              </Text>
             </View>
 
-            <View className="mb-4">
-              <Text className="mb-2 text-xs font-instrument-sans-medium uppercase tracking-wide text-secondary">
-                {selectedNetwork === "mainnet" ? "Mainnet" : "Testnet"} Address
-              </Text>
-              <View className="rounded-lg bg-sand-200 p-3">
-                <Text
-                  className="font-mono text-xs text-primary leading-5"
-                  selectable
-                >
-                  {address}
-                </Text>
-              </View>
+            <View className="mb-4 gap-3">
+              {bitcoinAddress ? (
+                <BridgeFieldCard label="Bitcoin" bgColor="white">
+                  <BridgeAddressRow
+                    leftSlot={<BtcRouteLogo size={20} />}
+                    address={bitcoinAddress}
+                    onCopy={
+                      btcAddress
+                        ? () =>
+                            void copyToClipboard(btcAddress, "Address copied")
+                        : undefined
+                    }
+                  />
+                </BridgeFieldCard>
+              ) : null}
+
+              {address ? (
+                <BridgeFieldCard label="Stacks" bgColor="white">
+                  <BridgeAddressRow
+                    leftSlot={<StacksRouteLogo size={20} />}
+                    address={address}
+                    onCopy={() =>
+                      void copyToClipboard(address, "Address copied")
+                    }
+                  />
+                </BridgeFieldCard>
+              ) : null}
             </View>
 
             <View className="gap-3">
@@ -209,13 +232,6 @@ export default function AccountDetailScreen() {
                   onPress={handleSetActive}
                 />
               )}
-              <Button
-                variant="outline"
-                size="lg"
-                label="Copy Address"
-                leftIcon={<Copy size={18} className="text-primary" />}
-                onPress={handleCopyAddress}
-              />
               {totalAccounts > 1 && (
                 <Button
                   variant="destructive"

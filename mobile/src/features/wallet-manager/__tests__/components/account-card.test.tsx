@@ -11,11 +11,21 @@ jest.mock("lucide-react-native", () => ({
   Check: "Check",
 }));
 
+jest.mock("@/components/ui/icons/btc-route-logo", () => ({
+  BtcRouteLogo: "BtcRouteLogo",
+}));
+
+jest.mock("@/components/ui/icons/stacks-route-logo", () => ({
+  StacksRouteLogo: "StacksRouteLogo",
+}));
+
 describe("AccountCard", () => {
-  const mockAddress = "SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7";
+  const mockStxAddress = "SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7";
+  const mockBtcAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
   const defaultProps = {
     accountIndex: 0,
-    address: mockAddress,
+    stxAddress: mockStxAddress,
+    btcAddress: mockBtcAddress,
     isActive: false,
     onPress: jest.fn(),
   };
@@ -31,10 +41,11 @@ describe("AccountCard", () => {
       expect(getByText("Account 1")).toBeTruthy();
     });
 
-    it("renders truncated address", () => {
+    it("renders truncated stx and btc addresses", () => {
       const { getByText } = render(<AccountCard {...defaultProps} />);
 
       expect(getByText("SP2J6ZY4...KNRV9EJ7")).toBeTruthy();
+      expect(getByText("bc1qxy2k...fjhx0wlh")).toBeTruthy();
     });
 
     it("renders balance when provided", () => {
@@ -52,11 +63,11 @@ describe("AccountCard", () => {
     });
 
     it("shows loading when address is empty", () => {
-      const { getByText } = render(
-        <AccountCard {...defaultProps} address="" />,
+      const { getAllByText } = render(
+        <AccountCard {...defaultProps} stxAddress="" btcAddress="" />,
       );
 
-      expect(getByText("Loading...")).toBeTruthy();
+      expect(getAllByText("Loading...")).toHaveLength(2);
     });
   });
 
