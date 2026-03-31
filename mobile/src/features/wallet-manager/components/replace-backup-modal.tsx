@@ -1,4 +1,5 @@
-import { Button, Modal, ScrollView, Text, View } from "@/components/ui";
+import { Button, Modal, Text, View } from "@/components/ui";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { WarningLabel } from "@/components/warning-label";
 import { trackEvent } from "@/lib/analytics";
 import { useActiveAccountIndex } from "@/lib/store/settings";
@@ -398,7 +399,7 @@ export const ReplaceBackupModal = forwardRef<
   return (
     <Modal
       ref={ref}
-      snapPoints={["70%"]}
+      enableDynamicSizing={true}
       title="Replace Cloud Backup"
       headerLeft={
         step === "password" ? (
@@ -419,7 +420,7 @@ export const ReplaceBackupModal = forwardRef<
         }
       }}
     >
-      <ScrollView className="flex-1 px-4 pb-8">
+      <BottomSheetScrollView contentContainerClassName="px-4 pb-8">
         {step === "mnemonic" ? (
           <MnemonicStep
             words={mnemonicWords}
@@ -457,7 +458,7 @@ export const ReplaceBackupModal = forwardRef<
             />
           </View>
         )}
-      </ScrollView>
+      </BottomSheetScrollView>
     </Modal>
   );
 });

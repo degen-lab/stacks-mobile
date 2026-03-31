@@ -1,6 +1,7 @@
-import { Modal, Text, View } from "@/components/ui";
+import { Modal, Text } from "@/components/ui";
 import { walletKit } from "@/lib/stacks/wallet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { forwardRef, useCallback, useState } from "react";
 import { showMessage } from "react-native-flash-message";
 
@@ -72,7 +73,7 @@ export const SaveBackupModal = forwardRef<
   return (
     <Modal
       ref={ref}
-      snapPoints={["70%"]}
+      enableDynamicSizing={true}
       title="Save Cloud Backup"
       onAnimate={(from, to) => {
         if (to !== -1 && from === -1) {
@@ -80,7 +81,7 @@ export const SaveBackupModal = forwardRef<
         }
       }}
     >
-      <View className="flex-1 px-4 pb-8 gap-4">
+      <BottomSheetScrollView contentContainerClassName="px-4 pb-8 gap-4">
         <Text className="text-sm font-instrument-sans text-secondary">
           Set a strong password to encrypt your existing wallet before saving it
           to the cloud. Keep this password safe—you will need it to restore.
@@ -103,7 +104,7 @@ export const SaveBackupModal = forwardRef<
           busyLabel="Saving Backup..."
           onSubmit={handleSaveBackup}
         />
-      </View>
+      </BottomSheetScrollView>
     </Modal>
   );
 });

@@ -12,7 +12,11 @@ type Props = {
 
 export function AnalyticsConsentModal({ modalRef, onAllow, onDecline }: Props) {
   return (
-    <Modal ref={modalRef} snapPoints={["50%"]} enablePanDownToClose={false}>
+    <Modal
+      ref={modalRef}
+      enableDynamicSizing={true}
+      enablePanDownToClose={false}
+    >
       <BottomSheetView>
         <View className="px-6 pb-8 pt-4">
           <View className="items-center">

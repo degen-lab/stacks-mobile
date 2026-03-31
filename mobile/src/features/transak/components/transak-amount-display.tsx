@@ -39,9 +39,6 @@ export function TransakAmountDisplay({
 
   return (
     <View className="mb-6 items-center">
-      <Text className="font-instrument-sans text-secondary text-base mb-2">
-        {action === "buy" ? "I want to buy" : "I want to sell"}
-      </Text>
       <View className="flex-row items-center justify-center h-16">
         {!isSell && (
           <Text className="font-matter text-4xl text-primary mr-1">$</Text>

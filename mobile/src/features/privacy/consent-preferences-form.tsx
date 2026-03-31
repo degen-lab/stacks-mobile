@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   Button,
@@ -82,6 +83,7 @@ export function ConsentPreferencesForm({
   testIDPrefix = "consent",
   withSafeArea = true,
 }: ConsentPreferencesFormProps) {
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const Container = withSafeArea ? SafeAreaView : View;
 
   return (
@@ -94,7 +96,7 @@ export function ConsentPreferencesForm({
         <View>
           <PreferenceRow
             title="App analytics"
-            description="Help us fix issues faster and improve the app."
+            description="Help us fix issues faster and improve the user experience."
             value={analyticsEnabled}
             onChange={onAnalyticsChange}
             testID={`${testIDPrefix}-analytics`}
@@ -109,7 +111,12 @@ export function ConsentPreferencesForm({
           />
         </View>
       </ScrollView>
-      <View className="border-t border-surface-secondary bg-surface-tertiary px-4 pb-6 pt-4">
+      <View
+        className="border-t border-surface-secondary bg-surface-tertiary px-4 pt-4"
+        style={{
+          paddingBottom: withSafeArea ? 24 : Math.max(24, bottomInset + 16),
+        }}
+      >
         <Button
           size="lg"
           variant="primaryNavbar"

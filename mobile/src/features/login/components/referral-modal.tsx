@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
 import { useForm } from "react-hook-form";
@@ -104,11 +105,11 @@ export const ReferralCodeModal = React.forwardRef<
   return (
     <Modal
       ref={ref}
-      snapPoints={["58%"]}
+      enableDynamicSizing={true}
       showHandle={true}
       onDismiss={handleDismiss}
     >
-      <View className="flex-1 px-6 pb-8">
+      <BottomSheetScrollView contentContainerClassName="px-6 pb-8">
         {/* Icon */}
         <View className="items-center mb-12 mt-4">
           <View
@@ -161,7 +162,7 @@ export const ReferralCodeModal = React.forwardRef<
             testID="continue-without-bonus-button"
           />
         </View>
-      </View>
+      </BottomSheetScrollView>
     </Modal>
   );
 });

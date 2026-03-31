@@ -223,7 +223,7 @@ export function TransakDrawer({ drawerRef }: Props) {
         setCheckoutUrl(url);
         setStep("checkout");
         requestAnimationFrame(() => {
-          modalRef.current?.snapToIndex?.(0);
+          modalRef.current?.snapToIndex?.(1);
         });
       },
       onError: (e) => {
@@ -338,6 +338,7 @@ export function TransakDrawer({ drawerRef }: Props) {
     <Modal
       ref={modalRef}
       snapPoints={snapPoints}
+      enableDynamicSizing={true}
       title={
         !isCheckout
           ? action === "buy"
@@ -346,7 +347,7 @@ export function TransakDrawer({ drawerRef }: Props) {
           : undefined
       }
       onDismiss={handleDismiss}
-      backgroundStyle={{ backgroundColor: colors.neutral[50] }}
+      backgroundStyle={{ backgroundColor: colors.white }}
     >
       <TransakDrawerLayout
         isCheckout={isCheckout}

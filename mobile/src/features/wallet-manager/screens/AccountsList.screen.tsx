@@ -26,6 +26,7 @@ import {
   NativeSyntheticEvent,
   ScrollView as NativeScrollView,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { WalletAccount } from "@degenlab/stacks-wallet-kit-core";
 
 import { trackEvent } from "@/lib/analytics";
@@ -36,6 +37,7 @@ import { ViewMnemonicModal } from "../components/view-mnemonic-modal";
 
 export default function AccountsListScreen() {
   const router = useRouter();
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { selectedNetwork } = useSelectedNetwork();
   const { activeAccountIndex, setActiveAccountIndex } = useActiveAccountIndex();
@@ -291,7 +293,10 @@ export default function AccountsListScreen() {
               />
             </View>
 
-            <View className="mt-auto pb-12">
+            <View
+              className="mt-auto"
+              style={{ paddingBottom: Math.max(48, bottomInset + 16) }}
+            >
               <Text className="mb-3 px-1 text-xs font-instrument-sans-medium uppercase tracking-wide text-secondary">
                 Backup & Security
               </Text>
@@ -343,7 +348,6 @@ export default function AccountsListScreen() {
         error={deleteBackupError}
         onConfirm={handleDeleteBackup}
         onCancel={deleteBackupModal.dismiss}
-        snapPoints={["40%"]}
       />
       <ReplaceBackupModal
         ref={replaceBackupModal.ref}

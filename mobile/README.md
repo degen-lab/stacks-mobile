@@ -15,31 +15,48 @@ pnpm install
 
 ## Environment Variables
 
-Environment variables are loaded from `.env.${APP_ENV}`, which defaults to
-`development`. Create the file you need in the project root, for example `.env.development`:
+Environment variables are loaded from `.env.${APP_ENV}` (default: `development`).
+Use `./.env.example` as the source of truth.
+
+Minimal example:
 
 ```env
-# Optional (defaults to development)
 APP_ENV=development
-
-# Optional (mainnet | testnet)
 NETWORK=testnet
 
-# Required: Google Sign-In configuration
+# Google Sign-In (required)
 GOOGLE_WEB_CLIENT_ID=
 GOOGLE_IOS_CLIENT_ID=
 GOOGLE_IOS_URL_SCHEME=
 
-# Required: Backend API URL
+# Backend (required)
 API_URL=https://your-api-url.example
 
-# Required: AdMob configuration
+# AdMob (required except IOS_ADMOB_APP_ID)
 ANDROID_ADMOB_APP_ID=
-IOS_ADMOB_APP_ID=  # Optional
+IOS_ADMOB_APP_ID=
 ANDROID_REWARDS_AD_MOBIN_KEY=
+
+# Transak (required)
+TRANSAK_STAGING_API_KEY=
+
+# Build-time (required)
+EAS_PROJECT_ID=
+
+# sBTC bridge
+SBTC_BRIDGE_MAINNET_EMILY_URL=
+SBTC_BRIDGE_TESTNET_EMILY_URL=
+SBTC_BRIDGE_MAINNET_CONTRACT_DEPLOYER=
+SBTC_BRIDGE_TESTNET_CONTRACT_DEPLOYER=
+
+# Optional sBTC overrides
+SBTC_BRIDGE_RECLAIM_LOCK_TIME=
+SBTC_BRIDGE_POLLING_INTERVAL=
+SBTC_BRIDGE_WITHDRAWAL_FEE_MULTIPLIER=
+SBTC_BRIDGE_WITHDRAW_MIN_AMOUNT_SATS=
 ```
 
-**Note:** All variables marked as "Required" must have non-empty values. The app will fail to start if any required variables are missing.
+`APP_ENV` also controls native plugin config at build time.
 
 To use a different environment file, set `APP_ENV` when running commands:
 
@@ -65,6 +82,15 @@ pnpm ios
 For Android:
 ```bash
 pnpm android
+```
+
+For explicit environments:
+
+```bash
+APP_ENV=development pnpm ios
+APP_ENV=staging pnpm ios
+pnpm android:development
+pnpm android:staging
 ```
 
 ### Expo Go vs Dev Client

@@ -39,24 +39,24 @@ describe("SaveBackupModal", () => {
 
   describe("Rendering", () => {
     it("renders modal with title and description", () => {
-      const { getByText } = render(
+      const { getAllByText, getByText } = render(
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 
-      expect(getByText("Save Cloud Backup")).toBeTruthy();
+      expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
       expect(
         getByText(/Set a strong password to encrypt your existing wallet/),
       ).toBeTruthy();
     });
 
     it("renders password form", () => {
-      const { getByText } = render(
+      const { getAllByText, getByText } = render(
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 
       expect(getByText("Backup Password")).toBeTruthy();
       expect(getByText("Confirm Password")).toBeTruthy();
-      expect(getByText("Save Cloud Backup")).toBeTruthy();
+      expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
     });
   });
 
@@ -75,7 +75,7 @@ describe("SaveBackupModal", () => {
     it("saves backup successfully", async () => {
       (walletKit.backupWallet as jest.Mock).mockResolvedValueOnce(undefined);
 
-      const { getByText } = render(
+      const { getAllByText } = render(
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 
@@ -83,19 +83,19 @@ describe("SaveBackupModal", () => {
       // This is a simplified version showing the test structure
 
       await waitFor(() => {
-        expect(getByText("Save Cloud Backup")).toBeTruthy();
+        expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
       });
     });
 
     it("handles successful backup", async () => {
       (walletKit.backupWallet as jest.Mock).mockResolvedValueOnce(undefined);
 
-      const { getByText } = render(
+      const { getAllByText } = render(
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 
       await waitFor(() => {
-        expect(getByText("Save Cloud Backup")).toBeTruthy();
+        expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
       });
     });
 
@@ -104,12 +104,12 @@ describe("SaveBackupModal", () => {
       (error as any).code = "BACKUP_ALREADY_EXISTS";
       (walletKit.backupWallet as jest.Mock).mockRejectedValueOnce(error);
 
-      const { getByText } = render(
+      const { getAllByText } = render(
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 
       await waitFor(() => {
-        expect(getByText("Save Cloud Backup")).toBeTruthy();
+        expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
       });
     });
 
@@ -117,12 +117,12 @@ describe("SaveBackupModal", () => {
       const error = new Error("Network error");
       (walletKit.backupWallet as jest.Mock).mockRejectedValueOnce(error);
 
-      const { getByText } = render(
+      const { getAllByText } = render(
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 
       await waitFor(() => {
-        expect(getByText("Save Cloud Backup")).toBeTruthy();
+        expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
       });
     });
   });
@@ -133,23 +133,23 @@ describe("SaveBackupModal", () => {
         () => new Promise((resolve) => setTimeout(resolve, 100)),
       );
 
-      const { getByText } = render(
+      const { getAllByText } = render(
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 
       await waitFor(() => {
-        expect(getByText("Save Cloud Backup")).toBeTruthy();
+        expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
       });
     });
   });
 
   describe("State Reset", () => {
     it("resets state when modal is opened", () => {
-      const { getByText } = render(
+      const { getAllByText } = render(
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 
-      expect(getByText("Save Cloud Backup")).toBeTruthy();
+      expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
     });
   });
 });

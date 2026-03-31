@@ -1,5 +1,6 @@
 import { Button, Modal, Text, colors } from "@/components/ui";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import { View } from "react-native";
@@ -17,7 +18,6 @@ type WarningSheetProps = {
   onConfirm: () => void;
   onCancel?: () => void;
   onDismiss?: () => void;
-  snapPoints?: string[];
 };
 
 export const WarningSheet = React.forwardRef<
@@ -36,7 +36,6 @@ export const WarningSheet = React.forwardRef<
       onConfirm,
       onCancel,
       onDismiss,
-      snapPoints = ["40%"],
     }: WarningSheetProps,
     ref: React.ForwardedRef<BottomSheetModal>,
   ) => {
@@ -47,13 +46,13 @@ export const WarningSheet = React.forwardRef<
       <Modal
         ref={ref}
         title={title}
-        snapPoints={snapPoints}
+        enableDynamicSizing={true}
         backgroundStyle={{
           backgroundColor: isDark ? colors.charcoal[850] : colors.white,
         }}
         onDismiss={onDismiss}
       >
-        <View className="px-5 pb-6">
+        <BottomSheetScrollView contentContainerClassName="px-5 pb-6">
           <Text className="text-base font-instrument-sans text-secondary dark:text-neutral-300">
             {description}
           </Text>
@@ -79,7 +78,7 @@ export const WarningSheet = React.forwardRef<
               }}
             />
           </View>
-        </View>
+        </BottomSheetScrollView>
       </Modal>
     );
   },

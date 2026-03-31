@@ -1,5 +1,6 @@
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader, ScrollView, Text, View } from "@/components/ui";
 
@@ -10,6 +11,7 @@ import { SecurityItem } from "../components/security-item";
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const version = Constants.expoConfig?.version ?? "1.0.0";
   const deviceId = Constants.deviceName ?? "Unknown";
 
@@ -18,7 +20,10 @@ export default function SettingsScreen() {
       <ScreenHeader title="Settings" />
       <ScrollView
         className="flex-1"
-        contentContainerClassName="grow justify-between px-4 pt-6 pb-8"
+        contentContainerClassName="grow justify-between px-4 pt-6"
+        contentContainerStyle={{
+          paddingBottom: Math.max(32, bottomInset + 16),
+        }}
       >
         <View className="overflow-hidden rounded-2xl border border-surface-secondary bg-white">
           <Item

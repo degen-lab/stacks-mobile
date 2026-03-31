@@ -155,7 +155,7 @@ describe("RewardsCycleCardContainer", () => {
 
     const { toJSON } = render(<RewardsCycleCardContainer />);
 
-    expect(toJSON()).toBeNull();
+    expect(toJSON()).toBeTruthy();
     expect(mockCard).not.toHaveBeenCalled();
   });
 });

@@ -132,7 +132,7 @@ export function TransakDrawerLayout({
         </View>
         <Numpad value={amount} onChange={onAmountChange} mode="decimal" />
       </View>
-      <View style={{ paddingTop: 8, paddingBottom: bottomInset }}>
+      <View style={{ paddingTop: 16, paddingBottom: bottomInset }}>
         {footer}
       </View>
     </BottomSheetView>

@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { router } from "expo-router";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
-import { Image, Modal, Text, View } from "@/components/ui";
+import { Image, Modal, Text } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 
@@ -21,12 +22,12 @@ export function MintSbtcSheet({ open, onOpenChange }: Props) {
   return (
     <Modal
       ref={ref}
-      snapPoints={["55%"]}
+      enableDynamicSizing={true}
       title="Mint sBTC"
       onDismiss={() => onOpenChange(false)}
       enablePanDownToClose
     >
-      <View className="px-5 pb-6 gap-4">
+      <BottomSheetScrollView contentContainerClassName="px-5 pb-6 gap-4">
         <Image
           source={require("@/assets/images/modals/mint-sbtc.svg")}
           style={{ width: 191, height: 97 }}
@@ -48,7 +49,7 @@ export function MintSbtcSheet({ open, onOpenChange }: Props) {
             router.push("/Earn/sbtc-bridge");
           }}
         />
-      </View>
+      </BottomSheetScrollView>
     </Modal>
   );
 }

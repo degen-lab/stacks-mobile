@@ -40,6 +40,38 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 
+jest.mock("@gorhom/bottom-sheet", () => {
+  const React = require("react");
+  const ReactNative = require("react-native");
+
+  const BottomSheetModal = React.forwardRef(
+    ({ children, handleComponent }, ref) => {
+      React.useImperativeHandle(ref, () => ({
+        present: jest.fn(),
+        dismiss: jest.fn(),
+      }));
+
+      return React.createElement(
+        ReactNative.View,
+        null,
+        handleComponent ? handleComponent() : null,
+        children,
+      );
+    },
+  );
+
+  BottomSheetModal.displayName = "BottomSheetModal";
+
+  return {
+    BottomSheetModal,
+    BottomSheetModalProvider: ({ children }) =>
+      React.createElement(ReactNative.View, null, children),
+    BottomSheetScrollView: ({ children, ...props }) =>
+      React.createElement(ReactNative.ScrollView, props, children),
+    useBottomSheet: () => ({ close: jest.fn() }),
+  };
+});
+
 global.setImmediate ??= (callback, ...args) => setTimeout(callback, 0, ...args);
 global.clearImmediate ??= (handle) => clearTimeout(handle);
 

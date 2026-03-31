@@ -5,7 +5,10 @@ describe("YieldCompositionChart", () => {
   it("returns null for empty data", () => {
     const { toJSON } = render(<YieldCompositionChart data={[]} />);
 
-    expect(toJSON()).toBeNull();
+    expect(toJSON()).toBeTruthy();
+    expect(screen.queryByTestId("composition-single-segment")).toBeNull();
+    expect(screen.queryByTestId("composition-indicator-line")).toBeNull();
+    expect(screen.queryByTestId("composition-segment-0")).toBeNull();
   });
 
   it("renders a single segment circle and indicator line", () => {

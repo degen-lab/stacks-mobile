@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import * as React from "react";
 import { Button, Image, Modal, Text, View } from "@/components/ui";
 
@@ -15,11 +16,11 @@ export const EmptyWalletModal = React.forwardRef<
   return (
     <Modal
       ref={ref}
-      snapPoints={["52%"]}
+      enableDynamicSizing={true}
       showHandle={true}
       onDismiss={onDismiss}
     >
-      <View className="flex-1 px-6 pb-8">
+      <BottomSheetScrollView contentContainerClassName="px-6 pb-8">
         <View className="items-center mb-10 mt-4">
           <Image
             source={require("@/assets/images/empty-wallet.png")}
@@ -49,7 +50,7 @@ export const EmptyWalletModal = React.forwardRef<
             variant="secondaryNavbar"
           />
         </View>
-      </View>
+      </BottomSheetScrollView>
     </Modal>
   );
 });

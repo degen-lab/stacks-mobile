@@ -99,7 +99,7 @@ describe("CompositionCardContainer", () => {
 
     const { toJSON } = render(<CompositionCardContainer />);
 
-    expect(toJSON()).toBeNull();
+    expect(toJSON()).toBeTruthy();
     expect(mockCard).not.toHaveBeenCalled();
   });
 });

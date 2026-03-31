@@ -1,6 +1,7 @@
 import { ChevronLeft } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button, LoadingView, Text, View } from "@/components/ui";
 import { validatePassword } from "@/lib/password-strength";
@@ -60,6 +61,7 @@ export function GooglePasswordScreen({
   loadingSubtitleOverride,
 }: GooglePasswordScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const baseConfig = PASSWORD_CONFIG[mode];
   const currentConfig = {
     title: titleOverride ?? baseConfig.title,
@@ -94,7 +96,10 @@ export function GooglePasswordScreen({
       className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View className="flex-1 bg-surface-tertiary px-8 py-12 dark:bg-neutral-900">
+      <View
+        className="flex-1 bg-surface-tertiary px-8 pt-12 dark:bg-neutral-900"
+        style={{ paddingBottom: Math.max(48, bottomInset + 16) }}
+      >
         {onBack && (
           <Button
             variant="outline"

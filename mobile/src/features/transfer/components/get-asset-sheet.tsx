@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { ArrowDownLeft, CreditCard } from "lucide-react-native";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
-import { Modal, SelectionCard, View, colors } from "@/components/ui";
+import { Modal, SelectionCard, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 
 export type GetAssetSheetAsset = "STX" | "BTC";
@@ -74,12 +75,12 @@ export function GetAssetSheet({
   return (
     <Modal
       ref={ref}
-      snapPoints={["44%"]}
+      enableDynamicSizing={true}
       title={copy.title}
       onDismiss={onClose}
       enablePanDownToClose
     >
-      <View className="gap-3 px-5 pb-6">
+      <BottomSheetScrollView contentContainerClassName="gap-3 px-5 pb-6">
         <SelectionCard
           icon={<CreditCard size={18} color={colors.neutral[800]} />}
           iconCircular
@@ -95,7 +96,7 @@ export function GetAssetSheet({
           subtitle={copy.receiveSubtitle}
           onPress={() => handleAction("receive")}
         />
-      </View>
+      </BottomSheetScrollView>
     </Modal>
   );
 }
