@@ -19,7 +19,6 @@ type FaqHelpModalProps = {
   title: string;
   items: readonly FaqHelpItem[];
   headerIcon?: ReactNode;
-  snapPoints?: string[];
 };
 
 function FaqHelpHeaderTitle({
@@ -39,7 +38,6 @@ export function FaqHelpModal({
   title,
   items,
   headerIcon,
-  snapPoints = ["70%"],
 }: FaqHelpModalProps) {
   const [openItemId, setOpenItemId] = useState<string | null>(
     items[0]?.id ?? null,
@@ -48,7 +46,7 @@ export function FaqHelpModal({
   return (
     <Modal
       ref={modalRef}
-      snapPoints={snapPoints}
+      enableDynamicSizing={true}
       headerTitle={<FaqHelpHeaderTitle title={title} headerIcon={headerIcon} />}
       handleBackgroundColor="#EAE8E6"
       backgroundStyle={{ backgroundColor: "#EAE8E6" }}

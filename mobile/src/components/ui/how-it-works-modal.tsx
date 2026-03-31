@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { RefObject } from "react";
-import { ScrollView, View } from "react-native";
 
 import { Modal } from "./modal";
 import { NumberedSection } from "./numbered-section";
@@ -20,19 +20,20 @@ export function HowItWorksModal({
   sections,
 }: HowItWorksModalProps) {
   return (
-    <Modal ref={modalRef} snapPoints={["50%"]} title={title}>
-      <View className="px-6 pb-6">
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {sections.map((section, index) => (
-            <NumberedSection
-              key={index}
-              index={index + 1}
-              title={section.title}
-              body={section.body}
-            />
-          ))}
-        </ScrollView>
-      </View>
+    <Modal ref={modalRef} enableDynamicSizing={true} title={title}>
+      <BottomSheetScrollView
+        contentContainerClassName="px-6 pb-6"
+        showsVerticalScrollIndicator={false}
+      >
+        {sections.map((section, index) => (
+          <NumberedSection
+            key={index}
+            index={index + 1}
+            title={section.title}
+            body={section.body}
+          />
+        ))}
+      </BottomSheetScrollView>
     </Modal>
   );
 }
