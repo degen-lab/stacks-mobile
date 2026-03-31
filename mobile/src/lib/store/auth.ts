@@ -10,6 +10,7 @@ const USER_DATA_KEY = "auth.userData";
 const BACKEND_TOKEN_KEY = "auth.backendToken";
 const BACKEND_USER_KEY = "auth.backendUser";
 const REFERRAL_USED_KEY = "auth.referralUsed";
+const HAS_BACKUP_KEY = "auth.hasBackup";
 
 export type AuthMethod = "none" | "google";
 
@@ -57,7 +58,12 @@ const useAuthStore = create<AuthState>((set, get) => ({
   backendUserData: null,
   referralUsed: false,
 
-  setHasBackup: (hasBackup: boolean) => set({ hasBackup }),
+  setHasBackup: (hasBackup: boolean) => {
+    set({ hasBackup });
+    void setItem(HAS_BACKUP_KEY, hasBackup).catch((error) => {
+      console.error("Failed to persist backup status:", error);
+    });
+  },
 
   signInWithGoogle: async () => {
     set({ isAuthenticating: true });
@@ -72,6 +78,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         await removeItem(USER_DATA_KEY);
       }
+      await setItem(HAS_BACKUP_KEY, hasBackup);
       set({
         accessToken,
         isAuthenticated: false,
@@ -110,6 +117,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
       removeItem(BACKEND_TOKEN_KEY),
       removeItem(BACKEND_USER_KEY),
       removeItem(REFERRAL_USED_KEY),
+      removeItem(HAS_BACKUP_KEY),
     ]);
 
     const failedCleanup = cleanupSettlements.find(
@@ -130,19 +138,18 @@ const useAuthStore = create<AuthState>((set, get) => ({
         persistedBackendToken,
         persistedBackendUser,
         persistedReferralUsed,
+        persistedHasBackup,
       ] = await Promise.all([
         getItem<string>(ACCESS_TOKEN_KEY),
         getItem<User>(USER_DATA_KEY),
         getItem<string>(BACKEND_TOKEN_KEY),
         getItem<BackendUserData>(BACKEND_USER_KEY),
         getItem<boolean>(REFERRAL_USED_KEY),
+        getItem<boolean>(HAS_BACKUP_KEY),
       ]);
 
       if (persistedToken) {
-        const [accounts, backup] = await Promise.all([
-          walletKit.getWalletAccounts().catch(() => null),
-          walletKit.hasBackup().catch(() => false),
-        ]);
+        const accounts = await walletKit.getWalletAccounts().catch(() => null);
         const hasAccounts = accounts ? accounts.length > 0 : !!persistedUser;
 
         set({
@@ -150,7 +157,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: hasAccounts,
           authMethod: hasAccounts ? "google" : "none",
           hasHydrated: true,
-          hasBackup: backup,
+          hasBackup: persistedHasBackup ?? false,
           userData: persistedUser ?? null,
           backendToken: persistedBackendToken ?? null,
           backendUserData: persistedBackendUser ?? null,
@@ -161,6 +168,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
           removeItem(BACKEND_TOKEN_KEY),
           removeItem(BACKEND_USER_KEY),
           removeItem(REFERRAL_USED_KEY),
+          removeItem(HAS_BACKUP_KEY),
         ]);
 
         // No persisted token, user is not authenticated
@@ -191,6 +199,9 @@ const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   completeGoogleAuth: (hasBackup: boolean) => {
+    void setItem(HAS_BACKUP_KEY, hasBackup).catch((error) => {
+      console.error("Failed to persist backup status:", error);
+    });
     set({
       hasBackup,
       isAuthenticated: true,

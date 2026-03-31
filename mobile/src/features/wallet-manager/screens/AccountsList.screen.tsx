@@ -9,6 +9,7 @@ import {
 } from "@/components/ui";
 import { WarningSheet } from "@/components/warning-sheet";
 import { useDeleteGoogleBackup } from "@/hooks/use-create-wallet";
+import { useAuth } from "@/lib/store/auth";
 import {
   useActiveAccountIndex,
   useSelectedNetwork,
@@ -39,9 +40,9 @@ export default function AccountsListScreen() {
   const router = useRouter();
   const { bottom: bottomInset } = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { hasBackup, setHasBackup } = useAuth();
   const { selectedNetwork } = useSelectedNetwork();
   const { activeAccountIndex, setActiveAccountIndex } = useActiveAccountIndex();
-  const [hasBackup, setHasBackup] = useState(false);
   const [accounts, setAccounts] = useState<WalletAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
@@ -83,15 +84,6 @@ export default function AccountsListScreen() {
     [],
   );
 
-  const refreshBackupStatus = useCallback(async () => {
-    try {
-      const backupStatus = await walletKit.hasBackup();
-      setHasBackup(backupStatus);
-    } catch (error) {
-      console.error("Failed to check backup status:", error);
-    }
-  }, []);
-
   const handleWalletReplaced = useCallback(async () => {
     await setActiveAccountIndex(0);
     await loadAccounts({ useLoading: false });
@@ -109,11 +101,11 @@ export default function AccountsListScreen() {
       });
       setHasBackup(false);
       deleteBackupModal.dismiss();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to delete backup:", error);
       if (
-        error?.message?.includes("not found") ||
-        error?.code === "NOT_FOUND"
+        (error as Error)?.message?.includes("not found") ||
+        (error as { code?: string })?.code === "NOT_FOUND"
       ) {
         showMessage({
           message: "No cloud backup found",
@@ -135,8 +127,7 @@ export default function AccountsListScreen() {
 
   useEffect(() => {
     loadAccounts();
-    refreshBackupStatus();
-  }, [loadAccounts, refreshBackupStatus]);
+  }, [loadAccounts]);
 
   useFocusEffect(
     useCallback(() => {
@@ -145,8 +136,7 @@ export default function AccountsListScreen() {
         return;
       }
       loadAccounts({ useLoading: false });
-      refreshBackupStatus();
-    }, [loadAccounts, refreshBackupStatus]),
+    }, [loadAccounts]),
   );
 
   const scrollToAccountsEnd = useCallback(() => {
@@ -352,16 +342,16 @@ export default function AccountsListScreen() {
       <ReplaceBackupModal
         ref={replaceBackupModal.ref}
         onSuccess={() => {
+          setHasBackup(true);
           replaceBackupModal.dismiss();
-          refreshBackupStatus();
         }}
         onWalletReplaced={handleWalletReplaced}
       />
       <SaveBackupModal
         ref={saveBackupModal.ref}
         onSuccess={() => {
+          setHasBackup(true);
           saveBackupModal.dismiss();
-          refreshBackupStatus();
         }}
       />
     </View>
