@@ -2,8 +2,8 @@ import { useState } from "react";
 
 import { Skeleton, Text, Toggle, View } from "@/components/ui";
 
-import { maskValue } from "@/lib/format/mask-display-value";
-import { formatUsd } from "@/lib/format/currency";
+import formatCurrency from "@/lib/format/currency";
+import { maskDisplayValue } from "@/lib/format/mask-display-value";
 import type { EarnAssetSnapshot, EarnRewardRow } from "../../types";
 import { EarnPortfolioBreakdown } from "./portfolio-breakdown";
 import { EarnRewardsList } from "./rewards-list";
@@ -23,6 +23,26 @@ type EarnOverviewCardProps = {
   onPressRewardRow: (row: EarnRewardRow) => void;
   onPressAsset?: (asset: EarnAssetSnapshot) => void;
 };
+
+function getOverviewTotalDisplay(
+  value: number | null,
+  isBalanceVisible: boolean,
+) {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return { dollars: "—", cents: null };
+  }
+
+  const formatted = formatCurrency(value);
+
+  return {
+    dollars: isBalanceVisible
+      ? formatted.dollars
+      : maskDisplayValue(formatted.dollars),
+    cents: isBalanceVisible
+      ? formatted.cents
+      : maskDisplayValue(formatted.cents),
+  };
+}
 
 function EarnOverviewCardSkeleton() {
   return (
@@ -67,6 +87,10 @@ export function EarnOverviewCard({
   onPressAsset,
 }: EarnOverviewCardProps) {
   const [mode, setMode] = useState<OverviewMode>("portfolio");
+  const totalDisplay = getOverviewTotalDisplay(
+    mode === "portfolio" ? portfolioTotalUsd : rewardsTotalUsd,
+    isBalanceVisible,
+  );
 
   if (isLoading) {
     return <EarnOverviewCardSkeleton />;
@@ -79,14 +103,19 @@ export function EarnOverviewCard({
           <Text className="font-instrument-sans-semibold text-sm text-secondary">
             {mode === "portfolio" ? "Portfolio" : "Rewards"}
           </Text>
-          <Text
+          <View
             testID="earn-overview-total"
-            className="font-matter-sq-mono text-4xl text-primary"
+            className="flex-row items-baseline gap-1"
           >
-            {mode === "portfolio"
-              ? maskValue(formatUsd(portfolioTotalUsd), isBalanceVisible)
-              : maskValue(formatUsd(rewardsTotalUsd), isBalanceVisible)}
-          </Text>
+            <Text className="text-4xl font-instrument-sans-semibold text-primary">
+              {totalDisplay.dollars}
+            </Text>
+            {totalDisplay.cents ? (
+              <Text className="text-2xl font-instrument-sans-semibold text-tertiary">
+                {totalDisplay.cents}
+              </Text>
+            ) : null}
+          </View>
         </View>
 
         <Toggle

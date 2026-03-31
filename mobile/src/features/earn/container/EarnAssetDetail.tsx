@@ -469,7 +469,7 @@ export default function EarnAssetDetail() {
             />
 
             <View className="items-center gap-1.5">
-              <Text className="font-matter-sq-mono text-3xl leading-tight text-primary">
+              <Text className="font-instrument-sans-semibold text-3xl leading-tight text-primary">
                 {amountDisplay}
               </Text>
               {detailDisplay ? (

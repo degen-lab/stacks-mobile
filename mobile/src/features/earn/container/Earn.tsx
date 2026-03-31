@@ -179,7 +179,7 @@ export default function EarnScreen() {
 
   const handlePressAsset = useCallback(
     (asset: (typeof assets)[number]) => {
-      router.push(buildEarnAssetRoute(asset));
+      router.navigate(buildEarnAssetRoute(asset) as never);
     },
     [router],
   );

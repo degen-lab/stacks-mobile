@@ -4,7 +4,7 @@ export function TokensListSkeleton() {
   return (
     <View
       testID="tokens-list-skeleton"
-      className="overflow-hidden rounded-[20px] border border-surface-secondary bg-sand-50"
+      className="overflow-hidden rounded-[20px] border border-surface-secondary bg-sand-50 px-1"
     >
       {[0, 1, 2].map((index) => (
         <View key={index}>

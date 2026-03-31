@@ -6,6 +6,7 @@ import { Header } from "../Header";
 
 const mockUsePathname = jest.fn();
 const mockPush = jest.fn();
+const mockNavigate = jest.fn();
 const mockReplace = jest.fn();
 const mockUseAuth = jest.fn();
 const mockUseUserProfile = jest.fn();
@@ -14,7 +15,11 @@ const mockUseBalanceVisibility = jest.fn();
 
 jest.mock("expo-router", () => ({
   usePathname: () => mockUsePathname(),
-  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useRouter: () => ({
+    push: mockPush,
+    navigate: mockNavigate,
+    replace: mockReplace,
+  }),
 }));
 
 jest.mock("react-native-safe-area-context", () => {
@@ -176,5 +181,27 @@ describe("Header", () => {
     expect(screen.getByText("Balance")).toBeTruthy();
     expect(screen.getByText("***.**")).toBeTruthy();
     expect(screen.getByLabelText("Show balances")).toBeTruthy();
+  });
+
+  it("navigates to asset details from the balance popover without pushing a duplicate stack entry", () => {
+    render(<Header />);
+
+    fireEvent.press(screen.getByLabelText("Open balance details"));
+    fireEvent.press(screen.getByLabelText("Open Stacks details"));
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      pathname: "/Earn/assets/[assetId]",
+      params: {
+        assetId: "stx",
+        assetLabel: "Stacks",
+      },
+    });
+    expect(mockPush).not.toHaveBeenCalledWith({
+      pathname: "/Earn/assets/[assetId]",
+      params: {
+        assetId: "stx",
+        assetLabel: "Stacks",
+      },
+    });
   });
 });

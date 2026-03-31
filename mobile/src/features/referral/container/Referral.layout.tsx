@@ -50,7 +50,7 @@ export default function ReferralLayout({
       <ScrollView className="flex-1 px-4">
         {hasReferralCode && (
           <>
-            <View className="flex-row gap-3 mb-6">
+            <View className="mt-2 flex-row gap-3 mb-6">
               <CardGradientRight
                 value={stats.totalInvites}
                 label="Total Invites"

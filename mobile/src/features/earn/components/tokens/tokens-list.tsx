@@ -28,7 +28,7 @@ export function TokensList({
   return (
     <View
       testID="earn-assets-list"
-      className="overflow-hidden rounded-[20px] border border-surface-secondary bg-sand-50"
+      className="overflow-hidden rounded-[20px] border border-surface-secondary bg-sand-50 px-1"
     >
       {assets.map((asset) => (
         <TokensRow

@@ -63,7 +63,7 @@ export function Header() {
   const handlePressAsset = useCallback(
     (asset: (typeof assets)[number]) => {
       setBalancePopoverVisible(false);
-      router.push(buildEarnAssetRoute(asset));
+      router.navigate(buildEarnAssetRoute(asset) as never);
     },
     [router],
   );
