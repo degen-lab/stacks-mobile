@@ -54,11 +54,15 @@ export function BridgeAmountFieldCard({
           <View className="min-w-0 flex-1 flex-row items-center gap-2">
             {startIcon ? <View>{startIcon}</View> : null}
             <View className="min-w-0 shrink flex-row items-center gap-1">
-              {/* Hidden mirror sizes this container to text width so unit stays adjacent to the number */}
               <View className="relative min-w-4">
+                {/* Hidden mirror sizes this container to text width so unit stays adjacent to the number. */}
                 <Text
-                  className="p-0 font-matter text-xl leading-5 text-transparent"
-                  style={{ includeFontPadding: false, paddingRight: 2 }}
+                  className="p-0 font-matter text-xl leading-5"
+                  style={{
+                    includeFontPadding: false,
+                    paddingRight: 2,
+                    opacity: 0,
+                  }}
                   aria-hidden
                 >
                   {hasValue ? value : placeholder}
