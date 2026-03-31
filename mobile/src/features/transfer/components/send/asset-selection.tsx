@@ -1,13 +1,21 @@
 import { View } from "@/components/ui";
-import { SharedAssetSelection } from "../shared-asset-selection";
+import {
+  SharedAssetSelection,
+  type AssetAvailabilityMap,
+} from "../shared-asset-selection";
 import type { AppToken } from "@/lib/assets/tokens";
 
 type AssetSelectionProps = {
   onSelectAsset: (asset: AppToken) => void;
   onNext: () => void;
+  assetAvailability?: AssetAvailabilityMap;
 };
 
-export function AssetSelection({ onSelectAsset, onNext }: AssetSelectionProps) {
+export function AssetSelection({
+  onSelectAsset,
+  onNext,
+  assetAvailability,
+}: AssetSelectionProps) {
   const handleSelectAsset = (asset: AppToken) => {
     onSelectAsset(asset);
     setTimeout(() => {
@@ -17,7 +25,10 @@ export function AssetSelection({ onSelectAsset, onNext }: AssetSelectionProps) {
 
   return (
     <View className="px-5 pb-6">
-      <SharedAssetSelection onSelectAsset={handleSelectAsset} />
+      <SharedAssetSelection
+        onSelectAsset={handleSelectAsset}
+        assetAvailability={assetAvailability}
+      />
     </View>
   );
 }

@@ -85,12 +85,10 @@ export function TransakDrawerLayout({
     icon,
     disabled,
   }));
+
   if (isCheckout) {
     return (
-      <View
-        className="flex-1 bg-[#f2f2f2]"
-        style={{ paddingBottom: bottomInset }}
-      >
+      <View className="flex-1" style={{ paddingBottom: bottomInset }}>
         <View className="flex-1">
           {checkoutUrl ? (
             <TransakWebView

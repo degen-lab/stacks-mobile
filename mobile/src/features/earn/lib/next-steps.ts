@@ -19,6 +19,7 @@ function selectCandidates(args: BuildEarnNextStepCardsArgs) {
   const preview = sortByPriority(
     buildPreviewCandidates({
       sbtcBalance: args.sbtcBalance,
+      minSbtcBalanceForEnrollment: args.minSbtcBalanceForEnrollment,
       totalStxBalance: args.totalStxBalance,
       lockedStxBalance: args.lockedStxBalance,
     }),

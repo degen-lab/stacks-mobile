@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { useActiveAccountIndex } from "@/lib/store/settings";
+import { useSbtcInWallet } from "@/api/dual-stacking/contract";
 import { useBtcBalance } from "@/hooks/use-btc-balance";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
+import { fromSatsToBtc } from "@/lib/format/currency";
+import { principalArgFromAddress } from "@/lib/stacks/addresses";
+import { useActiveAccountIndex } from "@/lib/store/settings";
 import type { TransferMode } from "../types";
+import { AppToken } from "@/lib/assets/tokens";
 
 export function useTransfer() {
   const [mode, setMode] = useState<TransferMode>("select");
@@ -16,6 +20,9 @@ export function useTransfer() {
     useStxBalance(activeAccountIndex);
   const { balance: btcBalance, isLoading: btcBalanceIsLoading } =
     useBtcBalance(activeAccountIndex);
+  const { data: sbtcBalanceSats, isLoading: sbtcBalanceIsLoading } =
+    useSbtcInWallet(principalArgFromAddress(stxAddress));
+  const sbtcBalance = fromSatsToBtc(sbtcBalanceSats ?? 0n);
 
   const getCurrentBalance = (asset: AppToken | null) => {
     switch (asset) {
@@ -24,7 +31,7 @@ export function useTransfer() {
       case "BTC":
         return btcBalance;
       case "sBTC":
-        return 0; // TODO: Implement sBTC balance
+        return sbtcBalance;
       default:
         return 0;
     }
@@ -37,7 +44,7 @@ export function useTransfer() {
       case "BTC":
         return btcBalanceIsLoading;
       case "sBTC":
-        return false; // TODO: Implement sBTC balance loading
+        return sbtcBalanceIsLoading;
       default:
         return false;
     }

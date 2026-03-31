@@ -43,13 +43,18 @@ export function Confirmation({
   feeRatePerVbyte,
   onFeeRateTierChange,
 }: ConfirmationProps) {
+  const resolvedFeeAsset = feeAsset ?? formData.asset;
+  const showsTotal = resolvedFeeAsset === formData.asset;
+  const totalAmount = (Number(formData.amount) || 0) + (Number(fee) || 0);
+  const showsFundingActions = typeof onConfirmSponsored === "function";
+
   return (
     <View className="flex-1 px-5 pb-6">
       <View className="rounded-2xl p-6 border-2 border-surface-tertiary bg-surface-primary items-center mb-4">
         <View className="mb-3">
           <TokenAvatar symbol={formData.asset} size={40} />
         </View>
-        <Text className="text-3xl font-matter font-bold text-primary">
+        <Text className="text-3xl font-instrument-sans-medium text-primary">
           {formData.amount} {formData.asset}
         </Text>
       </View>
@@ -111,15 +116,16 @@ export function Confirmation({
 
         <View className="h-px bg-surface-tertiary my-1" />
 
-        <View className="flex-row justify-between">
-          <Text className="text-sm font-instrument-sans-medium text-primary">
-            Total
-          </Text>
-          <Text className="text-sm font-instrument-sans-medium text-primary">
-            {(Number(formData.amount) || 0) + (Number(fee) || 0)}{" "}
-            {formData.asset}
-          </Text>
-        </View>
+        {showsTotal ? (
+          <View className="flex-row justify-between">
+            <Text className="text-sm font-instrument-sans-medium text-primary">
+              Total
+            </Text>
+            <Text className="text-sm font-instrument-sans-medium text-primary">
+              {totalAmount} {formData.asset}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       {error ? (
@@ -132,7 +138,7 @@ export function Confirmation({
         </Text>
       ) : null}
 
-      {formData.asset === "STX" ? (
+      {showsFundingActions ? (
         <TransactionFundingActions
           sponsoredLabel="Watch an ad"
           walletLabel="Use wallet funds"

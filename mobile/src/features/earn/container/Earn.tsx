@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 
+import { useMinHoldForEnrollment } from "@/api/dual-stacking/contract";
 import { useDualStackingStats } from "@/api/dual-stacking/use-dual-stacking-stats";
 import { useCurrentTournamentSubmissions } from "@/api/game/tournament";
 import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
@@ -17,6 +18,7 @@ import { useUserStackingData } from "@/api/stacking";
 import { usePoxData } from "@/api/stacks/use-stacks-api";
 import { useUserProfile } from "@/api/user";
 import { useTimeTillRewards } from "@/features/stacking/hooks/use-cycle-time";
+import { fromSatsToBtc } from "@/lib/format/currency";
 import { buildEarnAssetRoute } from "../lib/asset-route";
 import { buildEarnNextStepCards } from "../lib/next-steps";
 import {
@@ -37,6 +39,8 @@ const EARN_NEXT_STEP_ROUTES = {
   "dual-stacking": "/Earn/dual-stacking",
 } as const;
 
+const FALLBACK_MIN_SBTC_ENROLLMENT_SATS = 10_000;
+
 export default function EarnScreen() {
   const router = useRouter();
   const { openTransak } = useTransak();
@@ -53,6 +57,10 @@ export default function EarnScreen() {
     enrolledNextCycle,
     isLoading: enrollmentLoading,
   } = useEnrollmentStatus();
+  const {
+    data: minSbtcEnrollmentAmountSats,
+    isLoading: isMinSbtcEnrollmentAmountLoading,
+  } = useMinHoldForEnrollment();
   const { stxAddress } = useWalletAddresses();
   const { dualStackingDataLoading } = useDualStackingDataWithLatestCycle();
   const latestPricesQuery = useCoinPricesForYield();
@@ -116,6 +124,11 @@ export default function EarnScreen() {
       buildEarnNextStepCards({
         btcBalance: portfolio.btcBalance,
         sbtcBalance: portfolio.sbtcBalance + portfolio.sbtcDefiBalance,
+        minSbtcBalanceForEnrollment: fromSatsToBtc(
+          Number(
+            minSbtcEnrollmentAmountSats ?? FALLBACK_MIN_SBTC_ENROLLMENT_SATS,
+          ),
+        ),
         totalStxBalance: portfolio.stxBalance,
         availableStxBalance: portfolio.stxAvailableBalance,
         lockedStxBalance: portfolio.stxLockedBalance,
@@ -127,6 +140,7 @@ export default function EarnScreen() {
     [
       enrolledCurrentCycle,
       enrolledNextCycle,
+      minSbtcEnrollmentAmountSats,
       portfolio.btcBalance,
       portfolio.sbtcBalance,
       portfolio.sbtcDefiBalance,
@@ -144,6 +158,7 @@ export default function EarnScreen() {
     dualStackingDataLoading ||
     latestPricesQuery.isLoading ||
     isDualStackingStatsLoading ||
+    isMinSbtcEnrollmentAmountLoading ||
     isLoadingPox ||
     enrollmentLoading;
 

@@ -56,6 +56,7 @@ export function TransakDrawer({ drawerRef }: Props) {
   const [action, setAction] = useState<"buy" | "sell">("buy");
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [step, setStep] = useState<"form" | "checkout">("form");
+  const [isWidgetInitialized, setIsWidgetInitialized] = useState(false);
   const { activeAccountIndex } = useActiveAccountIndex();
   const { countryCode } = useI18nSettings();
   const { openTransfer } = useTransferSheet();
@@ -186,6 +187,7 @@ export function TransakDrawer({ drawerRef }: Props) {
       setAction(defaultAction);
       setAmount("");
       setCheckoutUrl(null);
+      setIsWidgetInitialized(false);
       setStep("form");
     },
     [],
@@ -204,6 +206,7 @@ export function TransakDrawer({ drawerRef }: Props) {
   const handleContinue = useCallback(() => {
     if (!amount) return;
     const isSellFlow = requestedActionRef.current === "sell";
+    setIsWidgetInitialized(false);
     const payload = {
       fiatAmount: isSellFlow ? undefined : numericAmount,
       cryptoAmount: isSellFlow ? numericAmount : undefined,
@@ -248,6 +251,7 @@ export function TransakDrawer({ drawerRef }: Props) {
   const handleCheckoutClose = useCallback(() => {
     setStep("form");
     setCheckoutUrl(null);
+    setIsWidgetInitialized(false);
     requestAnimationFrame(() => {
       modalRef.current?.snapToIndex?.(0);
     });
@@ -256,11 +260,15 @@ export function TransakDrawer({ drawerRef }: Props) {
   const handleDismiss = useCallback(() => {
     setStep("form");
     setCheckoutUrl(null);
+    setIsWidgetInitialized(false);
   }, []);
 
   const onTransakEvent: OnTransakEvent = useCallback(
     (event, eventData) => {
       switch (event) {
+        case Events.TRANSAK_WIDGET_INITIALISED:
+          setIsWidgetInitialized(true);
+          break;
         case Events.TRANSAK_ORDER_SUCCESSFUL:
           break;
         case Events.TRANSAK_ORDER_FAILED:
@@ -309,6 +317,9 @@ export function TransakDrawer({ drawerRef }: Props) {
   const transakConfig: TransakConfig = checkoutUrl
     ? { widgetUrl: checkoutUrl }
     : ({} as TransakConfig);
+  const backgroundColor = isWidgetInitialized
+    ? colors.white
+    : colors.neutral[50];
 
   const continueButton = (
     <View className="px-5 pb-4 pt-2">
@@ -347,7 +358,7 @@ export function TransakDrawer({ drawerRef }: Props) {
           : undefined
       }
       onDismiss={handleDismiss}
-      backgroundStyle={{ backgroundColor: colors.white }}
+      backgroundStyle={{ backgroundColor }}
     >
       <TransakDrawerLayout
         isCheckout={isCheckout}

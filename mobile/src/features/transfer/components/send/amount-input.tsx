@@ -35,7 +35,7 @@ export function AmountInput({
   return (
     <View className="flex-1 px-5 pb-6">
       <View className="items-center mb-6">
-        <Text className="text-4xl font-matter font-bold text-primary">
+        <Text className="text-4xl font-instrument-sans-medium text-primary">
           {amount || "0"}
         </Text>
         <Text className="text-sm font-instrument-sans text-secondary mt-2">
