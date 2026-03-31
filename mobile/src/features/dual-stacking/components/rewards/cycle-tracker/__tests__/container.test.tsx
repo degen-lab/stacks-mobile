@@ -95,11 +95,10 @@ describe("RewardsCycleCardContainer", () => {
       isError: false,
     });
     jest.mocked(useCoinPricesForYield).mockReturnValue({
-      raw: {
-        latest_prices: {
-          btc_price: "90000",
-          stx_price: "1.25",
-        },
+      data: {
+        btc_price: 90_000,
+        stx_price: 1.25,
+        stacking_apr: 8.5,
       },
       isLoading: false,
       isError: false,
@@ -148,7 +147,7 @@ describe("RewardsCycleCardContainer", () => {
       isError: false,
     });
     jest.mocked(useCoinPricesForYield).mockReturnValue({
-      raw: undefined,
+      data: undefined,
       isLoading: false,
       isError: false,
     });

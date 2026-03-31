@@ -1,5 +1,7 @@
 import { createQuery } from "react-query-kit";
 
+import { ONE_MINUTE_MS } from "@/api/common/query-constants";
+
 type StacksPriceResponse = {
   blockstack?: {
     usd?: number;
@@ -29,4 +31,7 @@ export const useStacksPrice = createQuery<Response, Variables>({
       change24h: data.blockstack?.usd_24h_change ?? null,
     };
   },
+  staleTime: ONE_MINUTE_MS,
+  refetchOnWindowFocus: false,
+  retry: false,
 });

@@ -1,6 +1,7 @@
 import type { AxiosError } from "axios";
 import { createQuery } from "react-query-kit";
 
+import { ONE_MINUTE_MS } from "@/api/common/query-constants";
 import { coinPricesClient } from "../common/backend-client";
 import type { CoinPricesResponse } from "./types";
 
@@ -24,4 +25,7 @@ export const useCoinPrices = createQuery<Response, Variables, AxiosError>({
     );
     return data;
   },
+  staleTime: ONE_MINUTE_MS,
+  refetchOnWindowFocus: false,
+  retry: false,
 });

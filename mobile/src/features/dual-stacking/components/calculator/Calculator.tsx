@@ -43,8 +43,7 @@ export default function Calculator() {
 
   const { enrolledNextCycle } = useEnrollmentStatus();
   const { baseAPR, maxAPR } = useAprConstants();
-  const { raw: coinPricesApiResponse, data: coinPricesNormalized } =
-    useCoinPricesForYield();
+  const { data: coinPricesNormalized } = useCoinPricesForYield();
   const { data: sbtcBalanceSats, isLoading: isSbtcLoading } =
     useSbtcInWallet(principalArg);
   const { data: stxStackedUstx, isLoading: isStxLoading } =
@@ -56,16 +55,8 @@ export default function Calculator() {
   const [stxInput, setStxInput] = useState("0");
   const [userHasEditedStx, setUserHasEditedStx] = useState(false);
 
-  const latestBtcUsdPrice = Number(
-    coinPricesApiResponse?.latest_prices?.btc_price ??
-      coinPricesNormalized?.btc_price ??
-      0,
-  );
-  const latestStxUsdPrice = Number(
-    coinPricesApiResponse?.latest_prices?.stx_price ??
-      coinPricesNormalized?.stx_price ??
-      0,
-  );
+  const latestBtcUsdPrice = Number(coinPricesNormalized?.btc_price ?? 0);
+  const latestStxUsdPrice = Number(coinPricesNormalized?.stx_price ?? 0);
 
   useEffect(() => {
     balancesHydrated.current = false;

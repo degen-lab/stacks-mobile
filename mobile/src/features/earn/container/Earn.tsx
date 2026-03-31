@@ -5,7 +5,6 @@ import { useMinHoldForEnrollment } from "@/api/dual-stacking/contract";
 import { useDualStackingStats } from "@/api/dual-stacking/use-dual-stacking-stats";
 import { useCurrentTournamentSubmissions } from "@/api/game/tournament";
 import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
-import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/use-coin-prices-for-yield";
 import { useDualStackingDataWithLatestCycle } from "@/features/dual-stacking/hooks/use-dual-stacking-data";
 import { useTransferSheet } from "@/features/transfer";
 import { useTransak } from "@/features/transak/context/transak-context";
@@ -63,7 +62,6 @@ export default function EarnScreen() {
   } = useMinHoldForEnrollment();
   const { stxAddress } = useWalletAddresses();
   const { dualStackingDataLoading } = useDualStackingDataWithLatestCycle();
-  const latestPricesQuery = useCoinPricesForYield();
   const dualStackingStatsQuery = useDualStackingStats({
     variables: { address: stxAddress ?? "" },
     enabled: !!stxAddress,
@@ -90,16 +88,17 @@ export default function EarnScreen() {
       ?.length ?? 0) > 0;
 
   const assets = portfolio.assets;
+  const isPortfolioInitialLoading =
+    portfolio.isBalanceLoading && assets.length === 0;
 
   const rewardsSummary = useMemo(
     () =>
       buildEarnRewardsSummary({
         stats: dualStackingStatsQuery.data,
         stackingRows: userStackingData,
-        currentBtcPriceUsd:
-          latestPricesQuery.data?.btc_price ?? portfolio.btcPriceUsd ?? null,
+        currentBtcPriceUsd: portfolio.btcPriceUsd ?? null,
         currentStxPriceUsd: portfolio.stxPriceUsd ?? null,
-        currentStackingApr: latestPricesQuery.data?.stacking_apr ?? null,
+        currentStackingApr: null,
         isEnrolledCurrentCycle: enrolledCurrentCycle,
         isEnrolledNextCycle: enrolledNextCycle,
         lockedStxBalance: portfolio.stxLockedBalance,
@@ -110,11 +109,9 @@ export default function EarnScreen() {
       enrolledCurrentCycle,
       hasActiveGameSubmission,
       enrolledNextCycle,
-      latestPricesQuery.data?.btc_price,
-      latestPricesQuery.data?.stacking_apr,
       portfolio.btcPriceUsd,
-      portfolio.stxPriceUsd,
       portfolio.stxLockedBalance,
+      portfolio.stxPriceUsd,
       userStackingData,
     ],
   );
@@ -154,9 +151,7 @@ export default function EarnScreen() {
 
   const isNextStepsLoading =
     portfolio.isBalanceLoading ||
-    portfolio.isPriceLoading ||
     dualStackingDataLoading ||
-    latestPricesQuery.isLoading ||
     isDualStackingStatsLoading ||
     isMinSbtcEnrollmentAmountLoading ||
     isLoadingPox ||
@@ -221,7 +216,7 @@ export default function EarnScreen() {
         rewardsTotalUsd={rewardsSummary.totalRewardsUsd}
         rewardRows={rewardsSummary.rows}
         nextStepCards={nextStepCards}
-        isLoading={portfolio.isLoading}
+        isLoading={isPortfolioInitialLoading}
         isRewardsLoading={isRewardsLoading}
         isNextStepsLoading={isNextStepsLoading}
         isBalanceVisible={isBalanceVisible}

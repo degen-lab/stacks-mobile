@@ -270,6 +270,8 @@ export default function EarnAssetDetail() {
   const { openSwap } = useSwapSheet();
   const portfolio = usePortfolioBalance();
   const selectedAssetId = getRouteParam(assetId) ?? "";
+  const isPortfolioInitialLoading =
+    portfolio.isBalanceLoading && portfolio.assets.length === 0;
 
   const asset = useMemo(
     () =>
@@ -364,7 +366,7 @@ export default function EarnAssetDetail() {
     });
   }, [openSwap, resolvedAsset?.swapTokenId]);
 
-  if (!resolvedAsset && portfolio.isLoading) {
+  if (!resolvedAsset && isPortfolioInitialLoading) {
     return (
       <SafeAreaView className="flex-1 bg-surface-tertiary" edges={[]}>
         <ScrollView

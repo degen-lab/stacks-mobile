@@ -44,6 +44,8 @@ export function Header() {
   );
 
   const assets = portfolio.assets;
+  const isPortfolioInitialLoading =
+    portfolio.isBalanceLoading && assets.length === 0;
 
   const handlePressSettings = useCallback(() => {
     setProfilePopoverVisible(false);
@@ -79,7 +81,7 @@ export function Header() {
       value: isBalanceVisible
         ? formattedBalance
         : maskDisplayValue(formattedBalance),
-      loading: portfolio.isLoading,
+      loading: isPortfolioInitialLoading,
       isBalanceVisible,
       onPress: () => setBalancePopoverVisible(true),
       onToggleVisibility: () => {
@@ -90,7 +92,7 @@ export function Header() {
   }, [
     isBalanceVisible,
     isEarnScreen,
-    portfolio.isLoading,
+    isPortfolioInitialLoading,
     portfolio.usdBalanceOrNull,
     toggleBalanceVisibility,
   ]);
@@ -140,7 +142,7 @@ export function Header() {
         onClose={() => setBalancePopoverVisible(false)}
         totalBalanceUsd={portfolio.usdBalanceOrNull}
         assets={assets}
-        loading={portfolio.isLoading}
+        loading={isPortfolioInitialLoading}
         isBalanceVisible={isBalanceVisible}
         onPressAsset={handlePressAsset}
       />

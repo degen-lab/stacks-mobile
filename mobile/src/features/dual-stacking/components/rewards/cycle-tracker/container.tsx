@@ -38,7 +38,7 @@ export function RewardsCycleCardContainer() {
     isError: totalSbtcEnrolledError,
   } = useTotalSbtcEnrolled();
   const {
-    raw: coinPrices,
+    data: coinPrices,
     isLoading: loadingCoinPrices,
     isError: coinPricesError,
   } = useCoinPricesForYield();
@@ -81,7 +81,7 @@ export function RewardsCycleCardContainer() {
     return null;
   }
 
-  const btcPrice = Number(coinPrices?.latest_prices?.btc_price ?? 0);
+  const btcPrice = Number(coinPrices?.btc_price ?? 0);
   const blocksPerSnapshot = Number(currentCycleData.blocks_per_snapshot ?? 0);
   const currentStart = isContractActive
     ? Number(currentCycleData.current_cycle_bitcoin_height ?? 0)

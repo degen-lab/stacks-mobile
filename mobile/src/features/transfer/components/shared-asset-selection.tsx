@@ -47,7 +47,7 @@ export function SharedAssetSelection({
         const availability =
           assetAvailability?.[asset.id] ?? DEFAULT_ASSET_AVAILABILITY[asset.id];
         const disabledLabel = availability.disabledLabel;
-
+        const disabled = availability.enabled === false;
         return (
           <SelectionCard
             key={asset.id}
