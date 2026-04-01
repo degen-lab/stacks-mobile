@@ -69,3 +69,27 @@ export type CreateSponsoredTransactionResponse = {
     expiresAt: string;
   };
 };
+
+export type SponsoredTransactionStatus =
+  | "not_broadcasted"
+  | "processing"
+  | "pending"
+  | "success"
+  | "failed";
+
+export type GetSponsoredTransactionStatusRequest = {
+  requestId: number;
+};
+
+export type GetSponsoredTransactionStatusResponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    requestId: number;
+    status: SponsoredTransactionStatus;
+    txId?: string | null;
+    waitReason?: "previous_origin_pending" | null;
+    blockingRequestId?: number | null;
+    blockingTxId?: string | null;
+  };
+};

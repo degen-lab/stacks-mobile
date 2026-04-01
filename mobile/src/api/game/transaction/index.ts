@@ -3,3 +3,4 @@ export * from "./use-broadcast-transaction";
 export * from "./use-broadcast-sponsored-transaction";
 export * from "./use-create-transaction";
 export * from "./use-create-sponsored-transaction";
+export * from "./use-sponsored-transaction-status";
