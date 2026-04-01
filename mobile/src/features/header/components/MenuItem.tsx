@@ -34,7 +34,7 @@ export function MenuItem({
           className={
             danger
               ? "font-matter text-base text-red-600 dark:text-red-400"
-              : "font-matter text-base text-primary dark:text-white"
+              : "font-matter text-base text-primary"
           }
         >
           {label}
@@ -44,10 +44,7 @@ export function MenuItem({
         {loading ? (
           <ActivityIndicator size="small" className="text-secondary" />
         ) : isPressable && !danger ? (
-          <ChevronRight
-            size={16}
-            className="text-secondary dark:text-sand-400"
-          />
+          <ChevronRight size={16} className="text-secondary" />
         ) : null}
       </View>
     </Pressable>

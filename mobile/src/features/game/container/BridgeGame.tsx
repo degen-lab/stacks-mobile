@@ -8,6 +8,7 @@ import { getItemVariant } from "@/api/user/types";
 import { ItemVariant, TournamentStatusEnum } from "@/lib/enums";
 import { RelativePathString, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useColorScheme } from "nativewind";
 import { BackHandler, StatusBar } from "react-native";
 import { useGameAds } from "../hooks/useGameAds";
 import { useBridgeLayout } from "../hooks/useBridgeLayout";
@@ -19,13 +20,14 @@ import { useSubmissionActions } from "../hooks/useSubmissionActions";
 import { useSubmissionSheet } from "../hooks/useSubmissionSheet";
 
 import { TournamentSubmissionSheet } from "@/components/tournament-submission-sheet";
-import { ActivityIndicator, View } from "@/components/ui";
+import { ActivityIndicator, View, colors } from "@/components/ui";
 import { useStxBalance } from "@/hooks/use-stx-balance";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
 import { useAuth } from "@/lib/store/auth";
 import { useGameStore } from "@/lib/store/game";
 import { useSelectedNetwork } from "@/lib/store/settings";
 import { StacksBridgeEngine } from "../engine";
+import { VISUAL_CONFIG } from "../config";
 import type {
   BridgeOverlayState,
   EngineEvent,
@@ -42,6 +44,12 @@ type BridgeGameProps = {
 
 const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const canvasBgColors = isDark
+    ? [...VISUAL_CONFIG.DARK_SCENE.BACKGROUND_COLORS]
+    : [VISUAL_CONFIG.COLORS.BG_TOP, VISUAL_CONFIG.COLORS.BG_BOT];
+  const canvasBgPositions = undefined;
 
   const { selectedNetwork } = useSelectedNetwork();
   const { balance: walletBalance } = useStxBalance();
@@ -457,12 +465,18 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     isStarting || !assetsLoaded ? "PLAYING" : overlayState;
   return (
     <>
-      <View className="flex-1 bg-[#F7F4F0]" onLayout={handleLayout}>
-        <StatusBar barStyle="dark-content" />
+      <View
+        className="flex-1"
+        style={{ backgroundColor: canvasBgColors[0] }}
+        onLayout={handleLayout}
+      >
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
         <BridgeGameCanvas
           engine={engineRef.current}
           canvasHeight={canvasHeight}
           worldOffsetY={worldOffsetY}
+          bgColors={canvasBgColors}
+          bgPositions={canvasBgPositions}
           isAnimating={overlayState === "PLAYING" || overlayState === "REVIVE"}
           isReviving={overlayState === "REVIVE"}
           perfectCue={perfectCue}
@@ -499,8 +513,18 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
           onActivateRevive={handleActivateRevive}
         />
         {isStarting || !assetsLoaded ? (
-          <View className="absolute inset-0 items-center justify-center bg-white">
-            <ActivityIndicator size="small" color="#D1D5DB" />
+          <View
+            className="absolute inset-0 items-center justify-center"
+            style={{ backgroundColor: canvasBgColors[0] }}
+          >
+            <ActivityIndicator
+              size="small"
+              color={
+                isDark
+                  ? VISUAL_CONFIG.DARK_SCENE.HUD_HELPER
+                  : colors.neutral[300]
+              }
+            />
           </View>
         ) : null}
       </View>
@@ -526,7 +550,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
         onCancel={handleSubmissionCancel}
         onSuccess={handleSubmissionSuccess}
         canSubmit={canSubmitTournament}
-        snapPoints={["60%"]}
         resetKey={submissionOpenCount}
         weeklyContestSubmissionsLeft={weeklyContestSubmissionsLeft}
         raffleSubmissionsLeft={raffleSubmissionsLeft}

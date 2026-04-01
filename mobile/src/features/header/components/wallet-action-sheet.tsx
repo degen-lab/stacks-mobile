@@ -41,6 +41,8 @@ export function WalletActionSheet({
 }: WalletActionSheetProps) {
   const { ref, present, dismiss } = useModal();
   const { colorScheme } = useColorScheme();
+  const modalBackgroundColor =
+    colorScheme === "dark" ? colors.charcoal[850] : colors.white;
 
   useEffect(() => {
     if (open) {
@@ -56,9 +58,9 @@ export function WalletActionSheet({
       ref={ref}
       snapPoints={snapPoints}
       backgroundStyle={{
-        backgroundColor:
-          colorScheme === "dark" ? colors.charcoal[850] : colors.white,
+        backgroundColor: modalBackgroundColor,
       }}
+      handleBackgroundColor={modalBackgroundColor}
       enablePanDownToClose
       onDismiss={() => onOpenChange(false)}
     >

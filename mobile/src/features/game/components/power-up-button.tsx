@@ -1,6 +1,8 @@
 import { colors } from "@/components/ui";
+import { useColorScheme } from "nativewind";
 import type { ComponentType } from "react";
 import { Pressable, Text, View } from "react-native";
+import { VISUAL_CONFIG } from "../config";
 
 type PowerUpButtonProps = {
   icon: ComponentType<{ size?: number; color?: string }>;
@@ -21,7 +23,27 @@ export default function PowerUpButton({
   disabled = false,
   onPress,
 }: PowerUpButtonProps) {
-  const backgroundColor = isActive ? colors.neutral[300] : "#EAE8E6";
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const backgroundColor = isDark
+    ? isActive
+      ? VISUAL_CONFIG.DARK_SCENE.POWER_UP_BG_ACTIVE
+      : VISUAL_CONFIG.DARK_SCENE.POWER_UP_BG
+    : isActive
+      ? colors.neutral[300]
+      : "#EAE8E6";
+  const iconColor = isDark
+    ? VISUAL_CONFIG.DARK_SCENE.HUD_SCORE
+    : colors.neutral[700];
+  const borderColor = isDark
+    ? VISUAL_CONFIG.DARK_SCENE.POWER_UP_BORDER
+    : undefined;
+  const labelColor = isDark
+    ? VISUAL_CONFIG.DARK_SCENE.POWER_UP_LABEL
+    : undefined;
+  const statusColor = isDark
+    ? VISUAL_CONFIG.DARK_SCENE.POWER_UP_STATUS
+    : colors.primary[600];
   const opacity = isUsed && !isActive ? 0.35 : 1;
 
   return (
@@ -36,15 +58,22 @@ export default function PowerUpButton({
         className="size-16 items-center justify-center rounded-full border-2 border-border-secondary"
         style={{
           backgroundColor,
+          borderColor,
           opacity,
         }}
       >
-        <Icon size={28} color={colors.neutral[700]} />
+        <Icon size={28} color={iconColor} />
       </View>
-      <Text className="mt-1 text-xs font-instrument-sans-medium text-neutral-700">
+      <Text
+        className="mt-1 text-xs font-instrument-sans-medium text-secondary"
+        style={labelColor ? { color: labelColor } : undefined}
+      >
         {label}
       </Text>
-      <Text className="text-xs font-instrument-sans-medium text-primary-600">
+      <Text
+        className="text-xs font-instrument-sans-medium"
+        style={{ color: statusColor }}
+      >
         {status}
       </Text>
     </Pressable>

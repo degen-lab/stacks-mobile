@@ -2,6 +2,7 @@ import { Pressable, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "./text";
 import colors from "./colors";
@@ -25,6 +26,8 @@ export function ScreenHeader({
 }: ScreenHeaderProps) {
   const router = useRouter();
   const navigation = useNavigation();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const handleBack = () => {
     if (onBack) {
@@ -50,7 +53,7 @@ export function ScreenHeader({
         >
           <ArrowLeft
             size={20}
-            color={colors.neutral[900]}
+            color={isDark ? colors.neutral[100] : colors.neutral[900]}
             pointerEvents="none"
           />
         </Pressable>

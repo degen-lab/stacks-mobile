@@ -38,7 +38,7 @@ export function CardGradientRight({
 
   return (
     <View
-      className="flex-1 rounded-xl p-4 border border-surface-secondary bg-sand-100 overflow-hidden"
+      className="flex-1 overflow-hidden rounded-xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-secondary"
       testID={testID}
     >
       <LinearGradient

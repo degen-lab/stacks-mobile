@@ -32,14 +32,13 @@ export function AssetSelector({ options, selectedAsset, onSelect }: Props) {
             }}
             className={`flex-1 flex-row items-center justify-center gap-2 rounded-xl border py-3 ${
               isSelected
-                ? "border-primary bg-surface-secondary"
+                ? "border-primary bg-sand-200 dark:bg-surface-secondary"
                 : "border-surface-secondary bg-surface-primary"
             } ${isDisabled ? "opacity-50" : ""}`}
             style={
               isSelected
                 ? {
                     borderColor: colors.primary[500],
-                    backgroundColor: colors.neutral[200],
                   }
                 : {}
             }
@@ -49,7 +48,9 @@ export function AssetSelector({ options, selectedAsset, onSelect }: Props) {
             </View>
             <Text
               className={`font-instrument-sans-medium text-sm ${
-                isSelected ? "text-primary" : "text-secondary"
+                isSelected
+                  ? "text-primary dark:text-primary"
+                  : "text-secondary dark:text-secondary"
               }`}
             >
               {item.label}

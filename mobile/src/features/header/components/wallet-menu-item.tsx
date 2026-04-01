@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { Pressable } from "react-native";
 
 import { Text, View, colors } from "@/components/ui";
@@ -16,13 +17,19 @@ export function WalletMenuItem({
   onPress,
   destructive = false,
 }: WalletMenuItemProps) {
-  const iconColor = destructive ? colors.danger[600] : colors.neutral[700];
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const iconColor = destructive
+    ? colors.danger[600]
+    : isDark
+      ? colors.charcoal[300]
+      : colors.neutral[700];
   const textClassName = destructive ? "text-red-600" : "text-primary";
 
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center justify-between rounded-xl border border-surface-secondary bg-neutral-100 px-4 py-4 active:opacity-80"
+      className="flex-row items-center justify-between rounded-xl border border-surface-secondary bg-neutral-100 px-4 py-4 active:opacity-80 dark:bg-surface-primary"
       accessibilityRole="button"
       accessibilityLabel={label}
     >

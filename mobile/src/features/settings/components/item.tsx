@@ -25,7 +25,7 @@ export const Item = ({
       onPress={onPress}
       pointerEvents={isPressable ? "auto" : "none"}
       className={`flex-1 flex-row items-center justify-between px-4 py-4 ${
-        isPressable ? "active:bg-sand-100" : ""
+        isPressable ? "active:bg-sand-100 dark:active:bg-surface-secondary" : ""
       }`}
     >
       <View className="flex-1 flex-row items-center">

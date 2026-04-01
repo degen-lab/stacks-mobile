@@ -30,7 +30,7 @@ const button = tv({
       },
       outline: {
         container:
-          "bg-sand-100 border border-sand-300 rounded-full active:bg-sand-200",
+          "bg-sand-100 border border-sand-300 rounded-full active:bg-sand-200 dark:bg-surface-primary dark:border-surface-secondary dark:active:bg-surface-secondary",
         label: "text-primary",
         indicator: "text-primary",
       },
@@ -52,7 +52,7 @@ const button = tv({
       },
       iconCircle: {
         container:
-          "my-0 rounded-full border border-surface-secondary bg-sand-100 active:opacity-90",
+          "my-0 rounded-full border border-surface-secondary bg-sand-100 active:opacity-90 dark:bg-surface-primary",
         label: "text-primary font-instrument-sans",
         indicator: "text-primary",
       },
@@ -74,16 +74,16 @@ const button = tv({
         indicator: "text-background",
       },
       gamePrimary: {
-        container: "my-0 h-auto rounded-xl bg-primary py-3",
+        container:
+          "my-0 h-auto rounded-xl bg-primary dark:bg-stacks-blood-orange py-3",
         label: "text-white font-semibold font-instrument-sans",
         indicator: "text-white",
       },
       gameOutline: {
         container:
-          "my-0 h-auto rounded-xl border border-sand-300 bg-transparent py-3 dark:border-neutral-700",
-        label:
-          "text-primary dark:text-white font-semibold font-instrument-sans",
-        indicator: "text-primary dark:text-white",
+          "my-0 h-auto rounded-xl border border-sand-300 bg-transparent py-3 dark:border-surface-secondary dark:bg-surface-primary",
+        label: "text-primary font-semibold font-instrument-sans",
+        indicator: "text-primary",
       },
       iconSquare: {
         container: "my-0 bg-neutral-100 border border-neutral-300 rounded-xl",

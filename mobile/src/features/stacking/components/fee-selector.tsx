@@ -18,7 +18,7 @@ export function FeeSelector({
 }: FeeSelectorProps) {
   if (isLoading) {
     return (
-      <View className="rounded-xl border border-surface-secondary bg-sand-100 px-4 py-3">
+      <View className="rounded-xl border border-surface-secondary bg-sand-100 px-4 py-3 dark:bg-surface-primary">
         <View className="flex-row items-center gap-2">
           <ActivityIndicator size="small" />
           <Text className="text-sm font-instrument-sans text-secondary">

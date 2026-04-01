@@ -7,6 +7,7 @@ import { useGameStore } from "@/lib/store/game";
 import { Asset } from "expo-asset";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ticket } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
 import { Image, Pressable } from "react-native";
@@ -34,6 +35,7 @@ export default function GameCard({
   submissions,
   onPressPlay,
 }: GameCardProps) {
+  const { colorScheme } = useColorScheme();
   const selectedSkinId = useGameStore((state) => state.selectedSkinId);
   const selectedSkin = getSkinById(selectedSkinId);
   const iconSize = 82;
@@ -43,6 +45,8 @@ export default function GameCard({
   const [isIconLoaded, setIsIconLoaded] = useState(
     () => typeof selectedSkin.icon !== "number" || svgUri !== null,
   );
+  const ticketColor =
+    colorScheme === "dark" ? colors.charcoal[300] : colors.secondary;
 
   useEffect(() => {
     if (typeof selectedSkin.icon === "number" && svgUri) {
@@ -119,7 +123,11 @@ export default function GameCard({
   return (
     <GradientBorder
       borderRadius={12}
-      gradient={colors.stacks.gameCardStroke}
+      gradient={
+        colorScheme === "dark"
+          ? ["rgba(255,255,255,0.1)", "rgba(252,100,50,1)"]
+          : colors.stacks.gameCardStroke
+      }
       angle={90}
       hasShadow={false}
     >
@@ -141,7 +149,7 @@ export default function GameCard({
               </Text>
             </View>
             <View className="flex-row items-center gap-2">
-              <Ticket size={14} color="#595754" />
+              <Ticket size={14} color={ticketColor} />
               <Text className="text-sm text-secondary">
                 Submissions: {submissions}
               </Text>

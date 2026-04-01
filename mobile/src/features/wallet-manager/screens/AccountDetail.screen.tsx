@@ -176,11 +176,13 @@ export default function AccountDetailScreen() {
         </View>
       ) : (
         <ScrollView className="flex-1 px-4 pt-5">
-          <View className="w-full rounded-lg border border-surface-secondary bg-sand-100 p-5">
+          <View className="w-full rounded-lg border border-surface-secondary bg-sand-100 dark:bg-surface-primary p-5">
             <View className="mb-4 items-center">
               <View
                 className={`mb-3 h-16 w-16 items-center justify-center rounded-full ${
-                  isActive ? "bg-stacks-blood-orange" : "bg-sand-200"
+                  isActive
+                    ? "bg-stacks-blood-orange"
+                    : "bg-sand-200 dark:bg-surface-secondary"
                 }`}
               >
                 <AccountIcon

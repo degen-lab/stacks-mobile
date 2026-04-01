@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
 import { ChevronDown } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { twMerge } from "tailwind-merge";
+
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 
 import colors from "./colors";
 import { Text } from "./text";
@@ -27,6 +30,7 @@ export function AccordionCard({
   contentClassName = "",
   testID,
 }: AccordionCardProps) {
+  const { colorScheme } = useColorScheme();
   const content =
     children ??
     (typeof body === "string" ? (
@@ -36,11 +40,15 @@ export function AccordionCard({
     ) : (
       body
     ));
+  const chevronColor =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-text-secondary")
+      : colors.secondary;
 
   return (
     <View
       className={twMerge(
-        "rounded-[24px] border border-border-secondary bg-sand-100 px-5 py-5 shadow-elevation-light-l",
+        "rounded-[24px] border border-border-secondary bg-sand-100 px-5 py-5 shadow-elevation-light-l dark:border-border-primary dark:bg-surface-secondary dark:shadow-none",
         className,
       )}
       testID={testID ? `${testID}-root` : undefined}
@@ -57,7 +65,7 @@ export function AccordionCard({
           testID={testID ? `${testID}-chevron` : undefined}
           style={{ transform: [{ rotate: isOpen ? "180deg" : "0deg" }] }}
         >
-          <ChevronDown size={18} color={colors.secondary} />
+          <ChevronDown size={18} color={chevronColor} />
         </View>
       </Pressable>
 

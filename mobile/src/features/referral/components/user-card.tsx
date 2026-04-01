@@ -28,7 +28,7 @@ export default function UserCard({
 
   return (
     <View
-      className="flex-row items-center justify-between bg-sand-100 rounded-xl px-4 py-3 border border-surface-secondary"
+      className="flex-row items-center justify-between rounded-xl border border-surface-secondary bg-sand-100 px-4 py-3 dark:border-border-primary dark:bg-surface-primary"
       testID={baseTestID}
     >
       <View className="flex-row items-center gap-3 flex-1">

@@ -17,6 +17,7 @@ import {
   Text,
   TokenAvatar,
   View,
+  colors,
 } from "@/components/ui";
 import { SwapActionIcon } from "@/components/ui/icons";
 import { useSwapSheet } from "@/features/swaps";
@@ -39,6 +40,7 @@ import { formatUsd } from "@/lib/format/currency";
 import { maskValue } from "@/lib/format/mask-display-value";
 import { formatContractIdentifier } from "@/lib/stacks/addresses";
 import { useBalanceVisibility } from "@/lib/store/balance-visibility";
+import { useColorScheme } from "nativewind";
 
 function getRouteParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -135,21 +137,28 @@ function resolveAssetMetadata(
 
 function ActionButton({
   label,
-  icon,
+  renderIcon,
   disabled,
   onPress,
 }: {
   label: string;
-  icon: React.ReactNode;
+  renderIcon: (color: string) => React.ReactNode;
   disabled: boolean;
   onPress: () => void;
 }) {
+  const { colorScheme } = useColorScheme();
+  const iconColor = disabled
+    ? colors.neutral[600]
+    : colorScheme === "dark"
+      ? colors.charcoal[100]
+      : colors.neutral[950];
+
   return (
     <View className="flex-1 items-center gap-2">
       <Button
         variant="iconCircle"
         size="iconCircle"
-        leftIcon={icon}
+        leftIcon={renderIcon(iconColor)}
         iconOnly
         disabled={disabled}
         onPress={onPress}
@@ -488,25 +497,25 @@ export default function EarnAssetDetail() {
           <View className="mt-5 flex-row gap-3">
             <ActionButton
               label="Send"
-              icon={<ArrowUpRight size={16} color="#0B0A0F" />}
+              renderIcon={(color) => <ArrowUpRight size={16} color={color} />}
               disabled={!actionAvailability.send}
               onPress={handleSend}
             />
             <ActionButton
               label="Receive"
-              icon={<ArrowDownLeft size={16} color="#0B0A0F" />}
+              renderIcon={(color) => <ArrowDownLeft size={16} color={color} />}
               disabled={!actionAvailability.receive}
               onPress={handleReceive}
             />
             <ActionButton
               label="Buy"
-              icon={<CreditCard size={16} color="#0B0A0F" />}
+              renderIcon={(color) => <CreditCard size={16} color={color} />}
               disabled={!actionAvailability.buy}
               onPress={handleBuy}
             />
             <ActionButton
               label="Swap"
-              icon={<SwapActionIcon size={16} color="#0B0A0F" />}
+              renderIcon={(color) => <SwapActionIcon size={16} color={color} />}
               disabled={!actionAvailability.swap}
               onPress={handleSwap}
             />

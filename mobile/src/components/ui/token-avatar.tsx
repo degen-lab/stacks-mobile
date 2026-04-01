@@ -35,7 +35,7 @@ function SymbolFallback({
   return (
     <View
       className={[
-        "items-center justify-center rounded-full border border-surface-secondary bg-white",
+        "items-center justify-center rounded-full border border-surface-secondary bg-white dark:bg-surface-primary",
         className,
       ]
         .filter(Boolean)

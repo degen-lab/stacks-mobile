@@ -45,7 +45,7 @@ export function StackingOptionCard({
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-2xl border p-4 bg-sand-100 ${isActive ? "border-border-secondary" : "border-surface-secondary"}`}
+      className={`rounded-2xl border bg-sand-100 p-4 dark:bg-surface-primary ${isActive ? "border-border-secondary" : "border-surface-secondary"}`}
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-3 flex-1">

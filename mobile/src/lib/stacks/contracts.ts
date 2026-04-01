@@ -12,9 +12,8 @@ export const CONTRACTS = {
     game: "ST13XJ4G348VGDRT5Z791J8GBTB9Z0ESPNCRAPN4E.game-1_0_0",
     pox: "",
     stackingFastPool: "",
-    yield: "ST39770H89J51RQEZPJ4JNTA7QCTXRMVQF60FY2X3.dual-stacking-v2-testing",
-    yieldV2:
-      "ST39770H89J51RQEZPJ4JNTA7QCTXRMVQF60FY2X3.dual-stacking-v2-testing",
+    yield: "",
+    yieldV2: "",
     sbtc: "",
   },
   devnet: {

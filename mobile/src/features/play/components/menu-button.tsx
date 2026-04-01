@@ -1,6 +1,7 @@
 import { colors, Text, View } from "@/components/ui";
 import GradientBorder from "@/components/ui/gradient-border";
 import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
 import type { ComponentType } from "react";
 import { Pressable } from "react-native";
 
@@ -17,10 +18,15 @@ export default function MenuButton({
   icon: Icon,
   onPress,
 }: MenuButtonProps) {
+  const { colorScheme } = useColorScheme();
   return (
     <GradientBorder
       borderRadius={12}
-      gradient={colors.stacks.menuStroke}
+      gradient={
+        colorScheme === "dark"
+          ? ["rgba(255,152,53,0.8)", "rgba(255,255,255,0.1)"]
+          : colors.stacks.menuStroke
+      }
       angle={-90}
       hasShadow={false}
     >

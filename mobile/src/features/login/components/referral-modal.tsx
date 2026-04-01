@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { View } from "react-native";
 import { SvgUri } from "react-native-svg";
 import { z } from "zod";
+import { useColorScheme } from "nativewind";
 import { useSvgAsset } from "@/hooks/use-svg-asset";
 
 import { Button } from "../../../components/ui/button";
@@ -100,7 +101,12 @@ export const ReferralCodeModal = React.forwardRef<
     onDismiss?.();
   };
 
-  const svgUri = useSvgAsset(require("@/assets/images/gift.svg"));
+  const { colorScheme } = useColorScheme();
+  const giftAsset =
+    colorScheme === "dark"
+      ? require("@/assets/images/gift-dark.svg")
+      : require("@/assets/images/gift.svg");
+  const svgUri = useSvgAsset(giftAsset);
 
   return (
     <Modal

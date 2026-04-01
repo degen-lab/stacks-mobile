@@ -1,9 +1,11 @@
 import { ArrowDown, ArrowDownUp } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 
 import { BtcDarkerLogo, Pressable, Text, View, colors } from "@/components/ui";
 import { BtcRouteLogo } from "@/components/ui/icons/btc-route-logo";
 import { SbtcRouteLogo } from "@/components/ui/icons/sbtc-route-logo";
 import { StacksRouteLogo } from "@/components/ui/icons/stacks-route-logo";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 
 function AssetIcons({ asset }: { asset: "btc" | "stacks" }) {
   if (asset === "btc") {
@@ -34,7 +36,7 @@ function AssetCard({
   asset: "btc" | "stacks";
 }) {
   return (
-    <View className="flex-row items-center gap-3 rounded-[12px] bg-surface-primary px-4 py-3.5">
+    <View className="flex-row items-center gap-3 rounded-[12px] border border-surface-secondary bg-surface-primary px-4 py-3.5 dark:border-border-primary dark:bg-surface-secondary">
       <AssetIcons asset={asset} />
       <View>
         <Text className="font-instrument-sans-semibold text-xs text-sand-500">
@@ -60,6 +62,8 @@ export function BridgeRouteCard({
   actionIcon?: "swap" | "down";
   onSwap?: () => void;
 }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const actionButtonStyle = {
     position: "absolute" as const,
     top: "50%" as const,
@@ -68,12 +72,18 @@ export function BridgeRouteCard({
     width: 24,
     height: 24,
     borderRadius: 8,
-    backgroundColor: "#EAE8E6",
+    backgroundColor: isDark
+      ? resolveThemeTokenColor("dark", "--color-surface-secondary")
+      : "#EAE8E6",
     borderWidth: 2,
-    borderColor: "#D5D3D1",
+    borderColor: isDark
+      ? resolveThemeTokenColor("dark", "--color-border-primary")
+      : "#D5D3D1",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   };
+  const frameBorderColor = isDark ? colors.charcoal[500] : "#D5D3D1";
+  const actionIconColor = isDark ? colors.charcoal[300] : colors.secondary;
 
   return (
     <View className="mr-2">
@@ -92,7 +102,7 @@ export function BridgeRouteCard({
           borderBottomWidth: 1,
           borderTopRightRadius: 12,
           borderBottomRightRadius: 12,
-          borderColor: "#D5D3D1",
+          borderColor: frameBorderColor,
         }}
       />
 
@@ -118,11 +128,11 @@ export function BridgeRouteCard({
           accessibilityLabel="Swap direction"
           style={actionButtonStyle}
         >
-          <ArrowDownUp size={12} color={colors.secondary} />
+          <ArrowDownUp size={12} color={actionIconColor} />
         </Pressable>
       ) : (
         <View pointerEvents="none" style={actionButtonStyle}>
-          <ArrowDown size={12} color={colors.secondary} />
+          <ArrowDown size={12} color={actionIconColor} />
         </View>
       )}
     </View>

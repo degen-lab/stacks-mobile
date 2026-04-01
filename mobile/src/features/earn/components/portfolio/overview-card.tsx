@@ -107,11 +107,11 @@ export function EarnOverviewCard({
             testID="earn-overview-total"
             className="flex-row items-baseline gap-1"
           >
-            <Text className="text-4xl font-instrument-sans-semibold text-primary">
+            <Text className="text-4xl font-instrument-sans-semibold text-primary dark:text-primary">
               {totalDisplay.dollars}
             </Text>
             {totalDisplay.cents ? (
-              <Text className="text-2xl font-instrument-sans-semibold text-tertiary">
+              <Text className="text-2xl font-instrument-sans-semibold text-tertiary dark:text-secondary">
                 {totalDisplay.cents}
               </Text>
             ) : null}

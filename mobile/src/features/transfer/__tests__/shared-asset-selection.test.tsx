@@ -59,4 +59,18 @@ describe("SharedAssetSelection", () => {
 
     expect(screen.getByText("Unavailable")).toBeTruthy();
   });
+
+  it("renders balances for assets", () => {
+    render(
+      <SharedAssetSelection
+        onSelectAsset={jest.fn()}
+        assetAvailability={{ sBTC: { enabled: true } }}
+        balances={{ STX: 12.345678, BTC: 0.12345678, sBTC: 1.5 }}
+      />,
+    );
+
+    expect(screen.getByText("Available: 12.345678")).toBeTruthy();
+    expect(screen.getByText("Available: 0.12345678")).toBeTruthy();
+    expect(screen.getByText("Available: 1.5")).toBeTruthy();
+  });
 });

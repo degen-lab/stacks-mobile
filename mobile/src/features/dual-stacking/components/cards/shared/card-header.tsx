@@ -1,8 +1,10 @@
 import { StatusBadge } from "@/components/ui/badge-with-status";
+import { useColorScheme } from "nativewind";
 import { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { InfoTooltipIcon } from "@/components/ui/tooltip-info";
 import { ChevronDown } from "lucide-react-native";
+import colors from "@/components/ui/colors";
 import { Status } from "@/features/dual-stacking/types/status";
 
 interface CardHeaderProps {
@@ -26,6 +28,8 @@ export function CardHeader({
   isCollapsed = false,
   onToggleCollapse,
 }: CardHeaderProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const rotation = isCollapsed ? "0deg" : "180deg";
 
   return (
@@ -63,7 +67,10 @@ export function CardHeader({
               pointerEvents="none"
               style={{ transform: [{ rotate: rotation }] }}
             >
-              <ChevronDown size={16} color="#595754" />
+              <ChevronDown
+                size={16}
+                color={isDark ? colors.charcoal[300] : "#595754"}
+              />
             </View>
           </Pressable>
         )}

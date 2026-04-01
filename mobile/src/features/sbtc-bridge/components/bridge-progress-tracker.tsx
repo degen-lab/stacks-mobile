@@ -1,12 +1,14 @@
 import * as React from "react";
 import { ActivityIndicator, Pressable } from "react-native";
 import { ChevronsUpDown, Loader } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 
 import { Text, View, colors } from "@/components/ui";
 import { ClockCountdown } from "@/components/ui/icons/clock-countdown";
 import { LinkUnderline } from "@/components/ui/link-underline";
 import { StatusCircleIcon } from "@/components/ui/status-circle-icon";
 import { StepNumberCircleIcon } from "@/components/ui/step-number-circle-icon";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 
 import {
   formatBridgeProgressTiming,
@@ -27,6 +29,10 @@ function ProgressMarker({
   stepNumber: number;
   mode: BridgeProgressMode;
 }) {
+  const { colorScheme } = useColorScheme();
+  const terminalColor =
+    colorScheme === "dark" ? colors.charcoal[400] : colors.neutral[400];
+
   if (step.state === "complete") {
     return <StatusCircleIcon size={ICON_SIZE} iconSize={14} />;
   }
@@ -79,7 +85,7 @@ function ProgressMarker({
           justifyContent: "center",
         }}
       >
-        <Loader size={18} color={colors.neutral[400]} />
+        <Loader size={18} color={terminalColor} />
       </View>
     );
   }
@@ -118,9 +124,14 @@ function ProgressStepRow({
   mode: BridgeProgressMode;
   elapsedMs: number;
 }) {
+  const { colorScheme } = useColorScheme();
   const timingText = item.showTiming
     ? formatBridgeProgressTiming(item.step.timing, elapsedMs)
     : null;
+  const connectorColor =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-border-primary")
+      : colors.neutral[200];
 
   return (
     <View style={{ flexDirection: "row", alignItems: "stretch" }}>
@@ -137,7 +148,7 @@ function ProgressStepRow({
               width: 1,
               minHeight: 16,
               marginTop: 4,
-              backgroundColor: colors.neutral[200],
+              backgroundColor: connectorColor,
             }}
           />
         ) : null}
@@ -197,11 +208,27 @@ function CollapseToggle({
   onToggle: () => void;
   showConnector: boolean;
 }) {
+  const { colorScheme } = useColorScheme();
+  const connectorColor =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-border-primary")
+      : colors.neutral[200];
+  const buttonBorderColor =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-border-primary")
+      : colors.neutral[300];
+  const buttonBackgroundColor =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-surface-secondary")
+      : colors.neutral[50];
+  const toggleIconColor =
+    colorScheme === "dark" ? colors.charcoal[300] : colors.neutral[500];
+
   return (
     <View style={{ flexDirection: "row" }}>
       <View style={{ width: ICON_SIZE, alignItems: "center" }}>
         <View
-          style={{ width: 1, height: 10, backgroundColor: colors.neutral[200] }}
+          style={{ width: 1, height: 10, backgroundColor: connectorColor }}
         />
         <Pressable
           testID="bridge-progress-toggle"
@@ -211,8 +238,8 @@ function CollapseToggle({
             height: 24,
             borderRadius: 12,
             borderWidth: 1,
-            borderColor: colors.neutral[300],
-            backgroundColor: colors.neutral[50],
+            borderColor: buttonBorderColor,
+            backgroundColor: buttonBackgroundColor,
             alignItems: "center",
             justifyContent: "center",
           }}
@@ -221,14 +248,14 @@ function CollapseToggle({
             expanded ? "Collapse progress steps" : "Expand progress steps"
           }
         >
-          <ChevronsUpDown size={12} color={colors.neutral[500]} />
+          <ChevronsUpDown size={12} color={toggleIconColor} />
         </Pressable>
         {showConnector ? (
           <View
             style={{
               width: 1,
               height: 10,
-              backgroundColor: colors.neutral[200],
+              backgroundColor: connectorColor,
             }}
           />
         ) : null}
@@ -256,6 +283,7 @@ export function BridgeProgressTracker({
   collapsible?: boolean;
   title?: string;
 }) {
+  const { colorScheme } = useColorScheme();
   const [expanded, setExpanded] = React.useState(false);
   const now = useMinuteNow();
   const [timingBaseMs, setTimingBaseMs] = React.useState(() => Date.now());
@@ -279,11 +307,13 @@ export function BridgeProgressTracker({
   if (steps.length === 0) return null;
 
   const elapsedMs = Math.max(0, now - timingBaseMs);
+  const headerIconColor =
+    colorScheme === "dark" ? colors.charcoal[300] : colors.neutral[600];
 
   return (
-    <View className="rounded-[20px] border border-border-secondary bg-sand-100 px-4 py-5">
+    <View className="rounded-[20px] border border-border-secondary bg-sand-100 px-4 py-5 dark:border-border-primary dark:bg-surface-primary">
       <View className="mb-5 flex-row items-center gap-2">
-        <ClockCountdown size={20} color={colors.neutral[600]} />
+        <ClockCountdown size={20} color={headerIconColor} />
         <Text className="font-matter text-lg text-primary">{title}</Text>
       </View>
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useColorScheme } from "nativewind";
 import { View, Text, Pressable, Modal, TextInput } from "react-native";
 import { Button, colors } from "@/components/ui";
 import { X } from "lucide-react-native";
@@ -10,6 +11,8 @@ type Props = {
 };
 
 export function CustomPeriodModal({ visible, onClose, onApply }: Props) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [customInput, setCustomInput] = useState("");
   const [customUnit, setCustomUnit] = useState<"weeks" | "months" | "years">(
     "months",
@@ -38,6 +41,10 @@ export function CustomPeriodModal({ visible, onClose, onApply }: Props) {
       }
     }
   };
+  const closeIconColor = isDark ? colors.charcoal[300] : colors.neutral[900];
+  const placeholderTextColor = isDark
+    ? colors.charcoal[500]
+    : colors.neutral[400];
 
   return (
     <Modal
@@ -56,18 +63,18 @@ export function CustomPeriodModal({ visible, onClose, onApply }: Props) {
               onPress={onClose}
               className="h-8 w-8 items-center justify-center rounded-full bg-surface-secondary"
             >
-              <X size={20} color={colors.neutral[900]} />
+              <X size={20} color={closeIconColor} />
             </Pressable>
           </View>
 
-          <View className="mb-3 rounded-2xl border border-surface-secondary p-4 bg-sand-100">
+          <View className="mb-3 rounded-2xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-primary">
             <TextInput
-              className="border-0 bg-transparent p-0 text-3xl dark:text-white font-matter"
+              className="border-0 bg-transparent p-0 font-matter text-3xl text-primary"
               placeholder="0"
               keyboardType="numeric"
               value={customInput}
               onChangeText={setCustomInput}
-              placeholderTextColor={colors.neutral[400]}
+              placeholderTextColor={placeholderTextColor}
               autoFocus
             />
           </View>
@@ -78,13 +85,25 @@ export function CustomPeriodModal({ visible, onClose, onApply }: Props) {
                 key={unit}
                 onPress={() => setCustomUnit(unit)}
                 className={`flex-1 rounded-full py-2 ${
-                  customUnit === unit
-                    ? "border border-sand-600 bg-sand-900"
-                    : "border border-sand-300 bg-sand-100"
+                  isDark
+                    ? customUnit === unit
+                      ? "border border-sand-300 bg-sand-100"
+                      : "border border-surface-secondary bg-surface-primary"
+                    : customUnit === unit
+                      ? "border border-sand-600 bg-sand-900"
+                      : "border border-sand-300 bg-sand-100"
                 }`}
               >
                 <Text
-                  className={`text-center text-sm font-instrument-sans-medium capitalize ${customUnit === unit ? "text-white" : "text-primary"}`}
+                  className={`text-center text-sm font-instrument-sans-medium capitalize ${
+                    isDark
+                      ? customUnit === unit
+                        ? "text-sand-900"
+                        : "text-primary"
+                      : customUnit === unit
+                        ? "text-white"
+                        : "text-primary"
+                  }`}
                 >
                   {unit}
                 </Text>

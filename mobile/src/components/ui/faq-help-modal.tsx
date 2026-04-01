@@ -3,6 +3,7 @@ import type { ReactNode, RefObject } from "react";
 import { View } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { useColorScheme } from "nativewind";
 
 import { AccordionCard } from "./accordion-card";
 import { Modal } from "./modal";
@@ -42,14 +43,16 @@ export function FaqHelpModal({
   const [openItemId, setOpenItemId] = useState<string | null>(
     items[0]?.id ?? null,
   );
+  const { colorScheme } = useColorScheme();
+  const lightBg = colorScheme === "dark" ? undefined : "#EAE8E6";
 
   return (
     <Modal
       ref={modalRef}
       enableDynamicSizing={true}
       headerTitle={<FaqHelpHeaderTitle title={title} headerIcon={headerIcon} />}
-      handleBackgroundColor="#EAE8E6"
-      backgroundStyle={{ backgroundColor: "#EAE8E6" }}
+      handleBackgroundColor={lightBg}
+      backgroundStyle={lightBg ? { backgroundColor: lightBg } : undefined}
       enablePanDownToClose
     >
       <BottomSheetScrollView

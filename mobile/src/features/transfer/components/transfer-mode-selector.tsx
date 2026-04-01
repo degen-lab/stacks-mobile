@@ -1,4 +1,5 @@
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { SelectionCard, View } from "@/components/ui";
 
 type TransferModeSelectorProps = {
@@ -8,10 +9,13 @@ type TransferModeSelectorProps = {
 export function TransferModeSelector({
   onSelectMode,
 }: TransferModeSelectorProps) {
+  const { colorScheme } = useColorScheme();
+  const iconColor = colorScheme === "dark" ? "#C9C9C9" : "#0B0A0F";
+
   return (
     <View className="px-5 pb-6 gap-3">
       <SelectionCard
-        icon={<ArrowUpRight size={18} color="#0B0A0F" />}
+        icon={<ArrowUpRight size={18} color={iconColor} />}
         iconCircular
         title="Send"
         subtitle="Transfer crypto to another wallet"
@@ -19,7 +23,7 @@ export function TransferModeSelector({
       />
 
       <SelectionCard
-        icon={<ArrowDownLeft size={18} color="#0B0A0F" />}
+        icon={<ArrowDownLeft size={18} color={iconColor} />}
         iconCircular
         title="Receive"
         subtitle="Get crypto from another wallet"

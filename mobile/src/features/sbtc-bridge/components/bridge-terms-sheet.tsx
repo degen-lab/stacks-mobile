@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useColorScheme } from "nativewind";
 
 import { Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 
 const TERMS_TEXT = `Last Updated: March 2026
 
@@ -96,8 +98,13 @@ type Props = {
 
 export function BridgeTermsSheet({ open, onOpenChange, onAccept }: Props) {
   const { ref, present, dismiss } = useModal();
+  const { colorScheme } = useColorScheme();
   const [agreed, setAgreed] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+  const sheetBackground =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-surface-primary")
+      : "#EAE8E6";
 
   useEffect(() => {
     if (open) {
@@ -129,7 +136,8 @@ export function BridgeTermsSheet({ open, onOpenChange, onAccept }: Props) {
       ref={ref}
       snapPoints={["92%"]}
       title="Terms & Conditions"
-      backgroundStyle={{ backgroundColor: "#EAE8E6" }}
+      handleBackgroundColor={sheetBackground}
+      backgroundStyle={{ backgroundColor: sheetBackground }}
       onDismiss={() => onOpenChange(false)}
       enablePanDownToClose
     >
@@ -145,7 +153,7 @@ export function BridgeTermsSheet({ open, onOpenChange, onAccept }: Props) {
           </Text>
         </BottomSheetScrollView>
 
-        <View className="px-5 pt-4 pb-8 gap-4 border-t border-sand-200">
+        <View className="gap-4 border-t border-sand-200 px-5 pb-8 pt-4 dark:border-border-primary">
           <Checkbox
             checked={agreed}
             onChange={hasScrolledToBottom ? setAgreed : () => {}}
@@ -155,13 +163,13 @@ export function BridgeTermsSheet({ open, onOpenChange, onAccept }: Props) {
           />
           <View className="flex-row gap-3">
             <Button
-              variant="ghost"
+              variant="outline"
               size="lg"
               onPress={() => onOpenChange(false)}
               label="Go back"
             />
             <Button
-              variant="default"
+              variant="sbtcBridgeCta"
               size="lg"
               onPress={handleAccept}
               disabled={!agreed}

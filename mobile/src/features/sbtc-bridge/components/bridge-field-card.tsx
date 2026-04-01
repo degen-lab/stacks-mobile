@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ArrowDown, Check, Copy } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 
 import { Pressable, Text, View, colors } from "@/components/ui";
 import { cn } from "tailwind-variants";
@@ -17,8 +18,20 @@ export function BridgeFieldCard({
   children: ReactNode;
   bgColor?: "surface-primary" | "white";
 }) {
+  const { colorScheme } = useColorScheme();
+  const bgClass =
+    colorScheme === "dark"
+      ? "bg-surface-secondary"
+      : bgColor === "white"
+        ? "bg-white"
+        : "bg-surface-primary";
   return (
-    <View className={cn("rounded-[12px] px-4 py-3", `bg-${bgColor}`)}>
+    <View
+      className={cn(
+        "rounded-[12px] border border-surface-secondary px-4 py-3 dark:border-border-primary",
+        bgClass,
+      )}
+    >
       <View className="flex-row items-start justify-between">
         <Text className="font-instrument-sans-semibold text-sm text-secondary">
           {label}
@@ -48,6 +61,9 @@ export function BridgeAddressRow({
   rightLabel?: string;
   onRightPress?: () => void;
 }) {
+  const { colorScheme } = useColorScheme();
+  const copyIconColor =
+    colorScheme === "dark" ? colors.charcoal[300] : colors.neutral[700];
   return (
     <View className="flex-row items-center justify-between gap-2">
       {leftSlot ? <View>{leftSlot}</View> : null}
@@ -66,7 +82,7 @@ export function BridgeAddressRow({
           onPress={onCopy}
           className="h-8 w-8 items-center justify-center"
         >
-          <Copy size={16} color={colors.neutral[700]} />
+          <Copy size={16} color={copyIconColor} />
         </Pressable>
       ) : null}
     </View>
@@ -85,13 +101,15 @@ export function BridgeMaxChip({
       onPress={onPress}
       className={cn(
         "flex-row items-center justify-center gap-0.5 rounded-lg px-2 py-1",
-        isMax ? "bg-sand-950" : "border-2 border-border-secondary",
+        isMax
+          ? "bg-sand-950 dark:bg-surface-primary dark:border dark:border-border-primary"
+          : "border-2 border-border-secondary dark:border-border-primary dark:bg-surface-primary",
       )}
     >
       <Text
         className={cn(
           "font-instrument-sans-medium text-xs",
-          isMax ? "text-white" : "text-secondary",
+          isMax ? "text-white" : "text-secondary dark:text-primary",
         )}
       >
         Max
@@ -104,7 +122,7 @@ export function BridgeMaxChip({
 export function BridgeDirectionMarker() {
   return (
     <View className="items-center py-1">
-      <View className="h-9 w-9 items-center justify-center rounded-full bg-sand-500">
+      <View className="h-9 w-9 items-center justify-center rounded-full border border-surface-secondary bg-sand-500 dark:border-border-primary dark:bg-surface-secondary">
         <ArrowDown size={16} color={colors.neutral[100]} />
       </View>
     </View>

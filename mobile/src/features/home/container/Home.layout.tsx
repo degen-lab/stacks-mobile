@@ -1,5 +1,6 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import type { Ref } from "react";
+import { useColorScheme } from "nativewind";
 import { View, Card } from "@/components/ui";
 import InviteFriendCard from "../components/invite-friend";
 import PortfolioSummary from "../components/portfolio";
@@ -28,6 +29,12 @@ export default function HomeScreenLayout({
   onBuyCrypto,
   onDepositCrypto,
 }: HomeScreenLayoutProps) {
+  const { colorScheme } = useColorScheme();
+  const playSquareImage =
+    colorScheme === "dark"
+      ? require("@/assets/images/play-square-dark.svg")
+      : require("@/assets/images/play-square.svg");
+
   return (
     <View className="flex-1 px-4 py-6 bg-surface-tertiary">
       <PortfolioSummary balance={usdBalance} onPress={navigateToPortfolio} />
@@ -38,7 +45,7 @@ export default function HomeScreenLayout({
       <View className="mt-8 flex-row gap-3">
         <View className="flex-1">
           <Card
-            imageSource={require("@/assets/images/play-square.svg")}
+            imageSource={playSquareImage}
             imageSize={{ width: 62, height: 62 }}
             title="Play & earn"
             description="Score high, win the weekly pool."

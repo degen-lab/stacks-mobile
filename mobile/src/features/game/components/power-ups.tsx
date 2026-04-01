@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useColorScheme } from "nativewind";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -7,7 +8,7 @@ import { View } from "@/components/ui";
 import { HeartIcon } from "@/components/ui/icons/heart";
 import { RulerIcon } from "@/components/ui/icons/ruler";
 import PowerUpButton from "./power-up-button";
-import { GAMEPLAY_CONFIG } from "../config";
+import { GAMEPLAY_CONFIG, VISUAL_CONFIG } from "../config";
 import type {
   BridgeOverlayState,
   GhostState,
@@ -37,6 +38,8 @@ const PowerUpsContainer = ({
   onActivateGhost,
   onActivateRevive,
 }: PowerUpsContainerProps) => {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
   const androidBottomInset =
     Platform.OS === "android" ? Math.max(insets.bottom, 12) : 0;
@@ -89,7 +92,11 @@ const PowerUpsContainer = ({
     <View pointerEvents="box-none" className="absolute inset-x-0 bottom-0">
       <LinearGradient
         pointerEvents="box-none"
-        colors={["rgba(255, 152, 53, 0.8)", "rgba(255, 152, 53, 0.01)"]}
+        colors={
+          isDark
+            ? [...VISUAL_CONFIG.DARK_SCENE.POWER_UP_GLOW]
+            : ["rgba(255, 152, 53, 0.8)", "rgba(255, 152, 53, 0.01)"]
+        }
         start={{ x: 0.5, y: 1 }}
         end={{ x: 0.5, y: 0 }}
         style={{

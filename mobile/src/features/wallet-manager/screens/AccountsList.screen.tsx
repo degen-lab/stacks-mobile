@@ -296,7 +296,7 @@ export default function AccountsListScreen() {
                           paddingBottom: 8,
                         }}
                       >
-                        <ChevronDown size={20} className="text-black" />
+                        <ChevronDown size={20} className="text-primary" />
                       </LinearGradient>
                     </Pressable>
                   </View>

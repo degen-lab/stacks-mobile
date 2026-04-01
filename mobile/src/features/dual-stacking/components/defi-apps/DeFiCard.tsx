@@ -24,7 +24,7 @@ export function DeFiCard({ card, width }: DeFiCardProps) {
   return (
     <View
       testID={`defi-app-card-${card.id}`}
-      className={`h-[138px] rounded-xl border border-border-secondary bg-sand-100 py-5 pr-4 pl-6 ${
+      className={`h-[138px] rounded-xl border border-border-secondary bg-sand-100 dark:bg-surface-primary py-5 pr-4 pl-6 ${
         isSoon ? "gap-3" : "gap-4"
       }`}
       style={{ width }}

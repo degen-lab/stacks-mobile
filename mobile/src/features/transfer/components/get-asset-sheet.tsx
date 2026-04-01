@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { ArrowDownLeft, CreditCard } from "lucide-react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useColorScheme } from "nativewind";
 
 import { Modal, SelectionCard, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
@@ -43,6 +44,9 @@ export function GetAssetSheet({
   onReceive,
 }: GetAssetSheetProps) {
   const { ref, present, dismiss } = useModal();
+  const { colorScheme } = useColorScheme();
+  const iconColor =
+    colorScheme === "dark" ? colors.charcoal[200] : colors.neutral[800];
 
   useEffect(() => {
     if (!asset) return;
@@ -82,7 +86,7 @@ export function GetAssetSheet({
     >
       <BottomSheetScrollView contentContainerClassName="gap-3 px-5 pb-6">
         <SelectionCard
-          icon={<CreditCard size={18} color={colors.neutral[800]} />}
+          icon={<CreditCard size={18} color={iconColor} />}
           iconCircular
           title={`Buy ${asset}`}
           subtitle={copy.buySubtitle}
@@ -90,7 +94,7 @@ export function GetAssetSheet({
         />
 
         <SelectionCard
-          icon={<ArrowDownLeft size={18} color={colors.neutral[800]} />}
+          icon={<ArrowDownLeft size={18} color={iconColor} />}
           iconCircular
           title={`Receive ${asset}`}
           subtitle={copy.receiveSubtitle}

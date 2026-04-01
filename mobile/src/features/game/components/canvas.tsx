@@ -11,6 +11,7 @@ import {
   useImage,
   vec,
 } from "@shopify/react-native-skia";
+import { useColorScheme } from "nativewind";
 
 import { Pressable, View } from "@/components/ui";
 import { useGameStore } from "@/lib/store/game";
@@ -44,6 +45,8 @@ type BridgeGameCanvasProps = {
   perfectCue?: { x: number; y: number; createdAt: number } | null;
   showGhostPreview?: boolean;
   onAssetsLoaded?: () => void;
+  bgColors?: readonly string[];
+  bgPositions?: readonly number[];
 };
 
 export const BridgeGameCanvas = ({
@@ -58,8 +61,12 @@ export const BridgeGameCanvas = ({
   onEvents,
   perfectCue,
   showGhostPreview = false,
+  bgColors,
+  bgPositions,
   onAssetsLoaded,
 }: BridgeGameCanvasProps) => {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const particlesRef = useRef<Particle[]>(
     Array.from({ length: MAX_PARTICLES }, () => ({
       x: 0,
@@ -233,6 +240,13 @@ export const BridgeGameCanvas = ({
   const platformSpawnTimes = platformSpawnTimesRef.current;
   const heroSize = VISUAL_CONFIG.HERO_SIZE;
   const heroHalf = heroSize / 2;
+  const platformSideColor = isDark
+    ? VISUAL_CONFIG.DARK_SCENE.PLATFORM_SIDE
+    : VISUAL_CONFIG.COLORS.PLATFORM_SIDE;
+  const platformTopColor = isDark
+    ? VISUAL_CONFIG.DARK_SCENE.PLATFORM_TOP
+    : "#282828";
+  const platformNotchColor = VISUAL_CONFIG.DARK_SCENE.PLATFORM_MARKER;
 
   return (
     <View style={{ flex: 1 }} className="relative">
@@ -241,7 +255,13 @@ export const BridgeGameCanvas = ({
           <LinearGradient
             start={vec(0, canvasHeight - VISUAL_CONFIG.CANVAS_H)}
             end={vec(0, canvasHeight)}
-            colors={[VISUAL_CONFIG.COLORS.BG_TOP, VISUAL_CONFIG.COLORS.BG_BOT]}
+            colors={
+              bgColors ?? [
+                VISUAL_CONFIG.COLORS.BG_TOP,
+                VISUAL_CONFIG.COLORS.BG_BOT,
+              ]
+            }
+            positions={bgPositions}
           />
         </Rect>
         <Group
@@ -278,7 +298,7 @@ export const BridgeGameCanvas = ({
                     y={platformY + 8}
                     width={p.w}
                     height={VISUAL_CONFIG.PLATFORM_H}
-                    color={VISUAL_CONFIG.COLORS.PLATFORM_SIDE}
+                    color={platformSideColor}
                   />
                   <Rect
                     x={p.x}
@@ -298,14 +318,14 @@ export const BridgeGameCanvas = ({
                     y={platformY}
                     width={p.w}
                     height={6}
-                    color="#282828"
+                    color={platformTopColor}
                   />
                   <Rect
-                    x={p.x + p.w / 2 - 4}
-                    y={platformY + 6}
-                    width={8}
-                    height={8}
-                    color={VISUAL_CONFIG.COLORS.BG_BOT}
+                    x={p.x + p.w / 2 - VISUAL_CONFIG.PERFECT_TOLERANCE}
+                    y={platformY}
+                    width={VISUAL_CONFIG.PERFECT_TOLERANCE * 2}
+                    height={6}
+                    color={platformNotchColor}
                   />
                 </Group>
               );

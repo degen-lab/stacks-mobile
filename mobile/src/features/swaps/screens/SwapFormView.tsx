@@ -1,7 +1,9 @@
 import { ArrowUpDown, ChevronDown } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { Pressable, StyleSheet, TextInput } from "react-native";
 
 import { Button, Text, TokenAvatar, View, colors } from "@/components/ui";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import type { SwapViewModel } from "../hooks/use-swap";
 import type { SwapAsset } from "../types";
 
@@ -35,6 +37,16 @@ function SwapSection({
   onSelectToken: () => void;
   onAmountChange?: (value: string) => void;
 }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const placeholderColor = isDark
+    ? resolveThemeTokenColor("dark", "--color-text-tertiary")
+    : colors.neutral[300];
+  const selectionColor = isDark
+    ? resolveThemeTokenColor("dark", "--color-text-primary")
+    : colors.neutral[900];
+  const chevronColor = isDark ? colors.charcoal[300] : colors.neutral[500];
+
   return (
     <View className="gap-3 px-4 py-5">
       <View
@@ -54,8 +66,8 @@ function SwapSection({
               className="p-0 font-matter text-primary"
               placeholder="0"
               keyboardType="decimal-pad"
-              placeholderTextColor={colors.neutral[300]}
-              selectionColor={colors.neutral[900]}
+              placeholderTextColor={placeholderColor}
+              selectionColor={selectionColor}
               value={amount}
               onChangeText={onAmountChange}
               style={{
@@ -91,7 +103,7 @@ function SwapSection({
         </View>
 
         <Pressable onPress={onSelectToken}>
-          <View className="flex-row items-center gap-2 rounded-full border-2 border-border-secondary px-2.5 py-1.5">
+          <View className="flex-row items-center gap-2 rounded-full border-2 border-border-secondary bg-transparent px-2.5 py-1.5 dark:border-border-primary dark:bg-surface-secondary">
             <TokenAvatar
               icon={token?.icon}
               symbol={token?.symbol ?? "?"}
@@ -100,7 +112,7 @@ function SwapSection({
             <Text className="font-matter text-[15px] text-primary">
               {token?.symbol ?? "Select"}
             </Text>
-            <ChevronDown size={13} color={colors.neutral[500]} />
+            <ChevronDown size={13} color={chevronColor} />
           </View>
         </Pressable>
       </View>
@@ -131,13 +143,25 @@ function SwapCard({
   sourceUsdLabel?: string;
   receiveUsdLabel?: string;
 }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const sourceAvailable = formatAvailableBalance(swap.sourceToken);
   const destinationAvailable = swap.destinationToken
     ? formatAvailableBalance(swap.destinationToken)
     : swap.destinationEmptyState;
+  const flipButtonStyle = {
+    ...styles.flipButton,
+    backgroundColor: isDark
+      ? resolveThemeTokenColor("dark", "--color-surface-secondary")
+      : "#EAE8E6",
+    borderColor: isDark
+      ? resolveThemeTokenColor("dark", "--color-border-primary")
+      : "#D5D3D1",
+  } as const;
+  const flipIconColor = isDark ? colors.charcoal[300] : colors.secondary;
 
   return (
-    <View className="overflow-hidden rounded-[20px] border border-border-secondary bg-sand-100 mb-4">
+    <View className="mb-4 overflow-hidden rounded-[20px] border border-border-secondary bg-sand-100 dark:border-border-primary dark:bg-surface-primary">
       <SwapSection
         label="You're paying"
         token={swap.sourceToken}
@@ -160,11 +184,11 @@ function SwapCard({
       />
 
       <View className="flex-row items-center px-4">
-        <View className="h-px flex-1 bg-surface-secondary" />
-        <Pressable style={styles.flipButton} onPress={swap.onFlip}>
-          <ArrowUpDown size={14} color={colors.secondary} />
+        <View className="h-px flex-1 bg-surface-secondary dark:bg-border-primary" />
+        <Pressable style={flipButtonStyle} onPress={swap.onFlip}>
+          <ArrowUpDown size={14} color={flipIconColor} />
         </Pressable>
-        <View className="h-px flex-1 bg-surface-secondary" />
+        <View className="h-px flex-1 bg-surface-secondary dark:bg-border-primary" />
       </View>
 
       <SwapSection

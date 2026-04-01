@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { useColorScheme } from "nativewind";
 import { TextInput as RNTextInput } from "react-native";
 
 import { Text, View, colors } from "@/components/ui";
@@ -6,6 +7,7 @@ import { fromSatsToBtc } from "@/lib/format/currency";
 import { LockIcon } from "@/components/ui/icons/lock-icon";
 
 import { sanitizeDecimal } from "@/lib/format/decimal";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import { BridgeFieldCard, BridgeMaxChip } from "./bridge-field-card";
 
 type AmountFieldCardBgColor = "surface-primary" | "white";
@@ -39,8 +41,15 @@ export function BridgeAmountFieldCard({
   onChangeText?: (value: string) => void;
   onMax?: () => void;
 }) {
+  const { colorScheme } = useColorScheme();
   const hasValue = value.trim().length > 0;
   const isEditable = !locked && Boolean(onChangeText);
+  const placeholderColor =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-text-tertiary")
+      : colors.neutral[500];
+  const unitClassName =
+    "shrink-0 p-0 font-matter text-xl leading-5 text-sand-500 dark:text-secondary";
 
   return (
     <BridgeFieldCard
@@ -74,13 +83,13 @@ export function BridgeAmountFieldCard({
                   }
                   keyboardType="decimal-pad"
                   placeholder={placeholder}
-                  placeholderTextColor={colors.neutral[500]}
-                  className={`absolute inset-0 p-0 font-matter text-xl leading-5 ${hasValue ? "text-primary" : "text-sand-500"}`}
+                  placeholderTextColor={placeholderColor}
+                  className={`absolute inset-0 p-0 font-matter text-xl leading-5 ${hasValue ? "text-primary" : "text-sand-500 dark:text-secondary"}`}
                   style={{ includeFontPadding: false }}
                 />
               </View>
               <Text
-                className="shrink-0 p-0 font-matter text-xl leading-5 text-sand-500 -translate-y-px"
+                className={`${unitClassName} -translate-y-px`}
                 style={{ includeFontPadding: false }}
               >
                 {unit}
@@ -104,7 +113,7 @@ export function BridgeAmountFieldCard({
               </Text>
             </View>
             <Text
-              className="shrink-0 p-0 font-matter text-xl leading-5 text-sand-500"
+              className={unitClassName}
               style={{ includeFontPadding: false }}
             >
               {unit}

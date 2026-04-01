@@ -7,6 +7,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
+import { View } from "react-native";
 import FlashMessage from "react-native-flash-message";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -20,6 +21,7 @@ import { ConsentController } from "@/lib/consent/consent-controller";
 import { fontConfig } from "@/lib/fonts";
 import { BiometricSessionGate } from "@/lib/security/biometric-session-gate";
 import { useThemeConfig } from "@/lib/theme/use-theme-config";
+import { darkThemeVars, lightThemeVars } from "@/lib/theme/theme-vars";
 
 import { TransakProvider } from "@/features/transak/context/transak-context";
 
@@ -63,10 +65,6 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="settings/display"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
           name="settings/privacy-ads"
           options={{ headerShown: false }}
         />
@@ -93,21 +91,23 @@ function Providers({ children }: { children: React.ReactNode }) {
   const theme = useThemeConfig();
   return (
     <GestureHandlerRootView className={`flex-1 ${theme.dark ? "dark" : ""}`}>
-      <KeyboardProvider>
-        <ThemeProvider value={theme}>
-          <APIProvider>
-            <BottomSheetModalProvider>
-              <TransferSheetProvider>
-                <SwapSheetProvider>
-                  <TransakProvider>{children}</TransakProvider>
-                </SwapSheetProvider>
-              </TransferSheetProvider>
-              <FlashMessage position="top" />
-              <BiometricSessionGate />
-            </BottomSheetModalProvider>
-          </APIProvider>
-        </ThemeProvider>
-      </KeyboardProvider>
+      <View style={[{ flex: 1 }, theme.dark ? darkThemeVars : lightThemeVars]}>
+        <KeyboardProvider>
+          <ThemeProvider value={theme}>
+            <APIProvider>
+              <BottomSheetModalProvider>
+                <TransferSheetProvider>
+                  <SwapSheetProvider>
+                    <TransakProvider>{children}</TransakProvider>
+                  </SwapSheetProvider>
+                </TransferSheetProvider>
+                <FlashMessage position="top" />
+                <BiometricSessionGate />
+              </BottomSheetModalProvider>
+            </APIProvider>
+          </ThemeProvider>
+        </KeyboardProvider>
+      </View>
     </GestureHandlerRootView>
   );
 }

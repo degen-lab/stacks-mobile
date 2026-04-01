@@ -11,8 +11,10 @@ import {
   WebBrowserPresentationStyle,
 } from "expo-web-browser";
 import { ArrowUpRight, Info } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 
 import { Text, View, colors } from "@/components/ui";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import type { BridgeChipTone } from "../utils/status";
 
 export type BridgeChip = {
@@ -65,22 +67,33 @@ function ChipContent({
   withInfo?: boolean;
   withExternalLink?: boolean;
 }) {
+  const { colorScheme } = useColorScheme();
   const toneStyles = CHIP_TONE_STYLES[item.tone ?? "neutral"];
+  const neutralValueColor =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-text-secondary")
+      : colors.secondary;
+  const metaIconColor =
+    colorScheme === "dark" ? colors.charcoal[400] : colors.neutral[500];
+  const valueColor =
+    (item.tone ?? "neutral") === "neutral"
+      ? neutralValueColor
+      : toneStyles.valueColor;
 
   return (
-    <View className="flex-row items-center gap-1.5 rounded-lg border border-border-secondary bg-sand-100 px-3 py-2">
-      <Text className="font-instrument-sans text-xs text-sand-500">
+    <View className="flex-row items-center gap-1.5 rounded-lg border border-border-secondary bg-sand-100 px-3 py-2 dark:border-border-primary dark:bg-surface-primary">
+      <Text className="font-instrument-sans text-xs text-sand-500 dark:text-secondary">
         {item.label}:
       </Text>
-      {withInfo && <Info size={10} color={colors.neutral[500]} />}
+      {withInfo && <Info size={10} color={metaIconColor} />}
       <Text
         className="font-instrument-sans-medium text-xs"
-        style={{ color: toneStyles.valueColor }}
+        style={{ color: valueColor }}
       >
         {item.value}
       </Text>
       {withExternalLink ? (
-        <ArrowUpRight size={10} color={colors.neutral[500]} />
+        <ArrowUpRight size={10} color={metaIconColor} />
       ) : null}
     </View>
   );

@@ -44,7 +44,7 @@ export function ProjectRewardsResult({
 
   return (
     <View
-      className={`rounded-xl bg-sand-100 p-3 ${
+      className={`rounded-xl bg-sand-100 dark:bg-surface-secondary p-3 ${
         isWide ? "flex-row items-center justify-evenly gap-4" : "flex-col gap-4"
       }`}
     >

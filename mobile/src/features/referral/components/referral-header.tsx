@@ -1,6 +1,7 @@
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { HelpCircle } from "lucide-react-native";
 import { RefObject } from "react";
+import { useColorScheme } from "nativewind";
 
 import {
   colors,
@@ -15,6 +16,7 @@ type ReferralHeaderProps = {
 
 export function ReferralHeader({ onPressHelp }: ReferralHeaderProps) {
   const { ref: helpModalRef, present: presentHelpModal } = useModal();
+  const { colorScheme } = useColorScheme();
 
   const handleHelpPress = () => {
     if (onPressHelp) {
@@ -29,7 +31,16 @@ export function ReferralHeader({ onPressHelp }: ReferralHeaderProps) {
       <ScreenHeader
         title="Referral"
         rightAction={{
-          icon: <HelpCircle size={20} color={colors.neutral[900]} />,
+          icon: (
+            <HelpCircle
+              size={20}
+              color={
+                colorScheme === "dark"
+                  ? colors.neutral[300]
+                  : colors.neutral[900]
+              }
+            />
+          ),
           onPress: handleHelpPress,
           accessibilityLabel: "How referrals work",
         }}

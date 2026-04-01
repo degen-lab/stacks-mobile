@@ -34,8 +34,7 @@ export default function LoginLayout({
           <Text
             className={`text-center text-5xl font-matter text-primary mb-4 leading-[1.15] tracking-tighter`}
           >
-            Welcome to Stacks{" "}
-            <Text className={`text-5xl text-tertiary`}>Mobile</Text>
+            Welcome to Enter Stacks{" "}
           </Text>
 
           <Text className="text-center text-base font-instrument-sans text-secondary mb-8 px-4">
@@ -48,16 +47,12 @@ export default function LoginLayout({
             size="lg"
             onPress={onGoogleSignIn}
             loading={isLoading}
-            disabled={isDisabled}
+            disabled={isDisabled || isLoading}
+            label="Continue with Google"
+            leftIcon={<GoogleIcon size={20} />}
+            textClassName="font-matter text-base text-primary"
             testID="google-signin-button"
-          >
-            <View className="flex-row items-center justify-center gap-2">
-              <GoogleIcon size={20} />
-              <Text className="font-matter text-base text-primary">
-                Continue with Google
-              </Text>
-            </View>
-          </Button>
+          />
 
           <Text className="mt-8 text-center text-base text-secondary px-4 font-instrument-sans">
             By proceeding, you agree with{" "}

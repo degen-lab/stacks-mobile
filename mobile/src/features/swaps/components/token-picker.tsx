@@ -1,10 +1,12 @@
 import { Check, Search } from "lucide-react-native";
 import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useColorScheme } from "nativewind";
 import { Pressable, StyleSheet, TextInput } from "react-native";
 
 import { Text, TokenAvatar, View, colors } from "@/components/ui";
 import { Skeleton } from "@/components/ui/skeleton";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import type { SwapAsset } from "../types";
 
 const TokenRow = memo(function TokenRow({
@@ -18,7 +20,11 @@ const TokenRow = memo(function TokenRow({
 }) {
   return (
     <Pressable
-      style={[styles.tokenRow, isSelected && styles.tokenRowSelected]}
+      className={`flex-row items-center gap-3 rounded-xl border px-4 py-3.5 ${
+        isSelected
+          ? "border-border-secondary bg-sand-200 dark:border-border-primary dark:bg-surface-secondary"
+          : "border-surface-secondary bg-sand-100 dark:border-border-primary dark:bg-surface-primary"
+      }`}
       onPress={onPress}
     >
       <TokenAvatar icon={token.icon} symbol={token.symbol} />
@@ -42,7 +48,7 @@ const TokenRow = memo(function TokenRow({
 
 function TokenRowSkeleton() {
   return (
-    <View style={styles.tokenRow}>
+    <View className="flex-row items-center gap-3 rounded-xl border border-surface-secondary bg-sand-100 px-4 py-3.5 dark:border-border-primary dark:bg-surface-primary">
       <Skeleton className="h-10 w-10 rounded-full" />
       <View className="flex-1 gap-2">
         <Skeleton className="h-3.5 w-16 rounded" />
@@ -73,6 +79,8 @@ export function TokenPicker({
   tokens,
   onSelect,
 }: TokenPickerProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [search, setSearch] = useState("");
   const searchRef = useRef<TextInput>(null);
 
@@ -102,16 +110,24 @@ export function TokenPicker({
     ),
     [selectedTokenId, onSelect],
   );
+  const searchIconColor = isDark ? colors.charcoal[400] : colors.neutral[400];
+  const placeholderColor = isDark
+    ? resolveThemeTokenColor("dark", "--color-text-tertiary")
+    : colors.neutral[400];
+  const selectionColor = isDark
+    ? resolveThemeTokenColor("dark", "--color-text-primary")
+    : colors.neutral[900];
 
   return (
     <View className="flex-1 gap-3">
-      <View className="flex-row items-center gap-2.5 rounded-xl border border-surface-secondary bg-sand-100 px-4 py-3">
-        <Search size={15} color={colors.neutral[400]} />
+      <View className="flex-row items-center gap-2.5 rounded-xl border border-surface-secondary bg-sand-100 px-4 py-3 dark:border-border-primary dark:bg-surface-primary">
+        <Search size={15} color={searchIconColor} />
         <TextInput
           ref={searchRef}
           className="flex-1 font-instrument-sans text-base text-primary"
           placeholder="Search tokens"
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={placeholderColor}
+          selectionColor={selectionColor}
           value={search}
           onChangeText={setSearch}
           autoCapitalize="none"
@@ -156,20 +172,5 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: 8,
-  },
-  tokenRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.neutral[200],
-    backgroundColor: colors.neutral[50],
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  tokenRowSelected: {
-    backgroundColor: colors.neutral[100],
-    borderColor: colors.neutral[300],
   },
 });

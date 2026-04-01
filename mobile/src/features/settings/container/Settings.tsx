@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader, ScrollView, Text, View } from "@/components/ui";
 
+import { ThemeItem } from "../components/theme-item";
 import { HelpItem } from "../components/help-item";
 import { Item } from "../components/item";
 import { NetworkItem } from "../components/network-item";
@@ -25,15 +26,13 @@ export default function SettingsScreen() {
           paddingBottom: Math.max(32, bottomInset + 16),
         }}
       >
-        <View className="overflow-hidden rounded-2xl border border-surface-secondary bg-white">
+        <View className="overflow-hidden rounded-2xl border border-surface-secondary bg-white dark:bg-surface-primary">
           <Item
             label="Wallet"
             onPress={() => router.push("/settings/accounts" as any)}
           />
-          {/* <Item
-            label="Display"
-            onPress={() => router.push("/settings/display" as any)}
-          /> */}
+          <View className="mx-4 border-b border-surface-secondary" />
+          <ThemeItem />
           <View className="mx-4 border-b border-surface-secondary" />
           <SecurityItem />
           {__DEV__ && (

@@ -24,7 +24,7 @@ type CardProps = {
 
 const DEFAULT_SIZE = { width: 64, height: 64 };
 const BASE_CARD_CLASSES =
-  "w-full rounded-xl border border-surface-secondary bg-sand-100 p-4";
+  "w-full rounded-xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-primary";
 
 export function Card({
   imageSource,

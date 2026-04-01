@@ -1,4 +1,5 @@
 import React from "react";
+import { useColorScheme } from "nativewind";
 import { View } from "react-native";
 
 type OverlayPanelProps = {
@@ -11,13 +12,19 @@ export default function OverlayPanel({
   children,
   translucent = true,
 }: OverlayPanelProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const backdropClass = translucent
+    ? isDark
+      ? "bg-black/75"
+      : "bg-white/85"
+    : "";
+
   return (
     <View
-      className={`absolute inset-0 items-center justify-center px-4 py-8 ${
-        translucent ? "bg-white/85" : ""
-      }`}
+      className={`absolute inset-0 items-center justify-center px-4 py-8 ${backdropClass}`}
     >
-      <View className="w-full max-w-[380px] rounded-[28px] border border-sand-200 bg-sand-100 p-6 shadow-xl dark:bg-neutral-900 dark:border-neutral-800">
+      <View className="w-full max-w-[380px] rounded-[28px] border border-surface-secondary bg-sand-100 p-6 shadow-xl dark:bg-surface-primary">
         {children}
       </View>
     </View>

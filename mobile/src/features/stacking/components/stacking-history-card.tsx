@@ -4,7 +4,9 @@ import {
   WebBrowserPresentationStyle,
 } from "expo-web-browser";
 import { ArrowUpRight } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { View, Text } from "@/components/ui";
+import colors from "@/components/ui/colors";
 import { getExplorerTxUrl } from "@/lib/stacks/network";
 import type { UserStackingDataRow } from "@/api/stacking";
 import { normalizeStackingStatus } from "@/api/stacking/status";
@@ -48,6 +50,7 @@ type CardProps = {
 };
 
 function DelegationCard({ delegation, index, stxPrice }: CardProps) {
+  const { colorScheme } = useColorScheme();
   const status = getStatus(delegation.txStatus);
   const stxReward =
     delegation.rewardedStxAmount == null
@@ -60,6 +63,8 @@ function DelegationCard({ delegation, index, stxPrice }: CardProps) {
 
   const cycleRange = `Cycles ${delegation.startCycleId}${delegation.endCycleId ? ` – ${delegation.endCycleId}` : " – ongoing"}`;
   const { explorerUrl } = getExplorerTxUrl(delegation.txId);
+  const linkIconColor =
+    colorScheme === "dark" ? colors.charcoal[300] : colors.neutral[500];
 
   const openExplorer = async () => {
     if (process.env.EXPO_OS !== "web") {
@@ -72,7 +77,7 @@ function DelegationCard({ delegation, index, stxPrice }: CardProps) {
   };
 
   return (
-    <View className="rounded-2xl border border-surface-secondary bg-sand-100 p-4">
+    <View className="rounded-2xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-primary">
       <View className="flex-row items-start justify-between">
         <View className="flex-1">
           <View className="flex-row items-center gap-2">
@@ -102,7 +107,7 @@ function DelegationCard({ delegation, index, stxPrice }: CardProps) {
             <Text className="text-xs font-instrument-sans-medium text-secondary">
               View on chain
             </Text>
-            <ArrowUpRight size={11} color="#95918C" />
+            <ArrowUpRight size={11} color={linkIconColor} />
           </View>
         </Pressable>
       </View>
@@ -208,7 +213,7 @@ export function StackingHistoryCard({
 
   return (
     <View className="gap-3">
-      <View className="rounded-2xl border border-surface-secondary bg-sand-100 p-4">
+      <View className="rounded-2xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-primary">
         <View className="gap-2.5">
           <View className="flex-row items-center justify-between">
             <Text className="text-sm font-instrument-sans text-secondary">

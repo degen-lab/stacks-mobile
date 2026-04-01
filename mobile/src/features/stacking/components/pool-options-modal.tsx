@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useColorScheme } from "nativewind";
 import { View, Text, Pressable, Modal } from "react-native";
 import { Button, colors } from "@/components/ui";
 import {
@@ -26,8 +27,14 @@ export function PoolOptionsModal({
   activePosition,
   onLeavePool,
 }: Props) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [currentView, setCurrentView] = useState<ViewState>("main");
   const [newRewardAddress, setNewRewardAddress] = useState("");
+  const primaryIconColor = isDark ? colors.charcoal[300] : colors.neutral[900];
+  const secondaryIconColor = isDark
+    ? colors.charcoal[400]
+    : colors.neutral[400];
 
   const handleClose = () => {
     setCurrentView("main");
@@ -45,15 +52,15 @@ export function PoolOptionsModal({
     <View className="gap-2">
       <Pressable
         onPress={() => setCurrentView("advanced")}
-        className="flex-row items-center justify-between rounded-xl bg-surface-primary p-4 active:bg-surface-secondary"
+        className="flex-row items-center justify-between rounded-xl bg-white p-4 active:bg-sand-100 dark:bg-surface-primary dark:active:bg-surface-secondary"
       >
         <View className="flex-row items-center gap-3">
-          <List size={24} color={colors.neutral[900]} />
+          <List size={24} color={primaryIconColor} />
           <Text className="text-base font-instrument-sans-medium text-primary">
             Pool Details
           </Text>
         </View>
-        <ChevronRight size={20} color={colors.neutral[400]} />
+        <ChevronRight size={20} color={secondaryIconColor} />
       </Pressable>
 
       {/* <Pressable
@@ -90,7 +97,7 @@ export function PoolOptionsModal({
         Details about your current stacking delegation.
       </Text>
 
-      <View className="rounded-2xl border border-surface-secondary bg-bg-primary p-4">
+      <View className="rounded-2xl border border-surface-secondary bg-surface-primary p-4">
         <View className="mb-4 flex-row items-center justify-between border-b border-surface-secondary pb-4">
           <Text className="text-sm font-instrument-sans text-secondary">
             Pool Name
@@ -154,7 +161,7 @@ export function PoolOptionsModal({
           autoCapitalize="none"
         />
         <Pressable className="absolute right-4 top-[38px]">
-          <QrCode size={20} color={colors.neutral[400]} />
+          <QrCode size={20} color={secondaryIconColor} />
         </Pressable>
       </View>
 
@@ -227,7 +234,7 @@ export function PoolOptionsModal({
                   className="mr-1"
                 >
                   <Text className="text-2xl text-primary">←</Text>
-                </Pressable> // Simpler back button
+                </Pressable>
               )}
               <Text className="font-matter text-xl text-primary">
                 {getTitle()}
@@ -237,7 +244,7 @@ export function PoolOptionsModal({
               onPress={handleClose}
               className="h-8 w-8 items-center justify-center rounded-full bg-surface-secondary"
             >
-              <X size={20} color={colors.neutral[900]} />
+              <X size={20} color={primaryIconColor} />
             </Pressable>
           </View>
 

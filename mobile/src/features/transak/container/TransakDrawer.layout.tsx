@@ -1,6 +1,6 @@
 import React from "react";
-import { View, ActivityIndicator } from "react-native";
-import { TokenAvatar, colors } from "@/components/ui";
+import { View } from "react-native";
+import { TokenAvatar, Spinner, Text, colors } from "@/components/ui";
 import { Numpad } from "@/components/ui/numpad";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
 import {
@@ -39,6 +39,7 @@ export interface TransakDrawerLayoutProps {
   checkoutUrl: string | null;
   transakConfig: TransakConfig;
   onTransakEvent: OnTransakEvent;
+  isWidgetInitialized: boolean;
   /** Form only */
   asset: AssetOption;
   amount: string;
@@ -62,6 +63,7 @@ export function TransakDrawerLayout({
   checkoutUrl,
   transakConfig,
   onTransakEvent,
+  isWidgetInitialized,
   asset,
   amount,
   action,
@@ -87,20 +89,32 @@ export function TransakDrawerLayout({
   }));
 
   if (isCheckout) {
+    const isLoadingCheckout = !checkoutUrl || !isWidgetInitialized;
+
     return (
-      <View className="flex-1" style={{ paddingBottom: bottomInset }}>
-        <View className="flex-1">
+      <View className="flex-1 bg-white" style={{ paddingBottom: bottomInset }}>
+        <View className="flex-1 bg-white">
           {checkoutUrl ? (
             <TransakWebView
               transakConfig={transakConfig}
               onTransakEvent={onTransakEvent}
               style={{ flex: 1 }}
             />
-          ) : (
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" color={colors.primary[500]} />
+          ) : null}
+          {isLoadingCheckout ? (
+            <View className="absolute inset-0 items-center justify-center gap-4 bg-white px-6">
+              <Spinner
+                color={colors.stacks.bloodOrange}
+                size={42}
+                trackColor={colors.neutral[200]}
+              />
+              <View className="items-center">
+                <Text className="text-center font-matter text-xl text-primary">
+                  Loading checkout
+                </Text>
+              </View>
             </View>
-          )}
+          ) : null}
         </View>
       </View>
     );

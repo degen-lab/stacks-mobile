@@ -2,8 +2,10 @@ import type React from "react";
 import { useMemo } from "react";
 
 import { Info } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 
 import { Text, View } from "@/components/ui";
+import colors from "@/components/ui/colors";
 import { Button } from "@/components/ui/button";
 import { Popover } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,32 +34,15 @@ export function PointsPopover({
   points = 0,
   missions = [],
 }: PointsPopoverProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const isPointsLoading = points === null || points === undefined;
+  const infoIconColor = isDark ? colors.charcoal[400] : "#595754";
 
   const displayPoints = useMemo(() => {
     if (points === null || points === undefined) return "0";
     return points.toLocaleString();
   }, [points]);
-
-  // TODO: Add missions here
-  // const defaultMissions: DailyMission[] = useMemo(() => [
-  //   {
-  //     id: "runs",
-  //     label: "Complete runs",
-  //     current: 2,
-  //     target: 3,
-  //     pointsReward: 150,
-  //     icon: <Target size={18} className="text-blue-500" />,
-  //   },
-  //   {
-  //     id: "jumps",
-  //     label: "Perfect middle jumps",
-  //     current: 15,
-  //     target: 30,
-  //     pointsReward: 200,
-  //     icon: <Zap size={18} className="text-orange-500" />,
-  //   },
-  // ], []);
 
   return (
     <Popover visible={visible} onClose={onClose}>
@@ -92,56 +77,56 @@ export function PointsPopover({
         ) : (
           <>
             <View className="items-center mb-6">
-              <Text className="font-matter text-6xl text-primary dark:text-white leading-tight">
+              <Text className="font-matter text-6xl text-primary leading-tight">
                 {displayPoints}
               </Text>
-              <Text className="text-base font-instrument-sans uppercase tracking-widest text-secondary dark:text-sand-300 mt-2">
+              <Text className="text-base font-instrument-sans uppercase tracking-widest text-secondary mt-2">
                 Points
               </Text>
             </View>
 
-            <View className="flex-row gap-3 bg-sand-200/80 dark:bg-neutral-800/50 rounded-xl px-3 py-3 border border-sand-300 dark:border-neutral-700 mb-6">
-              <View className="h-8 w-8 rounded-full items-center justify-center bg-white dark:bg-neutral-700 border border-sand-300 dark:border-neutral-600">
-                <Info size={16} color="#595754" />
+            <View className="mb-6 flex-row gap-3 rounded-xl border border-sand-300 bg-sand-200/80 px-3 py-3 dark:border-surface-secondary dark:bg-surface-secondary/60">
+              <View className="h-8 w-8 rounded-full border border-sand-300 bg-white items-center justify-center dark:border-surface-secondary dark:bg-surface-primary">
+                <Info size={16} color={infoIconColor} />
               </View>
-              <Text className="flex-1 text-sm text-secondary dark:text-sand-300 font-instrument-sans leading-5">
+              <Text className="flex-1 text-sm text-secondary font-instrument-sans leading-5">
                 Spend points on power-ups like Bridge Ghost and extra lives, or
                 unlock skins to show off your Stacks hero.
               </Text>
             </View>
 
-            {/* How it works - Clear instructions */}
-            <View className="bg-white dark:bg-neutral-800/50 rounded-xl p-4 mb-6 border border-sand-200 dark:border-neutral-700">
-              <Text className="text-lg font-semibold text-primary dark:text-white mb-3 font-matter">
+            <View className="mb-6 rounded-xl border border-sand-200 bg-white p-4 dark:border-surface-secondary dark:bg-surface-primary">
+              <Text className="text-lg font-semibold text-primary mb-3 font-matter">
                 What are points?
               </Text>
               <View className="gap-3">
                 <View className="flex-row gap-1.5 items-start">
-                  <Text className="text-sm text-secondary dark:text-sand-300 font-matter font-semibold leading-6">
+                  <Text className="text-sm text-secondary font-matter font-semibold leading-6">
                     1.
                   </Text>
-                  <Text className="text-sm text-secondary dark:text-sand-300 font-instrument-sans flex-1 leading-6">
+                  <Text className="text-sm text-secondary font-instrument-sans flex-1 leading-6">
                     They&apos;re in-game currency
                   </Text>
                 </View>
                 <View className="flex-row gap-1.5 items-start">
-                  <Text className="text-sm text-secondary dark:text-sand-300 font-matter font-semibold leading-6">
+                  <Text className="text-sm text-secondary font-matter font-semibold leading-6">
                     2.
                   </Text>
-                  <Text className="text-sm text-secondary dark:text-sand-300 font-instrument-sans flex-1 leading-6">
+                  <Text className="text-sm text-secondary font-instrument-sans flex-1 leading-6">
                     Used to buy power-ups to score higher
                   </Text>
                 </View>
                 <View className="flex-row gap-1.5 items-start">
-                  <Text className="text-sm text-secondary dark:text-sand-300 font-matter font-semibold leading-6">
+                  <Text className="text-sm text-secondary font-matter font-semibold leading-6">
                     3.
                   </Text>
-                  <Text className="text-sm text-secondary dark:text-sand-300 font-instrument-sans flex-1 leading-6">
+                  <Text className="text-sm text-secondary font-instrument-sans flex-1 leading-6">
                     Top users earn STX rewards
                   </Text>
                 </View>
               </View>
             </View>
+
             <View className="mb-5">
               <Button
                 onPress={() => {

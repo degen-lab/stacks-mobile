@@ -49,10 +49,10 @@ const PortfolioSummary = ({ balance, onPress }: PortfolioSummaryProps) => {
           </Pressable>
         </View>
         <View className="flex-row items-baseline gap-1">
-          <Text className="text-5xl font-instrument-sans-semibold text-primary">
+          <Text className="text-5xl font-instrument-sans-semibold text-primary dark:text-primary">
             {dollars}
           </Text>
-          <Text className="text-3xl font-instrument-sans-semibold text-tertiary">
+          <Text className="text-3xl font-instrument-sans-semibold text-tertiary dark:text-secondary">
             {cents}
           </Text>
         </View>

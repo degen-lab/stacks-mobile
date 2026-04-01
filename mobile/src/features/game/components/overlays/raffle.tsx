@@ -7,6 +7,8 @@ import {
   colors,
 } from "@/components/ui";
 import GradientBorder from "@/components/ui/gradient-border";
+import { useColorScheme } from "nativewind";
+import { VISUAL_CONFIG } from "../../config";
 
 type RaffleSubmissionProps = {
   canSubmit: boolean;
@@ -49,6 +51,12 @@ export default function RaffleSubmission({
   statusMessage,
   onSubmit,
 }: RaffleSubmissionProps) {
+  const { colorScheme } = useColorScheme();
+  const ticketBackgroundColor =
+    colorScheme === "dark"
+      ? VISUAL_CONFIG.DARK_SCENE.CARD_BG
+      : colors.neutral[100];
+
   return (
     <View className="relative mb-4 w-full">
       <AnimatedStarSplash
@@ -77,17 +85,17 @@ export default function RaffleSubmission({
         <Pressable
           onPress={canSubmit ? onSubmit : undefined}
           disabled={!canSubmit}
-          className={`rounded-2xl bg-sand-100 p-5 dark:bg-neutral-900/90 ${
+          className={`rounded-2xl bg-sand-100 p-5 dark:bg-surface-primary ${
             canSubmit
-              ? "active:bg-white dark:active:bg-neutral-800"
+              ? "active:bg-sand-200 dark:active:bg-surface-secondary"
               : "opacity-80"
           }`}
         >
           <View className="mb-3">
-            <Text className="text-xl font-semibold text-primary dark:text-white">
+            <Text className="text-xl font-semibold text-primary">
               Weekly Raffle - 500 STX
             </Text>
-            <Text className="mt-1 text-sm text-secondary dark:text-sand-300">
+            <Text className="mt-1 text-sm text-secondary">
               {statusMessage ??
                 `You have ${sponsoredSubmissionsLeft} free submissions left today.`}
             </Text>
@@ -95,7 +103,7 @@ export default function RaffleSubmission({
           <RaffleEntryIndicator
             submittedEntries={sponsoredSubmissionsLeft}
             totalSlots={3}
-            backgroundColor={colors.neutral[100]}
+            backgroundColor={ticketBackgroundColor}
           />
         </Pressable>
       </GradientBorder>

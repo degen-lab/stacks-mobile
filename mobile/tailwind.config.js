@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: [
     "./App.tsx",
     "./src/**/*.{js,jsx,ts,tsx}"
@@ -9,31 +10,31 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#0C0C0D',
+          DEFAULT: 'rgb(var(--color-text-primary) / <alpha-value>)',
         },
         secondary: {
-          DEFAULT: '#595754',
+          DEFAULT: 'rgb(var(--color-text-secondary) / <alpha-value>)',
         },
         tertiary: {
-          DEFAULT: '#B7B4B0',
+          DEFAULT: 'rgb(var(--color-text-tertiary) / <alpha-value>)',
         },
         sand: {
-          100: '#F3F2F0',
-          200: '#E6E4E2',
-          300: '#D8D6D3',
-          400: '#B7B4B0',
-          500: '#95918C',
-          600: '#7B7775',
-          700: '#605D5D',
-          800: '#484747',
-          850: '#3C3A38',
-          900: '#303030',
-          950: '#141414',
+          100: 'rgb(var(--color-sand-100) / <alpha-value>)',
+          200: 'rgb(var(--color-sand-200) / <alpha-value>)',
+          300: 'rgb(var(--color-sand-300) / <alpha-value>)',
+          400: 'rgb(var(--color-sand-400) / <alpha-value>)',
+          500: 'rgb(var(--color-sand-500) / <alpha-value>)',
+          600: 'rgb(var(--color-sand-600) / <alpha-value>)',
+          700: 'rgb(var(--color-sand-700) / <alpha-value>)',
+          800: 'rgb(var(--color-sand-800) / <alpha-value>)',
+          850: 'rgb(var(--color-sand-850) / <alpha-value>)',
+          900: 'rgb(var(--color-sand-900) / <alpha-value>)',
+          950: 'rgb(var(--color-sand-950) / <alpha-value>)',
         },
         surface: {
-          tertiary: '#F7F6F5',
-          secondary: '#D5D3D1',
-          primary: '#EAE8E6',
+          tertiary: 'rgb(var(--color-surface-tertiary) / <alpha-value>)',
+          secondary: 'rgb(var(--color-surface-secondary) / <alpha-value>)',
+          primary: 'rgb(var(--color-surface-primary) / <alpha-value>)',
         },
         feedback: {
           yellow: {
@@ -76,8 +77,8 @@ module.exports = {
           900: '#9B5B0D',
         },
         border: {
-          primary: '#BFBDBA',
-          secondary: '#D5D3D1',
+          primary: 'rgb(var(--color-border-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--color-border-secondary) / <alpha-value>)',
         },
       },
       fontFamily: {

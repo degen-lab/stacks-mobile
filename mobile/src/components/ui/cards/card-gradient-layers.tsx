@@ -1,9 +1,11 @@
 import { Copy } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { Pressable, StyleProp, View, ViewStyle } from "react-native";
 
 import { Text } from "../text";
 import { GradientBorderMultiple } from "@/components/ui/gradient-border-multiple";
 import { copyToClipboard } from "@/lib/clipboard";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 
 type ReferralCodeCardProps = {
   referralCode?: string;
@@ -31,15 +33,25 @@ export function CardGradientLayers({
   referralCode = "",
   hasReferralCode,
   borderRadius = 0,
-  innerBackground = "#F8F4EF",
+  innerBackground,
   containerStyle,
   onCopied,
 }: ReferralCodeCardProps) {
+  const { colorScheme } = useColorScheme();
   const handleCopy = async () => {
     if (!hasReferralCode) return;
     await copyToClipboard(referralCode, "Code copied!");
     onCopied?.();
   };
+  const resolvedInnerBackground =
+    innerBackground ??
+    (colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-surface-primary")
+      : "#F8F4EF");
+  const copyIconColor =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-text-secondary")
+      : resolveThemeTokenColor("light", "--color-text-secondary");
 
   return (
     <View style={containerStyle}>
@@ -51,17 +63,17 @@ export function CardGradientLayers({
       <GradientBorderMultiple
         layers={BLOOD_ORANGE_LAYERS}
         borderRadius={borderRadius}
-        innerBackground={innerBackground}
+        innerBackground={resolvedInnerBackground}
         contentStyle={{ padding: 0 }}
       >
         <Pressable
           onPress={handleCopy}
           disabled={!hasReferralCode}
-          className={`rounded-2xl bg-sand-100 p-4 active:opacity-90 ${
+          className={`rounded-2xl bg-sand-100 p-4 active:opacity-90 dark:bg-surface-primary ${
             hasReferralCode ? "" : "opacity-70"
           }`}
         >
-          <View className="rounded-xl bg-sand-200 px-3 py-3">
+          <View className="rounded-xl bg-sand-200 px-3 py-3 dark:bg-surface-secondary">
             <View className="flex-row items-center">
               <View className="w-10" />
 
@@ -84,7 +96,7 @@ export function CardGradientLayers({
                 accessibilityRole="button"
                 accessibilityLabel="Copy referral code"
               >
-                <Copy size={18} className="text-secondary" />
+                <Copy size={18} color={copyIconColor} />
               </Pressable>
             </View>
           </View>

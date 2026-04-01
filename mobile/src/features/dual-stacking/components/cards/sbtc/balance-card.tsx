@@ -59,7 +59,7 @@ export function BalanceCard({
       {(!isCollapsible || !isCollapsed) && (
         <CardBody
           icon={iconWithEmptyState}
-          value={`${balance.toFixed(5)} ${currency}`}
+          value={`${balance.toFixed(8)} ${currency}`}
           valueClassName={`${hasBalance ? "text-primary" : "text-tertiary"}`}
           layout="after-value"
         />

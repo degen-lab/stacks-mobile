@@ -7,10 +7,12 @@ import { StepIndicator } from "./StepIndicator";
 import { CtaVariant, Step, StepStatus } from "./model";
 
 const CARD_STYLE: Record<StepStatus, string> = {
-  current: "border-sand-600 bg-sand-100",
-  completed: "border-border-secondary bg-sand-100",
-  pending: "border-border-secondary bg-sand-100",
-  locked: "border-border-secondary bg-sand-100 opacity-70",
+  current:
+    "border-sand-600 bg-sand-100 dark:border-border-primary dark:bg-surface-primary",
+  completed: "border-border-secondary bg-sand-100 dark:bg-surface-primary",
+  pending: "border-border-secondary bg-sand-100 dark:bg-surface-primary",
+  locked:
+    "border-border-secondary bg-sand-100 dark:bg-surface-primary opacity-70",
 };
 
 const CTA_VARIANT_MAP: Record<
@@ -161,8 +163,13 @@ function StepBadge({ isRecommended }: { isRecommended: boolean }) {
       className="bg-feedback-blue-200 border border-feedback-blue-100 rounded-full px-1.5 py-1"
     >
       <Text
-        style={{ fontSize: 8, lineHeight: 8, letterSpacing: 0.3 }}
-        className="font-mono text-feedback-blue-900 uppercase"
+        style={{
+          fontSize: 8,
+          lineHeight: 8,
+          letterSpacing: 0.3,
+          color: "#1E3D8B",
+        }}
+        className="font-mono uppercase"
       >
         {isRecommended ? "Recommended" : "Next Step"}
       </Text>

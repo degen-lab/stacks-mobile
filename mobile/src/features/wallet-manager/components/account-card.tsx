@@ -3,6 +3,7 @@ import { GradientBorderMultiple } from "@/components/ui/gradient-border-multiple
 import { BtcRouteLogo } from "@/components/ui/icons/btc-route-logo";
 import { StacksRouteLogo } from "@/components/ui/icons/stacks-route-logo";
 import { truncateAddress } from "@/lib/stacks/addresses";
+import { useColorScheme } from "nativewind";
 import { GestureResponderEvent } from "react-native";
 
 import { getAccountIcon } from "./account-icon";
@@ -35,6 +36,8 @@ export const AccountCard = ({
     ? truncateAddress(btcAddress, 8, 8)
     : "Loading...";
 
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const IconComponent = getAccountIcon(accountIndex);
 
   const activeLayers = [
@@ -50,23 +53,36 @@ export const AccountCard = ({
     },
   ] as const;
 
-  const inactiveLayers = [
-    {
-      thickness: 2,
-      angle: 90,
-      colors: ["rgba(0,0,0,0.08)", "rgba(0,0,0,0.02)"] as const,
-    },
-    {
-      thickness: 3,
-      angle: 90,
-      colors: ["rgba(0,0,0,0.06)", "rgba(0,0,0,0.01)"] as const,
-    },
-  ] as const;
+  const inactiveLayers = isDark
+    ? ([
+        {
+          thickness: 2,
+          angle: 90,
+          colors: ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)"] as const,
+        },
+        {
+          thickness: 3,
+          angle: 90,
+          colors: ["rgba(255,255,255,0.06)", "rgba(255,255,255,0.01)"] as const,
+        },
+      ] as const)
+    : ([
+        {
+          thickness: 2,
+          angle: 90,
+          colors: ["rgba(0,0,0,0.08)", "rgba(0,0,0,0.02)"] as const,
+        },
+        {
+          thickness: 3,
+          angle: 90,
+          colors: ["rgba(0,0,0,0.06)", "rgba(0,0,0,0.01)"] as const,
+        },
+      ] as const);
 
   const content = (
     <Pressable
       onPress={onPress}
-      className="w-full rounded-lg p-4 bg-sand-100 active:opacity-70"
+      className="w-full rounded-lg p-4 bg-sand-100 dark:bg-surface-primary active:opacity-70"
       accessibilityRole="button"
       accessibilityLabel={`View Account ${accountIndex + 1}`}
     >
@@ -74,7 +90,9 @@ export const AccountCard = ({
         <View className="flex-row items-center flex-1">
           <View
             className={`mr-3 h-10 w-10 items-center justify-center rounded-lg ${
-              isActive ? "bg-stacks-blood-orange" : "bg-sand-200"
+              isActive
+                ? "bg-stacks-blood-orange"
+                : "bg-sand-200 dark:bg-surface-secondary"
             }`}
           >
             <IconComponent

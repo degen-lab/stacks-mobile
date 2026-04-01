@@ -5,6 +5,7 @@ import GradientBorder from "@/components/ui/gradient-border";
 import { SvgUri } from "react-native-svg";
 import { useSvgAsset } from "@/hooks/use-svg-asset";
 import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
 import { CustomPeriodModal } from "./custom-period-modal";
 import type { StackingPosition } from "../types";
 
@@ -44,6 +45,8 @@ export function StackingCalculator({
   price,
   onUpdateChange,
 }: Props) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   // Initialize state with active position if available, else defaults
   const [stxAmount, setStxAmount] = useState(
     activePosition ? String(activePosition.lockedAmount) : "40",
@@ -112,6 +115,9 @@ export function StackingCalculator({
     ? activePosition.lockedAmount + availableBalance
     : availableBalance;
   const availableLabel = activePosition ? "Available to add" : "Available";
+  const placeholderTextColor = isDark
+    ? colors.charcoal[500]
+    : colors.neutral[400];
 
   const handleMax = () => {
     setStxAmount(maxStackingAmount.toFixed(2));
@@ -150,17 +156,17 @@ export function StackingCalculator({
             : "Stacking amount"}
         </Text>
       </View>
-      <View className="mb-4 rounded-2xl border border-surface-secondary bg-sand-100 p-4">
+      <View className="mb-4 rounded-2xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-primary">
         <View className="flex-row items-center justify-between mb-2">
           <View className="flex-1 flex-row items-center gap-2">
             <TokenAvatar symbol="STX" size={32} />
             <TextInput
-              className="flex-1 border-0 bg-transparent p-0 text-3xl leading-9 dark:text-white font-matter"
+              className="flex-1 border-0 bg-transparent p-0 font-matter text-3xl leading-9 text-primary"
               placeholder="0"
               keyboardType="numeric"
               value={stxAmount}
               onChangeText={setStxAmount}
-              placeholderTextColor={colors.neutral[400]}
+              placeholderTextColor={placeholderTextColor}
             />
           </View>
           <Button
@@ -168,7 +174,7 @@ export function StackingCalculator({
             variant="outline"
             size="sm"
             label="Max"
-            className="rounded-full border border-sand-300 bg-sand-100 px-3 py-1.5"
+            className="rounded-full border border-sand-300 bg-sand-100 px-3 py-1.5 dark:border-surface-secondary dark:bg-surface-secondary"
             textClassName="text-xs font-instrument-sans-medium text-primary"
           />
         </View>
@@ -207,13 +213,25 @@ export function StackingCalculator({
                 key={index}
                 onPress={() => handlePeriodSelect(period)}
                 className={`rounded-full px-4 py-2 border ${
-                  isSelected
-                    ? "border-sand-600 bg-sand-900"
-                    : "border-sand-300 bg-sand-100"
+                  isDark
+                    ? isSelected
+                      ? "border-sand-300 bg-sand-100"
+                      : "border-surface-secondary bg-surface-primary"
+                    : isSelected
+                      ? "border-sand-600 bg-sand-900"
+                      : "border-sand-300 bg-sand-100"
                 }`}
               >
                 <Text
-                  className={`text-sm font-instrument-sans-medium ${isSelected ? "text-white" : "text-primary"}`}
+                  className={`text-sm font-instrument-sans-medium ${
+                    isDark
+                      ? isSelected
+                        ? "text-sand-900 dark:text-sand-900"
+                        : "text-primary"
+                      : isSelected
+                        ? "text-white"
+                        : "text-primary"
+                  }`}
                 >
                   {displayLabel}
                 </Text>
@@ -227,7 +245,7 @@ export function StackingCalculator({
         borderRadius={16}
         borderBottomRightRadius={32}
         gradient={colors.stacks.gameCardStroke}
-        innerBackground={colors.neutral[100]}
+        innerBackground={isDark ? undefined : colors.neutral[100]}
         angle={85}
         hasShadow={false}
       >
@@ -276,7 +294,7 @@ export function StackingCalculator({
                 <Text className="text-sm font-instrument-sans text-secondary">
                   Estimated Earnings
                 </Text>
-                <View className="rounded-full bg-sand-200/80 px-2 py-1">
+                <View className="rounded-full bg-sand-200/80 px-2 py-1 dark:bg-surface-secondary">
                   <View className="flex-row items-baseline gap-1.5">
                     <Text className="text-sm font-instrument-sans-semibold text-secondary">
                       ${totalEarningsUsd.toFixed(2)}
@@ -304,7 +322,7 @@ export function StackingCalculator({
                 <Text className="text-sm font-instrument-sans text-secondary">
                   Estimated Earnings
                 </Text>
-                <View className="rounded-full bg-sand-200/60 px-2 py-1">
+                <View className="rounded-full bg-sand-200/60 px-2 py-1 dark:bg-surface-secondary">
                   <Text className="text-sm font-instrument-sans-semibold text-secondary">
                     $0.00
                   </Text>

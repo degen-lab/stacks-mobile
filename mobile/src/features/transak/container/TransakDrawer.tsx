@@ -8,6 +8,7 @@ import {
 } from "react";
 import { View } from "react-native";
 import { showMessage } from "react-native-flash-message";
+import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Modal, Text, Button, colors } from "@/components/ui";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -314,12 +315,16 @@ export function TransakDrawer({ drawerRef }: Props) {
     [handleCheckoutClose, openTransfer],
   );
 
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const transakConfig: TransakConfig = checkoutUrl
     ? { widgetUrl: checkoutUrl }
     : ({} as TransakConfig);
-  const backgroundColor = isWidgetInitialized
+  const backgroundColor = isCheckout
     ? colors.white
-    : colors.neutral[50];
+    : isDark
+      ? "#242220"
+      : colors.neutral[50];
 
   const continueButton = (
     <View className="px-5 pb-4 pt-2">
@@ -358,6 +363,7 @@ export function TransakDrawer({ drawerRef }: Props) {
           : undefined
       }
       onDismiss={handleDismiss}
+      handleBackgroundColor={backgroundColor}
       backgroundStyle={{ backgroundColor }}
     >
       <TransakDrawerLayout
@@ -380,6 +386,7 @@ export function TransakDrawer({ drawerRef }: Props) {
         isValidAmount={isValidAmount}
         availableBalance={sellAvailableBalance}
         bottomInset={insets.bottom}
+        isWidgetInitialized={isWidgetInitialized}
         footer={!isCheckout ? continueButton : null}
       />
     </Modal>

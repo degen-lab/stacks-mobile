@@ -1,4 +1,5 @@
 import { RotateCcw } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 
 import { useSponsoredSubmissionsLeft, useUserProfile } from "@/api/user";
 import {
@@ -32,6 +33,9 @@ export default function GameOverOverlay({
   onSubmitToRaffle,
   onExit,
 }: GameOverOverlayProps) {
+  const { colorScheme } = useColorScheme();
+  const trophyColor =
+    colorScheme === "dark" ? colors.charcoal[200] : colors.neutral[900];
   const { data: userProfile } = useUserProfile();
   const { data: sponsoredSubmissionsLeft } = useSponsoredSubmissionsLeft();
   const raffleSubmissionsLeft =
@@ -67,18 +71,18 @@ export default function GameOverOverlay({
     <OverlayPanel>
       <View className="w-full flex-col items-center gap-4">
         <View className="items-center">
-          <Text className="text-base font-instrument-sans uppercase tracking-widest text-secondary dark:text-sand-300">
+          <Text className="text-base font-instrument-sans uppercase tracking-widest text-secondary text-secondary">
             {summary.isHighScore ? "NEW HIGHSCORE" : "Score"}
           </Text>
-          <Text className="font-matter text-7xl text-primary dark:text-white leading-tight">
+          <Text className="font-matter text-7xl text-primary text-primary leading-tight">
             {summary.score}
           </Text>
         </View>
         {!summary.isHighScore && highScore !== undefined ? (
-          <View className="w-full rounded-xl border border-surface-secondary bg-sand-100 p-4">
+          <View className="w-full rounded-xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-secondary">
             <View className="flex-row items-center gap-2">
-              <TrophyIcon size={20} color={colors.neutral[900]} />
-              <Text className="text-sm text-secondary dark:text-sand-300">
+              <TrophyIcon size={20} color={trophyColor} />
+              <Text className="text-sm text-secondary text-secondary">
                 Only{" "}
                 <Text className="font-semibold">
                   {Math.max(1, highScore - summary.score + 10)}
@@ -105,7 +109,9 @@ export default function GameOverOverlay({
               canSubmitScore && (
                 <TrophyIcon
                   size={18}
-                  color={highscoreSubmitted ? colors.neutral[900] : "#fff"}
+                  color={
+                    highscoreSubmitted ? colors.neutral[600] : colors.white
+                  }
                 />
               )
             }
@@ -152,7 +158,7 @@ export default function GameOverOverlay({
             variant="gamePrimary"
             size="game"
             label="Play again"
-            leftIcon={<RotateCcw size={18} color="#fff" />}
+            leftIcon={<RotateCcw size={18} color={colors.white} />}
             className={onExit ? "flex-1" : "w-full"}
           />
         </View>

@@ -33,6 +33,7 @@ import type {
   BottomSheetModalProps,
 } from "@gorhom/bottom-sheet";
 import { BottomSheetModal, useBottomSheet } from "@gorhom/bottom-sheet";
+import { useColorScheme } from "nativewind";
 import * as React from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -41,6 +42,7 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import colors from "./colors";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 
 import { Text } from "./text";
 
@@ -78,26 +80,50 @@ export const useModal = () => {
 export const Modal = React.forwardRef(
   (
     {
-      snapPoints: _snapPoints = ["60%"],
+      snapPoints: providedSnapPoints,
       title,
       headerTitle,
       detached = false,
       showHandle = true,
-      handleColor = colors.neutral[300],
+      handleColor,
       handleBackgroundColor,
       headerLeft,
       headerRight,
+      enableDynamicSizing = false,
       ...props
     }: ModalProps,
     ref: ModalRef,
   ) => {
     const { bottom: bottomInset } = useSafeAreaInsets();
+    const { colorScheme } = useColorScheme();
+    const isDark = colorScheme === "dark";
+    const resolvedHandleColor =
+      handleColor ?? (isDark ? colors.charcoal[600] : colors.neutral[300]);
+    const resolvedHandleBackgroundColor =
+      handleBackgroundColor ??
+      (isDark
+        ? resolveThemeTokenColor("dark", "--color-surface-primary")
+        : undefined);
+    const resolvedBackgroundStyle =
+      props.backgroundStyle ??
+      (isDark
+        ? {
+            backgroundColor: resolveThemeTokenColor(
+              "dark",
+              "--color-surface-primary",
+            ),
+          }
+        : undefined);
     const detachedProps = React.useMemo(
       () => getDetachedProps(detached),
       [detached],
     );
     const modal = useModal();
-    const snapPoints = React.useMemo(() => _snapPoints, [_snapPoints]);
+    const snapPoints = React.useMemo(() => {
+      if (providedSnapPoints) return providedSnapPoints;
+      if (enableDynamicSizing) return undefined;
+      return ["60%"];
+    }, [enableDynamicSizing, providedSnapPoints]);
 
     React.useImperativeHandle(
       ref,
@@ -109,13 +135,13 @@ export const Modal = React.forwardRef(
         <View
           className="px-1 pb-2"
           style={{
-            backgroundColor: handleBackgroundColor ?? "transparent",
+            backgroundColor: resolvedHandleBackgroundColor ?? "transparent",
           }}
         >
           <View
             className="mb-8 mt-2 h-1 w-12 self-center rounded-lg"
             style={{
-              backgroundColor: handleColor,
+              backgroundColor: resolvedHandleColor,
             }}
           />
           <ModalHeader
@@ -129,8 +155,8 @@ export const Modal = React.forwardRef(
       [
         title,
         headerTitle,
-        handleColor,
-        handleBackgroundColor,
+        resolvedHandleColor,
+        resolvedHandleBackgroundColor,
         headerLeft,
         headerRight,
       ],
@@ -146,9 +172,10 @@ export const Modal = React.forwardRef(
         index={0}
         snapPoints={snapPoints}
         backdropComponent={props.backdropComponent || renderBackdrop}
-        enableDynamicSizing={props.enableDynamicSizing ?? false}
+        enableDynamicSizing={enableDynamicSizing}
         handleComponent={showHandle ? renderHandleComponent : emptyHandle}
         bottomInset={detached ? undefined : bottomInset}
+        backgroundStyle={resolvedBackgroundStyle}
       />
     );
   },

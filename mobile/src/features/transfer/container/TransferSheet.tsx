@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable } from "react-native";
 import { showMessage } from "react-native-flash-message";
+import { useColorScheme } from "nativewind";
 import { Modal, Text, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { useBroadcastBitcoinTransaction } from "@/api/bitcoin";
@@ -60,6 +61,7 @@ export function TransferSheet({
   request,
   requestVersion,
 }: TransferSheetProps) {
+  const { colorScheme } = useColorScheme();
   const { ref, present, dismiss } = useModal();
   const queryClient = useQueryClient();
   const { selectedNetwork } = useSelectedNetwork();
@@ -82,11 +84,28 @@ export function TransferSheet({
   const [qrAsset, setQrAsset] = useState<AppToken | null>(null);
   const [qrAddress, setQrAddress] = useState<string | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasOpenedRef = useRef(false);
   const hasHandledRequestedReceiveRef = useRef(false);
   const currentAsset = sendFlow.formData.asset;
   const currentBalance = getCurrentBalance(currentAsset);
   const currentBalanceIsLoading = getCurrentBalanceIsLoading(currentAsset);
+  const assetBalances = useMemo(
+    () => ({
+      STX: getCurrentBalance("STX"),
+      BTC: getCurrentBalance("BTC"),
+      sBTC: getCurrentBalance("sBTC"),
+    }),
+    [getCurrentBalance],
+  );
+  const assetBalanceLoading = useMemo(
+    () => ({
+      STX: getCurrentBalanceIsLoading("STX"),
+      BTC: getCurrentBalanceIsLoading("BTC"),
+      sBTC: getCurrentBalanceIsLoading("sBTC"),
+    }),
+    [getCurrentBalanceIsLoading],
+  );
   const recipientError =
     mode === "send" &&
     sendFlow.currentStep !== "asset" &&
@@ -210,6 +229,10 @@ export function TransferSheet({
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+      toastTimeoutRef.current = null;
+    }
 
     if (open) {
       hasOpenedRef.current = true;
@@ -235,8 +258,31 @@ export function TransferSheet({
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = null;
+      }
     };
   }, [dismiss, open, present, reset, setMode]);
+
+  const showToastAfterClose = useCallback(
+    (message: string, description: string) => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+
+      onClose();
+      toastTimeoutRef.current = setTimeout(() => {
+        showMessage({
+          message,
+          description,
+          type: "success",
+        });
+        toastTimeoutRef.current = null;
+      }, 325);
+    },
+    [onClose],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -545,12 +591,10 @@ export function TransferSheet({
           token: "sBTC",
           method: "sponsored",
         });
-        showMessage({
-          message: "sBTC transfer queued",
-          description: "Your sponsored transfer will be broadcast shortly.",
-          type: "success",
-        });
-        onClose();
+        showToastAfterClose(
+          "sBTC transfer queued",
+          "Your sponsored transfer will be broadcast shortly.",
+        );
         return;
       }
 
@@ -581,12 +625,10 @@ export function TransferSheet({
         token: "STX",
         method: "sponsored",
       });
-      showMessage({
-        message: "STX transfer queued",
-        description: "Your sponsored transfer will be broadcast shortly.",
-        type: "success",
-      });
-      onClose();
+      showToastAfterClose(
+        "STX transfer queued",
+        "Your sponsored transfer will be broadcast shortly.",
+      );
     } catch (error) {
       showMessage({
         message: "Sponsored transfer failed",
@@ -709,6 +751,8 @@ export function TransferSheet({
             onSelectAsset={sendFlow.updateAsset}
             onNext={sendFlow.nextStep}
             assetAvailability={sendAssetAvailability}
+            balances={assetBalances}
+            balanceLoading={assetBalanceLoading}
           />
         );
       case "amount":
@@ -832,7 +876,14 @@ export function TransferSheet({
       headerLeft={getBackButton()}
       onDismiss={onClose}
       enablePanDownToClose={mode === "select"}
-      backgroundStyle={{ backgroundColor: colors.neutral[50] }}
+      handleBackgroundColor={
+        colorScheme === "dark" ? undefined : colors.neutral[50]
+      }
+      backgroundStyle={
+        colorScheme === "dark"
+          ? undefined
+          : { backgroundColor: colors.neutral[50] }
+      }
     >
       {renderContent()}
     </Modal>

@@ -10,9 +10,10 @@ import {
   colors,
 } from "@/components/ui";
 import { WeeklyTournamentPreview } from "@/features/leaderboard/components/submission-tournament-card";
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import React from "react";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import { TransactionFundingActions } from "./transaction-funding-actions";
 import { WarningLabel } from "./warning-label";
 import {
@@ -43,7 +44,6 @@ type TournamentSubmissionSheetProps = {
   walletHasEnoughBalance?: boolean;
   onAddFunds?: () => void;
   showRankChange?: boolean;
-  snapPoints?: string[];
   resetKey?: string | number;
   sponsoredSubmissionsLeft?: number;
   weeklyContestSubmissionsLeft?: number;
@@ -74,7 +74,6 @@ export const TournamentSubmissionSheet = React.forwardRef<
       walletHasEnoughBalance,
       onAddFunds,
       showRankChange = true,
-      snapPoints,
       resetKey,
       estimatedFee,
       userAvatarSource,
@@ -96,6 +95,9 @@ export const TournamentSubmissionSheet = React.forwardRef<
       React.useState<TransactionMethod | null>(null);
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
     const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
+    const sheetBackground = isDark
+      ? resolveThemeTokenColor("dark", "--color-surface-primary")
+      : colors.white;
 
     const resetState = React.useCallback(() => {
       setSheetState("initial");
@@ -210,16 +212,20 @@ export const TournamentSubmissionSheet = React.forwardRef<
       <Modal
         ref={ref}
         title={undefined}
-        snapPoints={snapPoints}
+        enableDynamicSizing={true}
+        handleBackgroundColor={sheetBackground}
         backgroundStyle={{
-          backgroundColor: isDark ? colors.charcoal[850] : colors.white,
+          backgroundColor: sheetBackground,
         }}
         enablePanDownToClose={sheetState === "initial"}
         enableHandlePanningGesture={sheetState === "initial"}
         enableContentPanningGesture={sheetState === "initial"}
         onDismiss={onCancel}
       >
-        <View className="px-6 ">
+        <BottomSheetScrollView
+          contentContainerClassName="px-6 pb-6"
+          keyboardShouldPersistTaps="handled"
+        >
           {sheetState === "initial" ? (
             <>
               {/* Transaction Details */}
@@ -333,7 +339,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
               </View>
             </View>
           ) : null}
-        </View>
+        </BottomSheetScrollView>
       </Modal>
     );
   },

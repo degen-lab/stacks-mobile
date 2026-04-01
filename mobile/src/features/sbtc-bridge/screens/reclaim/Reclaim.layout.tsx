@@ -65,6 +65,7 @@ export function ReclaimLayout({
         {depositStatus === "failed" && !reclaimTxId ? (
           <Button
             label="Submit reclaim"
+            variant="sbtcBridgeCta"
             size="lg"
             loading={isSubmitting}
             onPress={onSubmitReclaim}

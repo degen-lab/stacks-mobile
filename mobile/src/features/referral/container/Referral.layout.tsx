@@ -72,7 +72,6 @@ export default function ReferralLayout({
             referralCode={referralCode}
             hasReferralCode={hasReferralCode}
             borderRadius={18}
-            innerBackground="#F8F4EF"
           />
 
           {!hasReferralCode && (

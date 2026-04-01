@@ -12,6 +12,7 @@ import { Platform, Pressable, View, type PressableProps } from "react-native";
 import { tv } from "tailwind-variants";
 
 import colors from "@/components/ui/colors";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 
 import type { InputControllerType } from "./input";
 import { Modal, useModal } from "./modal";
@@ -22,7 +23,7 @@ const selectTv = tv({
     container: "mb-4",
     label: "text-secondary mb-1 text-base",
     input:
-      "border-surface-secondary mt-0 flex-row items-center justify-center rounded-xl border bg-white px-4 py-3",
+      "border-surface-secondary mt-0 flex-row items-center justify-center rounded-xl border bg-white px-4 py-3 dark:bg-surface-primary",
     inputValue: "text-primary",
   },
   variants: {
@@ -35,7 +36,7 @@ const selectTv = tv({
     },
     disabled: {
       true: {
-        input: "bg-neutral-200",
+        input: "bg-neutral-200 dark:bg-surface-secondary",
       },
     },
   },
@@ -69,7 +70,10 @@ export const Options = React.forwardRef<BottomSheetModal, OptionsProps>(
     const height = options.length * 64 + 80;
     const snapPoints = React.useMemo(() => [height], [height]);
     const { colorScheme } = useColorScheme();
-    const isDark = colorScheme === "dark";
+    const backgroundColor =
+      colorScheme === "dark"
+        ? resolveThemeTokenColor("dark", "--color-surface-primary")
+        : colors.white;
 
     const renderSelectItem = React.useCallback(
       ({ item }: { item: OptionType }) => (
@@ -90,8 +94,9 @@ export const Options = React.forwardRef<BottomSheetModal, OptionsProps>(
         ref={ref}
         index={0}
         snapPoints={snapPoints}
+        handleBackgroundColor={backgroundColor}
         backgroundStyle={{
-          backgroundColor: isDark ? colors.neutral[800] : colors.white,
+          backgroundColor,
         }}
       >
         <List
@@ -100,6 +105,8 @@ export const Options = React.forwardRef<BottomSheetModal, OptionsProps>(
           renderItem={renderSelectItem}
           testID={testID ? `${testID}-modal` : undefined}
           estimatedItemSize={64}
+          style={{ backgroundColor }}
+          contentContainerStyle={{ backgroundColor }}
         />
       </Modal>
     );
@@ -119,9 +126,13 @@ const Option = React.memo(
     label: string;
     icon?: React.ReactNode;
   }) => {
+    const { colorScheme } = useColorScheme();
+    const checkColor =
+      colorScheme === "dark" ? colors.charcoal[100] : colors.neutral[900];
+
     return (
       <Pressable
-        className="flex-row items-center border-b border-surface-secondary bg-white px-4 py-4"
+        className="flex-row items-center border-b border-surface-secondary bg-white px-4 py-4 dark:bg-surface-primary"
         {...props}
       >
         {icon ? (
@@ -130,7 +141,7 @@ const Option = React.memo(
         <Text className="flex-1 text-base font-instrument-sans text-primary">
           {label}
         </Text>
-        {selected ? <Check size={18} color={colors.neutral[900]} /> : null}
+        {selected ? <Check size={18} color={checkColor} /> : null}
       </Pressable>
     );
   },
@@ -164,6 +175,9 @@ export const Select = (props: SelectProps) => {
     testID,
   } = props;
   const modal = useModal();
+  const { colorScheme } = useColorScheme();
+  const chevronColor =
+    colorScheme === "dark" ? colors.charcoal[300] : colors.neutral[600];
 
   const onSelectOption = React.useCallback(
     (option: OptionType) => {
@@ -210,7 +224,7 @@ export const Select = (props: SelectProps) => {
           <View className="flex-1">
             <Text className={styles.inputValue()}>{textValue}</Text>
           </View>
-          <ChevronDown size={18} color={colors.neutral[600]} />
+          <ChevronDown size={18} color={chevronColor} />
         </Pressable>
         {error ? (
           <Text testID={`${testID}-error`} className="text-sm text-danger-600">

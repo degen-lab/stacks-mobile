@@ -1,4 +1,5 @@
 import { ArrowDown } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { ActivityIndicator } from "react-native";
 
 import { TransactionFundingActions } from "@/components/transaction-funding-actions";
@@ -61,6 +62,8 @@ function SwapTokenRow({
 }
 
 export function SwapReviewView({ swap }: SwapReviewViewProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const sourceBalanceLabel = swap.sourceToken
     ? `${swap.sourceToken.balanceDisplay} ${swap.sourceToken.symbol}`
     : "—";
@@ -70,7 +73,7 @@ export function SwapReviewView({ swap }: SwapReviewViewProps) {
 
   return (
     <>
-      <View className="overflow-hidden rounded-2xl bg-sand-100">
+      <View className="overflow-hidden rounded-2xl border border-border-secondary bg-sand-100 dark:border-border-primary dark:bg-surface-primary">
         <SwapTokenRow
           icon={swap.sourceToken?.icon}
           symbol={swap.sourceToken?.symbol}
@@ -80,9 +83,12 @@ export function SwapReviewView({ swap }: SwapReviewViewProps) {
 
         <View className="flex-row items-center px-5">
           <View className="mx-3">
-            <ArrowDown size={14} color={colors.neutral[400]} />
+            <ArrowDown
+              size={14}
+              color={isDark ? colors.charcoal[400] : colors.neutral[400]}
+            />
           </View>
-          <View className="h-px flex-1 bg-surface-secondary" />
+          <View className="h-px flex-1 bg-surface-secondary dark:bg-border-primary" />
         </View>
 
         <SwapTokenRow
@@ -93,7 +99,7 @@ export function SwapReviewView({ swap }: SwapReviewViewProps) {
         />
       </View>
 
-      <View className="gap-3 rounded-2xl bg-sand-100 px-5 py-4">
+      <View className="gap-3 rounded-2xl border border-border-secondary bg-sand-100 px-5 py-4 dark:border-border-primary dark:bg-surface-primary">
         <SummaryRow label="Current balance" value={sourceBalanceLabel} />
         <SummaryRow
           label="Destination balance"
@@ -104,7 +110,10 @@ export function SwapReviewView({ swap }: SwapReviewViewProps) {
             Network fee
           </Text>
           {swap.isLoadingWalletFee ? (
-            <ActivityIndicator size="small" color={colors.neutral[400]} />
+            <ActivityIndicator
+              size="small"
+              color={isDark ? colors.charcoal[400] : colors.neutral[400]}
+            />
           ) : (
             <Text className="font-instrument-sans text-sm text-primary">
               {swap.walletFeeLabel}

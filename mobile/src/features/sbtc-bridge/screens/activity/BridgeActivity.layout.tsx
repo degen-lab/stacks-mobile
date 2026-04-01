@@ -44,7 +44,7 @@ export function BridgeActivityLayout({
       ) : isLoading ? (
         <ActivityListSkeleton />
       ) : items.length === 0 ? (
-        <Text className="font-instrument-sans italic text-sm text-sand-500">
+        <Text className="font-instrument-sans italic text-sm text-sand-500 dark:text-secondary">
           No activity yet.
         </Text>
       ) : (

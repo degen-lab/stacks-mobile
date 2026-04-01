@@ -277,7 +277,7 @@ function ActivityRow({
 function EmptyState() {
   return (
     <View className="items-center justify-center min-h-[106px]">
-      <Text className="font-instrument-sans italic text-sm text-sand-500">
+      <Text className="font-instrument-sans italic text-sm text-sand-500 dark:text-secondary">
         No activity in your account yet.
       </Text>
     </View>
@@ -351,7 +351,7 @@ export function ActivityItemCard({
   const href = getItemHref(item);
   return (
     <Pressable onPress={() => router.push(href)}>
-      <View className="rounded-[16px] border border-border-secondary bg-sand-100 px-4 py-4 gap-3">
+      <View className="gap-3 rounded-[16px] border border-border-secondary bg-sand-100 px-4 py-4 dark:border-border-primary dark:bg-surface-primary">
         <ActivityRow item={item} config={config} />
         <LinkUnderline
           size="xs"
@@ -377,7 +377,7 @@ export function BridgeActivityCard({
   config: SbtcBridgeConfig;
 }) {
   return (
-    <View className="rounded-[16px] border border-border-secondary bg-sand-100 px-4 py-5">
+    <View className="rounded-[16px] border border-border-secondary bg-sand-100 px-4 py-5 dark:border-border-primary dark:bg-surface-primary">
       {isLoading ? (
         <View className="items-center justify-center min-h-[72px]">
           <ActivityIndicator size="small" color="#B7B4B0" />

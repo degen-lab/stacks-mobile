@@ -40,7 +40,7 @@ export default function ReviveOverlay({
   return (
     <OverlayPanel>
       <View className="w-full items-center gap-4">
-        <View className="w-full items-center gap-3 rounded-2xl border border-sand-200 bg-white px-4 py-5 dark:bg-neutral-900 dark:border-neutral-800">
+        <View className="w-full items-center gap-3 rounded-2xl border border-surface-secondary bg-sand-100 px-4 py-5 dark:bg-surface-secondary">
           <LinearGradient
             colors={["#FF8A64", colors.stacks.bloodOrange]}
             start={{ x: 0.2, y: 0 }}
@@ -60,10 +60,10 @@ export default function ReviveOverlay({
             <Heart size={32} color="#fff" fill="#fff" />
           </LinearGradient>
           <View className="items-center">
-            <Text className="text-lg font-semibold text-primary dark:text-white">
+            <Text className="text-lg font-semibold text-primary">
               Continue your run?
             </Text>
-            <Text className="mt-1 text-center text-base leading-6 text-secondary dark:text-sand-300 font-instrument-sans">
+            <Text className="mt-1 text-center text-base leading-6 font-instrument-sans text-secondary">
               {isHighScorePace
                 ? "You can keep going or submit highscore"
                 : canCompareHighScore
@@ -87,7 +87,9 @@ export default function ReviveOverlay({
               onPress={onRevive}
               disabled={adLoading}
               className={`w-full flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3 ${
-                adLoaded ? "bg-stacks-blood-orange" : "bg-sand-300"
+                adLoaded
+                  ? "bg-stacks-blood-orange"
+                  : "bg-sand-300 dark:bg-surface-secondary"
               }`}
             >
               {adLoading ? (
@@ -106,7 +108,7 @@ export default function ReviveOverlay({
               </Text>
             </Pressable>
             <Pressable
-              className="w-full items-center rounded-2xl border border-sand-300 px-4 py-3"
+              className="w-full items-center rounded-2xl border border-sand-300 px-4 py-3 dark:border-surface-secondary"
               onPress={onDeclineRevive}
             >
               <Text className="text-sm font-semibold text-secondary">

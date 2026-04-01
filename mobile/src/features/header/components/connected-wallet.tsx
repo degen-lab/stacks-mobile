@@ -13,6 +13,7 @@ import {
   WebBrowserPresentationStyle,
 } from "expo-web-browser";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useColorScheme } from "nativewind";
 import { Pressable } from "react-native";
 
 import { Text, View, colors } from "@/components/ui";
@@ -107,7 +108,10 @@ function WalletTrigger({
   isLoading,
   onPress,
 }: WalletTriggerProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const isDefaultConnectedIcon = isConnected && variant === "default";
+  const iconColor = isDark ? colors.charcoal[300] : colors.neutral[700];
 
   return (
     <Pressable
@@ -116,7 +120,7 @@ function WalletTrigger({
       className={
         isDefaultConnectedIcon
           ? "h-9 w-9 items-center justify-center rounded-lg border-2 border-surface-secondary bg-transparent active:opacity-90"
-          : "flex-row items-center gap-1 rounded-lg border-2 border-surface-secondary bg-neutral-100 px-3 py-1.5 active:opacity-80"
+          : "flex-row items-center gap-1 rounded-lg border-2 border-surface-secondary bg-neutral-100 px-3 py-1.5 active:opacity-80 dark:bg-transparent"
       }
       accessibilityRole="button"
       accessibilityLabel={
@@ -125,7 +129,7 @@ function WalletTrigger({
     >
       {isDefaultConnectedIcon ? (
         <View pointerEvents="none">
-          <Wallet size={14} color={colors.neutral[700]} />
+          <Wallet size={14} color={iconColor} />
         </View>
       ) : (
         <>
@@ -134,7 +138,7 @@ function WalletTrigger({
           </Text>
           {isConnected ? (
             <View pointerEvents="none">
-              <ChevronDown size={14} color={colors.neutral[700]} />
+              <ChevronDown size={14} color={iconColor} />
             </View>
           ) : null}
         </>

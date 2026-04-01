@@ -106,6 +106,7 @@ export function BridgeTransactionDetailLayout({
         <View className="gap-3">
           <Button
             label={reclaimButton.label}
+            variant="sbtcBridgeCta"
             size="lg"
             onPress={reclaimButton.onPress}
           />

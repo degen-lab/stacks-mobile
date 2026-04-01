@@ -1,8 +1,10 @@
 import { ArrowUpDown } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { StyleSheet } from "react-native";
 
 import { View, colors } from "@/components/ui";
 import { Skeleton } from "@/components/ui/skeleton";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 
 function SwapSectionSkeleton({ hasAction }: { hasAction?: boolean }) {
   return (
@@ -27,16 +29,31 @@ function SwapSectionSkeleton({ hasAction }: { hasAction?: boolean }) {
 }
 
 export function SwapFormSkeleton() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const flipButtonStyle = {
+    ...styles.flipButton,
+    backgroundColor: isDark
+      ? resolveThemeTokenColor("dark", "--color-surface-secondary")
+      : "#EAE8E6",
+    borderColor: isDark
+      ? resolveThemeTokenColor("dark", "--color-border-primary")
+      : "#D5D3D1",
+  } as const;
+
   return (
     <>
-      <View className="overflow-hidden rounded-[20px] border border-border-secondary bg-sand-100 mb-4">
+      <View className="mb-4 overflow-hidden rounded-[20px] border border-border-secondary bg-sand-100 dark:border-border-primary dark:bg-surface-primary">
         <SwapSectionSkeleton hasAction />
         <View className="flex-row items-center px-4">
-          <View className="h-px flex-1 bg-surface-secondary" />
-          <View style={styles.flipButton}>
-            <ArrowUpDown size={14} color={colors.neutral[300]} />
+          <View className="h-px flex-1 bg-surface-secondary dark:bg-border-primary" />
+          <View style={flipButtonStyle}>
+            <ArrowUpDown
+              size={14}
+              color={isDark ? colors.charcoal[300] : colors.neutral[300]}
+            />
           </View>
-          <View className="h-px flex-1 bg-surface-secondary" />
+          <View className="h-px flex-1 bg-surface-secondary dark:bg-border-primary" />
         </View>
         <SwapSectionSkeleton />
       </View>

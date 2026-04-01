@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { TextInput, View } from "react-native";
+import { useColorScheme } from "nativewind";
 
 import { Text } from "@/components/ui/text";
 import colors from "@/components/ui/colors";
@@ -52,6 +53,15 @@ export function ProjectRewardsInput({
   headerRight,
   maxDecimals = 8,
 }: ProjectRewardsInputProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const borderColor = errorText
+    ? "#DC2626"
+    : isDark
+      ? colors.charcoal[700]
+      : colors.neutral[300];
+  const placeholderColor = isDark ? colors.charcoal[500] : colors.neutral[400];
+
   const [isFocused, setIsFocused] = useState(false);
   const [editingValue, setEditingValue] = useState(value);
 
@@ -104,7 +114,7 @@ export function ProjectRewardsInput({
           autoCorrect={false}
           autoCapitalize="none"
           placeholder={placeholder}
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={placeholderColor}
           selectionColor={colors.neutral[700]}
           className={`h-12 rounded-xl bg-surface-tertiary pr-3 text-[14px] leading-5 text-primary ${
             disabled ? "opacity-60" : "opacity-100"
@@ -113,7 +123,7 @@ export function ProjectRewardsInput({
             paddingLeft: variant === "sbtc-icon" ? 30 : 28,
             fontFamily: "InstrumentSans-Regular",
             borderWidth: 1,
-            borderColor: errorText ? "#DC2626" : colors.neutral[300],
+            borderColor,
             elevation: 0,
           }}
         />

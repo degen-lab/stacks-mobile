@@ -1,4 +1,5 @@
 import { ChevronLeft, X } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { useEffect, useRef } from "react";
 import {
   KeyboardAvoidingView,
@@ -30,6 +31,8 @@ export function SwapSheet({
 }: SwapSheetProps) {
   const { ref, present, dismiss } = useModal();
   const hasOpenedRef = useRef(false);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   useEffect(() => {
     if (open) {
@@ -95,19 +98,28 @@ export function SwapSheet({
       ref={ref}
       title={title}
       snapPoints={["74%", "88%", "90%"]}
-      backgroundStyle={{ backgroundColor: colors.neutral[50] }}
+      handleBackgroundColor={isDark ? undefined : colors.neutral[50]}
+      backgroundStyle={
+        isDark ? undefined : { backgroundColor: colors.neutral[50] }
+      }
       enablePanDownToClose
       onDismiss={swap.onDismiss}
       headerLeft={
         swap.step !== "form" ? (
           <Pressable style={styles.headerButton} onPress={swap.onBack}>
-            <ChevronLeft size={20} color={colors.neutral[700]} />
+            <ChevronLeft
+              size={20}
+              color={isDark ? colors.charcoal[300] : colors.neutral[700]}
+            />
           </Pressable>
         ) : null
       }
       headerRight={
         <Pressable style={styles.headerButton} onPress={onClose}>
-          <X size={20} color={colors.neutral[400]} />
+          <X
+            size={20}
+            color={isDark ? colors.charcoal[400] : colors.neutral[400]}
+          />
         </Pressable>
       }
     >

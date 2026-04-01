@@ -49,7 +49,7 @@ export function PositionCard({
       {(!isCollapsible || !isCollapsed) && (
         <CardBody
           icon={iconWithEmptyState}
-          value={`${amount.toFixed(5)} sBTC`}
+          value={`${amount.toFixed(8)} sBTC`}
           valueClassName={hasDefiPosition ? "text-primary" : "text-tertiary"}
           subtitle={hasDefiPosition ? protocol : undefined}
           layout="inline"

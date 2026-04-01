@@ -1,5 +1,7 @@
 import colors, { shadows } from "@/components/ui/colors";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
 import { PropsWithChildren } from "react";
 import { ColorValue, StyleProp, View, ViewStyle } from "react-native";
 
@@ -33,10 +35,17 @@ export default function GradientBorder({
   borderWidth = 1,
   gradient = colors.stacks.borderGradientBloodOrangeCard,
   shadow = shadows.bloodOrangeCard,
-  innerBackground = "#EAE8E6",
+  innerBackground,
   angle = -94,
   hasShadow = true,
 }: GradientBorderProps) {
+  const { colorScheme } = useColorScheme();
+  const resolvedInnerBackground =
+    innerBackground ??
+    resolveThemeTokenColor(
+      colorScheme === "dark" ? "dark" : "light",
+      "--color-surface-primary",
+    );
   const { start, end } = angleToPoints(angle);
   return (
     <View style={hasShadow ? shadow : undefined}>
@@ -61,7 +70,7 @@ export default function GradientBorder({
                 borderWidth > 1
                   ? Math.max(borderBottomRightRadius - borderWidth, 0)
                   : borderBottomRightRadius,
-              backgroundColor: innerBackground,
+              backgroundColor: resolvedInnerBackground,
             },
             { overflow: "hidden" },
             style,

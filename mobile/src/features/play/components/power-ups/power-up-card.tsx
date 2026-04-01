@@ -23,12 +23,12 @@ export default function PowerUpCard({
 
   return (
     <View
-      className="rounded-2xl border border-surface-secondary bg-white px-4 py-4"
+      className="rounded-2xl border border-surface-secondary bg-white px-4 py-4 dark:bg-surface-primary"
       testID={`power-up-card-${variant}`}
     >
       <View className="flex-row items-start justify-between">
         <View className="flex-row items-start gap-3 flex-1 pr-3">
-          <View className="h-12 w-12 items-center justify-center rounded-2xl bg-sand-100 border border-sand-200">
+          <View className="h-12 w-12 items-center justify-center rounded-2xl border border-sand-200 bg-sand-100 dark:border-surface-secondary dark:bg-surface-secondary">
             <Icon size={24} />
           </View>
           <View className="flex-1 w-full">
@@ -39,7 +39,7 @@ export default function PowerUpCard({
               >
                 {title}
               </Text>
-              <View className="rounded-full bg-sand-100 px-2 py-0.5">
+              <View className="rounded-full bg-sand-100 px-2 py-0.5 dark:bg-surface-secondary">
                 <Text
                   className="text-sm font-instrument-sans text-secondary"
                   testID={`power-up-owned-${variant}`}

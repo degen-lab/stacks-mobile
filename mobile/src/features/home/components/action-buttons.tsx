@@ -1,36 +1,37 @@
-import { Text, View, Button } from "@/components/ui";
+import { Text, View, Button, colors } from "@/components/ui";
 import {
   ArrowDownLeft,
   ArrowUpLeft,
   ArrowLeftRight,
 } from "lucide-react-native";
 import { SwapActionIcon, BridgeActionIcon } from "@/components/ui/icons";
+import { useColorScheme } from "nativewind";
 import type { EarnQuickActions } from "../../earn/types";
 
 const ACTIONS = [
   {
     label: "Buy",
-    icon: <ArrowDownLeft size={16} color="#0B0A0F" />,
+    renderIcon: (color: string) => <ArrowDownLeft size={16} color={color} />,
     handler: (actions: EarnQuickActions) => actions.onBuy,
   },
   {
     label: "Sell",
-    icon: <ArrowUpLeft size={16} color="#0B0A0F" />,
+    renderIcon: (color: string) => <ArrowUpLeft size={16} color={color} />,
     handler: (actions: EarnQuickActions) => actions.onSell,
   },
   {
     label: "Transfer",
-    icon: <ArrowLeftRight size={16} color="#0B0A0F" />,
+    renderIcon: (color: string) => <ArrowLeftRight size={16} color={color} />,
     handler: (actions: EarnQuickActions) => actions.onTransfer,
   },
   {
     label: "Swap",
-    icon: <SwapActionIcon size={16} color="#0B0A0F" />,
+    renderIcon: (color: string) => <SwapActionIcon size={16} color={color} />,
     handler: (actions: EarnQuickActions) => actions.onSwap,
   },
   {
     label: "Bridge",
-    icon: <BridgeActionIcon size={16} color="#0B0A0F" />,
+    renderIcon: (color: string) => <BridgeActionIcon size={16} color={color} />,
     handler: (actions: EarnQuickActions) => actions.onBridge,
   },
 ] as const;
@@ -40,6 +41,10 @@ type ActionButtonsProps = {
 };
 
 export function EarnActionButtons({ actions }: ActionButtonsProps) {
+  const { colorScheme } = useColorScheme();
+  const iconColor =
+    colorScheme === "dark" ? colors.charcoal[100] : colors.neutral[950];
+
   return (
     <View className="flex-row gap-1.5">
       {ACTIONS.map((action) => (
@@ -47,7 +52,7 @@ export function EarnActionButtons({ actions }: ActionButtonsProps) {
           <Button
             variant="iconCircle"
             size="iconCircle"
-            leftIcon={action.icon}
+            leftIcon={action.renderIcon(iconColor)}
             label={action.label}
             iconOnly
             accessibilityLabel={action.label}

@@ -44,7 +44,7 @@ export function BridgeCard({
   return (
     <View
       className={twMerge(
-        "rounded-[20px] border border-border-secondary bg-sand-100 px-4 py-4",
+        "rounded-[20px] border border-border-secondary bg-sand-100 px-4 py-4 dark:border-border-primary dark:bg-surface-primary",
         className,
       )}
     >

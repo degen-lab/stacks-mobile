@@ -38,7 +38,7 @@ export function LeaderboardItem({
   return (
     <Pressable onPress={onMissingSubmission} disabled={!onMissingSubmission}>
       <View
-        className={`flex-row items-center bg-sand-100 border border-border-secondary p-4 ${
+        className={`flex-row items-center bg-sand-100 dark:bg-surface-primary border border-border-secondary p-4 ${
           isFirst ? "rounded-t-xl" : ""
         } ${isLast ? "rounded-b-xl" : ""} ${!isLast ? "border-b-0" : ""}`}
       >

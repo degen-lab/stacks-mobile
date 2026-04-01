@@ -16,7 +16,6 @@ export type ColorSchemeType = "light" | "dark" | "system";
 export const useSelectedTheme = () => {
   const { setColorScheme } = useColorScheme();
   const [theme, setTheme] = useState<ColorSchemeType>("system");
-  const [isLoaded, setIsLoaded] = useState(false);
 
   // Load theme from storage on mount
   useEffect(() => {
@@ -30,8 +29,6 @@ export const useSelectedTheme = () => {
         }
       } catch (error) {
         console.error("Failed to load theme:", error);
-      } finally {
-        setIsLoaded(true);
       }
     };
     loadTheme();
@@ -51,7 +48,7 @@ export const useSelectedTheme = () => {
   );
 
   const selectedTheme = (theme ?? "system") as ColorSchemeType;
-  return { selectedTheme, setSelectedTheme, isLoaded } as const;
+  return { selectedTheme, setSelectedTheme } as const;
 };
 
 // to be used in the root file to load the selected theme from AsyncStorage
@@ -59,7 +56,6 @@ export const loadSelectedTheme = async () => {
   try {
     const theme = await getString(SELECTED_THEME);
     if (theme) {
-      console.log("theme", theme);
       colorScheme.set(theme as ColorSchemeType);
     }
   } catch (error) {

@@ -4,6 +4,7 @@ import { Header } from "@/features/header";
 import { useAuth } from "@/lib/store/auth";
 import { useConsentStore } from "@/lib/store/consent";
 import { Redirect, Tabs } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -11,6 +12,8 @@ export default function TabLayout() {
   const { isAuthenticated, hasHydrated } = useAuth();
   const consentHydrated = useConsentStore((state) => state.hasHydrated);
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const androidBottomInset =
     Platform.OS === "android" ? Math.min(insets.bottom, 32) : 0;
 
@@ -23,9 +26,9 @@ export default function TabLayout() {
       screenOptions={{
         header: () => <Header />,
         tabBarActiveTintColor: "#FC6432",
-        tabBarInactiveTintColor: "#5E5F60",
+        tabBarInactiveTintColor: isDark ? "#95918C" : "#5E5F60",
         tabBarStyle: {
-          backgroundColor: "#EAE8E6",
+          backgroundColor: isDark ? "#242220" : "#EAE8E6",
           borderTopWidth: 0,
           shadowOpacity: 0,
           shadowOffset: { width: 0, height: 0 },
@@ -48,7 +51,9 @@ export default function TabLayout() {
           title: "Home",
           tabBarButton: (props) => <HapticTab {...props} />,
           tabBarIcon: ({ focused }) => (
-            <HomeIcon color={focused ? "#FC6432" : "#5E5F60"} />
+            <HomeIcon
+              color={focused ? "#FC6432" : isDark ? "#95918C" : "#5E5F60"}
+            />
           ),
         }}
       />
@@ -59,7 +64,9 @@ export default function TabLayout() {
           title: "Play",
           tabBarButton: (props) => <HapticTab {...props} />,
           tabBarIcon: ({ focused }) => (
-            <GamepadIcon color={focused ? "#FC6432" : "#5E5F60"} />
+            <GamepadIcon
+              color={focused ? "#FC6432" : isDark ? "#95918C" : "#5E5F60"}
+            />
           ),
         }}
       />
@@ -69,7 +76,9 @@ export default function TabLayout() {
           title: "Earn",
           tabBarButton: (props) => <HapticTab {...props} />,
           tabBarIcon: ({ focused }) => (
-            <EarnIcon color={focused ? "#FC6432" : "#5E5F60"} />
+            <EarnIcon
+              color={focused ? "#FC6432" : isDark ? "#95918C" : "#5E5F60"}
+            />
           ),
         }}
       />

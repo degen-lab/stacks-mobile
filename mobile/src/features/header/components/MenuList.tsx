@@ -13,7 +13,7 @@ export function MenuList({ items, className = "" }: MenuListProps) {
   return (
     <View
       className={twMerge(
-        "overflow-hidden rounded-3xl border border-sand-200 bg-white",
+        "overflow-hidden rounded-3xl border border-sand-200 bg-white dark:border-surface-secondary dark:bg-surface-primary",
         className,
       )}
     >
@@ -21,7 +21,7 @@ export function MenuList({ items, className = "" }: MenuListProps) {
         <React.Fragment key={item.label}>
           <MenuItem {...item} />
           {index < items.length - 1 ? (
-            <View className="h-px bg-sand-200" />
+            <View className="h-px bg-sand-200 dark:bg-surface-secondary" />
           ) : null}
         </React.Fragment>
       ))}

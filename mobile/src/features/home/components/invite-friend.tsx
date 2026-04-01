@@ -1,3 +1,4 @@
+import { useColorScheme } from "nativewind";
 import { View, Card, colors, AnimatedStarSplash } from "@/components/ui";
 import GradientBorder from "../../../components/ui/gradient-border";
 
@@ -6,6 +7,12 @@ type InviteFriendCardProps = {
 };
 
 export default function InviteFriendCard({ onPress }: InviteFriendCardProps) {
+  const { colorScheme } = useColorScheme();
+  const giftImage =
+    colorScheme === "dark"
+      ? require("@/assets/images/gift-dark.svg")
+      : require("@/assets/images/gift.svg");
+
   return (
     <View className="relative mt-10">
       <AnimatedStarSplash
@@ -30,7 +37,7 @@ export default function InviteFriendCard({ onPress }: InviteFriendCardProps) {
 
       <GradientBorder gradient={colors.stacks.borderGradientBloodOrangeCard}>
         <Card
-          imageSource={require("@/assets/images/gift.svg")}
+          imageSource={giftImage}
           imageSize={{ width: 72, height: 69.71 }}
           title="Invite a friend!"
           description="Earn 100 points and boosted points for each active referral"

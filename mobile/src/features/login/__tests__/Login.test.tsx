@@ -183,6 +183,15 @@ describe("LoginScreen", () => {
     });
   });
 
+  it("shows a loading indicator on the google button while authenticating", () => {
+    authState.isAuthenticating = true;
+
+    const { getByTestId, queryByText } = render(<LoginScreen />);
+
+    expect(getByTestId("google-signin-button-activity-indicator")).toBeTruthy();
+    expect(queryByText("Continue with Google")).toBeNull();
+  });
+
   it("opens referral modal for new users", async () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult());
     fetchQuery.mockResolvedValue({ isNewUser: true });

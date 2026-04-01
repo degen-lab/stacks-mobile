@@ -1,8 +1,11 @@
 import type { ImageSource } from "expo-image";
 import { Eye, EyeOff } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { InfoBadge, Pressable, Text, View } from "@/components/ui";
+import colors from "@/components/ui/colors";
+
 import { StreakIcon } from "@/components/ui/icons/streak";
 import { Avatar } from "../components/Avatar";
 import { BreadcrumbBar } from "../components/BreadcrumbBar";
@@ -71,6 +74,9 @@ export function HeaderLayout({
   onPressPlay,
 }: HeaderLayoutProps) {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const eyeIconColor = isDark ? colors.charcoal[300] : "#595754";
   return (
     <View
       className="bg-surface-tertiary"
@@ -134,9 +140,9 @@ export function HeaderLayout({
                 }
               >
                 {earnBalanceTrigger.isBalanceVisible ? (
-                  <EyeOff size={16} color="#595754" />
+                  <EyeOff size={16} color={eyeIconColor} />
                 ) : (
-                  <Eye size={16} color="#595754" />
+                  <Eye size={16} color={eyeIconColor} />
                 )}
               </Pressable>
             </>

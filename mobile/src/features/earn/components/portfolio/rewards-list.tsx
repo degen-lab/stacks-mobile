@@ -2,6 +2,8 @@ import { Asset } from "expo-asset";
 import { Image } from "react-native";
 import { SvgUri } from "react-native-svg";
 
+import { useColorScheme } from "nativewind";
+
 import { Pressable, Skeleton, Text, View, colors } from "@/components/ui";
 import { getSkinById } from "@/features/play/components/skins/types";
 import { useSvgAsset } from "@/hooks/use-svg-asset";
@@ -10,12 +12,6 @@ import { maskValue } from "@/lib/format/mask-display-value";
 import { formatPortfolioTokenAmount } from "@/lib/assets/portfolio";
 import type { EarnRewardRow } from "../../types";
 import { EarnProgramIcon } from "./rewards-sources-icon";
-
-const STATUS_TEXT_COLOR: Record<EarnRewardRow["statusTone"], string> = {
-  active: colors.success[600],
-  pending: colors.neutral[600],
-  inactive: colors.neutral[600],
-};
 
 type EarnRewardsListProps = {
   rewardRows: EarnRewardRow[];
@@ -70,9 +66,18 @@ function RewardRow({
   isBalanceVisible: boolean;
   onPress: () => void;
 }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const valueDisplay = `${formatPortfolioTokenAmount(row.value, row.valueToken === "stx" ? 2 : 8)} ${row.valueToken.toUpperCase()}`;
   const isActive = row.statusTone !== "inactive";
-  const titleColor = isActive ? colors.neutral[900] : colors.neutral[500];
+  const titleColor = isActive
+    ? isDark
+      ? colors.neutral[100]
+      : colors.neutral[900]
+    : isDark
+      ? colors.neutral[500]
+      : colors.neutral[500];
+  const mutedColor = isDark ? colors.neutral[400] : colors.neutral[600];
   const titleInsetClassName = row.id !== "dual-stacking" ? "ml-1" : "";
   const showValue = isActive || row.value > 0;
   const showTrailingStatus = !isActive && row.value === 0;
@@ -113,7 +118,12 @@ function RewardRow({
               <Text
                 className="font-instrument-sans-medium text-xs"
                 numberOfLines={1}
-                style={{ color: STATUS_TEXT_COLOR[row.statusTone] }}
+                style={{
+                  color:
+                    row.statusTone === "active"
+                      ? colors.success[600]
+                      : mutedColor,
+                }}
               >
                 {row.statusLabel}
               </Text>
@@ -129,7 +139,7 @@ function RewardRow({
         <Text
           className="font-instrument-sans-medium text-xs"
           numberOfLines={1}
-          style={{ color: colors.neutral[600] }}
+          style={{ color: mutedColor }}
         >
           {row.statusLabel}
         </Text>

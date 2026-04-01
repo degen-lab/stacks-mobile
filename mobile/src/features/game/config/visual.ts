@@ -54,6 +54,28 @@ export const VISUAL_CONFIG = {
     PLATFORM_TOP: "#FFFFFF",
     PLATFORM_SIDE: "#E2E8F0",
   },
+  DARK_SCENE: {
+    // surface-tertiary (#181818) → surface-primary (#242220) — matches design system tokens
+    BACKGROUND_COLORS: ["#181818", "#242220"] as const,
+    HUD_SCORE: "#F5EFE7",
+    HUD_HELPER: "#C8BDAF",
+    PLATFORM_TOP: "#484747",
+    PLATFORM_SIDE: "#4A515C",
+    PLATFORM_MARKER: "#FF4A3D",
+    PANEL_BG: "#26221F",
+    PANEL_BORDER: "#4F5863",
+    CARD_BG: "#302A26",
+    CARD_BORDER: "#5B6470",
+    POWER_UP_BG: "#2D3138",
+    POWER_UP_BG_ACTIVE: "#434B55",
+    POWER_UP_BORDER: "#69727D",
+    POWER_UP_LABEL: "#D5CBC0",
+    POWER_UP_STATUS: "#FFB15C",
+    POWER_UP_GLOW: [
+      "rgba(255, 152, 53, 0.24)",
+      "rgba(255, 152, 53, 0)",
+    ] as const,
+  },
 } as const;
 
 // Screen dimensions

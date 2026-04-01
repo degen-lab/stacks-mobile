@@ -1,7 +1,9 @@
 import { SvgUri } from "react-native-svg";
+import { useColorScheme } from "nativewind";
 
 import { Text, View } from "@/components/ui";
 import GradientBorder from "@/components/ui/gradient-border";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import { useSvgAsset } from "@/hooks/use-svg-asset";
 
 export type StatItem = {
@@ -13,7 +15,7 @@ export type StatItem = {
 
 function StatCard({ label, value, unit, prefix }: StatItem) {
   return (
-    <View className="flex-1 rounded-[14px] border border-surface-secondary bg-sand-100 px-3 py-4">
+    <View className="flex-1 rounded-[14px] border border-surface-secondary bg-sand-100 px-3 py-4 dark:border-border-primary dark:bg-surface-primary">
       <Text className="font-matter-sq-mono text-xs tracking-wide uppercase text-secondary">
         {label}
       </Text>
@@ -48,9 +50,14 @@ export function BridgeOverviewGrid({
   hero: StatItem;
   items: StatItem[];
 }) {
+  const { colorScheme } = useColorScheme();
   const bitcoinCoinsUri = useSvgAsset(
     require("@/assets/images/bitcoin-coins.svg"),
   );
+  const heroInnerBackground =
+    colorScheme === "dark"
+      ? resolveThemeTokenColor("dark", "--color-surface-primary")
+      : "#F3F2F0";
 
   return (
     <View className="gap-3">
@@ -58,7 +65,7 @@ export function BridgeOverviewGrid({
         borderRadius={14}
         borderBottomRightRadius={36}
         gradient={["#D5D3D1", "rgba(255, 152, 53, 1)"]}
-        innerBackground="#F3F2F0"
+        innerBackground={heroInnerBackground}
         angle={85}
         hasShadow={false}
       >
