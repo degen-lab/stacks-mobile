@@ -60,8 +60,8 @@ const mockRewardRows = [
   {
     id: "bridge-game" as const,
     label: "Stacks Bridge",
-    statusLabel: "No submissions",
-    statusTone: "inactive" as const,
+    statusLabel: "2 submissions",
+    statusTone: "active" as const,
     value: 0,
     valueToken: "stx" as const,
   },
@@ -123,7 +123,7 @@ describe("EarnOverviewCard", () => {
           {
             id: "bridge-game",
             label: "Stacks Bridge",
-            statusLabel: "Earning",
+            statusLabel: "1 submission",
             statusTone: "active",
             value: 0,
             valueToken: "stx",
@@ -155,7 +155,7 @@ describe("EarnOverviewCard", () => {
     fireEvent.press(screen.getByTestId("earn-overview-toggle-rewards"));
 
     expect(screen.getAllByText("Not active")).toHaveLength(2);
-    expect(screen.getByText("Earning")).toBeTruthy();
+    expect(screen.getByText("1 submission")).toBeTruthy();
     expect(screen.getByText("0 STX")).toBeTruthy();
   });
 });

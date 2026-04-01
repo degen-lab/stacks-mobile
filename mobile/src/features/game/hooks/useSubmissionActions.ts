@@ -1,12 +1,15 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback } from "react";
 
+import { queryClient } from "@/api/common";
+import type { CurrentTournamentSubmissions } from "@/api/game/tournament/types";
 import { trackEvent } from "@/lib/analytics";
 
 import { useCreateGameSubmissionTransactionMutation } from "@/api/game/transaction";
 import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
 import { useSubmitStacksTransaction } from "@/hooks/use-submit-stacks-transaction";
 import { SubmissionType } from "@/lib/enums";
+import { usePendingGameSubmissionStore } from "@/lib/store/pending-game-submission";
 import { getActiveWalletAccount } from "@/lib/stacks/active-account";
 
 import type { SubmissionContext } from "./useSubmissionSheet";
@@ -36,6 +39,23 @@ export const useSubmissionActions = ({
   const { submitPreparedSponsoredTransaction } =
     useSponsoredStacksTransaction();
   const { submitWalletTransaction } = useSubmitStacksTransaction();
+  const markPendingSubmission = usePendingGameSubmissionStore(
+    (state) => state.markPendingSubmission,
+  );
+
+  const getCurrentSubmissionCount = useCallback(() => {
+    const currentTournamentSubmissions =
+      queryClient.getQueryData<CurrentTournamentSubmissions>([
+        "current-tournament-submissions",
+      ]);
+
+    return (
+      (currentTournamentSubmissions
+        ?.weeklyContestSubmissionsForCurrentTournament.length ?? 0) +
+      (currentTournamentSubmissions?.raffleSubmissionsForCurrentTournament
+        .length ?? 0)
+    );
+  }, []);
 
   const handleSubmissionSuccess = useCallback(
     (txId: string) => {
@@ -100,9 +120,12 @@ export const useSubmissionActions = ({
       accountIndex,
       unsignedSerializedTx: unsigned.serializedTx,
     });
+    markPendingSubmission(getCurrentSubmissionCount());
     return String(requestId);
   }, [
     createGameSubmissionTransactionMutation,
+    getCurrentSubmissionCount,
+    markPendingSubmission,
     runSummary?.score,
     score,
     submissionContext?.kind,
@@ -147,9 +170,12 @@ export const useSubmissionActions = ({
         ? "raffle_entered"
         : "score_submitted";
     void trackEvent(eventName, { method: "wallet" });
+    markPendingSubmission(getCurrentSubmissionCount());
     return String(unsigned.submission.id);
   }, [
     createGameSubmissionTransactionMutation,
+    getCurrentSubmissionCount,
+    markPendingSubmission,
     runSummary?.score,
     score,
     submissionContext?.kind,

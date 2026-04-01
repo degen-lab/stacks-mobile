@@ -13,7 +13,7 @@ type BuildEarnRewardsSummaryArgs = {
   isEnrolledCurrentCycle: boolean;
   isEnrolledNextCycle: boolean;
   lockedStxBalance: number;
-  hasActiveGameSubmission: boolean;
+  currentTournamentGameSubmissionCount: number;
 };
 
 export const EARN_REWARD_ROW_ROUTES: Record<EarnRewardRowId, string> = {
@@ -47,7 +47,7 @@ export function buildEarnRewardsSummary({
   isEnrolledCurrentCycle,
   isEnrolledNextCycle,
   lockedStxBalance,
-  hasActiveGameSubmission,
+  currentTournamentGameSubmissionCount,
 }: BuildEarnRewardsSummaryArgs): EarnRewardsSummary {
   const normalizedStats = Array.isArray(stats) ? stats : [];
   let cumulativeDualStackingRewardsBtc = 0;
@@ -66,6 +66,10 @@ export function buildEarnRewardsSummary({
     currentStxPriceUsd != null
       ? cumulativeStackingRewardsStx * currentStxPriceUsd
       : null;
+  const hasGameSubmissions = currentTournamentGameSubmissionCount > 0;
+  const gameSubmissionStatusLabel = hasGameSubmissions
+    ? `${currentTournamentGameSubmissionCount} submission${currentTournamentGameSubmissionCount === 1 ? "" : "s"}`
+    : "No submissions";
   const totalRewardsUsd =
     dualStackingRewardsUsd == null && stackingRewardsUsd == null
       ? null
@@ -78,8 +82,8 @@ export function buildEarnRewardsSummary({
       {
         id: "bridge-game",
         label: "Stacks Bridge",
-        statusLabel: hasActiveGameSubmission ? "Earning" : "No submissions",
-        statusTone: hasActiveGameSubmission ? "active" : "inactive",
+        statusLabel: gameSubmissionStatusLabel,
+        statusTone: hasGameSubmissions ? "active" : "inactive",
         value: 0,
         valueToken: "stx",
       },

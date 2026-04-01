@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 
 import { useMinHoldForEnrollment } from "@/api/dual-stacking/contract";
@@ -11,12 +11,17 @@ import { useTransak } from "@/features/transak/context/transak-context";
 import { usePortfolioBalance } from "@/hooks/use-portfolio-balance";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useBalanceVisibility } from "@/lib/store/balance-visibility";
+import {
+  PENDING_GAME_SUBMISSION_TTL_MS,
+  usePendingGameSubmissionStore,
+} from "@/lib/store/pending-game-submission";
 
 import { GetAssetSheet } from "@/features/transfer/components/get-asset-sheet";
 import { useUserStackingData } from "@/api/stacking";
 import { usePoxData } from "@/api/stacks/use-stacks-api";
 import { useUserProfile } from "@/api/user";
 import { useTimeTillRewards } from "@/features/stacking/hooks/use-cycle-time";
+import { DEFAULT_STACKING_APY } from "@/features/stacking/hooks/use-stacking";
 import { fromSatsToBtc } from "@/lib/format/currency";
 import { buildEarnAssetRoute } from "../lib/asset-route";
 import { buildEarnNextStepCards } from "../lib/next-steps";
@@ -48,6 +53,12 @@ export default function EarnScreen() {
   const { data: userProfile } = useUserProfile();
   const [selectedGetAsset, setSelectedGetAsset] =
     useState<EarnAcquisitionAsset | null>(null);
+  const pendingSubmission = usePendingGameSubmissionStore(
+    (state) => state.pendingSubmission,
+  );
+  const clearPendingSubmission = usePendingGameSubmissionStore(
+    (state) => state.clearPendingSubmission,
+  );
 
   const portfolio = usePortfolioBalance();
   const { data: poxInfo, isLoading: isLoadingPox } = usePoxData();
@@ -74,7 +85,10 @@ export default function EarnScreen() {
   const {
     data: currentTournamentSubmissions,
     isLoading: currentTournamentSubmissionsLoading,
-  } = useCurrentTournamentSubmissions();
+  } = useCurrentTournamentSubmissions({
+    refetchInterval: pendingSubmission ? 10_000 : false,
+    refetchOnWindowFocus: true,
+  });
   const isDualStackingStatsLoading = Boolean(
     stxAddress && dualStackingStatsQuery.isLoading,
   );
@@ -83,9 +97,37 @@ export default function EarnScreen() {
     timeTillRewardPhase && timeTillRewardPhase !== "--"
       ? timeTillRewardPhase
       : null;
-  const hasActiveGameSubmission =
+  const serverSubmissionCount =
     (currentTournamentSubmissions?.weeklyContestSubmissionsForCurrentTournament
-      ?.length ?? 0) > 0;
+      ?.length ?? 0) +
+    (currentTournamentSubmissions?.raffleSubmissionsForCurrentTournament
+      ?.length ?? 0);
+  const pendingSubmissionExpired =
+    pendingSubmission != null &&
+    Date.now() - pendingSubmission.createdAt > PENDING_GAME_SUBMISSION_TTL_MS;
+  const optimisticPendingSubmissionCount =
+    pendingSubmission &&
+    !pendingSubmissionExpired &&
+    serverSubmissionCount <= pendingSubmission.baselineCount
+      ? 1
+      : 0;
+  const currentTournamentGameSubmissionCount =
+    serverSubmissionCount + optimisticPendingSubmissionCount;
+
+  useEffect(() => {
+    if (!pendingSubmission) return;
+    if (
+      pendingSubmissionExpired ||
+      serverSubmissionCount > pendingSubmission.baselineCount
+    ) {
+      clearPendingSubmission();
+    }
+  }, [
+    clearPendingSubmission,
+    pendingSubmission,
+    pendingSubmissionExpired,
+    serverSubmissionCount,
+  ]);
 
   const assets = portfolio.assets;
   const isPortfolioInitialLoading =
@@ -98,16 +140,16 @@ export default function EarnScreen() {
         stackingRows: userStackingData,
         currentBtcPriceUsd: portfolio.btcPriceUsd ?? null,
         currentStxPriceUsd: portfolio.stxPriceUsd ?? null,
-        currentStackingApr: null,
+        currentStackingApr: DEFAULT_STACKING_APY * 100,
         isEnrolledCurrentCycle: enrolledCurrentCycle,
         isEnrolledNextCycle: enrolledNextCycle,
         lockedStxBalance: portfolio.stxLockedBalance,
-        hasActiveGameSubmission,
+        currentTournamentGameSubmissionCount,
       }),
     [
       dualStackingStatsQuery.data,
       enrolledCurrentCycle,
-      hasActiveGameSubmission,
+      currentTournamentGameSubmissionCount,
       enrolledNextCycle,
       portfolio.btcPriceUsd,
       portfolio.stxLockedBalance,
