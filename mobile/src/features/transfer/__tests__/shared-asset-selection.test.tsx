@@ -6,6 +6,14 @@ jest.mock("expo-haptics", () => ({
   selectionAsync: jest.fn(),
 }));
 
+jest.mock("@/api/market/use-stacks-price", () => ({
+  useStacksPrice: () => ({ data: undefined }),
+}));
+
+jest.mock("@/api/market/use-btc-price", () => ({
+  useBtcPrice: () => ({ data: undefined }),
+}));
+
 describe("SharedAssetSelection", () => {
   it.each([
     ["Stacks", "STX"],
@@ -69,8 +77,8 @@ describe("SharedAssetSelection", () => {
       />,
     );
 
-    expect(screen.getByText("Available: 12.345678")).toBeTruthy();
-    expect(screen.getByText("Available: 0.12345678")).toBeTruthy();
-    expect(screen.getByText("Available: 1.5")).toBeTruthy();
+    expect(screen.getByText("12.345678 STX")).toBeTruthy();
+    expect(screen.getByText("0.12345678 BTC")).toBeTruthy();
+    expect(screen.getByText("1.5 sBTC")).toBeTruthy();
   });
 });

@@ -84,7 +84,6 @@ export function TransferSheet({
   const [qrAsset, setQrAsset] = useState<AppToken | null>(null);
   const [qrAddress, setQrAddress] = useState<string | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasOpenedRef = useRef(false);
   const hasHandledRequestedReceiveRef = useRef(false);
   const currentAsset = sendFlow.formData.asset;
@@ -229,10 +228,6 @@ export function TransferSheet({
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-      toastTimeoutRef.current = null;
-    }
 
     if (open) {
       hasOpenedRef.current = true;
@@ -258,27 +253,19 @@ export function TransferSheet({
         clearTimeout(closeTimeoutRef.current);
         closeTimeoutRef.current = null;
       }
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-        toastTimeoutRef.current = null;
-      }
     };
   }, [dismiss, open, present, reset, setMode]);
 
   const showToastAfterClose = useCallback(
     (message: string, description: string) => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current);
-      }
-
       onClose();
-      toastTimeoutRef.current = setTimeout(() => {
+      setTimeout(() => {
         showMessage({
           message,
           description,
           type: "success",
+          duration: 4500,
         });
-        toastTimeoutRef.current = null;
       }, 325);
     },
     [onClose],

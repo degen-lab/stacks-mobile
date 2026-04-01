@@ -1,4 +1,7 @@
 import { SelectionCard, Text, TokenAvatar, View } from "@/components/ui";
+import { useBtcPrice } from "@/api/market/use-btc-price";
+import { useStacksPrice } from "@/api/market/use-stacks-price";
+import { formatUsd } from "@/lib/format/currency";
 import type { AppToken } from "@/lib/assets/tokens";
 
 const ASSETS = [
@@ -34,19 +37,19 @@ const DEFAULT_ASSET_AVAILABILITY: Record<AppToken, AssetAvailability> = {
   sBTC: { enabled: false, disabledLabel: "Coming soon" },
 };
 
-type SharedAssetSelectionProps = {
-  onSelectAsset: (asset: AppToken) => void;
-  assetAvailability?: AssetAvailabilityMap;
-  balances?: AssetBalanceMap;
-  balanceLoading?: AssetBalanceLoadingMap;
-};
-
 function formatAssetBalance(asset: AppToken, balance: number) {
   const maximumFractionDigits = asset === "STX" ? 6 : 8;
+  return balance.toLocaleString("en-US", { maximumFractionDigits });
+}
 
-  return balance.toLocaleString("en-US", {
-    maximumFractionDigits,
-  });
+function getUsdPrice(
+  assetId: AppToken,
+  stxPriceUsd: number | null,
+  btcPriceUsd: number | null,
+): number | null {
+  if (assetId === "STX") return stxPriceUsd;
+  if (assetId === "BTC" || assetId === "sBTC") return btcPriceUsd;
+  return null;
 }
 
 export function SharedAssetSelection({
@@ -54,7 +57,17 @@ export function SharedAssetSelection({
   assetAvailability,
   balances,
   balanceLoading,
-}: SharedAssetSelectionProps) {
+}: {
+  onSelectAsset: (asset: AppToken) => void;
+  assetAvailability?: AssetAvailabilityMap;
+  balances?: AssetBalanceMap;
+  balanceLoading?: AssetBalanceLoadingMap;
+}) {
+  const { data: stxMarketData } = useStacksPrice();
+  const { data: btcMarketData } = useBtcPrice();
+  const stxPriceUsd = stxMarketData?.usd ?? null;
+  const btcPriceUsd = btcMarketData?.usd ?? null;
+
   return (
     <View className="gap-3">
       {ASSETS.map((asset) => {
@@ -64,6 +77,9 @@ export function SharedAssetSelection({
         const disabled = availability.enabled === false;
         const isBalanceLoading = balanceLoading?.[asset.id] ?? false;
         const balance = balances?.[asset.id] ?? 0;
+        const unitPrice = getUsdPrice(asset.id, stxPriceUsd, btcPriceUsd);
+        const usdValue = unitPrice !== null ? balance * unitPrice : null;
+
         return (
           <SelectionCard
             key={asset.id}
@@ -79,18 +95,23 @@ export function SharedAssetSelection({
             }
             disabled={disabled}
             onPress={() => onSelectAsset(asset.id)}
-            rightContentAlign="top"
             rightContent={
-              <Text
-                className="max-w-[132px] font-instrument-sans-medium text-right text-xs text-sand-500"
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.85}
-              >
-                {isBalanceLoading
-                  ? "Available: Loading..."
-                  : `Available: ${formatAssetBalance(asset.id, balance)}`}
-              </Text>
+              isBalanceLoading ? (
+                <Text className="font-instrument-sans text-xs text-secondary">
+                  Loading...
+                </Text>
+              ) : (
+                <View className="items-end gap-0.5">
+                  {usdValue !== null && (
+                    <Text className="font-instrument-sans-medium text-sm text-primary">
+                      {formatUsd(usdValue)}
+                    </Text>
+                  )}
+                  <Text className="font-instrument-sans text-xs text-secondary">
+                    {formatAssetBalance(asset.id, balance)} {asset.symbol}
+                  </Text>
+                </View>
+              )
             }
           />
         );

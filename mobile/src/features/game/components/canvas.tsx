@@ -247,6 +247,12 @@ export const BridgeGameCanvas = ({
     ? VISUAL_CONFIG.DARK_SCENE.PLATFORM_TOP
     : "#282828";
   const platformNotchColor = VISUAL_CONFIG.DARK_SCENE.PLATFORM_MARKER;
+  const backgroundColors = bgColors
+    ? [...bgColors]
+    : [VISUAL_CONFIG.COLORS.BG_TOP, VISUAL_CONFIG.COLORS.BG_BOT];
+  const backgroundPositions: number[] | undefined = bgPositions
+    ? Array.from(bgPositions)
+    : undefined;
 
   return (
     <View style={{ flex: 1 }} className="relative">
@@ -255,13 +261,8 @@ export const BridgeGameCanvas = ({
           <LinearGradient
             start={vec(0, canvasHeight - VISUAL_CONFIG.CANVAS_H)}
             end={vec(0, canvasHeight)}
-            colors={
-              bgColors ?? [
-                VISUAL_CONFIG.COLORS.BG_TOP,
-                VISUAL_CONFIG.COLORS.BG_BOT,
-              ]
-            }
-            positions={bgPositions}
+            colors={backgroundColors}
+            positions={backgroundPositions}
           />
         </Rect>
         <Group

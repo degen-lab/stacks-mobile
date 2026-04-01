@@ -436,6 +436,7 @@ describe("TransferSheet", () => {
         message: "STX transfer queued",
         description: "Your sponsored transfer will be broadcast shortly.",
         type: "success",
+        duration: 4500,
       });
     });
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -537,6 +538,7 @@ describe("TransferSheet", () => {
         message: "sBTC transfer queued",
         description: "Your sponsored transfer will be broadcast shortly.",
         type: "success",
+        duration: 4500,
       });
     });
     expect(onClose).toHaveBeenCalledTimes(1);
