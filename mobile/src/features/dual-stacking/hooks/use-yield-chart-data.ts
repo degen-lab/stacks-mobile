@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 
 import {
-  useAmountStackedNow,
   useCurrentBitcoinBlockHeight,
   useSbtcInWallet,
-  useUserTotalSbtcInDefi,
+  useUserStackingDefiBalances,
 } from "@/api/dual-stacking/contract/hooks";
 import { useDualStackingData } from "@/api/dual-stacking/use-dual-stacking-data";
 import { useDualStackingStats } from "@/api/dual-stacking/use-dual-stacking-stats";
@@ -19,7 +18,6 @@ import { principalArgFromAddress } from "@/lib/stacks/addresses";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { avg } from "../utils/apr-calculations";
 import { useAprConstants } from "./use-apr-constants";
-import { useCoinPricesForYield } from "./use-coin-prices-for-yield";
 import { useDualStackingDataWithLatestCycle } from "./use-dual-stacking-data";
 import { useEnrollmentStatus } from "./use-enrollment-status";
 import type { TimePeriod } from "../components/rewards/portfolio/chart/types";
@@ -61,7 +59,7 @@ export function useYieldChartData(
 ): YieldChartPoint[] {
   const { stxAddress } = useWalletAddresses();
   const principal = principalArgFromAddress(stxAddress);
-  const { baseAPR, maxAPR } = useAprConstants();
+  const { baseAPR, projectRewardsMaxApr } = useAprConstants();
 
   const { data: dualStackingStats, isLoading: loadingUserStats } =
     useDualStackingStats({
@@ -79,35 +77,29 @@ export function useYieldChartData(
 
   const { enrolledNextCycle } = useEnrollmentStatus();
 
-  const { data: currentStxStackedUstx, isLoading: loadingStxStacked } =
-    useAmountStackedNow(principal);
-  const { data: totalSbtcInDefi, isLoading: loadingTotalSbtcInDefi } =
-    useUserTotalSbtcInDefi(principal);
+  const {
+    data: stackingDefiBalances,
+    isLoading: loadingStackingDefiBalances,
+    isError: defiReadError,
+  } = useUserStackingDefiBalances(principal);
+  const currentStxStackedUstx = stackingDefiBalances?.stxStackedUstx;
+  const totalSbtcInDefi = stackingDefiBalances?.totalDefiSats;
   const { data: sbtcWalletBalanceSats, isLoading: loadingSbtcWalletBalance } =
     useSbtcInWallet(principal);
 
   const { cycle: latestCycleId } = useDualStackingDataWithLatestCycle();
 
-  const firstCycleYield = useMemo(() => {
-    if (!Array.isArray(dualStackingStats) || dualStackingStats.length === 0)
-      return latestCycleId;
-    return Math.min(
-      ...(dualStackingStats as DualStackingStat[]).map((s) => s.cycleId),
-    );
-  }, [dualStackingStats, latestCycleId]);
-
-  const { raw: coinPriceResponse } = useCoinPricesForYield(firstCycleYield);
-
-  const hasProjectionBalances =
+  const includeLiveBalances =
+    enrolledNextCycle &&
     sbtcWalletBalanceSats !== undefined &&
-    totalSbtcInDefi !== undefined &&
-    currentStxStackedUstx !== undefined;
+    currentStxStackedUstx !== undefined &&
+    (totalSbtcInDefi !== undefined || defiReadError);
 
   const projectionRequestParams = useMemo(
     () => ({
       address: stxAddress as string,
-      maxApr: maxAPR,
-      ...(hasProjectionBalances && {
+      maxApr: projectRewardsMaxApr,
+      ...(includeLiveBalances && {
         sbtcWallet: Number(sbtcWalletBalanceSats || 0),
         sbtcDefi: Number(totalSbtcInDefi || 0),
         stx: Number(currentStxStackedUstx || 0),
@@ -118,13 +110,13 @@ export function useYieldChartData(
       totalSbtcInDefi,
       sbtcWalletBalanceSats,
       currentStxStackedUstx,
-      maxAPR,
-      hasProjectionBalances,
+      projectRewardsMaxApr,
+      includeLiveBalances,
     ],
   );
 
   const shouldQueryProjectedRewards =
-    !!stxAddress && !!enrolledNextCycle && hasProjectionBalances;
+    !!stxAddress && (!enrolledNextCycle || includeLiveBalances);
   const { data: projectedRewards, isLoading: loadingProjectedRewards } =
     useProjectRewards({
       variables: projectionRequestParams,
@@ -143,14 +135,10 @@ export function useYieldChartData(
     loadingUserStats ||
     loadingYieldCyclesMeta ||
     loadingCurrentBitcoinHeight ||
-    !currentBitcoinBlockHeight ||
-    loadingStxStacked ||
-    loadingTotalSbtcInDefi ||
+    loadingStackingDefiBalances ||
     loadingSbtcWalletBalance ||
     loadingProjectedRewards ||
-    !yieldCyclesMeta ||
-    !coinPriceResponse?.prices ||
-    !coinPriceResponse?.aprs;
+    !yieldCyclesMeta;
 
   return useMemo(() => {
     if (!Array.isArray(dualStackingStats) || !Array.isArray(yieldCyclesMeta)) {

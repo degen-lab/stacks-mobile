@@ -86,7 +86,7 @@ export function TokensRow({
       <View className={isListVariant ? "items-end gap-0.5" : "items-end gap-1"}>
         <Text
           testID={isListVariant ? `earn-asset-value-${asset.id}` : undefined}
-          className="font-instrument-sans-semibold text-base leading-5 text-primary"
+          className="font-instrument-sans-medium text-base leading-5 text-primary"
           numberOfLines={1}
         >
           {valueDisplay}

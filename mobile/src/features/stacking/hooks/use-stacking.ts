@@ -4,7 +4,7 @@ import { usePoxData } from "@/api/stacks/use-stacks-api";
 import { useTimeTillRewards } from "./use-cycle-time";
 import { AVERAGE_BLOCK_DURATION_SECONDS } from "@/lib/format/date";
 
-const DEFAULT_APY = 0.07;
+export const DEFAULT_STACKING_APY = 0.085;
 
 export function useStacking() {
   const { data: stxMarketData } = useStacksPrice();
@@ -29,7 +29,7 @@ export function useStacking() {
   const stackingInfo = useMemo(
     () => ({
       currentCycle: poxInfo?.current_cycle.id ?? 0,
-      apy: DEFAULT_APY,
+      apy: DEFAULT_STACKING_APY,
       price: stxMarketData?.usd ?? 0,
       nextCycleStart: nextCycleDate ?? new Date(),
       timeTillNextCycle,

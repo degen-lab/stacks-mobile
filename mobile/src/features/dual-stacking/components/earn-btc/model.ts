@@ -60,29 +60,27 @@ const TEXT = {
 } as const;
 
 export type BuildEarnBtcArgs = {
-  sbtcBalance: number;
   isEnrolledNextCycle: boolean;
   isStacking: boolean;
   isConnected: boolean;
   isDeFiParticipant: boolean;
-  minEnrollAmount?: number;
+  meetsMinimumEnrollAmount: boolean;
   ctaLinks?: EarnBtcCtaLinks;
   hasEnrollMempoolTx?: boolean;
   enrollExplorerUrl?: string;
 };
 
 export function buildEarnBtcSteps({
-  sbtcBalance,
   isEnrolledNextCycle,
   isStacking,
   isConnected,
   isDeFiParticipant,
-  minEnrollAmount,
+  meetsMinimumEnrollAmount,
   ctaLinks = {},
   hasEnrollMempoolTx = false,
   enrollExplorerUrl,
 }: BuildEarnBtcArgs): { steps: Step[]; enrolled?: boolean } {
-  const hasEnough = sbtcBalance >= Number(minEnrollAmount);
+  const hasEnough = meetsMinimumEnrollAmount;
   const nextStep: StepId = hasEnough ? 2 : 1;
 
   if (isEnrolledNextCycle) {

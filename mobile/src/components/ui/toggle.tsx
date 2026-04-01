@@ -47,12 +47,16 @@ function ToggleItem<T extends string>({
         variant === "card" ? styles.itemCard : null,
       ]}
     >
-      {option.icon}
-      <Text
-        className={`font-instrument-sans-semibold text-sm ${active ? "text-white" : "text-sand-900"}`}
-      >
-        {option.label}
-      </Text>
+      <View style={styles.itemContent}>
+        {option.icon ? (
+          <View style={styles.itemIcon}>{option.icon}</View>
+        ) : null}
+        <Text
+          className={`font-instrument-sans-semibold text-sm ${active ? "text-white" : "text-sand-900"}`}
+        >
+          {option.label}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -93,18 +97,24 @@ export function Toggle<T extends string>({
 
   return (
     <View style={[styles.container, containerStyle, cardStyle]}>
-      {options.map((option) => (
-        <ToggleItem
+      {options.map((option, index) => (
+        <View
           key={option.value}
-          option={option}
-          active={value === option.value}
-          onPress={() => onChange(option.value)}
-          testID={
-            testIDPrefix ? `${testIDPrefix}-${String(option.value)}` : undefined
-          }
-          variant={variant}
-          activeStyle={activeItemStyle}
-        />
+          style={index === 0 ? null : styles.itemSpacing}
+        >
+          <ToggleItem
+            option={option}
+            active={value === option.value}
+            onPress={() => onChange(option.value)}
+            testID={
+              testIDPrefix
+                ? `${testIDPrefix}-${String(option.value)}`
+                : undefined
+            }
+            variant={variant}
+            activeStyle={activeItemStyle}
+          />
+        </View>
       ))}
     </View>
   );
@@ -114,22 +124,31 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
     padding: 4,
     borderRadius: 4,
     borderWidth: 1,
     borderColor: colors.neutral[300],
     backgroundColor: "transparent",
   },
+  itemSpacing: {
+    marginLeft: 4,
+  },
   item: {
     minWidth: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
+  },
+  itemContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  itemIcon: {
+    marginRight: 4,
   },
   inactiveItem: {
     backgroundColor: "transparent",

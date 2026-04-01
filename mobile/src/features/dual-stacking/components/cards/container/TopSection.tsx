@@ -59,12 +59,18 @@ const TopSectionContainer = () => {
     isWalletLoading || isLoading || isEnrollmentLoading || isBalancesLoading;
   const isSectionError = isError || isEnrollmentError || isBalancesError;
   const shouldCollapseCards = !isSectionLoading && Boolean(enrolledNextCycle);
+  const displayApy =
+    enrolledNextCycle && expectedTotalApr > 0
+      ? expectedTotalApr
+      : totalApr > 0
+        ? totalApr
+        : expectedTotalApr;
   const apyStatus = mapApyStatus({
     enrolledCurrentCycle,
     enrolledNextCycle,
     isStacking: stxStacked > 0,
     isDeFiParticipant: totalSbtcInDefi > 0,
-    totalApr: totalApr > 0 ? totalApr : expectedTotalApr,
+    totalApr: displayApy,
     maxApr: maxAPR,
   });
   return (
@@ -118,7 +124,7 @@ const TopSectionContainer = () => {
         isError={isSectionError}
         errorFallback={<APYCardSkeleton />}
       >
-        <APYCard apy={expectedTotalApr} status={apyStatus} maxApy={maxAPR} />
+        <APYCard apy={displayApy} status={apyStatus} maxApy={maxAPR} />
       </Loadable>
     </View>
   );

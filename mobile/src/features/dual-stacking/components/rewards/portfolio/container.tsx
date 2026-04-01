@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
 
 import {
-  useAmountStackedNow,
   useIsContractActive,
   useSbtcInWallet,
-  useUserTotalSbtcInDefi,
+  useUserStackingDefiBalances,
 } from "@/api/dual-stacking/contract/hooks";
 import { useDualStackingStats } from "@/api/dual-stacking/use-dual-stacking-stats";
 import { fromSatsToBtc, fromUstxToStx } from "@/lib/format/currency";
@@ -33,10 +32,10 @@ export function PortfolioPerformanceCardContainer() {
 
   const { data: sbtcBalanceSats, isLoading: loadingSbtc } =
     useSbtcInWallet(principal);
-  const { data: totalSbtcInDefiSats, isLoading: loadingDefi } =
-    useUserTotalSbtcInDefi(principal);
-  const { data: stxStackedUstx, isLoading: loadingStacked } =
-    useAmountStackedNow(principal);
+  const { data: stackingDefiBalances, isLoading: loadingStackingDefi } =
+    useUserStackingDefiBalances(principal);
+  const totalSbtcInDefiSats = stackingDefiBalances?.totalDefiSats;
+  const stxStackedUstx = stackingDefiBalances?.stxStackedUstx;
   const { data: userStats, isLoading: loadingUserStats } = useDualStackingStats(
     {
       variables: { address: stxAddress ?? "" },
@@ -162,8 +161,7 @@ export function PortfolioPerformanceCardContainer() {
 
   const isLoading =
     loadingSbtc ||
-    loadingDefi ||
-    loadingStacked ||
+    loadingStackingDefi ||
     loadingPrices ||
     loadingUserStats ||
     sbtcBalanceSats === undefined ||

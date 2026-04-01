@@ -213,28 +213,11 @@ export function StackStxSheet({
                 walletLabel="Use wallet funds"
                 onPressSponsored={onSponsoredConfirm}
                 onPressWallet={onConfirm}
-                sponsoredDisabled={
-                  !isFeeValid || isProcessing || isSponsoredProcessing
-                }
-                walletDisabled={
-                  !isFeeValid || isProcessing || isSponsoredProcessing
-                }
+                sponsoredDisabled={!isFeeValid || isProcessing}
+                walletDisabled={!isFeeValid || isSponsoredProcessing}
                 sponsoredLoading={isSponsoredProcessing}
                 walletLoading={isProcessing}
               />
-
-              <View className="mt-4">
-                <Button
-                  label="Cancel"
-                  variant="secondary"
-                  size="lg"
-                  onPress={() => {
-                    onClose();
-                    sheetRef.current?.dismiss();
-                  }}
-                  disabled={isProcessing || isSponsoredProcessing}
-                />
-              </View>
             </>
           )}
         </View>

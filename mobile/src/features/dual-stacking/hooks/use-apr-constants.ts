@@ -9,8 +9,7 @@ import {
 } from "@/api/dual-stacking/project-rewards";
 import {
   useSbtcInWallet,
-  useUserTotalSbtcInDefi,
-  useAmountStackedNow,
+  useUserStackingDefiBalances,
 } from "@/api/dual-stacking/contract";
 /**
  * - Fetches weighted average APR from the API
@@ -31,36 +30,39 @@ export function useAprConstants() {
     : MAX_APR;
 
   const { data: sbtcBalance } = useSbtcInWallet(principal);
-  const { data: totalSbtcDefi } = useUserTotalSbtcInDefi(principal);
-  const { data: stxStacked } = useAmountStackedNow(principal);
-  const hasRewardBalances =
+  const { data: stackingDefiBalances, isError: stackingDefiReadError } =
+    useUserStackingDefiBalances(principal);
+  const totalSbtcDefi = stackingDefiBalances?.totalDefiSats;
+  const stxStacked = stackingDefiBalances?.stxStackedUstx;
+
+  const includeLiveBalances =
+    enrolledNextCycle &&
     sbtcBalance !== undefined &&
-    totalSbtcDefi !== undefined &&
-    stxStacked !== undefined;
-  const shouldQueryRewards =
-    !!stxAddress && !!enrolledNextCycle && hasRewardBalances;
+    stxStacked !== undefined &&
+    (totalSbtcDefi !== undefined || stackingDefiReadError);
 
   const rewardsParams = useMemo(
     () => ({
       address: stxAddress as string,
       maxApr: dynamicMaxAPR,
-      ...(enrolledNextCycle &&
-        hasRewardBalances && {
-          sbtcWallet: Number(sbtcBalance || 0),
-          sbtcDefi: Number(totalSbtcDefi || 0),
-          stx: Number(stxStacked || 0),
-        }),
+      ...(includeLiveBalances && {
+        sbtcWallet: Number(sbtcBalance || 0),
+        sbtcDefi: Number(totalSbtcDefi || 0),
+        stx: Number(stxStacked || 0),
+      }),
     }),
     [
       stxAddress,
-      enrolledNextCycle,
+      dynamicMaxAPR,
+      includeLiveBalances,
       sbtcBalance,
       totalSbtcDefi,
       stxStacked,
-      dynamicMaxAPR,
-      hasRewardBalances,
     ],
   );
+
+  const shouldQueryRewards =
+    !!stxAddress && (!enrolledNextCycle || includeLiveBalances);
 
   const { data: projectRewards, isFetched } = useProjectRewards({
     variables: rewardsParams,
@@ -82,5 +84,6 @@ export function useAprConstants() {
   return {
     baseAPR,
     maxAPR,
+    projectRewardsMaxApr: dynamicMaxAPR,
   };
 }

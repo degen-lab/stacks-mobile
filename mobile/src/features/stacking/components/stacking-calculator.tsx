@@ -49,7 +49,7 @@ export function StackingCalculator({
   const isDark = colorScheme === "dark";
   // Initialize state with active position if available, else defaults
   const [stxAmount, setStxAmount] = useState(
-    activePosition ? String(activePosition.lockedAmount) : "40",
+    activePosition ? String(activePosition.lockedAmount) : "41",
   );
   const [weeks, setWeeks] = useState(
     activePosition ? activePosition.lockDuration : 12,
@@ -66,7 +66,7 @@ export function StackingCalculator({
     if (activePosition?.lockedAmount) {
       setStxAmount(String(activePosition.lockedAmount));
     } else {
-      setStxAmount("40");
+      setStxAmount("41");
     }
   }, [activePosition?.lockedAmount]);
 
@@ -88,7 +88,7 @@ export function StackingCalculator({
     } else {
       // User is stacking for the first time
       const hasChange = false; // No existing position to compare
-      const isValid = newAmount >= 40;
+      const isValid = newAmount >= 41;
       onUpdateChange(hasChange, isValid, newAmount);
     }
   }, [inputAmount, activePosition, onUpdateChange]);
@@ -281,14 +281,14 @@ export function StackingCalculator({
                 bottom: -13,
                 right: -5,
                 zIndex: 10,
-                opacity: results && Number(stxAmount) >= 40 ? 1 : 0.3,
+                opacity: results && Number(stxAmount) >= 41 ? 1 : 0.3,
               }}
             >
               <SvgUri uri={stacksCoinsUri} width={170} height={90} />
             </View>
           )}
 
-          {results && Number(stxAmount) >= 40 ? (
+          {results && Number(stxAmount) >= 41 ? (
             <View>
               <View className="mb-2 flex-row items-center gap-2">
                 <Text className="text-sm font-instrument-sans text-secondary">

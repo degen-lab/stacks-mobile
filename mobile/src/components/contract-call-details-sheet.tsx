@@ -1,10 +1,12 @@
 import { Button, Modal, Text, View, colors } from "@/components/ui";
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetScrollView,
+  type BottomSheetModal,
+} from "@gorhom/bottom-sheet";
 import type { ClarityValue } from "@stacks/transactions";
 import { useContractCallFee } from "@/hooks/use-contract-call-fee";
 import { useColorScheme } from "nativewind";
 import React from "react";
-import { ScrollView } from "react-native";
 import { TransactionFundingActions } from "./transaction-funding-actions";
 import {
   ContractTxDetails,
@@ -28,6 +30,7 @@ type ContractCallDetailsSheetProps = {
   onClose?: () => void;
   extraContent?: React.ReactNode;
   snapPoints?: string[];
+  enableDynamicSizing?: boolean;
   isLoading?: boolean;
   confirmDisabled?: boolean;
   sponsoredConfirmDisabled?: boolean;
@@ -58,7 +61,8 @@ export const ContractCallDetailsSheet = React.forwardRef<
       onSponsoredConfirm,
       onClose,
       extraContent,
-      snapPoints = ["65%"],
+      snapPoints,
+      enableDynamicSizing = false,
       isLoading = false,
       confirmDisabled = false,
       sponsoredConfirmDisabled = false,
@@ -135,14 +139,14 @@ export const ContractCallDetailsSheet = React.forwardRef<
     return (
       <Modal
         ref={ref}
-        snapPoints={snapPoints}
+        snapPoints={enableDynamicSizing ? undefined : (snapPoints ?? ["65%"])}
+        enableDynamicSizing={enableDynamicSizing}
         backgroundStyle={{
           backgroundColor: isDark ? colors.charcoal[850] : colors.white,
         }}
         onDismiss={handleClose}
       >
-        <ScrollView
-          className="flex-1"
+        <BottomSheetScrollView
           contentContainerClassName="pb-6"
           showsVerticalScrollIndicator={false}
         >
@@ -233,7 +237,7 @@ export const ContractCallDetailsSheet = React.forwardRef<
               </>
             )}
           </View>
-        </ScrollView>
+        </BottomSheetScrollView>
       </Modal>
     );
   },

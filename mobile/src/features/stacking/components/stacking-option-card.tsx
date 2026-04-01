@@ -1,6 +1,7 @@
 import { Pressable, View, Image } from "react-native";
 import { Text } from "@/components/ui";
 import type { StackingPosition } from "../types";
+import { formatUsd } from "@/lib/format/currency";
 
 type Props = {
   title: string;
@@ -21,17 +22,17 @@ export function StackingOptionCard({
   title,
   description,
   apy,
-  selected,
   onPress,
   registrationStatus = "open",
   registrationClosesIn,
   lockingTime = "2-week cycles",
-  minimumStx = 40,
+  minimumStx = 41,
   activePosition,
   price = 0,
   timeTillRewardPhase,
 }: Props) {
   const isActive = !!activePosition;
+  const displayApy = Number((apy * 100).toFixed(1));
 
   const usdValue = activePosition
     ? (activePosition.lockedAmount * price).toFixed(2)
@@ -84,12 +85,11 @@ export function StackingOptionCard({
 
         <View className="rounded-full bg-secondary/10 px-2.5 py-1">
           <Text className="text-xs font-instrument-sans-medium text-secondary">
-            {(apy * 100).toFixed(0)}% APY
+            ~{displayApy}% APY
           </Text>
         </View>
       </View>
 
-      {/* Details Section */}
       {isActive && activePosition ? (
         <View className="gap-3 pt-4 mt-4 border-t border-surface-secondary/40">
           <View className="flex-row items-center justify-between">
@@ -146,9 +146,11 @@ export function StackingOptionCard({
             <Text className="text-sm font-instrument-sans text-secondary">
               Minimum
             </Text>
-            <Text className="text-sm font-instrument-sans-medium text-primary">
-              {minimumStx} STX
-            </Text>
+            <View className="items-end">
+              <Text className="text-sm font-instrument-sans-medium text-primary">
+                {minimumStx} STX • {formatUsd(minimumStx * price)}
+              </Text>
+            </View>
           </View>
         </View>
       )}

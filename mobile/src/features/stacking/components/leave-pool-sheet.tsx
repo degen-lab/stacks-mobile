@@ -1,16 +1,23 @@
+import { showMessage } from "react-native-flash-message";
 import { useColorScheme } from "nativewind";
-import { useEffect, useRef, useState } from "react";
-import { ScrollView } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
 import { getDisallowanceArgs } from "@/api/stacks/fast-pool/fast-pool";
 import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
 import { Button, Modal, Text, View, colors } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
+import { TransactionStatusSheet } from "@/features/dual-stacking/components/layout/modals/transaction-status-sheet";
 import { SC_FUNCTIONS } from "@/lib/stacks/contracts";
+import { useSponsoredRequestFlow } from "../hooks/use-sponsored-request-flow";
 
 type LeavePoolAction = (
   feeMicroStx?: number,
 ) => Promise<boolean | void> | boolean | void;
+
+type SponsoredLeavePoolAction = (
+  feeMicroStx?: number,
+) => Promise<number | false | void> | number | false | void;
 
 type LeavePoolSheetProps = {
   open: boolean;
@@ -21,13 +28,14 @@ type LeavePoolSheetProps = {
   isStacking: boolean;
   isAllowed: boolean;
   onRevoke?: LeavePoolAction;
-  onSponsoredRevoke?: LeavePoolAction;
+  onSponsoredRevoke?: SponsoredLeavePoolAction;
   onDisallow?: LeavePoolAction;
-  onSponsoredDisallow?: LeavePoolAction;
+  onSponsoredDisallow?: SponsoredLeavePoolAction;
   onGoBack?: () => void;
 };
 
 type ActiveSheet = "form" | "revoke" | "disallow" | "none";
+type SponsoredStep = "revoke" | "disallow" | null;
 
 export function LeavePoolSheet({
   open,
@@ -61,12 +69,18 @@ export function LeavePoolSheet({
   const { colorScheme } = useColorScheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasRevokedLocally, setHasRevokedLocally] = useState(false);
+  const [sponsoredRequestId, setSponsoredRequestId] = useState<number | null>(
+    null,
+  );
+  const [activeSponsoredStep, setActiveSponsoredStep] =
+    useState<SponsoredStep>(null);
   const activeSheetRef = useRef<ActiveSheet>("none");
   const isClosingRef = useRef(false);
 
   const needsRevoke = isStacking && !hasRevokedLocally;
   const needsDisallow = isAllowed || hasRevokedLocally;
   const canLeavePool = needsRevoke || needsDisallow;
+  const isSponsoredStepPending = sponsoredRequestId !== null;
 
   useEffect(() => {
     if (open) {
@@ -76,6 +90,8 @@ export function LeavePoolSheet({
     } else {
       isClosingRef.current = true;
       activeSheetRef.current = "none";
+      setSponsoredRequestId(null);
+      setActiveSponsoredStep(null);
       dismissForm();
       dismissRevoke();
       dismissDisallow();
@@ -90,15 +106,144 @@ export function LeavePoolSheet({
     }
   }, [isAllowed, isStacking]);
 
-  const closeFlow = () => {
-    if (isSubmitting) return;
-    isClosingRef.current = true;
-    activeSheetRef.current = "none";
-    onOpenChange(false);
-  };
+  const closeFlow = useCallback(
+    (force = false) => {
+      if (!force && (isSubmitting || isSponsoredStepPending)) return;
+      isClosingRef.current = true;
+      activeSheetRef.current = "none";
+      onOpenChange(false);
+    },
+    [isSponsoredStepPending, isSubmitting, onOpenChange],
+  );
+
+  const sponsoredStepCopy = useMemo(() => {
+    const actionLabel =
+      activeSponsoredStep === "disallow" ? "permission removal" : "revocation";
+
+    return {
+      verifying: {
+        title: `Verifying ${actionLabel}...`,
+        message:
+          "Waiting for ad verification before your sponsored transaction can be broadcast.",
+      },
+      queued: {
+        title:
+          activeSponsoredStep === "disallow"
+            ? "Permission removal queued..."
+            : "Revocation queued...",
+        message:
+          activeSponsoredStep === "disallow"
+            ? "Your sponsored permission removal is queued and will be broadcast shortly."
+            : "Your sponsored revocation is queued and will be broadcast shortly.",
+      },
+      blocked: {
+        title: "Waiting for previous transaction...",
+        message:
+          "Another sponsored transaction from this wallet is still pending. This step will continue once that transaction confirms.",
+      },
+      confirming: {
+        title:
+          activeSponsoredStep === "disallow"
+            ? "Permission removal pending..."
+            : "Revocation pending...",
+        message:
+          activeSponsoredStep === "disallow"
+            ? "Your sponsored permission removal is on chain."
+            : "Your sponsored revocation is on chain. Waiting for confirmation before the next step.",
+      },
+      preparing: {
+        title: `Preparing ${actionLabel}...`,
+        message:
+          "Please wait while we finalize your sponsored transaction request.",
+      },
+    };
+  }, [activeSponsoredStep]);
+
+  const { loadingCopy: sponsoredStepLoadingCopy } = useSponsoredRequestFlow({
+    requestId: sponsoredRequestId,
+    completeOn:
+      activeSponsoredStep === "revoke" ? ["success"] : ["pending", "success"],
+    copy: sponsoredStepCopy,
+    onComplete: () => {
+      if (isClosingRef.current || !activeSponsoredStep) return;
+
+      const completedStep = activeSponsoredStep;
+      setSponsoredRequestId(null);
+      setActiveSponsoredStep(null);
+
+      if (completedStep === "revoke") {
+        setHasRevokedLocally(true);
+        showMessage({
+          message: "Revocation confirmed",
+          description: "You can now remove Fast Pool's permission.",
+          type: "success",
+        });
+        activeSheetRef.current = "disallow";
+        requestAnimationFrame(() => {
+          presentDisallow();
+        });
+        return;
+      }
+
+      showMessage({
+        message: "Permission removal broadcasted",
+        description: "Fast Pool can no longer manage your stacking rights.",
+        type: "success",
+      });
+      closeFlow(true);
+    },
+    onFailed: () => {
+      if (isClosingRef.current || !activeSponsoredStep) return;
+
+      const failedStep = activeSponsoredStep;
+      setSponsoredRequestId(null);
+      setActiveSponsoredStep(null);
+      activeSheetRef.current = failedStep;
+      showMessage({
+        message:
+          failedStep === "revoke"
+            ? "Revocation failed"
+            : "Permission removal failed",
+        description:
+          "The sponsored transaction could not be broadcast. Please try again.",
+        type: "danger",
+      });
+      requestAnimationFrame(() => {
+        if (failedStep === "revoke") {
+          presentRevoke();
+          return;
+        }
+        presentDisallow();
+      });
+    },
+    onStatusUnavailable: ({ error }) => {
+      if (isClosingRef.current || !activeSponsoredStep) return;
+
+      const failedStep = activeSponsoredStep;
+      setSponsoredRequestId(null);
+      setActiveSponsoredStep(null);
+      activeSheetRef.current = failedStep;
+      showMessage({
+        message: "Transaction status unavailable",
+        description:
+          error instanceof Error
+            ? error.message
+            : "We couldn't confirm the sponsored transaction status.",
+        type: "danger",
+      });
+      requestAnimationFrame(() => {
+        if (failedStep === "revoke") {
+          presentRevoke();
+          return;
+        }
+        presentDisallow();
+      });
+      console.error("Sponsored leave-pool status unavailable:", error);
+    },
+  });
 
   const handleGoBack = () => {
-    if (isSubmitting) return;
+    if (isSubmitting || isSponsoredStepPending) return;
     onGoBack?.();
     closeFlow();
   };
@@ -153,50 +298,88 @@ export function LeavePoolSheet({
     }
   };
 
+  const runSponsoredAction = async (
+    action?: SponsoredLeavePoolAction,
+  ): Promise<number | false | void> => {
+    if (!action || isSubmitting) return false;
+
+    setIsSubmitting(true);
+    try {
+      const result = await action();
+      return result === false ? false : result;
+    } catch (error) {
+      console.error("Failed to leave Fast Pool:", error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleConfirmRevoke = async (feeMicroStx?: number) => {
     const ok = await runAction(() => onRevoke?.(feeMicroStx));
     if (!ok) return;
 
     setHasRevokedLocally(true);
+    showMessage({
+      message: "Delegation revoked",
+      description: "You can now remove Fast Pool's permission.",
+      type: "success",
+    });
     activeSheetRef.current = "disallow";
     dismissRevoke();
     presentDisallow();
   };
 
   const handleSponsoredRevoke = async (feeMicroStx?: number) => {
-    const ok = await runAction(() => onSponsoredRevoke?.(feeMicroStx));
-    if (!ok) return;
+    const requestId = await runSponsoredAction(() =>
+      onSponsoredRevoke?.(feeMicroStx),
+    );
+    if (typeof requestId !== "number") return;
 
-    setHasRevokedLocally(true);
-    activeSheetRef.current = "disallow";
+    setActiveSponsoredStep("revoke");
+    setSponsoredRequestId(requestId);
+    activeSheetRef.current = "none";
     dismissRevoke();
-    presentDisallow();
   };
 
   const handleConfirmDisallow = async (feeMicroStx?: number) => {
     const ok = await runAction(() => onDisallow?.(feeMicroStx));
-    if (ok) {
-      closeFlow();
-    }
+    if (!ok) return;
+
+    showMessage({
+      message: "Permission removed",
+      description: "Fast Pool can no longer manage your stacking rights.",
+      type: "success",
+    });
+    closeFlow();
   };
 
   const handleSponsoredDisallow = async (feeMicroStx?: number) => {
-    const ok = await runAction(() => onSponsoredDisallow?.(feeMicroStx));
-    if (ok) {
-      closeFlow();
-    }
+    const requestId = await runSponsoredAction(() =>
+      onSponsoredDisallow?.(feeMicroStx),
+    );
+    if (typeof requestId !== "number") return;
+
+    setActiveSponsoredStep("disallow");
+    setSponsoredRequestId(requestId);
+    activeSheetRef.current = "none";
+    dismissDisallow();
   };
 
   const leaveDescription = needsRevoke
     ? "Leaving Fast Pool takes 2 transactions. First you revoke the current delegation, then you remove Fast Pool's contract-caller permission. Your locked STX will still unlock only after the current cycle ends."
-    : "Your delegation is already revoked. One final transaction remains to remove Fast Pool's contract-caller permission from your account.";
+    : "Remove Fast Pool's contract-caller permission from your account.";
+  const reviewLabel = needsRevoke
+    ? "Review transactions"
+    : "Review transaction";
+  const secondaryActionLabel = onGoBack ? "Go back" : "Cancel";
 
   return (
     <>
       <Modal
         ref={formRef}
         title="Leave Fast Pool"
-        snapPoints={["56%"]}
+        enableDynamicSizing={true}
         backgroundStyle={{
           backgroundColor:
             colorScheme === "dark" ? colors.charcoal[850] : colors.white,
@@ -212,37 +395,41 @@ export function LeavePoolSheet({
           }
         }}
       >
-        <ScrollView className="flex-1" contentContainerClassName="pb-6">
-          <View className="px-6 gap-6">
+        <BottomSheetScrollView
+          contentContainerClassName="px-6 pb-8"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="gap-6">
             <Text className="text-sm font-instrument-sans leading-relaxed text-secondary">
               {leaveDescription}
             </Text>
 
             <View className="gap-3">
               <Button
-                label="Review transactions"
+                label={reviewLabel}
                 variant="gamePrimary"
                 size="lg"
                 onPress={handleOpenReview}
-                disabled={!canLeavePool || isSubmitting}
+                disabled={
+                  !canLeavePool || isSubmitting || isSponsoredStepPending
+                }
               />
               <Button
-                label={onGoBack ? "Go back and keep earning" : "Cancel"}
+                label={secondaryActionLabel}
                 variant="secondary"
                 size="lg"
                 onPress={onGoBack ? handleGoBack : closeFlow}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isSponsoredStepPending}
               />
             </View>
           </View>
-        </ScrollView>
+        </BottomSheetScrollView>
       </Modal>
 
       <ContractCallDetailsSheet
         ref={revokeRef}
         title="Revoke delegation"
-        description="This first transaction stops Fast Pool from managing your current delegation. Your locked STX remains locked until the cycle ends."
-        snapPoints={["58%"]}
+        enableDynamicSizing
         network={network}
         contractAddress={poxContract}
         functionName={SC_FUNCTIONS.pox.publicFunctions.REVOKE_DELEGATE_STX}
@@ -266,9 +453,8 @@ export function LeavePoolSheet({
 
       <ContractCallDetailsSheet
         ref={disallowRef}
-        title="Remove Fast Pool permission"
-        description="This transaction removes Fast Pool's contract-caller permission so the pool can no longer manage your stacking rights."
-        snapPoints={["58%"]}
+        title="Remove permission"
+        enableDynamicSizing
         network={network}
         contractAddress={poxContract}
         functionName={SC_FUNCTIONS.pox.publicFunctions.DISALLOW_CONTRACT_CALLER}
@@ -295,6 +481,18 @@ export function LeavePoolSheet({
         isLoading={isSubmitting}
         confirmDisabled={isSubmitting}
         sponsoredConfirmDisabled={isSubmitting}
+      />
+
+      <TransactionStatusSheet
+        open={isSponsoredStepPending}
+        isLoading={true}
+        loading={sponsoredStepLoadingCopy}
+        success={{
+          title: "Transaction broadcasted",
+          message: "Your sponsored transaction is now on chain.",
+        }}
+        dismissibleWhenLoading={false}
+        enableDynamicSizing={true}
       />
     </>
   );

@@ -1,9 +1,8 @@
 import { useMemo } from "react";
 import { useAprConstants } from "./use-apr-constants";
 import {
-  useAmountStackedNow,
   useSbtcInWallet,
-  useUserTotalSbtcInDefi,
+  useUserStackingDefiBalances,
 } from "@/api/dual-stacking/contract/hooks";
 import { useEnrollmentStatus } from "./use-enrollment-status";
 import { useDualStackingDataWithLatestCycle } from "./use-dual-stacking-data";
@@ -18,18 +17,15 @@ export function useAprComputation() {
   const { stxAddress } = useWalletAddresses();
   const principal = principalArgFromAddress(stxAddress);
   const { enrolledCurrentCycle, enrolledNextCycle } = useEnrollmentStatus();
-  const { baseAPR, maxAPR } = useAprConstants();
+  const { baseAPR, maxAPR, projectRewardsMaxApr } = useAprConstants();
 
   const {
-    data: stxStacked,
-    isLoading: stxLoading,
-    isError: stxError,
-  } = useAmountStackedNow(principal);
-  const {
-    data: totalSbtcDefi,
-    isLoading: defiLoading,
-    isError: defiError,
-  } = useUserTotalSbtcInDefi(principal);
+    data: stackingDefiBalances,
+    isLoading: stackingDefiLoading,
+    isError: stackingDefiError,
+  } = useUserStackingDefiBalances(principal);
+  const stxStacked = stackingDefiBalances?.stxStackedUstx;
+  const totalSbtcDefi = stackingDefiBalances?.totalDefiSats;
   const {
     data: sbtcBalance,
     isLoading: sbtcLoading,
@@ -47,10 +43,11 @@ export function useAprComputation() {
   const { cycle: latestCycleId } = useDualStackingDataWithLatestCycle();
 
   const userBalancesForProjection = enrolledNextCycle && !enrolledCurrentCycle;
-  const hasProjectionBalances =
+  const includeLiveBalances =
+    enrolledNextCycle &&
+    sbtcBalance !== undefined &&
     stxStacked !== undefined &&
-    totalSbtcDefi !== undefined &&
-    sbtcBalance !== undefined;
+    (totalSbtcDefi !== undefined || stackingDefiError);
 
   const latestStat = useMemo(() => {
     if (!Array.isArray(userStats)) return undefined;
@@ -60,8 +57,8 @@ export function useAprComputation() {
   const projectedRewardsParams = useMemo(
     () => ({
       address: stxAddress as string,
-      maxApr: maxAPR,
-      ...(hasProjectionBalances && {
+      maxApr: projectRewardsMaxApr,
+      ...(includeLiveBalances && {
         sbtcWallet: Number(sbtcBalance || 0),
         sbtcDefi: Number(totalSbtcDefi || 0),
         stx: Number(stxStacked || 0),
@@ -72,13 +69,13 @@ export function useAprComputation() {
       totalSbtcDefi,
       sbtcBalance,
       stxStacked,
-      maxAPR,
-      hasProjectionBalances,
+      projectRewardsMaxApr,
+      includeLiveBalances,
     ],
   );
 
   const shouldQueryRewards =
-    !!stxAddress && !!enrolledNextCycle && hasProjectionBalances;
+    !!stxAddress && (!enrolledNextCycle || includeLiveBalances);
   const { data: projectedReward } = useProjectRewards({
     variables: projectedRewardsParams,
     enabled: shouldQueryRewards,
@@ -163,7 +160,7 @@ export function useAprComputation() {
     totalSbtcDefi: Number(totalSbtcDefi ?? 0),
     sbtcBalance: Number(sbtcBalance ?? 0),
     stxStacked: Number(stxStacked ?? 0),
-    isLoading: stxLoading || defiLoading || sbtcLoading,
-    isError: stxError || defiError || sbtcError,
+    isLoading: stackingDefiLoading || sbtcLoading,
+    isError: stackingDefiError || sbtcError,
   };
 }

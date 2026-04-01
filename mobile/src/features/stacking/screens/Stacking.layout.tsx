@@ -12,6 +12,7 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { WarningLabel } from "@/components/warning-label";
 import { StackingHistoryCard } from "../components/stacking-history-card";
 import type { UserStackingDataRow } from "@/api/stacking";
+import { TransactionStatusSheet } from "@/features/dual-stacking/components/layout/modals/transaction-status-sheet";
 
 interface PoolState {
   availableStxBalance: number;
@@ -36,6 +37,7 @@ interface PoolState {
   selectedNetwork: string;
   isLoadingPool: boolean;
   poolContract: string;
+  poxContract: string;
 }
 
 interface FormState {
@@ -52,7 +54,6 @@ interface FormState {
 }
 
 interface FeeState {
-  feeLabel: string;
   selectedFeeOption: FeeOption;
   customFee: string;
   isFeeValid: boolean;
@@ -64,6 +65,11 @@ interface UiState {
   showPoolOptions: boolean;
   isProcessing: boolean;
   isSponsoredSubmitting: boolean;
+  isSponsoredApprovalBroadcasting: boolean;
+  sponsoredApprovalLoadingCopy: {
+    title: string;
+    message: string;
+  };
   isApprovalPending: boolean;
   isDelegatePending: boolean;
   approvalSheetRef: React.RefObject<BottomSheetModal | null>;
@@ -119,6 +125,7 @@ export function StackingScreenLayout({
     selectedNetwork,
     isLoadingPool,
     poolContract,
+    poxContract,
   } = poolState;
 
   const {
@@ -130,7 +137,6 @@ export function StackingScreenLayout({
   } = formState;
 
   const {
-    feeLabel,
     selectedFeeOption,
     customFee,
     isFeeValid,
@@ -142,6 +148,8 @@ export function StackingScreenLayout({
     showPoolOptions,
     isProcessing,
     isSponsoredSubmitting,
+    isSponsoredApprovalBroadcasting,
+    sponsoredApprovalLoadingCopy,
     isApprovalPending,
     isDelegatePending,
     approvalSheetRef,
@@ -162,7 +170,9 @@ export function StackingScreenLayout({
     onLeavePool,
   } = actions;
   const { delegations, isLoading, isError } = stackingHistory;
+  const registrationClosesIn = stackingInfo.timeTillRewardPhase || "~4 Days";
   const getCtaLabel = () => {
+    if (isSponsoredApprovalBroadcasting) return "Broadcasting approval...";
     if (!hasSufficientFunds) return "Add Funds";
     if (!activePosition) return "Start Stacking";
     if (!hasChanges) return "No changes";
@@ -179,6 +189,7 @@ export function StackingScreenLayout({
 
   const isCtaDisabled = () => {
     if (!isMainnet) return true;
+    if (isSponsoredApprovalBroadcasting) return true;
     if (isProcessing || isLoadingPool) return true;
 
     if (pendingAmount === undefined) return true;
@@ -223,11 +234,9 @@ export function StackingScreenLayout({
                 selected={true}
                 onPress={() => {}}
                 registrationStatus="open"
-                registrationClosesIn={
-                  stackingInfo.timeTillNextCycle || "~4 Days"
-                }
+                registrationClosesIn={registrationClosesIn}
                 lockingTime="2-week cycles"
-                minimumStx={40}
+                minimumStx={41}
                 activePosition={activePosition}
                 price={stackingInfo.price}
                 timeTillRewardPhase={stackingInfo.timeTillRewardPhase}
@@ -284,7 +293,7 @@ export function StackingScreenLayout({
         onClose={onSheetClose}
         network={selectedNetwork}
         poolAddress={poolContract}
-        feeLabel={feeLabel}
+        poxContract={poxContract}
         selectedFeeOption={selectedFeeOption}
         onSelectFee={onSelectFee}
         customFee={customFee}
@@ -321,6 +330,18 @@ export function StackingScreenLayout({
         isSponsoredProcessing={isSponsoredSubmitting}
         inPreparePhase={stackingInfo.inPreparePhase}
         timeTillPreparePhase={stackingInfo.timeTillPreparePhase}
+      />
+
+      <TransactionStatusSheet
+        open={isSponsoredApprovalBroadcasting}
+        isLoading={true}
+        loading={sponsoredApprovalLoadingCopy}
+        success={{
+          title: "Approval broadcasted",
+          message: "You can now continue to stack your STX.",
+        }}
+        dismissibleWhenLoading={false}
+        enableDynamicSizing={true}
       />
 
       <TransactionLoadingOverlay

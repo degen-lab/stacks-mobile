@@ -2,10 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useProjectRewards } from "@/api/dual-stacking";
 import {
-  useAmountStackedNow,
   useNrCyclesYear,
   useSbtcInWallet,
-  useUserTotalSbtcInDefi,
+  useUserStackingDefiBalances,
 } from "@/api/dual-stacking/contract";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -42,14 +41,15 @@ export default function Calculator() {
   const balancesHydrated = useRef(false);
 
   const { enrolledNextCycle } = useEnrollmentStatus();
-  const { baseAPR, maxAPR } = useAprConstants();
+  const { baseAPR, projectRewardsMaxApr } = useAprConstants();
   const { data: coinPricesNormalized } = useCoinPricesForYield();
   const { data: sbtcBalanceSats, isLoading: isSbtcLoading } =
     useSbtcInWallet(principalArg);
-  const { data: stxStackedUstx, isLoading: isStxLoading } =
-    useAmountStackedNow(principalArg);
-  const { isLoading: isSbtcDefiLoading } = useUserTotalSbtcInDefi(principalArg);
-  const { data: nrCyclesReadOnly } = useNrCyclesYear();
+  const { data: stackingDefiBalances, isLoading: isStackingDefiLoading } =
+    useUserStackingDefiBalances(principalArg);
+  const stxStackedUstx = stackingDefiBalances?.stxStackedUstx;
+  const totalSbtcInDefi = stackingDefiBalances?.totalDefiSats;
+  const { data: nrCyclesYear = CYCLES_PER_YEAR } = useNrCyclesYear();
 
   const [sbtcWalletInput, setSbtcWalletInput] = useState("0");
   const [stxInput, setStxInput] = useState("0");
@@ -104,10 +104,6 @@ export default function Calculator() {
   const stxErrorText = tooLowStx
     ? `Min. ${MIN_STX_AMOUNT} STX required`
     : undefined;
-  const nrCyclesYear =
-    nrCyclesReadOnly === BigInt(0)
-      ? CYCLES_PER_YEAR
-      : Number(nrCyclesReadOnly ?? 0) / 1e8;
 
   const canQueryRewards = Boolean(
     userAddress &&
@@ -119,12 +115,18 @@ export default function Calculator() {
   const rewardsParams = useMemo(
     () => ({
       address: userAddress,
-      maxApr: maxAPR,
+      maxApr: projectRewardsMaxApr,
       sbtcWallet: committedSbtcWalletInSats,
-      sbtcDefi: 0,
+      sbtcDefi: Number(totalSbtcInDefi ?? 0),
       stx: Math.round(fromStxToUstx(committedStx)),
     }),
-    [committedSbtcWalletInSats, committedStx, maxAPR, userAddress],
+    [
+      committedSbtcWalletInSats,
+      committedStx,
+      projectRewardsMaxApr,
+      totalSbtcInDefi,
+      userAddress,
+    ],
   );
 
   const {
@@ -221,7 +223,7 @@ export default function Calculator() {
     return Math.ceil(sbtcUsdValue / latestStxUsdPrice);
   }, [committedTotalSbtc, latestBtcUsdPrice, latestStxUsdPrice]);
 
-  const isLoadingBalances = isSbtcLoading || isStxLoading || isSbtcDefiLoading;
+  const isLoadingBalances = isSbtcLoading || isStackingDefiLoading;
   const isLoadingResults = isRewardsLoading || isRewardsFetching;
 
   const handleSbtcWalletChange = (value: string) => {

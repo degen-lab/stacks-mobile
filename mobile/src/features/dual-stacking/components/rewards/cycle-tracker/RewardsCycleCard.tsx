@@ -15,19 +15,19 @@ type RewardsCycleCardProps = {
 };
 
 function getRewardsCycleStatusText(cycle: RewardsCycle) {
+  if (!cycle.isContractActive) {
+    return `Starting in ~${Number.isFinite(cycle.startsInDays) ? cycle.startsInDays : 0} days`;
+  }
+
+  if (!cycle.isDistributingRewards) {
+    return `Rewards start in ${cycle.startsInDays} days`;
+  }
+
   if (cycle.isFinalized) {
     return "Rewards distribution finalized";
   }
 
-  if (cycle.isDistributingRewards) {
-    return "Distributing rewards...";
-  }
-
-  if (cycle.isContractActive) {
-    return `Rewards start in ${cycle.startsInDays} days`;
-  }
-
-  return `Starting in ~${cycle.startsInDays} days`;
+  return "Distributing rewards...";
 }
 
 function formatRewardsCycleUsdValue(value: number) {
@@ -84,7 +84,7 @@ export function RewardsCycleCard({ cycle, href }: RewardsCycleCardProps) {
               />
             </View>
             <Text className="font-instrument-sans-medium text-tertiary text-xs">
-              {cycle.progress}%
+              {Number.isFinite(cycle.progress) ? cycle.progress : 0}%
             </Text>
           </View>
 

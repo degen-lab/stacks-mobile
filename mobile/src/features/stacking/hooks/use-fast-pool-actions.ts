@@ -60,7 +60,7 @@ export function useFastPoolActions(userAddress?: string) {
         postConditionMode: PostConditionMode.Allow,
       });
 
-      await submitSponsoredTransaction({
+      return await submitSponsoredTransaction({
         originAddress: address,
         accountIndex,
         unsignedSerializedTx,
@@ -86,7 +86,7 @@ export function useFastPoolActions(userAddress?: string) {
   const revokeDelegationSponsored = useCallback(
     async (feeMicroStx?: number) => {
       try {
-        await sponsorContractCall({
+        const requestId = await sponsorContractCall({
           contractId: poxContract,
           functionName: SC_FUNCTIONS.pox.publicFunctions.REVOKE_DELEGATE_STX,
           functionArgs: [],
@@ -99,7 +99,7 @@ export function useFastPoolActions(userAddress?: string) {
           type: "success",
         });
         void trackEvent("stacking_revoked");
-        return true;
+        return requestId;
       } catch (error) {
         console.error("Failed to sponsor delegation revocation:", error);
         return false;
@@ -125,7 +125,7 @@ export function useFastPoolActions(userAddress?: string) {
   const disallowPoolPermissionSponsored = useCallback(
     async (feeMicroStx?: number) => {
       try {
-        await sponsorContractCall({
+        const requestId = await sponsorContractCall({
           contractId: poxContract,
           functionName:
             SC_FUNCTIONS.pox.publicFunctions.DISALLOW_CONTRACT_CALLER,
@@ -140,7 +140,7 @@ export function useFastPoolActions(userAddress?: string) {
           type: "success",
         });
         void trackEvent("stacking_disallowed");
-        return true;
+        return requestId;
       } catch (error) {
         console.error("Failed to sponsor Fast Pool permission removal:", error);
         return false;
@@ -151,7 +151,7 @@ export function useFastPoolActions(userAddress?: string) {
 
   const approvePoolSponsored = useCallback(
     async (feeMicroStx?: number) => {
-      await sponsorContractCall({
+      const requestId = await sponsorContractCall({
         contractId: poxContract,
         functionName: SC_FUNCTIONS.pox.publicFunctions.ALLOW_CONTRACT_CALLER,
         functionArgs: getAllowanceArgs(poolContract),
@@ -159,6 +159,7 @@ export function useFastPoolActions(userAddress?: string) {
       });
       invalidateFastPoolState();
       void trackEvent("stacking_approve_contract_caller");
+      return requestId;
     },
     [invalidateFastPoolState, poolContract, poxContract, sponsorContractCall],
   );

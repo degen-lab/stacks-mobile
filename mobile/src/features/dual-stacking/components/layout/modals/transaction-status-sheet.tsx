@@ -1,5 +1,9 @@
+import {
+  BottomSheetView,
+  type BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
@@ -21,6 +25,8 @@ type TransactionStatusSheetProps = {
   snapPoints?: string[];
   spinnerColor?: string;
   spinnerTrackColor?: string;
+  dismissibleWhenLoading?: boolean;
+  enableDynamicSizing?: boolean;
 };
 
 export function TransactionStatusSheet({
@@ -33,9 +39,12 @@ export function TransactionStatusSheet({
   snapPoints = ["40%"],
   spinnerColor = colors.stacks.bloodOrange,
   spinnerTrackColor = colors.neutral[200],
+  dismissibleWhenLoading = true,
+  enableDynamicSizing = false,
 }: TransactionStatusSheetProps) {
   const { ref, present, dismiss } = useModal();
   const { colorScheme } = useColorScheme();
+  const isDismissible = !isLoading || dismissibleWhenLoading;
 
   useEffect(() => {
     if (open) {
@@ -46,18 +55,27 @@ export function TransactionStatusSheet({
     dismiss();
   }, [dismiss, open, present]);
 
+  const renderStaticBackdrop = useCallback(
+    ({ style }: BottomSheetBackdropProps) => (
+      <View style={[style, { backgroundColor: "rgba(0, 0, 0, 0.4)" }]} />
+    ),
+    [],
+  );
+
   return (
     <Modal
       ref={ref}
-      snapPoints={snapPoints}
-      enablePanDownToClose
+      snapPoints={enableDynamicSizing ? undefined : snapPoints}
+      enableDynamicSizing={enableDynamicSizing}
+      enablePanDownToClose={isDismissible}
+      backdropComponent={isDismissible ? undefined : renderStaticBackdrop}
       backgroundStyle={{
         backgroundColor:
           colorScheme === "dark" ? colors.charcoal[850] : colors.white,
       }}
       onDismiss={() => onOpenChange(false)}
     >
-      <View className="flex-1 items-center justify-start gap-8 p-6">
+      <BottomSheetView className="items-center justify-start gap-8 p-6">
         {isLoading ? (
           <View className="items-center gap-4">
             <Spinner
@@ -83,7 +101,7 @@ export function TransactionStatusSheet({
             {children}
           </View>
         )}
-      </View>
+      </BottomSheetView>
     </Modal>
   );
 }
