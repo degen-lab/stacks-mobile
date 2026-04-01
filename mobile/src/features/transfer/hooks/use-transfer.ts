@@ -16,8 +16,10 @@ export function useTransfer() {
   const { stxAddress, btcAddress } = useWalletAddresses({
     accountIndex: activeAccountIndex,
   });
-  const { balance: stxBalance, isLoading: stxBalanceIsLoading } =
-    useStxBalance(activeAccountIndex);
+  const {
+    availableBalance: stxAvailableBalance,
+    isLoading: stxBalanceIsLoading,
+  } = useStxBalance(activeAccountIndex);
   const { balance: btcBalance, isLoading: btcBalanceIsLoading } =
     useBtcBalance(activeAccountIndex);
   const { data: sbtcBalanceSats, isLoading: sbtcBalanceIsLoading } =
@@ -27,7 +29,7 @@ export function useTransfer() {
   const getCurrentBalance = (asset: AppToken | null) => {
     switch (asset) {
       case "STX":
-        return stxBalance;
+        return stxAvailableBalance;
       case "BTC":
         return btcBalance;
       case "sBTC":
