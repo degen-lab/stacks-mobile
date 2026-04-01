@@ -146,7 +146,7 @@ export function TokenPicker({
         <BottomSheetFlatList
           style={styles.list}
           data={filtered}
-          keyExtractor={(token) => token.tokenId}
+          keyExtractor={(token: SwapAsset) => token.tokenId}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.listContent}
           initialNumToRender={12}

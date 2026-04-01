@@ -56,6 +56,7 @@ function getCardStatus(
   if (card.kind === "success") return "success";
   if (hasOnlyPreviewCards && index === 0) return "primary";
   if (card.kind === "preview") return "preview";
+  if (card.kind === "actionable") return "primary";
   return isAcquirePair || index === 0 ? "primary" : "secondary";
 }
 

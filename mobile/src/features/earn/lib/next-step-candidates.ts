@@ -72,8 +72,8 @@ function buildDualStackingCandidate({
   if (isEnrolledCurrentCycle) {
     return {
       id: "dual-stacking",
-      title: "Enroll in Dual Stacking",
-      description: "Renew next cycle to keep BTC rewards on.",
+      title: "Dual Stacking",
+      description: "Renew next cycle to keep sBTC rewards on.",
       kind: "actionable",
       priority: 1,
       action: { type: "dual-stacking" },
@@ -82,12 +82,12 @@ function buildDualStackingCandidate({
 
   return {
     id: "dual-stacking",
-    title: "Enroll in Dual Stacking",
+    title: "Dual Stacking",
     description: isStacking
       ? "Enroll to start boosted stacking rewards."
-      : "Enroll to start BTC rewards.",
+      : "Enroll to receive rewards for holding sBTC.",
     kind: "actionable",
-    priority: 1,
+    priority: 2,
     action: { type: "dual-stacking" },
   };
 }
@@ -98,7 +98,7 @@ function buildBridgeCandidate(): EarnNextStepCandidate {
     title: "Bridge BTC to sBTC",
     description: "Bridge BTC to sBTC so you can enroll in Dual Stacking.",
     kind: "actionable",
-    priority: 2,
+    priority: 4,
     action: { type: "bridge" },
   };
 }
@@ -109,9 +109,9 @@ function buildStackingCandidate(
   return {
     id: "stack-stx",
     title: "Stack your STX",
-    description: `Earn ${formatStackingAprLabel(stackingApr)} in BTC rewards.`,
+    description: `Earn ${formatStackingAprLabel(stackingApr)} in STX stacking rewards.`,
     kind: "actionable",
-    priority: 3,
+    priority: 1,
     action: { type: "stacking" },
   };
 }
