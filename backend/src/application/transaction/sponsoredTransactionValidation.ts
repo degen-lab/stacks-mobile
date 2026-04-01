@@ -36,6 +36,9 @@ const SUPPORTED_CONTRACT_CALLS: Record<
     'SP21YTSM60CAY6D011EZVEVNKXVW8FVZE198XEFFP.pox4-fast-pool-v3': new Set([
       'delegate-stx',
     ]),
+    'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token': new Set([
+      'transfer',
+    ]),
   },
   testnet: {
     'ST39770H89J51RQEZPJ4JNTA7QCTXRMVQF60FY2X3.dual-stacking-v2-testing':
