@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { TransactionService } from '../../application/transaction/transactionService';
+import transactionGetRoutes from './get';
 import transactionPostRoutes from './post';
 import deleteTransactionRoute from './delete';
 
@@ -11,6 +12,10 @@ export default function transactionRoutes(
     transactionService: TransactionService;
   },
 ) {
+  app.register(transactionGetRoutes, {
+    transactionService,
+  });
+
   app.register(transactionPostRoutes, {
     transactionService,
   });

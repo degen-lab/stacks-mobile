@@ -43,6 +43,12 @@ type CreateGameSubmissionTransactionResult = {
   };
 };
 
+type SponsoredRequestStatusResult = {
+  requestId: number;
+  status: 'not_broadcasted' | 'processing' | 'pending' | 'success' | 'failed';
+  txId?: string | null;
+};
+
 const SPONSORED_TTL_MS = 15 * 60 * 1000;
 
 /**
@@ -329,7 +335,29 @@ export class TransactionService {
   }
 
   /**
-   * Worker entry point. First refreshes already-broadcast pending rows, then sends new queued rows in order.
+   * Loads the current state of a sponsored request for the authenticated user.
+   */
+  async getSponsoredRequestStatus(
+    userId: number,
+    requestIdRaw: string | number,
+  ): Promise<SponsoredRequestStatusResult> {
+    const requestId = this.parseSponsoredRequestId(requestIdRaw);
+    const sponsoredRequest = await this.loadOwnedSponsoredRequest(
+      requestId,
+      userId,
+    );
+
+    if (sponsoredRequest.status === TransactionStatus.Pending) {
+      await this.refreshPendingSponsoredRequest(sponsoredRequest);
+    }
+
+    return this.serializeSponsoredRequestStatus(sponsoredRequest);
+  }
+
+  /**
+   * Worker entry point. Refreshes already-broadcast pending rows, then sends queued rows in order.
+   * Per-origin gate: an origin with a Pending tx is skipped this cycle; unrelated origins proceed.
+   * At most one tx per origin is broadcast per cycle to prevent back-to-back origin-nonce conflicts.
    */
   async processSponsoredBroadcastQueue(): Promise<void> {
     logger.info({
@@ -337,17 +365,44 @@ export class TransactionService {
     });
 
     await this.refreshPendingSponsoredRequests();
-    let pendingCount = await this.countPendingSponsoredRequests();
+    await this.broadcastQueuedSponsoredTransactions();
 
-    while (pendingCount > 0) {
-      logger.info({
-        msg: 'Waiting for the current sponsored batch to anchor',
-        pendingCount,
-      });
-      await this.refreshPendingSponsoredRequests();
-      pendingCount = await this.countPendingSponsoredRequests();
-      await new Promise((resolve) => setTimeout(resolve, 10000));
+    const pendingCount = await this.checkDbPendingDefiTransactionsCount();
+    logger.info({
+      msg: 'Step 4: Updating DeFi pending transactions',
+      pendingCount,
+    });
+    const defiOperations = await this.entityManager.find(DefiOperation, {
+      where: {
+        status: In([TransactionStatus.Pending, TransactionStatus.Processing]),
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+    for (const operation of defiOperations) {
+      if (operation.txId) {
+        const transactionStatus =
+          await this.transactionClient.getTransactionStatus(operation.txId);
+        const txStatus =
+          transactionStatus === 'success'
+            ? TransactionStatus.Success
+            : transactionStatus === 'pending'
+              ? TransactionStatus.Pending
+              : TransactionStatus.Failed;
+        operation.status = txStatus;
+        await this.entityManager.save(operation);
+      }
     }
+  }
+
+  private async broadcastQueuedSponsoredTransactions(): Promise<void> {
+    // Origins that already have a Pending tx on-chain — skip those this cycle.
+    const pendingTxs = await this.entityManager.find(SponsoredTransaction, {
+      where: { status: TransactionStatus.Pending },
+      select: ['originAddress'],
+    });
+    const blockedOrigins = new Set(pendingTxs.map((tx) => tx.originAddress));
 
     const queuedTransactions = await this.entityManager.find(
       SponsoredTransaction,
@@ -359,12 +414,23 @@ export class TransactionService {
       },
     );
 
+    // One tx per origin per cycle — prevents back-to-back origin-nonce conflicts.
+    const seenOrigins = new Set<string>();
+    const eligible = queuedTransactions.filter((tx) => {
+      if (blockedOrigins.has(tx.originAddress)) return false;
+      if (seenOrigins.has(tx.originAddress)) return false;
+      seenOrigins.add(tx.originAddress);
+      return true;
+    });
+
     logger.info({
       msg: 'Broadcasting sponsored transactions',
       queuedCount: queuedTransactions.length,
+      eligibleCount: eligible.length,
+      skippedOrigins: blockedOrigins.size,
     });
 
-    for (const queuedTransaction of queuedTransactions) {
+    for (const queuedTransaction of eligible) {
       if (!queuedTransaction.serializedTx) {
         queuedTransaction.status = TransactionStatus.Failed;
         await this.entityManager.save(queuedTransaction);
@@ -394,34 +460,6 @@ export class TransactionService {
 
       await this.entityManager.save(queuedTransaction);
       await this.syncLinkedSubmissionStatus(queuedTransaction);
-    }
-
-    pendingCount = await this.checkDbPendingDefiTransactionsCount();
-    logger.info({
-      msg: 'Step 4: Updating DeFi pending transactions',
-      pendingCount,
-    });
-    const defiOperation = await this.entityManager.find(DefiOperation, {
-      where: {
-        status: In([TransactionStatus.Pending, TransactionStatus.Processing]),
-      },
-      order: {
-        createdAt: 'ASC',
-      },
-    });
-    for (const operation of defiOperation) {
-      if (operation.txId) {
-        const transactionStatus =
-          await this.transactionClient.getTransactionStatus(operation.txId);
-        const txStatus =
-          transactionStatus === 'success'
-            ? TransactionStatus.Success
-            : transactionStatus === 'pending'
-              ? TransactionStatus.Pending
-              : TransactionStatus.Failed;
-        operation.status = txStatus;
-        await this.entityManager.save(operation);
-      }
     }
   }
 
@@ -590,12 +628,34 @@ export class TransactionService {
   }
 
   /**
-   * Counts in-flight sponsored rows that already have a txId and are still pending on-chain.
+   * Maps internal transaction state to the sponsored request status returned to mobile clients.
    */
-  private async countPendingSponsoredRequests(): Promise<number> {
-    return await this.entityManager.count(SponsoredTransaction, {
-      where: { status: TransactionStatus.Pending },
-    });
+  private serializeSponsoredRequestStatus(
+    sponsoredRequest: SponsoredTransaction,
+  ): SponsoredRequestStatusResult {
+    return {
+      requestId: sponsoredRequest.id,
+      status: this.getSponsoredRequestStatusName(sponsoredRequest.status),
+      txId: sponsoredRequest.txId ?? null,
+    };
+  }
+
+  private getSponsoredRequestStatusName(
+    status: TransactionStatus,
+  ): SponsoredRequestStatusResult['status'] {
+    switch (status) {
+      case TransactionStatus.NotBroadcasted:
+        return 'not_broadcasted';
+      case TransactionStatus.Processing:
+        return 'processing';
+      case TransactionStatus.Pending:
+        return 'pending';
+      case TransactionStatus.Success:
+        return 'success';
+      case TransactionStatus.Failed:
+      default:
+        return 'failed';
+    }
   }
 
   /**
@@ -611,35 +671,41 @@ export class TransactionService {
     );
 
     for (const pendingTransaction of pendingTransactions) {
-      if (!pendingTransaction.txId) {
-        pendingTransaction.status = TransactionStatus.Failed;
-        await this.entityManager.save(pendingTransaction);
-        await this.syncLinkedSubmissionStatus(pendingTransaction);
-        continue;
-      }
+      await this.refreshPendingSponsoredRequest(pendingTransaction);
+    }
+  }
 
-      try {
-        const txStatus = await this.transactionClient.getTransactionStatus(
-          pendingTransaction.txId,
-        );
+  private async refreshPendingSponsoredRequest(
+    sponsoredRequest: SponsoredTransaction,
+  ): Promise<void> {
+    if (!sponsoredRequest.txId) {
+      sponsoredRequest.status = TransactionStatus.Failed;
+      await this.entityManager.save(sponsoredRequest);
+      await this.syncLinkedSubmissionStatus(sponsoredRequest);
+      return;
+    }
 
-        pendingTransaction.status =
-          txStatus === 'success'
-            ? TransactionStatus.Success
-            : txStatus === 'pending'
-              ? TransactionStatus.Pending
-              : TransactionStatus.Failed;
+    try {
+      const txStatus = await this.transactionClient.getTransactionStatus(
+        sponsoredRequest.txId,
+      );
 
-        await this.entityManager.save(pendingTransaction);
-        await this.syncLinkedSubmissionStatus(pendingTransaction);
-      } catch (error) {
-        logger.error({
-          msg: 'Error checking sponsored transaction status',
-          requestId: pendingTransaction.id,
-          txId: pendingTransaction.txId,
-          err: error,
-        });
-      }
+      sponsoredRequest.status =
+        txStatus === 'success'
+          ? TransactionStatus.Success
+          : txStatus === 'pending'
+            ? TransactionStatus.Pending
+            : TransactionStatus.Failed;
+
+      await this.entityManager.save(sponsoredRequest);
+      await this.syncLinkedSubmissionStatus(sponsoredRequest);
+    } catch (error) {
+      logger.error({
+        msg: 'Error checking sponsored transaction status',
+        requestId: sponsoredRequest.id,
+        txId: sponsoredRequest.txId,
+        err: error,
+      });
     }
   }
 
