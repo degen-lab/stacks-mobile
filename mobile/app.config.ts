@@ -64,22 +64,27 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#ffffff',
+        backgroundColor: '#EBEBEB',
         dark: {
-          backgroundColor: '#000000',
+          backgroundColor: '#141414',
         },
         ios: {
-          image: './src/assets/images/stacks-mobile-logo.png',
+          image: './src/assets/images/splash-light.png',
           imageWidth: 200,
           resizeMode: 'contain',
           dark: {
-            backgroundColor: '#000000',
+            image: './src/assets/images/splash-dark.png',
+            backgroundColor: '#141414',
           },
         },
         android: {
-          image: './src/assets/images/android-icon-foreground.png',
+          image: './src/assets/images/splash-light.png',
           imageWidth: 150,
           resizeMode: 'contain',
+          dark: {
+            image: './src/assets/images/splash-dark.png',
+            backgroundColor: '#141414',
+          },
         },
       },
     ],

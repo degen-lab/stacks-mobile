@@ -1,3 +1,15 @@
+jest.mock("expo-constants", () => ({
+  default: {
+    expoConfig: {
+      extra: {
+        APP_ENV: "development",
+        NETWORK: "testnet",
+        API_URL: "http://localhost:3000",
+      },
+    },
+  },
+}));
+
 jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );

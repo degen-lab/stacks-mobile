@@ -24,7 +24,7 @@ export function Avatar({
   ...imageProps
 }: AvatarProps) {
   const sizeClass = sizeClassMap[size] ?? sizeClassMap.md;
-  const resolvedSource = source ?? require("@/assets/images/splash-icon.png");
+  const resolvedSource = source ?? require("@/assets/images/icon.png");
 
   return (
     <Image

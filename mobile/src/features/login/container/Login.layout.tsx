@@ -34,7 +34,9 @@ export default function LoginLayout({
           <Text
             className={`text-center text-5xl font-matter text-primary mb-4 leading-[1.15] tracking-tighter`}
           >
-            Welcome to Enter Stacks{" "}
+            Welcome to{" "}
+            <Text className="font-matter text-secondary text-5xl">Enter </Text>
+            Stacks{" "}
           </Text>
 
           <Text className="text-center text-base font-instrument-sans text-secondary mb-8 px-4">

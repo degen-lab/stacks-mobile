@@ -128,7 +128,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
     // This should query the Stacks API or use a fee estimation service to get accurate fees
     const cappedFee = estimatedFee ? Math.min(estimatedFee, 0.01) : 0;
     const fallbackAvatar = React.useMemo(
-      () => require("@/assets/images/splash-icon.png"),
+      () => require("@/assets/images/icon.png"),
       [],
     );
     const projectedUser = React.useMemo(() => {

@@ -23,8 +23,7 @@ export function LeaderboardItem({
   avatarFallback,
   highlight = false,
 }: LeaderboardItemProps) {
-  const fallbackAvatar =
-    avatarFallback ?? require("@/assets/images/splash-icon.png");
+  const fallbackAvatar = avatarFallback ?? require("@/assets/images/icon.png");
   const medalColor =
     user.tier === "Gold"
       ? colors.primary[600]

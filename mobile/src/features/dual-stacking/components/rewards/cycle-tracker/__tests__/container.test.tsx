@@ -3,6 +3,26 @@ import { RewardsCycleCardContainer } from "../container";
 
 const mockCard = jest.fn((_props?: Record<string, unknown>) => null);
 
+/** Avoid loading real `backend.ts` → `backend-client` (game client needs Env.API_URL at import time). */
+jest.mock("@/api/dual-stacking/backend", () => ({
+  getLatestDualStackingCycleRow: (data: unknown) => {
+    if (!Array.isArray(data) || data.length === 0) return null;
+    let latest: (typeof data)[number] | null = null;
+    let maxId = -Infinity;
+    for (const row of data) {
+      const cycleId = Number(
+        (row as { cycle_id?: number }).cycle_id,
+      );
+      if (!Number.isFinite(cycleId)) continue;
+      if (cycleId > maxId) {
+        maxId = cycleId;
+        latest = row;
+      }
+    }
+    return latest;
+  },
+}));
+
 jest.mock("@/api/dual-stacking", () => ({
   useDualStackingData: jest.fn(),
   useTotalSbtcEnrolled: jest.fn(),

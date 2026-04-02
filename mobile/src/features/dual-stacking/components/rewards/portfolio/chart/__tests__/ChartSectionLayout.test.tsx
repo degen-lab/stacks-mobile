@@ -86,7 +86,7 @@ describe("ChartSectionLayout", () => {
   };
 
   it("shows controls when estimated chart data exists", () => {
-    render(<ChartSectionLayout {...baseProps} />);
+    render(<ChartSectionLayout {...baseProps} isEmptyChart={false} />);
 
     expect(screen.getByText("View by:")).toBeTruthy();
     expect(screen.getByText("UNIT_TOGGLE")).toBeTruthy();

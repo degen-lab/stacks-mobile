@@ -60,7 +60,7 @@ export function PodiumPlace({
   borderRadiusRight = 8,
   showBorder = false,
 }: PodiumPlaceProps) {
-  const fallbackAvatar = require("@/assets/images/splash-icon.png");
+  const fallbackAvatar = require("@/assets/images/icon.png");
   const avatarSource = photoUri || fallbackAvatar;
   const height = getHeight(rank);
   const backgroundColor = getBackgroundColor(rank);

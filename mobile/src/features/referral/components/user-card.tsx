@@ -22,7 +22,7 @@ export default function UserCard({
   imageUri,
   testID,
 }: UserCardProps) {
-  const fallbackAvatar = require("@/assets/images/splash-icon.png");
+  const fallbackAvatar = require("@/assets/images/icon.png");
   const avatarSource = imageUri || fallbackAvatar;
   const baseTestID = testID ?? `user-card-${id}`;
 
