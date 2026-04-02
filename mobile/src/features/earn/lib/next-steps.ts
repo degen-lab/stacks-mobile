@@ -18,9 +18,12 @@ function selectCandidates(args: BuildEarnNextStepCardsArgs) {
   const selected = sortByPriority(buildActionableCandidates(args)).slice(0, 2);
   const preview = sortByPriority(
     buildPreviewCandidates({
+      btcBalance: args.btcBalance,
+      bridgeDepositMinimumBtc: args.bridgeDepositMinimumBtc,
       sbtcBalance: args.sbtcBalance,
-      minSbtcBalanceForEnrollment: args.minSbtcBalanceForEnrollment,
+      meetsMinimumSbtcForEnrollment: args.meetsMinimumSbtcForEnrollment,
       totalStxBalance: args.totalStxBalance,
+      availableStxBalance: args.availableStxBalance,
       lockedStxBalance: args.lockedStxBalance,
     }),
   );

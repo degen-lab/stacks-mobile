@@ -75,7 +75,7 @@ export function useAprComputation() {
   );
 
   const shouldQueryRewards =
-    !!stxAddress && (!enrolledNextCycle || includeLiveBalances);
+    !!stxAddress && enrolledNextCycle && includeLiveBalances;
   const { data: projectedReward } = useProjectRewards({
     variables: projectedRewardsParams,
     enabled: shouldQueryRewards,

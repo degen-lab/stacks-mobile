@@ -70,15 +70,13 @@ export function ContractTxDetails({
         : `${customFee} STX`
       : isLoadingFees
         ? "Calculating..."
-        : isFeeUnavailable
-          ? "Unavailable — wallet will estimate"
-          : stackingPrice > 0 && feeMicroStx
-            ? `$${((feeMicroStx / MICRO_STX) * stackingPrice).toFixed(3)} • ${formatMicroStx(feeMicroStx)} STX`
-            : feeMicroStx
-              ? `${formatMicroStx(feeMicroStx)} STX`
-              : selectedFeeOption === "custom"
-                ? "Enter custom fee"
-                : "Estimated in wallet";
+        : stackingPrice > 0 && feeMicroStx
+          ? `$${((feeMicroStx / MICRO_STX) * stackingPrice).toFixed(3)} • ${formatMicroStx(feeMicroStx)} STX`
+          : feeMicroStx
+            ? `${formatMicroStx(feeMicroStx)} STX`
+            : selectedFeeOption === "custom"
+              ? "Enter custom fee"
+              : "Estimated in wallet";
 
   const handleAdvancedToggle = () => {
     const newState = !showAdvanced;

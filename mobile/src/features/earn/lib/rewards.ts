@@ -101,7 +101,7 @@ export function buildEarnRewardsSummary({
         statusLabel: isEnrolledCurrentCycle
           ? "Earning"
           : isEnrolledNextCycle
-            ? "Next cycle"
+            ? "Enrolled next cycle"
             : "Not active",
         statusTone: isEnrolledCurrentCycle
           ? "active"

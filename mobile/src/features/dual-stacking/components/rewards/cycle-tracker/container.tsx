@@ -1,11 +1,9 @@
-import {
-  useCurrentBitcoinBlockHeight,
-  useIsContractActive,
-} from "@/api/dual-stacking/contract/hooks";
-import { useTotalSbtcEnrolled } from "@/api/dual-stacking";
+import { useCurrentBitcoinBlockHeight } from "@/api/dual-stacking/contract/hooks";
+import { useDualStackingData, useTotalSbtcEnrolled } from "@/api/dual-stacking";
+import { getLatestDualStackingCycleRow } from "@/api/dual-stacking/backend";
+import type { DualStackingDataCycleRow } from "@/api/dual-stacking/types";
 import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/use-coin-prices-for-yield";
 import { useDaysUntilCycleStarts } from "@/features/dual-stacking/hooks/use-days-until-cycle-starts";
-import { useDualStackingDataWithLatestCycle } from "@/features/dual-stacking/hooks/use-dual-stacking-data";
 import { fromSatsToBtc } from "@/lib/format/currency";
 import { isInDistributionWindow } from "@/lib/utils/time";
 import { RewardsCycleCard } from "./RewardsCycleCard";
@@ -13,62 +11,46 @@ import { RewardsCycleCardSkeleton } from "./RewardsCycleCard.skeleton";
 
 const HIRO_SBTC_EXPLORER_URL =
   "https://explorer.hiro.so/token/SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token?chain=mainnet";
-const UNINITIALIZED_CONTRACT_START_BLOCK = 921465;
 
 export function RewardsCycleCardContainer() {
-  const {
-    dualStackingData,
-    cycle,
-    dualStackingDataLoading,
-    dualStackingDataError,
-  } = useDualStackingDataWithLatestCycle();
+  const { data: dualStackingData, isLoading: dualStackingDataLoading } =
+    useDualStackingData();
   const {
     data: currentBitcoinBlockHeight,
     isLoading: loadingCurrentBitcoinBlockHeight,
-    isError: currentBitcoinBlockHeightError,
   } = useCurrentBitcoinBlockHeight();
-  const {
-    data: isContractActiveData,
-    isLoading: loadingContractActive,
-    isError: contractActiveError,
-  } = useIsContractActive();
-  const {
-    data: totalSbtcEnrolled,
-    isLoading: loadingTotalSbtcEnrolled,
-    isError: totalSbtcEnrolledError,
-  } = useTotalSbtcEnrolled();
-  const {
-    data: coinPrices,
-    isLoading: loadingCoinPrices,
-    isError: coinPricesError,
-  } = useCoinPricesForYield();
+  const { data: totalSbtcEnrolled, isLoading: loadingTotalSbtcEnrolled } =
+    useTotalSbtcEnrolled();
+  const { data: coinPrices, isLoading: loadingCoinPrices } =
+    useCoinPricesForYield();
   const {
     daysUntilCycleStart,
     isFinalized,
     loading: loadingCycleStartState,
   } = useDaysUntilCycleStarts();
 
-  const isContractActive = Boolean(isContractActiveData);
-  const initializedCycle = isContractActive ? (cycle ?? 0) : 0;
-  const currentCycleData = dualStackingData?.find(
-    (item) => item.cycle_id === initializedCycle,
-  );
+  const waitingForYield = dualStackingDataLoading && !dualStackingData;
+  const btcReady =
+    currentBitcoinBlockHeight !== undefined &&
+    currentBitcoinBlockHeight !== null;
 
-  const isError =
-    dualStackingDataError ||
-    currentBitcoinBlockHeightError ||
-    contractActiveError ||
-    totalSbtcEnrolledError ||
-    coinPricesError;
+  if (
+    waitingForYield ||
+    !Array.isArray(dualStackingData) ||
+    dualStackingData.length === 0 ||
+    !btcReady
+  ) {
+    return <RewardsCycleCardSkeleton />;
+  }
 
-  if (isError) {
-    return null;
+  const latest = getLatestDualStackingCycleRow(dualStackingData);
+
+  if (!latest) {
+    return <RewardsCycleCardSkeleton />;
   }
 
   const isLoading =
-    dualStackingDataLoading ||
     loadingCurrentBitcoinBlockHeight ||
-    loadingContractActive ||
     loadingTotalSbtcEnrolled ||
     loadingCoinPrices ||
     loadingCycleStartState;
@@ -77,60 +59,70 @@ export function RewardsCycleCardContainer() {
     return <RewardsCycleCardSkeleton />;
   }
 
-  if (currentBitcoinBlockHeight == null || !currentCycleData) {
-    return null;
-  }
-
   const btcPrice = Number(coinPrices?.btc_price ?? 0);
-  const blocksPerSnapshot = Number(currentCycleData.blocks_per_snapshot ?? 0);
-  const currentStart = isContractActive
-    ? Number(currentCycleData.current_cycle_bitcoin_height ?? 0)
-    : UNINITIALIZED_CONTRACT_START_BLOCK;
-  const nextStart = isContractActive
-    ? Number(currentCycleData.next_cycle_bitcoin_height ?? 0)
-    : Number(currentCycleData.current_cycle_bitcoin_height ?? 0);
-  const blocksPerCycle = isContractActive
-    ? blocksPerSnapshot * Number(currentCycleData.snapshots_per_cycle ?? 0)
-    : nextStart - currentStart;
+  const row = latest as DualStackingDataCycleRow;
   const btcNow = Number(currentBitcoinBlockHeight);
+  const cycleStartBtc = Number(row.current_cycle_bitcoin_height ?? NaN);
+  const currentCycleLive =
+    Number.isFinite(btcNow) &&
+    Number.isFinite(cycleStartBtc) &&
+    btcNow >= cycleStartBtc;
+
+  const totalSatsParticipating = totalSbtcEnrolled
+    ? totalSbtcEnrolled.total
+    : 0;
+  const totalSbtcParticipating = currentCycleLive
+    ? fromSatsToBtc(totalSatsParticipating)
+    : 0;
+
+  const blocksPerSnapshot = Number(row.blocks_per_snapshot ?? 0);
+  const snapshotsPerCycle = Number(row.snapshots_per_cycle ?? 0);
+  const currentStart = Number(row.current_cycle_bitcoin_height ?? 0);
+  const nextStart = Number(row.next_cycle_bitcoin_height ?? 0);
+  const blocksPerCycle =
+    blocksPerSnapshot > 0 && snapshotsPerCycle > 0
+      ? blocksPerSnapshot * snapshotsPerCycle
+      : Math.max(0, nextStart - currentStart);
+  const bufferStart =
+    row.buffer_start_block != null ? Number(row.buffer_start_block) : undefined;
+  const bufferBlocks =
+    row.buffer_blocks != null ? Number(row.buffer_blocks) : undefined;
 
   const isDistributingRewards =
-    Boolean(isContractActiveData) && currentBitcoinBlockHeight != null
-      ? isInDistributionWindow(
-          btcNow,
-          currentCycleData.buffer_start_block,
-          currentCycleData.buffer_blocks,
-        )
+    currentCycleLive && Number.isFinite(btcNow)
+      ? isInDistributionWindow(btcNow, bufferStart, bufferBlocks)
       : false;
   const progressedBlocks = Math.max(
     0,
     Math.min(blocksPerCycle, btcNow - currentStart),
   );
   const progressPct =
-    blocksPerCycle > 0
+    blocksPerCycle > 0 && Number.isFinite(progressedBlocks)
       ? Math.round((progressedBlocks / blocksPerCycle) * 100)
       : 0;
 
-  const totalSbtcParticipating = isContractActive
-    ? fromSatsToBtc(Number(totalSbtcEnrolled?.total ?? 0))
-    : 0;
   const totalUsdValue = totalSbtcParticipating * btcPrice;
-  const participants = isContractActive
-    ? Number(currentCycleData.participants_count ?? 0)
+  const participants = currentCycleLive
+    ? Number(row.participants_count ?? 0)
     : 0;
 
-  const blocksUntilRewards = Math.max(0, blocksPerCycle - progressedBlocks);
-  const daysUntilCycleStartWhenContractIsNotActive = Math.ceil(
-    blocksUntilRewards / 144,
-  );
+  let cycleStartsIn = 0;
+  if (
+    Number.isFinite(btcNow) &&
+    Number.isFinite(cycleStartBtc) &&
+    btcNow < cycleStartBtc
+  ) {
+    cycleStartsIn = Math.max(0, Math.ceil((cycleStartBtc - btcNow) / 144));
+  } else if (currentCycleLive) {
+    cycleStartsIn = daysUntilCycleStart;
+  }
+
   const cycleData = {
-    cycleNumber: Number(initializedCycle),
+    cycleNumber: Number(row.cycle_id),
     progress: progressPct,
-    startsInDays: isContractActive
-      ? daysUntilCycleStart
-      : daysUntilCycleStartWhenContractIsNotActive,
+    startsInDays: Number.isFinite(cycleStartsIn) ? cycleStartsIn : 0,
     isFinalized,
-    isContractActive,
+    isContractActive: currentCycleLive,
     isDistributingRewards,
     participants,
     totalSbtcParticipating,

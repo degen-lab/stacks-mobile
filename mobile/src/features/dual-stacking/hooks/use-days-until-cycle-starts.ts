@@ -8,7 +8,7 @@ import { useDualStackingDataWithLatestCycle } from "./use-dual-stacking-data";
 import { isInDistributionWindow, timeUntilBlock } from "@/lib/utils/time";
 
 export function useDaysUntilCycleStarts() {
-  const { dualStackingData, cycle, dualStackingDataLoading } =
+  const { dualStackingData, dualStackingDataLoading } =
     useDualStackingDataWithLatestCycle();
   const { data: btcNow, isLoading: isLoadingBtcNow } =
     useCurrentBitcoinBlockHeight();

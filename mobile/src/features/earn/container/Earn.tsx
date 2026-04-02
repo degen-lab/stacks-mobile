@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 
-import { useMinHoldForEnrollment } from "@/api/dual-stacking/contract";
+import { useBridgeLimits } from "@/api/sbtc-bridge/hooks";
+import { useMeetsMinimumEnrollmentAmount } from "@/api/dual-stacking/contract";
 import { useDualStackingStats } from "@/api/dual-stacking/use-dual-stacking-stats";
 import { useCurrentTournamentSubmissions } from "@/api/game/tournament";
 import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
 import { useDualStackingDataWithLatestCycle } from "@/features/dual-stacking/hooks/use-dual-stacking-data";
+import { useBridgeConfig } from "@/features/sbtc-bridge/hooks/use-bridge-data";
 import { useTransferSheet } from "@/features/transfer";
 import { useTransak } from "@/features/transak/context/transak-context";
 import { usePortfolioBalance } from "@/hooks/use-portfolio-balance";
+import { fromSatsToBtc } from "@/lib/format/currency";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useBalanceVisibility } from "@/lib/store/balance-visibility";
 import {
@@ -22,7 +25,6 @@ import { usePoxData } from "@/api/stacks/use-stacks-api";
 import { useUserProfile } from "@/api/user";
 import { useTimeTillRewards } from "@/features/stacking/hooks/use-cycle-time";
 import { DEFAULT_STACKING_APY } from "@/features/stacking/hooks/use-stacking";
-import { fromSatsToBtc } from "@/lib/format/currency";
 import { buildEarnAssetRoute } from "../lib/asset-route";
 import { buildEarnNextStepCards } from "../lib/next-steps";
 import {
@@ -43,8 +45,6 @@ const EARN_NEXT_STEP_ROUTES = {
   "dual-stacking": "/Earn/dual-stacking",
 } as const;
 
-const FALLBACK_MIN_SBTC_ENROLLMENT_SATS = 10_000;
-
 export default function EarnScreen() {
   const router = useRouter();
   const { openTransak } = useTransak();
@@ -60,6 +60,8 @@ export default function EarnScreen() {
     (state) => state.clearPendingSubmission,
   );
 
+  const bridgeConfig = useBridgeConfig();
+  const bridgeLimits = useBridgeLimits(bridgeConfig);
   const portfolio = usePortfolioBalance();
   const { data: poxInfo, isLoading: isLoadingPox } = usePoxData();
   const {
@@ -67,11 +69,11 @@ export default function EarnScreen() {
     enrolledNextCycle,
     isLoading: enrollmentLoading,
   } = useEnrollmentStatus();
-  const {
-    data: minSbtcEnrollmentAmountSats,
-    isLoading: isMinSbtcEnrollmentAmountLoading,
-  } = useMinHoldForEnrollment();
   const { stxAddress } = useWalletAddresses();
+  const {
+    data: meetsMinimumSbtcForEnrollment,
+    isLoading: isMeetsMinimumSbtcForEnrollmentLoading,
+  } = useMeetsMinimumEnrollmentAmount(stxAddress);
   const { dualStackingDataLoading } = useDualStackingDataWithLatestCycle();
   const dualStackingStatsQuery = useDualStackingStats({
     variables: { address: stxAddress ?? "" },
@@ -113,6 +115,9 @@ export default function EarnScreen() {
       : 0;
   const currentTournamentGameSubmissionCount =
     serverSubmissionCount + optimisticPendingSubmissionCount;
+  const bridgeDepositMinimumBtc = fromSatsToBtc(
+    bridgeLimits.data?.perDepositMinimum ?? 0,
+  );
 
   useEffect(() => {
     if (!pendingSubmission) return;
@@ -162,12 +167,9 @@ export default function EarnScreen() {
     () =>
       buildEarnNextStepCards({
         btcBalance: portfolio.btcBalance,
+        bridgeDepositMinimumBtc,
         sbtcBalance: portfolio.sbtcBalance + portfolio.sbtcDefiBalance,
-        minSbtcBalanceForEnrollment: fromSatsToBtc(
-          Number(
-            minSbtcEnrollmentAmountSats ?? FALLBACK_MIN_SBTC_ENROLLMENT_SATS,
-          ),
-        ),
+        meetsMinimumSbtcForEnrollment: Boolean(meetsMinimumSbtcForEnrollment),
         totalStxBalance: portfolio.stxBalance,
         availableStxBalance: portfolio.stxAvailableBalance,
         lockedStxBalance: portfolio.stxLockedBalance,
@@ -177,9 +179,10 @@ export default function EarnScreen() {
         stackingApr: rewardsSummary.currentStackingApr,
       }),
     [
+      bridgeDepositMinimumBtc,
       enrolledCurrentCycle,
       enrolledNextCycle,
-      minSbtcEnrollmentAmountSats,
+      meetsMinimumSbtcForEnrollment,
       portfolio.btcBalance,
       portfolio.sbtcBalance,
       portfolio.sbtcDefiBalance,
@@ -193,9 +196,10 @@ export default function EarnScreen() {
 
   const isNextStepsLoading =
     portfolio.isBalanceLoading ||
+    bridgeLimits.isLoading ||
     dualStackingDataLoading ||
     isDualStackingStatsLoading ||
-    isMinSbtcEnrollmentAmountLoading ||
+    isMeetsMinimumSbtcForEnrollmentLoading ||
     isLoadingPox ||
     enrollmentLoading;
 

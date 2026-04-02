@@ -20,7 +20,7 @@ export function AnalyticsConsentModal({ modalRef, onAllow, onDecline }: Props) {
       <BottomSheetView>
         <View className="px-6 pb-8 pt-4">
           <View className="items-center">
-            <View className="rounded-full bg-sand-100 px-3 py-1">
+            <View className="rounded-full bg-sand-100 dark:bg-surface-secondary px-3 py-1">
               <Text className="font-instrument-sans-medium text-xs uppercase tracking-[1px] text-primary">
                 Optional
               </Text>

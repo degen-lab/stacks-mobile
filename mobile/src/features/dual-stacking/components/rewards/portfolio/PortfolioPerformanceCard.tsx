@@ -38,7 +38,7 @@ export function PortfolioPerformanceCard({
     <View className="border-border-secondary rounded-xl border bg-transparent">
       {/* Header */}
       <View className="px-5 pt-5 pb-4">
-        <View className={`gap-4 ${showData ? "flex-col" : "items-end"}`}>
+        <View className="items-start gap-4">
           {showData && <PerformanceHeader metrics={data.metrics} />}
           <PortfolioValueDisplay value={data.portfolioValue} />
         </View>

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import { CartesianChart, Area, Line, useChartPressState } from "victory-native";
 import {
   useFont,
@@ -71,7 +71,13 @@ interface Props {
   isContractActive?: boolean;
 }
 
-function EmptyState({ label, ticks }: { label: string; ticks: number[] }) {
+function EmptyState({
+  ticks,
+  children,
+}: {
+  ticks: number[];
+  children: React.ReactNode;
+}) {
   return (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyTicks}>
@@ -88,9 +94,12 @@ function EmptyState({ label, ticks }: { label: string; ticks: number[] }) {
         ))}
       </View>
       <View style={styles.emptyOverlay}>
-        <Text className="font-instrument-sans-medium text-tertiary text-center text-sm leading-5">
-          {label}
-        </Text>
+        {children}
+        <Image
+          source={require("@/assets/images/sbtc-coins.png")}
+          style={{ width: 134, height: 62, opacity: 0.7 }}
+          resizeMode="contain"
+        />
       </View>
     </View>
   );
@@ -302,19 +311,32 @@ export default function YieldChart({
 
   if (!isContractActive) {
     return (
-      <EmptyState
-        ticks={EMPTY_TICKS}
-        label={`Your first Dual Stacking rewards cycle will start in ${timeUntilContractActiveLabel}.`}
-      />
+      <EmptyState ticks={EMPTY_TICKS}>
+        <Text className="font-instrument-sans-medium text-tertiary text-center text-xs leading-4">
+          {"Your first Dual Stacking rewards cycle will start in "}
+          <Text className="font-instrument-sans-bold text-tertiary text-xs">
+            {timeUntilContractActiveLabel}
+          </Text>
+          {"."}
+        </Text>
+      </EmptyState>
     );
   }
 
   if (chartData.length === 0 && isEmpty) {
     return (
-      <EmptyState
-        ticks={EMPTY_TICKS}
-        label={`Your first Dual Stacking rewards cycle is in progress.\nCheck back in ${timeUntilCycleStartLabel ?? "~0 minutes"} to view your rewards.`}
-      />
+      <EmptyState ticks={EMPTY_TICKS}>
+        <Text className="font-instrument-sans-medium text-tertiary text-center text-sm leading-5">
+          {"Your first Dual Stacking rewards\ncycle is in progress."}
+        </Text>
+        <Text className="font-instrument-sans-medium text-tertiary text-center text-sm leading-5">
+          {"Check back in "}
+          <Text className="font-instrument-sans-bold text-tertiary text-sm">
+            {timeUntilCycleStartLabel ?? "~0 minutes"}
+          </Text>
+          {" to view your rewards."}
+        </Text>
+      </EmptyState>
     );
   }
 
@@ -523,17 +545,17 @@ const styles = StyleSheet.create({
     height: 1,
     borderStyle: "dashed",
     borderWidth: 1,
-    borderColor: "#D5D3D1",
+    borderColor: "rgba(213, 211, 209, 0.4)",
   },
   emptyOverlay: {
     position: "absolute",
     top: 0,
-    left: 0,
+    left: 44,
     right: 0,
     bottom: 0,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
   },
   tooltip: {
     backgroundColor: colors.neutral[50],

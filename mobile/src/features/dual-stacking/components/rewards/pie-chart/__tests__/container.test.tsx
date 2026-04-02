@@ -1,7 +1,7 @@
 import { render } from "@/lib/tests";
 import { CompositionCardContainer } from "../container";
 
-const mockCard = jest.fn(() => null);
+const mockCard = jest.fn((_props?: Record<string, unknown>) => null);
 
 jest.mock("@/features/dual-stacking/hooks/use-apr-computation", () => ({
   useAprComputation: jest.fn(),

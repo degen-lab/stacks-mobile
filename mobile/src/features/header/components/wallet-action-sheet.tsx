@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react-native";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
-import { ScrollView } from "react-native";
 
 import { Modal, View, colors } from "@/components/ui";
 import { BtcRouteLogo } from "@/components/ui/icons/btc-route-logo";
@@ -28,7 +28,6 @@ type WalletActionSheetProps = {
   address: string | null;
   btcAddress?: string | null;
   actions: WalletAction[];
-  snapPoints?: string[];
 };
 
 export function WalletActionSheet({
@@ -37,7 +36,6 @@ export function WalletActionSheet({
   address,
   btcAddress,
   actions,
-  snapPoints = ["50%"],
 }: WalletActionSheetProps) {
   const { ref, present, dismiss } = useModal();
   const { colorScheme } = useColorScheme();
@@ -56,7 +54,7 @@ export function WalletActionSheet({
   return (
     <Modal
       ref={ref}
-      snapPoints={snapPoints}
+      enableDynamicSizing={true}
       backgroundStyle={{
         backgroundColor: modalBackgroundColor,
       }}
@@ -64,7 +62,7 @@ export function WalletActionSheet({
       enablePanDownToClose
       onDismiss={() => onOpenChange(false)}
     >
-      <ScrollView className="flex-1" contentContainerClassName="px-6 pb-6">
+      <BottomSheetScrollView contentContainerClassName="px-6 pb-6">
         <View className="gap-4">
           <View className="gap-2">
             {btcAddress ? (
@@ -102,7 +100,7 @@ export function WalletActionSheet({
             ))}
           </View>
         </View>
-      </ScrollView>
+      </BottomSheetScrollView>
     </Modal>
   );
 }

@@ -7,6 +7,9 @@ import { FeeOption } from "@/features/stacking/components/fee-selector";
 import { MICRO_STX } from "@/lib/format/currency";
 import { useSelectedNetwork } from "@/lib/store/settings";
 
+// Fallback when the node has no cost data for a contract function
+const FALLBACK_FEE_MICRO_STX = 10_000;
+
 type UseContractCallFeeArgs = {
   contractId: string;
   functionName: string;
@@ -51,6 +54,8 @@ export function useContractCallFee({
       return Number.isNaN(parsed) ? undefined : parsed;
     }
 
+    if (isFeeUnavailable) return FALLBACK_FEE_MICRO_STX;
+
     if (feeEstimations.length === 0) return undefined;
 
     if (selectedFeeOption === "low") return feeEstimations[0]?.fee;
@@ -60,7 +65,7 @@ export function useContractCallFee({
       return feeEstimations[2]?.fee ?? feeEstimations[1]?.fee;
 
     return feeEstimations[1]?.fee;
-  }, [customFee, feeEstimations, selectedFeeOption]);
+  }, [customFee, feeEstimations, isFeeUnavailable, selectedFeeOption]);
 
   const isFeeValid =
     selectedFeeOption !== "custom" && feeMicroStx !== undefined

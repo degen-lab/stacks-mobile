@@ -120,7 +120,7 @@ function RewardRow({
                 numberOfLines={1}
                 style={{
                   color:
-                    row.statusTone === "active"
+                    row.statusTone === "active" || row.statusTone === "pending"
                       ? colors.success[600]
                       : mutedColor,
                 }}

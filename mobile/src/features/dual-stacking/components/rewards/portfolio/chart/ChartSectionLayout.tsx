@@ -37,14 +37,18 @@ export function ChartSectionLayout({
   return (
     <View>
       {showData && (
-        <View className="mb-5 flex-row flex-wrap items-center justify-between gap-3">
-          <View className="flex-row items-center gap-2">
+        <View className="mb-5 flex-row flex-wrap items-center justify-between">
+          <View className="mb-3 mr-3 flex-row items-center">
             <Text className="font-instrument-sans-medium text-tertiary text-xs">
               View by:
             </Text>
-            <UnitToggle value={unit} onChange={onUnitChange} />
+            <View className="ml-2">
+              <UnitToggle value={unit} onChange={onUnitChange} />
+            </View>
           </View>
-          <TimeToggle value={period} onChange={onPeriodChange} />
+          <View className="mb-3">
+            <TimeToggle value={period} onChange={onPeriodChange} />
+          </View>
         </View>
       )}
 

@@ -2,17 +2,26 @@ import { useEffect } from "react";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 
 import { useTxById } from "@/api/stacks/use-stacks-api";
+import type { IsEnrolledResponse } from "@/api/dual-stacking/types";
+
+export const IS_ENROLLED_QUERY_KEY = "is-enrolled" as const;
 
 export const invalidateEnrollmentQueries = (qc: QueryClient) =>
-  qc.invalidateQueries({
-    predicate: (q) => {
-      const k = q.queryKey.join(":");
-      return (
-        k.includes("IS_ENROLLED_THIS_CYCLE") ||
-        k.includes("IS_ENROLLED_NEXT_CYCLE")
-      );
-    },
-  });
+  qc.invalidateQueries({ queryKey: [IS_ENROLLED_QUERY_KEY] });
+
+/**
+ * Optimistically sets enrollment state in the cache so the UI updates
+ * immediately after tx confirmation, without waiting for the backend indexer.
+ */
+export const optimisticSetEnrolled = (
+  qc: QueryClient,
+  enrolled: Partial<IsEnrolledResponse>,
+) => {
+  qc.setQueriesData<IsEnrolledResponse>(
+    { queryKey: [IS_ENROLLED_QUERY_KEY] },
+    (old) => (old ? { ...old, ...enrolled } : old),
+  );
+};
 
 type Props = {
   txId: string | null;
@@ -65,7 +74,10 @@ export function useTrackEnrollTx({ txId, onSuccess, onFailure }: Props) {
 
     if (status === "success") {
       onSuccess?.();
-      invalidateEnrollmentQueries(qc);
+      // Delay invalidation so the backend indexer has time to process the
+      // confirmed block — prevents the refetch from overwriting optimistic updates.
+      const t = setTimeout(() => invalidateEnrollmentQueries(qc), 20_000);
+      return () => clearTimeout(t);
     } else if (["failed", "abort_by_response", "rejected"].includes(status)) {
       onFailure?.(status, (data as any)?.tx_result?.repr);
     }

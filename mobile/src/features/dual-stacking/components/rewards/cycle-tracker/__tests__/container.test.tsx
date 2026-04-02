@@ -1,19 +1,15 @@
 import { render } from "@/lib/tests";
 import { RewardsCycleCardContainer } from "../container";
 
-const mockCard = jest.fn(() => null);
+const mockCard = jest.fn((_props?: Record<string, unknown>) => null);
 
-jest.mock("@/features/dual-stacking/hooks/use-dual-stacking-data", () => ({
-  useDualStackingDataWithLatestCycle: jest.fn(),
+jest.mock("@/api/dual-stacking", () => ({
+  useDualStackingData: jest.fn(),
+  useTotalSbtcEnrolled: jest.fn(),
 }));
 
 jest.mock("@/api/dual-stacking/contract/hooks", () => ({
   useCurrentBitcoinBlockHeight: jest.fn(),
-  useIsContractActive: jest.fn(),
-}));
-
-jest.mock("@/api/dual-stacking", () => ({
-  useTotalSbtcEnrolled: jest.fn(),
 }));
 
 jest.mock("@/features/dual-stacking/hooks/use-coin-prices-for-yield", () => ({
@@ -32,13 +28,12 @@ jest.mock("../RewardsCycleCard.skeleton", () => ({
   RewardsCycleCardSkeleton: () => null,
 }));
 
-const { useDualStackingDataWithLatestCycle } = jest.requireMock(
-  "@/features/dual-stacking/hooks/use-dual-stacking-data",
+const { useDualStackingData, useTotalSbtcEnrolled } = jest.requireMock(
+  "@/api/dual-stacking",
 );
-const { useCurrentBitcoinBlockHeight, useIsContractActive } = jest.requireMock(
+const { useCurrentBitcoinBlockHeight } = jest.requireMock(
   "@/api/dual-stacking/contract/hooks",
 );
-const { useTotalSbtcEnrolled } = jest.requireMock("@/api/dual-stacking");
 const { useCoinPricesForYield } = jest.requireMock(
   "@/features/dual-stacking/hooks/use-coin-prices-for-yield",
 );
@@ -52,8 +47,8 @@ describe("RewardsCycleCardContainer", () => {
   });
 
   it("maps hook data into the native rewards cycle card", () => {
-    jest.mocked(useDualStackingDataWithLatestCycle).mockReturnValue({
-      dualStackingData: [
+    jest.mocked(useDualStackingData).mockReturnValue({
+      data: [
         {
           cycle_id: 12,
           current_cycle_bitcoin_height: 1000,
@@ -69,19 +64,11 @@ describe("RewardsCycleCardContainer", () => {
           total_rewarded: 0,
         },
       ],
-      cycle: 12,
-      dualStackingDataLoading: false,
-      dualStackingDataError: false,
+      isLoading: false,
     });
     jest.mocked(useCurrentBitcoinBlockHeight).mockReturnValue({
       data: 1072,
       isLoading: false,
-      isError: false,
-    });
-    jest.mocked(useIsContractActive).mockReturnValue({
-      data: true,
-      isLoading: false,
-      isError: false,
     });
     jest.mocked(useDaysUntilCycleStarts).mockReturnValue({
       daysUntilCycleStart: 4,
@@ -119,21 +106,13 @@ describe("RewardsCycleCardContainer", () => {
   });
 
   it("returns null on data error", () => {
-    jest.mocked(useDualStackingDataWithLatestCycle).mockReturnValue({
-      dualStackingData: undefined,
-      cycle: undefined,
-      dualStackingDataLoading: false,
-      dualStackingDataError: true,
+    jest.mocked(useDualStackingData).mockReturnValue({
+      data: undefined,
+      isLoading: false,
     });
     jest.mocked(useCurrentBitcoinBlockHeight).mockReturnValue({
       data: undefined,
       isLoading: false,
-      isError: false,
-    });
-    jest.mocked(useIsContractActive).mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: false,
     });
     jest.mocked(useDaysUntilCycleStarts).mockReturnValue({
       daysUntilCycleStart: 0,

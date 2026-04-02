@@ -20,6 +20,18 @@ export interface DualStackingStat {
 
 export type DualStackingStatsResponse = DualStackingStat[];
 
+export interface DualStackingDataCycleRow {
+  cycle_id: number;
+  current_cycle_bitcoin_height?: number | string | null;
+  next_cycle_bitcoin_height?: number | string | null;
+  participants_count?: number | string | null;
+  snapshots_per_cycle?: number | string | null;
+  blocks_per_snapshot?: number | string | null;
+  buffer_start_block?: number | string | null;
+  buffer_blocks?: number | string | null;
+  total_rewarded?: number | string | null;
+}
+
 export interface DefiPool {
   poolRewardsAddress: string;
   rewarded: number;
@@ -36,21 +48,18 @@ export interface DefiCycle {
 
 export interface DualStackingData {
   cycle_id: number;
-  current_cycle_bitcoin_height?: number;
-  next_cycle_bitcoin_height: number;
-  participants_count: number;
-  snapshots_per_cycle: number;
-  blocks_per_snapshot: number;
-  buffer_blocks?: number;
-  buffer_start_block?: number;
+  current_cycle_bitcoin_height?: number | string | null;
+  next_cycle_bitcoin_height: number | string | null;
+  participants_count: number | string | null;
+  snapshots_per_cycle: number | string | null;
+  blocks_per_snapshot: number | string | null;
+  buffer_blocks?: number | string | null;
+  buffer_start_block?: number | string | null;
   reward_mechanism?: number;
   defi_multiplier?: number;
-  cycle_total_sbtc_in_wallet?: number;
-  cycle_total_sbtc_in_defis?: number;
-  cycle_total_stx: number;
   start_time: number;
   end_time: number;
-  total_rewarded: number;
+  total_rewarded?: number | string | null;
 }
 
 export type DualStackingDataResponse = DualStackingData[];
@@ -81,6 +90,12 @@ export interface LeaderboardResponse {
   cycleId: string;
   leaderboard: LeaderboardEntry[];
   totals: LeaderboardTotals;
+}
+
+export interface IsEnrolledResponse {
+  success: boolean;
+  isEnrolledCurrentCycle: boolean;
+  isEnrolledNextCycle: boolean;
 }
 
 // Coin Prices

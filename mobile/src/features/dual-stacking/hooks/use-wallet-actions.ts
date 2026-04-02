@@ -19,6 +19,7 @@ import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import type { UnenrollReasonKey } from "@/api/dual-stacking/enrollment/save-unenrollment-reasons";
 import {
   invalidateEnrollmentQueries,
+  optimisticSetEnrolled,
   useTrackEnrollTx,
 } from "@/features/dual-stacking/hooks/use-track-enroll-tx";
 import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-transaction";
@@ -66,15 +67,14 @@ export function useWalletActions() {
   const invalidateDualStackingState = useCallback(() => {
     invalidateEnrollmentQueries(queryClient);
     void queryClient.invalidateQueries({
-      queryKey: [contractType, "GET_LATEST_REWARD_ADDRESS"],
+      queryKey: ["latest-reward-address"],
     });
-  }, [contractType, queryClient]);
+  }, [queryClient]);
 
   const scheduleDualStackingRefresh = useCallback(() => {
-    invalidateDualStackingState();
     setTimeout(() => {
       invalidateDualStackingState();
-    }, 15000);
+    }, 20_000);
   }, [invalidateDualStackingState]);
 
   const openInExplorer = async () => {
@@ -260,8 +260,10 @@ export function useWalletActions() {
     onSuccess: () => {
       setIsOptOutSubmitting(false);
       setOptOutStatus("success");
-      invalidateDualStackingState();
-      invalidateEnrollmentQueries(queryClient);
+      optimisticSetEnrolled(queryClient, {
+        isEnrolledNextCycle: false,
+      });
+      scheduleDualStackingRefresh();
       setOptOutTxId(null);
     },
     onFailure: (_status, repr) => {

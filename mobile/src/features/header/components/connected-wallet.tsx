@@ -535,7 +535,6 @@ function StackingConnectedWallet() {
         address={stxAddress}
         btcAddress={btcAddress}
         actions={actions}
-        snapPoints={["62%"]}
       />
 
       <LeavePoolSheet

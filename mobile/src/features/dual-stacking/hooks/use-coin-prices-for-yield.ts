@@ -3,12 +3,14 @@ import { useDualStackingDataWithLatestCycle } from "./use-dual-stacking-data";
 import { isPositiveNumber, poxForYield } from "../utils/apr-calculations";
 import { CoinPricesResponse, useCoinPrices } from "@/api/dual-stacking";
 import { usePoxData } from "@/api/stacks/use-stacks-api";
+import { useIsContractActive } from "@/api/dual-stacking/contract/hooks";
 
 const UNINITIALIZED_CONTRACT_STACKING_APR = 8.5;
 
 export const useCoinPricesForYield = (yieldCycle?: number) => {
   const { data: poxData } = usePoxData();
   const { cycle: currentYield } = useDualStackingDataWithLatestCycle();
+  const { data: isContractActive } = useIsContractActive();
   const targetYield = yieldCycle ?? currentYield;
 
   const poxCycleId = useMemo(() => {
@@ -24,7 +26,9 @@ export const useCoinPricesForYield = (yieldCycle?: number) => {
     return poxForYield(targetYield, currentYield, currentPox);
   }, [poxData, currentYield, targetYield]);
 
-  const shouldFetch = targetYield != null && poxCycleId != null;
+  const shouldFetch = isContractActive
+    ? targetYield != null && poxCycleId != null
+    : true;
 
   const coinPricesQuery = useCoinPrices({
     variables: {

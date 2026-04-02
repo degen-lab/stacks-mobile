@@ -88,10 +88,9 @@ function NextStepStatusIcon({
   const isPrimary = status === "primary";
   return (
     <View
-      className="h-8 w-8 shrink-0 items-center justify-center rounded-full"
-      style={{
-        backgroundColor: isPrimary ? colors.neutral[900] : colors.neutral[200],
-      }}
+      className={`h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+        isPrimary ? "bg-neutral-900" : "bg-neutral-200 dark:bg-neutral-700"
+      }`}
     >
       <ArrowRight
         size={16}

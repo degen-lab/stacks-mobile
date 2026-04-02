@@ -75,7 +75,7 @@ export function useYieldChartData(
     isLoading: loadingCurrentBitcoinHeight,
   } = useCurrentBitcoinBlockHeight();
 
-  const { enrolledNextCycle } = useEnrollmentStatus();
+  const { enrolledNextCycle, enrolledCurrentCycle } = useEnrollmentStatus();
 
   const {
     data: stackingDefiBalances,
@@ -116,7 +116,7 @@ export function useYieldChartData(
   );
 
   const shouldQueryProjectedRewards =
-    !!stxAddress && (!enrolledNextCycle || includeLiveBalances);
+    !!stxAddress && enrolledNextCycle && includeLiveBalances;
   const { data: projectedRewards, isLoading: loadingProjectedRewards } =
     useProjectRewards({
       variables: projectionRequestParams,
@@ -245,16 +245,18 @@ export function useYieldChartData(
       };
     });
 
-    // Compute estimated end time for the latest cycle whenever end_time is null/0
-    // (regardless of enrollment — the current cycle always has no end_time yet)
-    if (currentBitcoinBlockHeight && latestCycleId != null) {
+    if (
+      enrolledCurrentCycle &&
+      currentBitcoinBlockHeight &&
+      latestCycleId != null
+    ) {
       const currentCycleMeta = (yieldCyclesMeta as DualStackingData[]).find(
         (c) => c.cycle_id === latestCycleId,
       );
       if (currentCycleMeta && !currentCycleMeta.end_time) {
         const estimatedEndTimeMs = calculateBlockEndTime(
           Number(currentBitcoinBlockHeight),
-          currentCycleMeta.next_cycle_bitcoin_height,
+          Number(currentCycleMeta.next_cycle_bitcoin_height ?? 0),
         );
         const estimatedEndTimeSec = Math.floor(estimatedEndTimeMs / 1000);
         const latestPoint = points.find((p) => p.cycle === latestCycleId);
@@ -312,6 +314,7 @@ export function useYieldChartData(
     projectedRewards,
     baseAPR,
     enrolledNextCycle,
+    enrolledCurrentCycle,
     latestCycleId,
     period,
     unit,

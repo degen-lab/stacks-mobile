@@ -1,7 +1,7 @@
 import { principalCV } from "@stacks/transactions";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ScrollView } from "react-native";
 
 import { useGetLatestRewardAddressUser } from "@/api/dual-stacking/contract";
 import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
@@ -57,8 +57,10 @@ export function ChangeRewardAddressSheet({
     () => principalArgFromAddress(stxAddress),
     [stxAddress],
   );
-  const { data: latestAddress, refetch } =
-    useGetLatestRewardAddressUser(principalArg);
+  const { data: latestAddress, refetch } = useGetLatestRewardAddressUser(
+    principalArg,
+    open,
+  );
   const contractType = getContractTypeForCycle(FUTURE_MIGRATION_ID);
   const contractId = CONTRACTS[selectedNetwork][contractType];
   const functionName =
@@ -171,7 +173,7 @@ export function ChangeRewardAddressSheet({
     <>
       <Modal
         ref={formRef}
-        snapPoints={["55%"]}
+        enableDynamicSizing={true}
         backgroundStyle={{
           backgroundColor:
             colorScheme === "dark" ? colors.charcoal[850] : colors.white,
@@ -183,7 +185,7 @@ export function ChangeRewardAddressSheet({
           }
         }}
       >
-        <ScrollView className="flex-1" contentContainerClassName="pb-6">
+        <BottomSheetScrollView contentContainerClassName="pb-6">
           <View className="px-6">
             <Text className="mb-3 font-matter text-2xl text-primary">
               Change reward address
@@ -235,13 +237,13 @@ export function ChangeRewardAddressSheet({
               />
             </View>
           </View>
-        </ScrollView>
+        </BottomSheetScrollView>
       </Modal>
 
       <ContractCallDetailsSheet
         ref={confirmRef}
         title="Change reward address"
-        snapPoints={["50%"]}
+        enableDynamicSizing={true}
         network={selectedNetwork}
         contractAddress={contractId}
         functionName={functionName}

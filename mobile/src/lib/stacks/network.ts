@@ -117,9 +117,9 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
   development: {
     mainnet: {
       "dual-stacking":
-        "https://dual-stacking-v2-server.degenlab.io/dual-stacking-server",
+        "https://dual-stacking-v3-server.degenlab.io/dual-stacking-server",
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
-      "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
+      "coin-prices": "https://dual-stacking-v3-server.degenlab.io",
     },
     testnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
@@ -135,9 +135,9 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
   staging: {
     mainnet: {
       "dual-stacking":
-        "https://dual-stacking-v2-server.degenlab.io/dual-stacking-server",
+        "https://dual-stacking-v3-server.degenlab.io/dual-stacking-server",
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
-      "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
+      "coin-prices": "https://dual-stacking-v3-server.degenlab.io",
     },
     testnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
@@ -153,9 +153,9 @@ const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
   production: {
     mainnet: {
       "dual-stacking":
-        "https://dual-stacking-v2-server.degenlab.io/dual-stacking-server",
+        "https://dual-stacking-v3-server.degenlab.io/dual-stacking-server",
       defi: "https://dual-stacking-server.degenlab.io/defi-server",
-      "coin-prices": "https://dual-stacking-v2-server.degenlab.io",
+      "coin-prices": "https://dual-stacking-v3-server.degenlab.io",
     },
     testnet: {
       "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",

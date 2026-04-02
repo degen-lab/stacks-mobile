@@ -1,5 +1,3 @@
-import { formatBtcAmount } from "@/lib/format/currency";
-
 import type { EarnAcquisitionAsset, EarnNextStepCard } from "../types";
 
 export const MIN_STACKING_STX = 40;
@@ -13,8 +11,9 @@ export type EarnNextStepCandidate = Omit<EarnNextStepCard, "status"> & {
 
 export type BuildEarnNextStepCardsArgs = {
   btcBalance: number;
+  bridgeDepositMinimumBtc: number;
   sbtcBalance: number;
-  minSbtcBalanceForEnrollment: number;
+  meetsMinimumSbtcForEnrollment: boolean;
   totalStxBalance: number;
   availableStxBalance: number;
   lockedStxBalance: number;
@@ -128,17 +127,14 @@ function buildStackingPreviewCandidate(): EarnNextStepCandidate {
 }
 
 function buildDualStackingPreviewCandidate(
-  remainingSbtcBalance?: number,
+  hasSbtcBalance: boolean,
 ): EarnNextStepCandidate {
   return {
     id: "dual-stacking",
     title: "Enroll in Dual Stacking",
-    description:
-      remainingSbtcBalance != null
-        ? `Add at least ${formatBtcAmount(
-            remainingSbtcBalance,
-          )} sBTC more to enroll.`
-        : "Use sBTC to enroll and start earning rewards.",
+    description: hasSbtcBalance
+      ? "Add more sBTC to enroll in Dual Stacking."
+      : "Use sBTC to enroll and start earning rewards.",
     kind: "preview",
     priority: 1,
     action: { type: "dual-stacking" },
@@ -162,8 +158,8 @@ export function buildSuccessCandidate(
 
 export function buildActionableCandidates({
   btcBalance,
-  sbtcBalance,
-  minSbtcBalanceForEnrollment,
+  bridgeDepositMinimumBtc,
+  meetsMinimumSbtcForEnrollment,
   totalStxBalance,
   availableStxBalance,
   lockedStxBalance,
@@ -172,16 +168,19 @@ export function buildActionableCandidates({
   stackingApr,
 }: BuildEarnNextStepCardsArgs): EarnNextStepCandidate[] {
   const isStacking = lockedStxBalance > 0;
-  const hasEnoughSbtcForEnrollment = sbtcBalance >= minSbtcBalanceForEnrollment;
+  const hasEnoughBtcForBridge =
+    bridgeDepositMinimumBtc > 0
+      ? btcBalance >= bridgeDepositMinimumBtc
+      : btcBalance > 0;
   const candidates: EarnNextStepCandidate[] = [];
 
-  if (hasEnoughSbtcForEnrollment && !isEnrolledNextCycle) {
+  if (meetsMinimumSbtcForEnrollment && !isEnrolledNextCycle) {
     candidates.push(
       buildDualStackingCandidate({ isEnrolledCurrentCycle, isStacking }),
     );
   }
 
-  if (btcBalance > 0 && !hasEnoughSbtcForEnrollment) {
+  if (hasEnoughBtcForBridge && !meetsMinimumSbtcForEnrollment) {
     candidates.push(buildBridgeCandidate());
   }
 
@@ -191,8 +190,8 @@ export function buildActionableCandidates({
 
   if (
     candidates.length === 0 &&
-    btcBalance === 0 &&
-    !hasEnoughSbtcForEnrollment
+    !hasEnoughBtcForBridge &&
+    !meetsMinimumSbtcForEnrollment
   ) {
     if (isStacking) {
       candidates.push(
@@ -210,30 +209,42 @@ export function buildActionableCandidates({
 }
 
 export function buildPreviewCandidates({
+  btcBalance,
+  bridgeDepositMinimumBtc,
   sbtcBalance,
-  minSbtcBalanceForEnrollment,
+  meetsMinimumSbtcForEnrollment,
   totalStxBalance,
+  availableStxBalance,
   lockedStxBalance,
 }: Pick<
   BuildEarnNextStepCardsArgs,
+  | "btcBalance"
+  | "bridgeDepositMinimumBtc"
   | "sbtcBalance"
-  | "minSbtcBalanceForEnrollment"
+  | "meetsMinimumSbtcForEnrollment"
   | "totalStxBalance"
+  | "availableStxBalance"
   | "lockedStxBalance"
 >) {
   const isStacking = lockedStxBalance > 0;
-  const hasEnoughSbtcForEnrollment = sbtcBalance >= minSbtcBalanceForEnrollment;
-  const remainingSbtcBalance = Math.max(
-    minSbtcBalanceForEnrollment - sbtcBalance,
-    0,
-  );
+  const hasEnoughBtcForBridge =
+    bridgeDepositMinimumBtc > 0
+      ? btcBalance >= bridgeDepositMinimumBtc
+      : btcBalance > 0;
   const candidates: EarnNextStepCandidate[] = [];
 
-  if (isStacking && !hasEnoughSbtcForEnrollment) {
+  if (isStacking && !meetsMinimumSbtcForEnrollment) {
+    candidates.push(buildDualStackingPreviewCandidate(sbtcBalance > 0));
+  }
+
+  if (
+    !isStacking &&
+    availableStxBalance >= MIN_STACKING_STX &&
+    !hasEnoughBtcForBridge &&
+    !meetsMinimumSbtcForEnrollment
+  ) {
     candidates.push(
-      buildDualStackingPreviewCandidate(
-        sbtcBalance > 0 ? remainingSbtcBalance : undefined,
-      ),
+      buildAcquireCandidate("BTC", { kind: "preview", priority: 1 }),
     );
   }
 

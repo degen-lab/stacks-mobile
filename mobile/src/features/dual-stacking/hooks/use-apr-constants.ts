@@ -62,7 +62,7 @@ export function useAprConstants() {
   );
 
   const shouldQueryRewards =
-    !!stxAddress && (!enrolledNextCycle || includeLiveBalances);
+    !!stxAddress && enrolledNextCycle && includeLiveBalances;
 
   const { data: projectRewards, isFetched } = useProjectRewards({
     variables: rewardsParams,

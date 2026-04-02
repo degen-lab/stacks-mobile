@@ -18,7 +18,7 @@ export function PortfolioValueDisplay({ value }: Props) {
         ${formatNumberToEnUs(value.usd)}
       </Text>
       <View className="mt-1 flex-row items-center gap-1">
-        <BalanceBtcIcon width={14} height={14} color="#E08516" />
+        <BalanceBtcIcon width={16} height={16} color="#C97B0A" />
         <Text className="font-instrument-sans-medium text-sm">
           ≈ {value.btc.toFixed(5)} BTC
         </Text>

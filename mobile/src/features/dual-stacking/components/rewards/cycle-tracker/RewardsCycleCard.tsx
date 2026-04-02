@@ -79,7 +79,7 @@ export function RewardsCycleCard({ cycle, href }: RewardsCycleCardProps) {
               <Progress
                 showThumb={false}
                 className="h-1"
-                value={cycle.progress}
+                value={Number.isFinite(cycle.progress) ? cycle.progress : 0}
                 indicatorColor="#FF8A64"
               />
             </View>

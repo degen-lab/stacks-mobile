@@ -12,7 +12,11 @@ type UseDualStackingDataLatestCycle = {
 
 const getLatestCycle = (data?: DualStackingDataResponse) => {
   if (!Array.isArray(data) || data.length === 0) return undefined;
-  return Math.max(...data.map((item) => item.cycle_id));
+  return data.reduce<number | undefined>((maxCycle, item) => {
+    const cycleId = Number(item.cycle_id);
+    if (!Number.isFinite(cycleId)) return maxCycle;
+    return maxCycle === undefined || cycleId > maxCycle ? cycleId : maxCycle;
+  }, undefined);
 };
 
 export const useDualStackingDataWithLatestCycle =

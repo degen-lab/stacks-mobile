@@ -14,10 +14,12 @@ import { useContractCallFee } from "@/hooks/use-contract-call-fee";
 import {
   useTrackEnrollTx,
   invalidateEnrollmentQueries,
+  optimisticSetEnrolled,
 } from "@/features/dual-stacking/hooks/use-track-enroll-tx";
+import { useSponsoredRequestFlow } from "@/features/stacking/hooks/use-sponsored-request-flow";
 import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
 import { useAprComputation } from "@/features/dual-stacking/hooks/use-apr-computation";
-import { useMinHoldForEnrollment } from "@/api/dual-stacking/contract/hooks";
+import { useMeetsMinimumEnrollmentAmount } from "@/api/dual-stacking/contract/hooks";
 import { useCheckTerms } from "@/api/dual-stacking/enrollment/use-check-terms";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useStxBalance } from "@/hooks/use-stx-balance";
@@ -25,7 +27,6 @@ import { useSponsoredStacksTransaction } from "@/hooks/use-sponsored-stacks-tran
 import { contractEnroll } from "../../contract-calls/enroll";
 import { getActiveWalletAccount } from "@/lib/stacks/active-account";
 import type { TransactionMethod } from "@/lib/enums";
-import { fromSatsToBtc } from "@/lib/format/currency";
 import { buildUnsignedContractCall } from "@/lib/stacks/transaction-builder";
 import { CONTRACTS, SC_FUNCTIONS } from "@/lib/stacks/contracts";
 import { getExplorerTxUrl } from "@/lib/stacks/network";
@@ -50,6 +51,9 @@ export default function EarnBtcContainer({
     useSponsoredStacksTransaction();
   const [isSubmittingEnroll, setIsSubmittingEnroll] = useState(false);
   const [enrollTxId, setEnrollTxId] = useState<string | null>(null);
+  const [enrollSponsoredRequestId, setEnrollSponsoredRequestId] = useState<
+    number | null
+  >(null);
   const [enrollFunding, setEnrollFunding] = useState<TransactionMethod | null>(
     null,
   );
@@ -75,10 +79,10 @@ export default function EarnBtcContainer({
   } = useAprComputation();
 
   const {
-    data: minEnrollAmountSats,
+    data: meetsMinimumEnrollAmount,
     isLoading: isMinEnrollLoading,
     isError: isMinEnrollError,
-  } = useMinHoldForEnrollment();
+  } = useMeetsMinimumEnrollmentAmount(stxAddress);
 
   const {
     balance: stxTotalBalance,
@@ -119,9 +123,6 @@ export default function EarnBtcContainer({
 
   const isError = isEnrollmentError || isComputationError || isMinEnrollError;
 
-  const sbtcBalance = fromSatsToBtc(sbtcBalanceSats);
-  const minEnrollAmount = fromSatsToBtc(Number(minEnrollAmountSats ?? 0));
-
   const stackingPercentage =
     stxTotalBalance > 0 ? stxStacked / stxTotalBalance : 0;
   const isStacking = stackingPercentage >= 0.2;
@@ -138,6 +139,7 @@ export default function EarnBtcContainer({
   useTrackEnrollTx({
     txId: enrollTxId,
     onSuccess: () => {
+      optimisticSetEnrolled(queryClient, { isEnrolledNextCycle: true });
       setIsSubmittingEnroll(false);
       setIsEnrolling(false);
       setEnrollTxId(null);
@@ -150,6 +152,69 @@ export default function EarnBtcContainer({
       showMessage({
         message: "Enrollment failed",
         description: repr,
+        type: "danger",
+      });
+    },
+  });
+
+  const { loadingCopy: enrollSponsoredLoadingCopy } = useSponsoredRequestFlow({
+    requestId: enrollSponsoredRequestId,
+    copy: {
+      preparing: {
+        title: "Preparing enrollment...",
+        message:
+          "Please wait while we finalize your sponsored enrollment request.",
+      },
+      verifying: {
+        title: "Verifying sponsorship...",
+        message:
+          "Waiting for ad verification before your enrollment can be broadcast.",
+      },
+      queued: {
+        title: "Enrollment queued...",
+        message:
+          "Your sponsored enrollment is queued and will be broadcast shortly.",
+      },
+      blocked: {
+        title: "Waiting for previous transaction...",
+        message:
+          "Another sponsored transaction from this wallet is still pending. Enrollment will continue once that transaction confirms.",
+      },
+      confirming: {
+        title: "Enrollment pending...",
+        message:
+          "Your sponsored enrollment is on chain. Waiting for confirmation.",
+      },
+    },
+    onComplete: () => {
+      setEnrollSponsoredRequestId(null);
+      setIsEnrolling(false);
+      invalidateEnrollmentQueries(queryClient);
+      setTimeout(() => {
+        invalidateEnrollmentQueries(queryClient);
+      }, 15000);
+    },
+    onFailed: () => {
+      setEnrollSponsoredRequestId(null);
+      setIsEnrolling(false);
+      setIsEnrolledModalOpen(false);
+      showMessage({
+        message: "Enrollment failed",
+        description:
+          "The sponsored enrollment could not be broadcast. Please try again.",
+        type: "danger",
+      });
+    },
+    onStatusUnavailable: ({ error }) => {
+      setEnrollSponsoredRequestId(null);
+      setIsEnrolling(false);
+      setIsEnrolledModalOpen(false);
+      showMessage({
+        message: "Enrollment status unavailable",
+        description:
+          error instanceof Error
+            ? error.message
+            : "We couldn't confirm the sponsored enrollment status.",
         type: "danger",
       });
     },
@@ -168,20 +233,18 @@ export default function EarnBtcContainer({
   const model = useMemo(
     () =>
       buildEarnBtcSteps({
-        sbtcBalance,
         isEnrolledNextCycle: Boolean(enrolledNextCycle),
         isConnected: Boolean(stxAddress),
-        minEnrollAmount,
+        meetsMinimumEnrollAmount: Boolean(meetsMinimumEnrollAmount),
         isStacking,
         isDeFiParticipant,
         hasEnrollMempoolTx: !!enrollTxId,
         enrollExplorerUrl,
       }),
     [
-      sbtcBalance,
       enrolledNextCycle,
       stxAddress,
-      minEnrollAmount,
+      meetsMinimumEnrollAmount,
       isStacking,
       isDeFiParticipant,
       enrollTxId,
@@ -250,19 +313,15 @@ export default function EarnBtcContainer({
         postConditionMode: PostConditionMode.Allow,
         sponsored: true,
       });
-      await submitSponsoredTransaction({
+      const requestId = await submitSponsoredTransaction({
         originAddress: address,
         accountIndex,
         unsignedSerializedTx,
       });
 
-      invalidateEnrollmentQueries(queryClient);
-      setTimeout(() => {
-        invalidateEnrollmentQueries(queryClient);
-      }, 15000);
-
+      setEnrollSponsoredRequestId(requestId);
       setIsEnrolledModalOpen(true);
-      setIsEnrolling(false);
+      setIsEnrolling(true);
       setIsEnrollSheetOpen(false);
     } catch {
       showMessage({
@@ -352,22 +411,17 @@ export default function EarnBtcContainer({
         loading={{
           title:
             enrollFunding === "sponsored"
-              ? "Queueing sponsored enrollment..."
+              ? enrollSponsoredLoadingCopy.title
               : "Processing your enrollment...",
           message:
             enrollFunding === "sponsored"
-              ? "We are preparing your sponsored transaction and will broadcast it shortly."
+              ? enrollSponsoredLoadingCopy.message
               : "Please wait while we confirm your transaction on the blockchain.",
         }}
         success={{
-          title:
-            enrollFunding === "sponsored"
-              ? "Enrollment queued"
-              : "Congrats! You are enrolled in Dual Stacking",
+          title: "Congrats! You are enrolled in Dual Stacking",
           message:
-            enrollFunding === "sponsored"
-              ? "Your sponsored enrollment will broadcast shortly."
-              : "Starting next cycle you'll earn Bitcoin-denominated yield, powered by Stacks.",
+            "Starting next cycle you'll earn Bitcoin-denominated yield, powered by Stacks.",
         }}
       >
         <BitcoinTree width={188} height={88} />

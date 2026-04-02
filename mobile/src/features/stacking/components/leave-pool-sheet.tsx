@@ -418,7 +418,13 @@ export function LeavePoolSheet({
                 label={secondaryActionLabel}
                 variant="secondary"
                 size="lg"
-                onPress={onGoBack ? handleGoBack : closeFlow}
+                onPress={() => {
+                  if (onGoBack) {
+                    handleGoBack();
+                    return;
+                  }
+                  closeFlow();
+                }}
                 disabled={isSubmitting || isSponsoredStepPending}
               />
             </View>

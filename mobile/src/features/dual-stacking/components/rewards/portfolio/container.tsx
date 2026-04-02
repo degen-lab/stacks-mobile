@@ -13,6 +13,8 @@ import { useAprComputation } from "@/features/dual-stacking/hooks/use-apr-comput
 import { useCoinPricesForYield } from "@/features/dual-stacking/hooks/use-coin-prices-for-yield";
 import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
 import { useYieldChartData } from "@/features/dual-stacking/hooks/use-yield-chart-data";
+import { useDaysUntilCycleStarts } from "@/features/dual-stacking/hooks/use-days-until-cycle-starts";
+import { formatTimeUntil } from "@/lib/utils/time";
 import { divisorNetwork } from "@/lib/stacks/utils";
 
 import type {
@@ -98,6 +100,9 @@ export function PortfolioPerformanceCardContainer() {
     return items;
   }, [totalSbtc, stxStacked, baseApr, boostedApr, stackingApr]);
 
+  const { timeUntil: cycleTimeUntil } = useDaysUntilCycleStarts();
+  const timeUntilLabel = formatTimeUntil(cycleTimeUntil);
+
   const isEmptyUserStats = Array.isArray(userStats) && userStats.length === 0;
   const isEmptyChart = isEmptyUserStats && enrolledNextCycle;
 
@@ -181,8 +186,8 @@ export function PortfolioPerformanceCardContainer() {
       onPeriodChange={setPeriod}
       unit={unit}
       period={period}
-      timeUntilCycleStartLabel=""
-      timeUntilContractActiveLabel=""
+      timeUntilCycleStartLabel={timeUntilLabel}
+      timeUntilContractActiveLabel={timeUntilLabel}
     />
   );
 }
