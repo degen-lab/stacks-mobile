@@ -21,8 +21,8 @@ const FAQ_ITEMS: readonly FaqHelpItem[] = [
     body: "Yes. Watch a short ad to keep going. You can do it as many times as you want.",
   },
   {
-    id: "what-is-ghost-mode",
-    title: "What is Ghost Mode?",
+    id: "what-is-drop-point",
+    title: "What is Drop Point?",
     body: "Shows a preview line of where your bridge will land. Great for nailing tight gaps.",
   },
 ] as const;

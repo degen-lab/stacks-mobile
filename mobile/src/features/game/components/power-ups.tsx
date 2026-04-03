@@ -88,75 +88,96 @@ const PowerUpsContainer = ({
 
   if (overlayState !== "PLAYING") return null;
 
-  const bottomPadding = androidBottomInset;
+  const gradientColors = isDark
+    ? [...VISUAL_CONFIG.DARK_SCENE.POWER_UP_GLOW]
+    : ["rgba(255, 152, 53, 0.8)", "rgba(255, 152, 53, 0.01)"];
   const containerStyle = {
-    paddingBottom: bottomPadding,
+    paddingBottom: androidBottomInset,
     paddingTop: 20,
     paddingHorizontal: 20,
   } as const;
+  const content = (
+    <View
+      pointerEvents={Platform.OS === "android" ? "box-none" : "auto"}
+      className="w-full flex-row items-center justify-center gap-6 mt-4"
+    >
+      {showDropPoint ? (
+        <PowerUpButton
+          icon={RulerIcon}
+          label="Drop Point"
+          status={
+            ghostActive
+              ? `${Math.ceil((ghost.expiresAt! - currentTime) / 1000)}s`
+              : ghost.used
+                ? "Used"
+                : `${GAMEPLAY_CONFIG.GHOST_DURATION_MS / 1000}s`
+          }
+          isActive={ghostActive}
+          isUsed={ghost.used}
+          disabled={ghost.used || ghostActive}
+          onPress={handleActivateGhost}
+        />
+      ) : null}
+      {showRevive ? (
+        <PowerUpButton
+          icon={HeartIcon}
+          label="Revive"
+          status={
+            revivePowerUp.consumed
+              ? "Used"
+              : revivePowerUp.activated
+                ? "Active"
+                : "1x"
+          }
+          isActive={revivePowerUp.activated && !revivePowerUp.consumed}
+          isUsed={revivePowerUp.consumed}
+          disabled={revivePowerUp.activated}
+          onPress={handleActivateRevive}
+        />
+      ) : null}
+    </View>
+  );
+
+  if (Platform.OS === "android") {
+    return (
+      <>
+        <LinearGradient
+          pointerEvents="none"
+          className="absolute inset-x-0 bottom-0"
+          colors={gradientColors}
+          start={{ x: 0.5, y: 1 }}
+          end={{ x: 0.5, y: 0 }}
+          style={{
+            height: 140 + androidBottomInset,
+          }}
+        />
+        <View
+          pointerEvents="box-none"
+          className="absolute inset-x-0 bottom-0"
+          style={containerStyle}
+        >
+          {content}
+        </View>
+      </>
+    );
+  }
 
   return (
-    <>
+    <View pointerEvents="box-none" className="absolute inset-x-0 bottom-0">
       <LinearGradient
-        pointerEvents="none"
-        className="absolute inset-x-0 bottom-0"
-        colors={
-          isDark
-            ? [...VISUAL_CONFIG.DARK_SCENE.POWER_UP_GLOW]
-            : ["rgba(255, 152, 53, 0.8)", "rgba(255, 152, 53, 0.01)"]
-        }
+        pointerEvents="box-none"
+        colors={gradientColors}
         start={{ x: 0.5, y: 1 }}
         end={{ x: 0.5, y: 0 }}
         style={{
-          height: 140 + androidBottomInset,
+          height: 140,
+          paddingTop: 20,
+          paddingHorizontal: 20,
         }}
-      />
-      <View
-        pointerEvents="box-none"
-        className="absolute inset-x-0 bottom-0"
-        style={containerStyle}
       >
-        <View
-          pointerEvents="box-none"
-          className="w-full flex-row items-center justify-center gap-6 mt-4"
-        >
-          {showDropPoint ? (
-            <PowerUpButton
-              icon={RulerIcon}
-              label="Drop Point"
-              status={
-                ghostActive
-                  ? `${Math.ceil((ghost.expiresAt! - currentTime) / 1000)}s`
-                  : ghost.used
-                    ? "Used"
-                    : `${GAMEPLAY_CONFIG.GHOST_DURATION_MS / 1000}s`
-              }
-              isActive={ghostActive}
-              isUsed={ghost.used}
-              disabled={ghost.used || ghostActive}
-              onPress={handleActivateGhost}
-            />
-          ) : null}
-          {showRevive ? (
-            <PowerUpButton
-              icon={HeartIcon}
-              label="Revive"
-              status={
-                revivePowerUp.consumed
-                  ? "Used"
-                  : revivePowerUp.activated
-                    ? "Active"
-                    : "1x"
-              }
-              isActive={revivePowerUp.activated && !revivePowerUp.consumed}
-              isUsed={revivePowerUp.consumed}
-              disabled={revivePowerUp.activated}
-              onPress={handleActivateRevive}
-            />
-          ) : null}
-        </View>
-      </View>
-    </>
+        {content}
+      </LinearGradient>
+    </View>
   );
 };
 

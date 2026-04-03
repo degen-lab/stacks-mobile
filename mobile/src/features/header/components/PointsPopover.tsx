@@ -90,7 +90,7 @@ export function PointsPopover({
                 <Info size={16} color={infoIconColor} />
               </View>
               <Text className="flex-1 text-sm text-secondary font-instrument-sans leading-5">
-                Spend points on power-ups like Bridge Ghost and extra lives, or
+                Spend points on power-ups like Drop Point and extra lives, or
                 unlock skins to show off your Stacks hero.
               </Text>
             </View>

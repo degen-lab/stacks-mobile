@@ -163,8 +163,8 @@ export function StreakPopover({
                 <Info size={16} color={infoIconColor} />
               </View>
               <Text className="flex-1 text-sm text-secondary font-instrument-sans leading-5">
-                Missing a day lose your progress, play daily to keep the streak
-                alive.
+                If you miss a day, your streak resets. Play daily to keep it
+                going.
               </Text>
             </View>
           </>
