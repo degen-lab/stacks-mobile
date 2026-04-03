@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { ScrollView } from "react-native";
-import { useColorScheme } from "nativewind";
 
-import { Modal, Text, View, colors } from "@/components/ui";
+import { Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { ContractTxDetails } from "@/components/contract-tx-details";
 import { FeeOption } from "@/features/stacking/components/fee-selector";
@@ -46,7 +45,6 @@ export function EnrollRewardsSheet({
   isSponsoredSubmitting = false,
 }: Props) {
   const { ref, present, dismiss } = useModal();
-  const { colorScheme } = useColorScheme();
 
   useEffect(() => {
     if (open) present();
@@ -57,10 +55,6 @@ export function EnrollRewardsSheet({
     <Modal
       ref={ref}
       snapPoints={["55%"]}
-      backgroundStyle={{
-        backgroundColor:
-          colorScheme === "dark" ? colors.charcoal[850] : colors.white,
-      }}
       onDismiss={() => onOpenChange(false)}
       enablePanDownToClose
     >

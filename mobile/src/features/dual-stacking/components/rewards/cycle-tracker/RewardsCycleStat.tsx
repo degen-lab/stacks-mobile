@@ -29,7 +29,7 @@ export function RewardsCycleStat({
         </Text>
 
         {subValue ? (
-          <View className="ml-1.5 rounded-md bg-surface-primary px-1.5 py-1">
+          <View className="ml-1.5 rounded-md bg-surface-primary px-1.5 py-1 dark:bg-surface-secondary">
             <Text className="font-matter-mono text-primary text-xs tracking-wide">
               {subValue}
             </Text>

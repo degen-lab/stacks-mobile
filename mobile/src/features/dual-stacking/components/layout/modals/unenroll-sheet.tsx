@@ -1,5 +1,4 @@
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import { useColorScheme } from "nativewind";
 import { useEffect, useRef, useState } from "react";
 
 import {
@@ -9,7 +8,6 @@ import {
   Pressable,
   Text,
   View,
-  colors,
 } from "@/components/ui";
 import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
 import { useModal } from "@/components/ui/modal";
@@ -58,7 +56,6 @@ export function UnenrollSheet({
     present: presentConfirm,
     dismiss: dismissConfirm,
   } = useModal();
-  const { colorScheme } = useColorScheme();
   const { selectedNetwork } = useSelectedNetwork();
   const [reasons, setReasons] = useState<Record<UnenrollReasonKey, boolean>>({
     ...INITIAL_UNENROLL_REASONS,
@@ -155,10 +152,6 @@ export function UnenrollSheet({
         ref={formRef}
         title="Unenroll from Dual Stacking"
         enableDynamicSizing={true}
-        backgroundStyle={{
-          backgroundColor:
-            colorScheme === "dark" ? colors.charcoal[850] : colors.white,
-        }}
         enablePanDownToClose
         onDismiss={() => {
           if (activeSheetRef.current === "form") {
@@ -187,7 +180,7 @@ export function UnenrollSheet({
                   <Pressable
                     key={key}
                     onPress={() => handleReasonChange(key, !reasons[key])}
-                    className="rounded-2xl border border-surface-secondary bg-neutral-100 px-4 py-4"
+                    className="rounded-2xl border border-surface-secondary bg-neutral-100 px-4 py-4 dark:border-border-primary dark:bg-surface-secondary"
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: reasons[key] }}
                     accessibilityLabel={label}
@@ -213,7 +206,7 @@ export function UnenrollSheet({
               />
               <Button
                 label="Go back and keep earning rewards"
-                variant="secondary"
+                variant="ghost"
                 size="lg"
                 onPress={handleGoBack}
                 disabled={isSubmitting}

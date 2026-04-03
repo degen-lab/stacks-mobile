@@ -1,5 +1,7 @@
 import { Text, View } from "@/components/ui";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useColorScheme } from "nativewind";
 import { TextInput } from "react-native";
 
 interface MnemonicWordGridProps {
@@ -21,9 +23,32 @@ export function MnemonicWordGrid({
   maxHeight = 380,
   invalidWordIndices = [],
 }: MnemonicWordGridProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const displayWords = words.length
     ? words
     : Array.from({ length: wordCount }, () => "");
+  const placeholderTextColor = resolveThemeTokenColor(
+    isDark ? "dark" : "light",
+    "--color-text-tertiary",
+  );
+  const primaryTextColor = resolveThemeTokenColor(
+    isDark ? "dark" : "light",
+    "--color-text-primary",
+  );
+  const tertiaryTextColor = resolveThemeTokenColor(
+    isDark ? "dark" : "light",
+    "--color-text-tertiary",
+  );
+  const defaultCellBorderColor = resolveThemeTokenColor(
+    isDark ? "dark" : "light",
+    isDark ? "--color-border-primary" : "--color-sand-200",
+  );
+  const defaultCellBackgroundColor = resolveThemeTokenColor(
+    isDark ? "dark" : "light",
+    isDark ? "--color-surface-secondary" : "--color-surface-tertiary",
+  );
+  const invalidTextColor = isDark ? "#F87171" : "#DC2626";
 
   return (
     <BottomSheetScrollView
@@ -34,20 +59,32 @@ export function MnemonicWordGrid({
         {displayWords.map((word, index) => {
           const isInvalid = invalidWordIndices.includes(index);
           const hasValue = word.trim().length > 0;
+          const cellStyle =
+            isInvalid && hasValue
+              ? {
+                  backgroundColor: isDark
+                    ? "rgba(127, 29, 29, 0.22)"
+                    : "#FEF2F2",
+                  borderColor: isDark ? "rgba(127, 29, 29, 0.5)" : "#FECACA",
+                }
+              : {
+                  backgroundColor: defaultCellBackgroundColor,
+                  borderColor: defaultCellBorderColor,
+                };
+          const labelColor =
+            isInvalid && hasValue ? invalidTextColor : tertiaryTextColor;
+          const wordColor =
+            isInvalid && hasValue ? invalidTextColor : primaryTextColor;
 
           return (
             <View
               key={index}
-              className={`w-[48%] rounded-lg bg-white border px-4 py-3 ${
-                isInvalid && hasValue
-                  ? "border-red-500 bg-red-50"
-                  : "border-sand-200"
-              }`}
+              className="w-[48%] rounded-lg border px-4 py-3"
+              style={cellStyle}
             >
               <Text
-                className={`text-[10px] font-instrument-sans-medium mb-1 ${
-                  isInvalid && hasValue ? "text-red-600" : "text-tertiary"
-                }`}
+                className="mb-1 text-[10px] font-instrument-sans-medium"
+                style={{ color: labelColor }}
               >
                 {index + 1}
               </Text>
@@ -59,14 +96,13 @@ export function MnemonicWordGrid({
                     onWordChange?.(index, text.trim().toLowerCase())
                   }
                   placeholder="word"
-                  placeholderTextColor="#B7B4B0"
+                  placeholderTextColor={placeholderTextColor}
                   autoCapitalize="none"
                   autoCorrect={false}
                   spellCheck={false}
+                  className="font-matter-sq-mono text-sm"
                   style={{
-                    fontFamily: "MatterSQMono",
-                    fontSize: 14,
-                    color: isInvalid && hasValue ? "#DC2626" : "#0C0C0D",
+                    color: wordColor,
                     letterSpacing: 0.5,
                     padding: 0,
                     margin: 0,
@@ -74,14 +110,14 @@ export function MnemonicWordGrid({
                 />
               ) : (
                 <Text
-                  className="font-matter-sq-mono text-sm text-primary"
+                  className="font-matter-sq-mono text-sm"
                   style={
                     revealed
                       ? {
                           letterSpacing: 0.5,
-                          color: isInvalid && hasValue ? "#DC2626" : undefined,
+                          color: wordColor,
                         }
-                      : { opacity: 0.5, letterSpacing: 2 }
+                      : { opacity: 0.5, letterSpacing: 2, color: wordColor }
                   }
                 >
                   {revealed ? word : "••••••••"}

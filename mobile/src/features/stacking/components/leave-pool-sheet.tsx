@@ -1,11 +1,10 @@
 import { showMessage } from "react-native-flash-message";
-import { useColorScheme } from "nativewind";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
 import { getDisallowanceArgs } from "@/api/stacks/fast-pool/fast-pool";
 import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
-import { Button, Modal, Text, View, colors } from "@/components/ui";
+import { Button, Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { TransactionStatusSheet } from "@/features/dual-stacking/components/layout/modals/transaction-status-sheet";
 import { SC_FUNCTIONS } from "@/lib/stacks/contracts";
@@ -66,7 +65,6 @@ export function LeavePoolSheet({
     present: presentDisallow,
     dismiss: dismissDisallow,
   } = useModal();
-  const { colorScheme } = useColorScheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasRevokedLocally, setHasRevokedLocally] = useState(false);
   const [sponsoredRequestId, setSponsoredRequestId] = useState<number | null>(
@@ -380,10 +378,6 @@ export function LeavePoolSheet({
         ref={formRef}
         title="Leave Fast Pool"
         enableDynamicSizing={true}
-        backgroundStyle={{
-          backgroundColor:
-            colorScheme === "dark" ? colors.charcoal[850] : colors.white,
-        }}
         enablePanDownToClose
         onDismiss={() => {
           if (activeSheetRef.current === "form") {
@@ -416,7 +410,7 @@ export function LeavePoolSheet({
               />
               <Button
                 label={secondaryActionLabel}
-                variant="secondary"
+                variant="ghost"
                 size="lg"
                 onPress={() => {
                   if (onGoBack) {

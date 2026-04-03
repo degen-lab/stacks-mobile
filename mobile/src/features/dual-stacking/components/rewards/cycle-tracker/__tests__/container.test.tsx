@@ -10,9 +10,7 @@ jest.mock("@/api/dual-stacking/backend", () => ({
     let latest: (typeof data)[number] | null = null;
     let maxId = -Infinity;
     for (const row of data) {
-      const cycleId = Number(
-        (row as { cycle_id?: number }).cycle_id,
-      );
+      const cycleId = Number((row as { cycle_id?: number }).cycle_id);
       if (!Number.isFinite(cycleId)) continue;
       if (cycleId > maxId) {
         maxId = cycleId;

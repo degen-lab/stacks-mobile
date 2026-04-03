@@ -87,7 +87,10 @@ export function EarnBalancePopover({
               >
                 {formattedTotalBalance}
               </Text>
-              <Text className="font-instrument-sans text-xs uppercase tracking-[1.5px] text-secondary">
+              <Text
+                className="font-instrument-sans text-xs uppercase tracking-[1.5px]"
+                style={{ color: colors.success[800] }}
+              >
                 Account balance
               </Text>
             </View>

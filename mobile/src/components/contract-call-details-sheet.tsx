@@ -1,11 +1,10 @@
-import { Button, Modal, Text, View, colors } from "@/components/ui";
+import { Button, Modal, Text, View } from "@/components/ui";
 import {
   BottomSheetScrollView,
   type BottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import type { ClarityValue } from "@stacks/transactions";
 import { useContractCallFee } from "@/hooks/use-contract-call-fee";
-import { useColorScheme } from "nativewind";
 import React from "react";
 import { TransactionFundingActions } from "./transaction-funding-actions";
 import {
@@ -73,8 +72,6 @@ export const ContractCallDetailsSheet = React.forwardRef<
     },
     ref,
   ) => {
-    const { colorScheme } = useColorScheme();
-    const isDark = colorScheme === "dark";
     const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
 
     const displayAddress = contractAddress || "";
@@ -141,9 +138,6 @@ export const ContractCallDetailsSheet = React.forwardRef<
         ref={ref}
         snapPoints={enableDynamicSizing ? undefined : (snapPoints ?? ["65%"])}
         enableDynamicSizing={enableDynamicSizing}
-        backgroundStyle={{
-          backgroundColor: isDark ? colors.charcoal[850] : colors.white,
-        }}
         onDismiss={handleClose}
       >
         <BottomSheetScrollView

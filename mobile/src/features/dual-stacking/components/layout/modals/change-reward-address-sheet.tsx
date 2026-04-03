@@ -1,11 +1,10 @@
 import { principalCV } from "@stacks/transactions";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import { useColorScheme } from "nativewind";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useGetLatestRewardAddressUser } from "@/api/dual-stacking/contract";
 import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
-import { Button, Input, Modal, Text, View, colors } from "@/components/ui";
+import { Button, Input, Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import {
@@ -50,7 +49,6 @@ export function ChangeRewardAddressSheet({
     present: presentConfirm,
     dismiss: dismissConfirm,
   } = useModal();
-  const { colorScheme } = useColorScheme();
   const { stxAddress } = useWalletAddresses();
   const { selectedNetwork } = useSelectedNetwork();
   const principalArg = useMemo(
@@ -174,10 +172,6 @@ export function ChangeRewardAddressSheet({
       <Modal
         ref={formRef}
         enableDynamicSizing={true}
-        backgroundStyle={{
-          backgroundColor:
-            colorScheme === "dark" ? colors.charcoal[850] : colors.white,
-        }}
         enablePanDownToClose
         onDismiss={() => {
           if (activeSheetRef.current === "form") {
@@ -230,7 +224,7 @@ export function ChangeRewardAddressSheet({
               />
               <Button
                 label="Cancel"
-                variant="secondary"
+                variant="ghost"
                 size="lg"
                 onPress={handleClose}
                 disabled={isSubmitting}

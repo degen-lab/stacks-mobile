@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function RewardsCycleCardSkeleton() {
   return (
-    <View className="border-border-secondary rounded-xl border bg-sand-100 pt-3 pb-6">
+    <View className="border-border-secondary rounded-xl border bg-sand-100 pt-3 pb-6 dark:border-border-primary dark:bg-surface-primary">
       <View className="flex-row items-end justify-between px-3 pt-2">
         <Skeleton className="h-5 w-36 rounded-sm" />
         <Skeleton className="h-5 w-5 rounded-full" />

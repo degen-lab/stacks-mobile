@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { useWindowDimensions } from "react-native";
+import { useColorScheme } from "nativewind";
 
 import SectionHeader from "@/features/dual-stacking/components/layout/section-header";
+import colors from "@/components/ui/colors";
 import { ValueSlider } from "@/components/ui/slider-value";
 import { View } from "@/components/ui";
 import {
@@ -66,6 +68,9 @@ export function CalculatorLayout({
 }: CalculatorLayoutProps) {
   const [sbtcDisplayUsd, setSbtcDisplayUsd] = useState(false);
   const [stxDisplayUsd, setStxDisplayUsd] = useState(false);
+  const { colorScheme } = useColorScheme();
+  const stacksIconColor =
+    colorScheme === "dark" ? colors.charcoal[100] : "#0C0C0D";
   const { width } = useWindowDimensions();
   const isWide = width >= 768;
   const sbtcUnit = sbtcDisplayUsd ? "usd" : "crypto";
@@ -182,7 +187,7 @@ export function CalculatorLayout({
               stxDisplayUsd ? (
                 <DollarIcon width={12} height={12} />
               ) : (
-                <StacksIcon width={12} height={12} />
+                <StacksIcon width={12} height={12} color={stacksIconColor} />
               )
             }
             variant="stx-icon"
@@ -211,7 +216,9 @@ export function CalculatorLayout({
             max={sliderMax}
             value={stxAmount}
             onChange={handleSliderChange}
-            currencySymbol={<StacksIcon width={12} height={12} />}
+            currencySymbol={
+              <StacksIcon width={12} height={12} color={stacksIconColor} />
+            }
             showTicks={true}
             disabled={isStxLocked}
             loading={isCalculatingGoldenRatio}

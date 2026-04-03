@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { ArrowLeft } from "lucide-react-native";
-import { useColorScheme } from "nativewind";
 
-import { Checkbox, Modal, Text, View, colors } from "@/components/ui";
+import { Checkbox, Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useSaveTerms } from "@/api/dual-stacking/enrollment/use-save-terms";
@@ -155,7 +154,6 @@ export function TermsAndConditionsSheet({
   address,
 }: Props) {
   const { ref, present, dismiss } = useModal();
-  const { colorScheme } = useColorScheme();
   const { mutateAsync: saveTerms, isPending } = useSaveTerms();
   const [agreed, setAgreed] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
@@ -196,10 +194,6 @@ export function TermsAndConditionsSheet({
       ref={ref}
       snapPoints={["92%"]}
       title="Terms & Conditions"
-      backgroundStyle={{
-        backgroundColor:
-          colorScheme === "dark" ? colors.charcoal[850] : colors.white,
-      }}
       onDismiss={() => onOpenChange(false)}
       enablePanDownToClose
     >

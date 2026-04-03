@@ -2,7 +2,6 @@ import {
   BottomSheetView,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
-import { useColorScheme } from "nativewind";
 import { useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
@@ -43,7 +42,6 @@ export function TransactionStatusSheet({
   enableDynamicSizing = false,
 }: TransactionStatusSheetProps) {
   const { ref, present, dismiss } = useModal();
-  const { colorScheme } = useColorScheme();
   const isDismissible = !isLoading || dismissibleWhenLoading;
 
   useEffect(() => {
@@ -69,10 +67,6 @@ export function TransactionStatusSheet({
       enableDynamicSizing={enableDynamicSizing}
       enablePanDownToClose={isDismissible}
       backdropComponent={isDismissible ? undefined : renderStaticBackdrop}
-      backgroundStyle={{
-        backgroundColor:
-          colorScheme === "dark" ? colors.charcoal[850] : colors.white,
-      }}
       onDismiss={() => onOpenChange(false)}
     >
       <BottomSheetView className="items-center justify-start gap-8 p-6">

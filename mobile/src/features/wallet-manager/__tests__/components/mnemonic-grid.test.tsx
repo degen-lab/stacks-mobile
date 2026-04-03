@@ -1,5 +1,23 @@
 import { fireEvent, render } from "@/lib/tests";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
+import { useColorScheme } from "nativewind";
 import { MnemonicWordGrid } from "../../components/mnemonic-grid";
+
+jest.mock("nativewind", () => ({
+  ...jest.requireActual("nativewind"),
+  useColorScheme: jest.fn(() => ({ colorScheme: "light" })),
+}));
+
+const mockUseColorScheme = useColorScheme as jest.MockedFunction<
+  typeof useColorScheme
+>;
+
+function flattenStyle(
+  style: Record<string, unknown> | Record<string, unknown>[] | undefined,
+) {
+  if (!style) return {};
+  return Array.isArray(style) ? Object.assign({}, ...style) : style;
+}
 
 describe("MnemonicWordGrid", () => {
   const mockWords = [
@@ -16,6 +34,10 @@ describe("MnemonicWordGrid", () => {
     "access",
     "accident",
   ];
+
+  beforeEach(() => {
+    mockUseColorScheme.mockReturnValue({ colorScheme: "light" } as never);
+  });
 
   describe("Display Mode", () => {
     it("renders words in revealed mode", () => {
@@ -108,6 +130,35 @@ describe("MnemonicWordGrid", () => {
       fireEvent.changeText(firstInput, "  ABANDON  ");
 
       expect(onWordChange).toHaveBeenCalledWith(0, "abandon");
+    });
+
+    it("uses dark theme colors for editable cells", () => {
+      mockUseColorScheme.mockReturnValue({ colorScheme: "dark" } as never);
+
+      const { getAllByPlaceholderText, UNSAFE_root } = render(
+        <MnemonicWordGrid
+          words={Array(12).fill("")}
+          revealed={true}
+          editable={true}
+          wordCount={12}
+        />,
+      );
+
+      const firstInput = getAllByPlaceholderText("word")[0];
+      const darkCells = UNSAFE_root.findAll((node) => {
+        const style = flattenStyle(node.props.style);
+        return (
+          style.backgroundColor ===
+            resolveThemeTokenColor("dark", "--color-surface-secondary") &&
+          style.borderColor ===
+            resolveThemeTokenColor("dark", "--color-border-primary")
+        );
+      });
+
+      expect(firstInput.props.placeholderTextColor).toBe(
+        resolveThemeTokenColor("dark", "--color-text-tertiary"),
+      );
+      expect(darkCells.length).toBeGreaterThan(0);
     });
   });
 

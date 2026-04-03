@@ -1,11 +1,10 @@
 import React from "react";
-import { View, Image, ScrollView } from "react-native";
-import { Button, Text, Modal, Input, colors } from "@/components/ui";
+import { View, Image, ScrollView, TextInput } from "react-native";
+import { Button, Text, Modal } from "@/components/ui";
 import { WarningLabel } from "@/components/warning-label";
 import { FeeSelector, FeeOption } from "../components/fee-selector";
 import { ContractTxDetails } from "@/components/contract-tx-details";
 import { formatMicroStx, MICRO_STX } from "@/lib/format/currency";
-import { useColorScheme } from "nativewind";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { TransactionFundingActions } from "@/components/transaction-funding-actions";
 
@@ -55,7 +54,6 @@ export function StackStxSheet({
   inPreparePhase,
   timeTillPreparePhase,
 }: StackStxSheetProps) {
-  const { colorScheme } = useColorScheme();
   const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
   const [showFeeSelector, setShowFeeSelector] = React.useState(false);
 
@@ -68,17 +66,15 @@ export function StackStxSheet({
       year: "numeric",
     });
   }, []);
+  const feeDisplayLabel =
+    selectedFeeOption === "custom" && customFee && !showFeeSelector
+      ? `${customFee} STX`
+      : `${formatMicroStx(feeMicroStx || 0)} STX • $${(
+          (feeMicroStx ? feeMicroStx / MICRO_STX : 0) * stackingPrice
+        ).toFixed(3)}`;
 
   return (
-    <Modal
-      ref={sheetRef}
-      snapPoints={["75%"]}
-      backgroundStyle={{
-        backgroundColor:
-          colorScheme === "dark" ? colors.charcoal[850] : colors.white,
-      }}
-      onDismiss={onClose}
-    >
+    <Modal ref={sheetRef} snapPoints={["75%"]} onDismiss={onClose}>
       <ScrollView className="flex-1" contentContainerClassName="pb-6">
         <View className="px-6">
           {/* Contract Details with Title */}
@@ -154,30 +150,33 @@ export function StackStxSheet({
                 </View>
               </View>
 
-              <View className="mb-6 rounded-xl bg-sand-50 px-4 py-3 dark:bg-sand-900/30">
+              <View className="mb-6 rounded-xl border border-surface-secondary px-4 py-3 dark:border-border-primary">
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1">
                     <Text className="font-instrument-sans text-sm text-secondary">
                       Network fee
                     </Text>
-                    {selectedFeeOption === "custom" && showFeeSelector ? (
-                      <Input
-                        placeholder={`${formatMicroStx(feeMicroStx || 0)} STX`}
-                        keyboardType="decimal-pad"
-                        value={customFee}
-                        onChangeText={onCustomFeeChange}
-                        className="mt-0.5 h-6 border-0 border-b border-surface-secondary bg-transparent p-0 font-instrument-sans-medium text-base leading-6 text-primary"
-                        autoFocus={true}
-                      />
-                    ) : (
-                      <Text className="mt-0.5 font-instrument-sans-medium text-base leading-6 text-primary">
-                        {formatMicroStx(feeMicroStx || 0)} STX • $
-                        {(
-                          (feeMicroStx ? feeMicroStx / MICRO_STX : 0) *
-                          stackingPrice
-                        ).toFixed(3)}
-                      </Text>
-                    )}
+                    <View className="mt-1 min-h-[24px] justify-center">
+                      {selectedFeeOption === "custom" && showFeeSelector ? (
+                        <TextInput
+                          placeholder="Enter custom fee"
+                          placeholderTextColor="rgb(var(--color-text-tertiary))"
+                          keyboardType="decimal-pad"
+                          value={customFee}
+                          onChangeText={onCustomFeeChange}
+                          className="border-0 border-b border-surface-secondary p-0 pb-1 font-instrument-sans-medium text-base text-primary dark:border-border-primary"
+                          autoFocus
+                          style={{
+                            paddingVertical: 0,
+                            textAlignVertical: "center",
+                          }}
+                        />
+                      ) : (
+                        <Text className="font-instrument-sans-medium text-base text-primary">
+                          {feeDisplayLabel}
+                        </Text>
+                      )}
+                    </View>
                   </View>
                   <Button
                     label={showFeeSelector ? "Done" : "Edit"}

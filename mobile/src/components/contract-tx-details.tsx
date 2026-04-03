@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { View } from "react-native";
-import { Text, Input, Button } from "@/components/ui";
+import { TextInput, View } from "react-native";
+import { Text, Button } from "@/components/ui";
 import {
   FeeSelector,
   FeeOption,
@@ -174,31 +174,32 @@ export function ContractTxDetails({
 
       {/* Fee Section */}
       {showFeeSelector && (
-        <View className="mb-6 rounded-xl bg-sand-50 px-4 py-3 dark:bg-sand-900/30">
-          <View className="flex-row items-center justify-between">
+        <View className="mb-6 rounded-xl border border-surface-secondary px-4 py-3 dark:border-border-primary">
+          <View className="flex-row items-center justify-between gap-4">
             <View className="flex-1">
               <Text className="font-instrument-sans text-sm text-secondary">
                 Network fee
               </Text>
-              <View className="mt-0.5">
-                <Input
-                  placeholder={feeDisplayLabel}
-                  keyboardType="decimal-pad"
-                  value={
-                    selectedFeeOption === "custom" && showFeePicker
-                      ? customFee
-                      : ""
-                  }
-                  onChangeText={onCustomFeeChange}
-                  editable={selectedFeeOption === "custom" && showFeePicker}
-                  className={`h-auto border-0 bg-transparent p-0 pb-1 font-instrument-sans-medium text-base text-primary ${
-                    selectedFeeOption === "custom" && showFeePicker
-                      ? "border-b border-surface-secondary"
-                      : ""
-                  }`}
-                  placeholderTextColor="rgb(var(--color-text-primary))"
-                  autoFocus={selectedFeeOption === "custom" && showFeePicker}
-                />
+              <View className="mt-1 min-h-[24px] justify-center">
+                {selectedFeeOption === "custom" && showFeePicker ? (
+                  <TextInput
+                    keyboardType="decimal-pad"
+                    value={customFee}
+                    onChangeText={onCustomFeeChange}
+                    placeholder="Enter custom fee"
+                    placeholderTextColor="rgb(var(--color-text-tertiary))"
+                    autoFocus
+                    className="border-0 border-b border-surface-secondary p-0 pb-1 font-instrument-sans-medium text-base text-primary dark:border-border-primary"
+                    style={{
+                      paddingVertical: 0,
+                      textAlignVertical: "center",
+                    }}
+                  />
+                ) : (
+                  <Text className="font-instrument-sans-medium text-base text-primary">
+                    {feeDisplayLabel}
+                  </Text>
+                )}
               </View>
             </View>
             {onSelectFee && (

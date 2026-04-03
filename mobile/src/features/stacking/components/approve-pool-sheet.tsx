@@ -1,9 +1,8 @@
 import React from "react";
 import { View } from "react-native";
-import { Text, Modal, colors } from "@/components/ui";
+import { Text, Modal } from "@/components/ui";
 import { FeeOption } from "./fee-selector";
 import { ContractTxDetails } from "@/components/contract-tx-details";
-import { useColorScheme } from "nativewind";
 import {
   BottomSheetScrollView,
   type BottomSheetModal,
@@ -51,19 +50,10 @@ export function ApprovePoolSheet({
   isSponsoredLoading = false,
   confirmDisabled,
 }: ApprovePoolSheetProps) {
-  const { colorScheme } = useColorScheme();
   const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
 
   return (
-    <Modal
-      ref={sheetRef}
-      enableDynamicSizing={true}
-      backgroundStyle={{
-        backgroundColor:
-          colorScheme === "dark" ? colors.charcoal[850] : colors.white,
-      }}
-      onDismiss={onClose}
-    >
+    <Modal ref={sheetRef} enableDynamicSizing={true} onDismiss={onClose}>
       <BottomSheetScrollView
         contentContainerClassName="px-6 pb-6"
         showsVerticalScrollIndicator={false}

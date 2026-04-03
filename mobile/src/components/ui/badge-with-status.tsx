@@ -37,14 +37,14 @@ const STATUS_CONFIG: Record<Status, StatusConfig> = {
     label: "Enrolled",
     icon: <SealCheckIcon size={ICON_SIZE} color={COLORS.active} />,
     bgClass: "bg-feedback-green-150 border-feedback-green-150",
-    textClass: "text-primary",
+    textClass: "text-primary dark:text-surface-primary",
     clickable: false,
   },
   [Status.EnrolledNextCycle]: {
     label: "Enrolled next cycle",
     icon: <SealCheckIcon size={ICON_SIZE} color={COLORS.active} />,
     bgClass: "bg-feedback-green-150 border-feedback-green-150",
-    textClass: "text-primary",
+    textClass: "text-primary dark:text-surface-primary",
     clickable: false,
   },
   [Status.NotBoosting]: {
@@ -58,14 +58,14 @@ const STATUS_CONFIG: Record<Status, StatusConfig> = {
     label: "Boost active",
     icon: <Zap size={ICON_SIZE} color={COLORS.active} />,
     bgClass: "bg-feedback-green-150 border-feedback-green-150",
-    textClass: "text-primary",
+    textClass: "text-primary dark:text-surface-primary",
     clickable: false,
   },
   [Status.MaxBoost]: {
     label: "Max. boost",
     icon: <Flame size={ICON_SIZE} color={COLORS.active} />,
     bgClass: "bg-feedback-green-150 border-feedback-green-150",
-    textClass: "text-primary",
+    textClass: "text-primary dark:text-surface-primary",
     clickable: false,
   },
 };
