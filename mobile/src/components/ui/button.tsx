@@ -36,7 +36,7 @@ const button = tv({
       },
       dashed: {
         container:
-          "bg-transparent border border-dashed border-surface-secondary active:bg-sand-100",
+          "bg-transparent border border-dashed border-surface-secondary active:bg-sand-100 dark:active:bg-surface-secondary",
         label: "text-primary",
         indicator: "text-primary",
       },

@@ -239,12 +239,13 @@ export default function AccountsListScreen() {
           </View>
         ) : (
           <View className="flex-1 flex-col">
-            <View className="pt-4">
-              <View style={{ position: "relative" }}>
+            <View className={accounts.length > 3 ? "flex-1 pt-4" : "pt-4"}>
+              <View
+                className={accounts.length > 3 ? "relative flex-1" : "relative"}
+              >
                 <ScrollView
                   ref={scrollViewRef}
-                  className="mb-2"
-                  style={{ maxHeight: 260 }}
+                  className={accounts.length > 3 ? "mb-2 flex-1" : "mb-2"}
                   showsVerticalScrollIndicator={accounts.length > 3}
                   onScroll={handleScroll}
                   scrollEventThrottle={16}
@@ -267,6 +268,17 @@ export default function AccountsListScreen() {
                         />
                       );
                     })}
+
+                    <Button
+                      variant="dashed"
+                      size="lg"
+                      leftIcon={<Plus size={18} className="text-primary" />}
+                      label="Add Account"
+                      onPress={handleAddAccount}
+                      accessibilityLabel="Add new account"
+                      loading={loading}
+                      className="mt-2 mb-4"
+                    />
                   </View>
                 </ScrollView>
 
@@ -303,16 +315,6 @@ export default function AccountsListScreen() {
                 )}
               </View>
 
-              <Button
-                variant="dashed"
-                size="lg"
-                leftIcon={<Plus size={18} className="text-primary" />}
-                label="Add Account"
-                onPress={handleAddAccount}
-                accessibilityLabel="Add new account"
-                loading={loading}
-                className="my-4"
-              />
             </View>
 
             <View
