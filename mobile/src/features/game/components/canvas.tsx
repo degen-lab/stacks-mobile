@@ -247,6 +247,9 @@ export const BridgeGameCanvas = ({
     ? VISUAL_CONFIG.DARK_SCENE.PLATFORM_TOP
     : "#282828";
   const platformNotchColor = VISUAL_CONFIG.DARK_SCENE.PLATFORM_MARKER;
+  const ghostPreviewColor = isDark
+    ? VISUAL_CONFIG.DARK_SCENE.HUD_SCORE
+    : "rgba(0, 0, 0, 0.2)";
   const backgroundColors = bgColors
     ? [...bgColors]
     : [VISUAL_CONFIG.COLORS.BG_TOP, VISUAL_CONFIG.COLORS.BG_BOT];
@@ -351,7 +354,7 @@ export const BridgeGameCanvas = ({
                   y={stickOriginY - VISUAL_CONFIG.STICK_WIDTH / 2}
                   width={renderState.stick.length}
                   height={VISUAL_CONFIG.STICK_WIDTH}
-                  color="rgba(0, 0, 0, 0.2)"
+                  color={ghostPreviewColor}
                 />
                 <Rect
                   x={

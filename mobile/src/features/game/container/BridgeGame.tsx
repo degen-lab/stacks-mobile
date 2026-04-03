@@ -5,8 +5,11 @@ import {
 } from "@/api/";
 import { useSponsoredSubmissionsLeft, useUserProfile } from "@/api/user";
 import { getItemVariant } from "@/api/user/types";
+import { GetAssetSheet } from "@/features/transfer/components/get-asset-sheet";
+import { useTransferSheet } from "@/features/transfer";
+import { useTransak } from "@/features/transak/context/transak-context";
 import { ItemVariant, TournamentStatusEnum } from "@/lib/enums";
-import { RelativePathString, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { BackHandler, StatusBar } from "react-native";
@@ -44,6 +47,8 @@ type BridgeGameProps = {
 
 const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const router = useRouter();
+  const { openTransfer } = useTransferSheet();
+  const { openTransak } = useTransak();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const canvasBgColors = isDark
@@ -62,6 +67,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   const { canvasHeight, handleLayout, worldOffsetY } = useBridgeLayout();
   const [isStarting, setIsStarting] = useState(false);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [getAssetSheetOpen, setGetAssetSheetOpen] = useState(false);
   const isMountedRef = useRef(true);
 
   const [overlayState, setOverlayState] = useState<BridgeOverlayState>("START");
@@ -403,8 +409,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       : weeklyContestSubmissionsLeft;
 
   const handleAddFunds = useCallback(() => {
-    router.push("/add-funds" as RelativePathString); // TOOD: when we add this screen we should need a way to navigate back to the game and still let user submit
-  }, [router]);
+    setGetAssetSheetOpen(true);
+  }, []);
 
   const handleRevive = useCallback(() => {
     if (reviveAd.loading || isWatchingAd) return;
@@ -569,6 +575,15 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
             value: tournamentId,
           },
         ]}
+      />
+      <GetAssetSheet
+        open={getAssetSheetOpen}
+        asset={getAssetSheetOpen ? "STX" : null}
+        onClose={() => setGetAssetSheetOpen(false)}
+        onBuy={() => openTransak("STX", "buy")}
+        onReceive={() =>
+          openTransfer({ mode: "receive", receive: { asset: "STX" } })
+        }
       />
     </>
   );

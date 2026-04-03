@@ -10,6 +10,9 @@ const mockLayoutProps: { current: Record<string, any> | null } = {
 const mockCanvasProps: { current: Record<string, any> | null } = {
   current: null,
 };
+const mockGetAssetSheetProps: { current: Record<string, any> | null } = {
+  current: null,
+};
 
 const mockEngine = {
   start: jest.fn(),
@@ -73,6 +76,8 @@ const mockResetReviveReward = jest.fn();
 const mockReviveAdLoadAd = jest.fn();
 const mockReviveAdShowAd = jest.fn();
 const mockConsumeRevive = jest.fn();
+const mockOpenTransak = jest.fn();
+const mockOpenTransfer = jest.fn();
 
 // --- MOCKS SETUP ---
 
@@ -128,6 +133,27 @@ jest.mock("@/lib/store/auth", () => ({
   useAuth: () => ({
     userData: { user: { name: "Test User", photo: null } },
   }),
+}));
+
+jest.mock("@/features/transak/context/transak-context", () => ({
+  useTransak: () => ({
+    openTransak: mockOpenTransak,
+    closeTransak: jest.fn(),
+  }),
+}));
+
+jest.mock("@/features/transfer", () => ({
+  useTransferSheet: () => ({
+    openTransfer: mockOpenTransfer,
+    closeTransfer: jest.fn(),
+  }),
+}));
+
+jest.mock("@/features/transfer/components/get-asset-sheet", () => ({
+  GetAssetSheet: (props: Record<string, any>) => {
+    mockGetAssetSheetProps.current = props;
+    return null;
+  },
 }));
 
 jest.mock("@/lib/store/settings", () => ({
@@ -282,6 +308,7 @@ describe("BridgeGame Integration Tests", () => {
     jest.clearAllMocks();
     mockLayoutProps.current = null;
     mockCanvasProps.current = null;
+    mockGetAssetSheetProps.current = null;
 
     // Reset mock store state
     mockGameStore.overlayState = "START";
