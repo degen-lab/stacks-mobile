@@ -1,3 +1,4 @@
+import { StyleSheet } from "react-native";
 import { SvgUri } from "react-native-svg";
 import { useColorScheme } from "nativewind";
 
@@ -13,32 +14,46 @@ export type StatItem = {
   prefix?: string;
 };
 
+function StatValue({
+  value,
+  unit,
+  prefix,
+  className,
+  prefixClassName = "text-sand-500",
+  unitClassName = "text-secondary",
+}: Pick<StatItem, "value" | "unit" | "prefix"> & {
+  className: string;
+  prefixClassName?: string;
+  unitClassName?: string;
+}) {
+  return (
+    <Text
+      className={className}
+      style={styles.metricText}
+      numberOfLines={1}
+      adjustsFontSizeToFit
+      minimumFontScale={0.85}
+    >
+      {prefix ? <Text className={prefixClassName}>{prefix}</Text> : null}
+      {value}
+      {unit ? <Text className={unitClassName}>{` ${unit}`}</Text> : null}
+    </Text>
+  );
+}
+
 function StatCard({ label, value, unit, prefix }: StatItem) {
   return (
     <View className="flex-1 rounded-[14px] border border-surface-secondary bg-sand-100 px-3 py-4 dark:border-border-primary dark:bg-surface-primary">
       <Text className="font-matter-sq-mono text-xs tracking-wide uppercase text-secondary">
         {label}
       </Text>
-      <View className="mt-1 flex-row items-baseline">
-        {prefix ? (
-          <Text className="font-matter text-lg leading-5 text-sand-500">
-            {prefix}
-          </Text>
-        ) : null}
-        <Text
-          className="font-matter text-lg leading-5 text-primary"
-          numberOfLines={1}
-          adjustsFontSizeToFit
-        >
-          {value}
-        </Text>
-        {unit ? (
-          <Text className="font-matter text-lg leading-5 text-secondary">
-            {" "}
-            {unit}
-          </Text>
-        ) : null}
-      </View>
+      <StatValue
+        value={value}
+        unit={unit}
+        prefix={prefix}
+        className="mt-1 font-matter text-lg leading-5 text-primary"
+        unitClassName="text-secondary"
+      />
     </View>
   );
 }
@@ -79,22 +94,13 @@ export function BridgeOverviewGrid({
           <Text className="font-matter-sq-mono text-sm tracking-wide uppercase text-secondary">
             {hero.label}
           </Text>
-          <View className="mt-1 flex-row items-baseline">
-            {hero.prefix ? (
-              <Text className="font-matter text-3xl text-sand-500">
-                {hero.prefix}
-              </Text>
-            ) : null}
-            <Text className="font-matter text-3xl text-primary">
-              {hero.value}
-            </Text>
-            {hero.unit ? (
-              <Text className="font-matter text-3xl text-sand-500">
-                {" "}
-                {hero.unit}
-              </Text>
-            ) : null}
-          </View>
+          <StatValue
+            value={hero.value}
+            unit={hero.unit}
+            prefix={hero.prefix}
+            className="mt-1 font-matter text-3xl leading-8 text-primary"
+            unitClassName="text-sand-500"
+          />
         </View>
       </GradientBorder>
 
@@ -114,3 +120,9 @@ export function BridgeOverviewGrid({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  metricText: {
+    includeFontPadding: false,
+  },
+});

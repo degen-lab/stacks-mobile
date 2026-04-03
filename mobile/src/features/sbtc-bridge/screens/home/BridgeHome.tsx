@@ -9,7 +9,7 @@ import {
   formatBtcAmount,
   formatBtcInput,
   formatBtcMetric,
-  formatUsdCompact,
+  formatUsd,
   fromSatsToBtc,
 } from "@/lib/format/currency";
 import { validateBitcoinAddress } from "@/lib/bitcoin/validation";
@@ -102,6 +102,10 @@ export function BridgeHomeScreen() {
 
   // --- Derived values ---
   const minDeposit = fromSatsToBtc(limits.data?.perDepositMinimum ?? 0);
+  const minDepositDisplay =
+    limits.data?.perDepositMinimum != null
+      ? formatBtcInput(fromSatsToBtc(limits.data.perDepositMinimum))
+      : "—";
   const maxDeposit = fromSatsToBtc(currentCap);
   const sbtcBalanceBtc = fromSatsToBtc(sbtcBalance.data ?? 0n);
   const withdrawMaxFeeBtc = fromSatsToBtc(maxFee.data ?? 0);
@@ -229,14 +233,13 @@ export function BridgeHomeScreen() {
   // --- Overview ---
   const overviewItems: StatItem[] = [
     {
-      label: "sBTC current supply",
-      value: formatBtcMetric(overview.supplyBtc),
-      unit: "sBTC",
+      label: "sBTC market cap",
+      value: formatUsd(overview.marketCapUsd, { compact: true }),
     },
     {
-      label: "sBTC market cap",
-      value: formatUsdCompact(overview.marketCapUsd),
-      prefix: "$",
+      label: "Current deposit cap",
+      value: formatBtcMetric(overview.currentCapBtc),
+      unit: "BTC",
     },
     {
       label: "Uptime (30 days)",
@@ -244,8 +247,8 @@ export function BridgeHomeScreen() {
       unit: "%",
     },
     {
-      label: "Total sBTC minted",
-      value: formatBtcMetric(overview.minDepositBtc),
+      label: "Minimum deposit",
+      value: minDepositDisplay,
       unit: "BTC",
     },
   ];
