@@ -99,6 +99,7 @@ export function QRCodeView({ asset, address, onClose }: QRCodeViewProps) {
         variant="iconSquare"
         label="Copy address"
         leftIcon={<Copy size={16} color="#0B0A0F" />}
+        textClassName="text-[#0B0A0F]"
         onPress={() => copyToClipboard(address, "Address copied to clipboard")}
         accessibilityLabel="Copy address"
       />

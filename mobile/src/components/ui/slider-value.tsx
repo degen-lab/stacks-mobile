@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
 import {
   type ReactNode,
   useCallback,
@@ -148,8 +149,16 @@ const TRACK_TOP = (SLIDER_HEIGHT - TRACK_HEIGHT) / 2;
 const END_DOT_TOP = TRACK_TOP - (END_DOT_SIZE - TRACK_HEIGHT) / 2;
 const BUBBLE_HIT_SLOP_TOP =
   DEFAULT_BUBBLE_HEIGHT + BUBBLE_BOTTOM_OFFSET - SLIDER_HEIGHT;
-const BUBBLE_BORDER_GRADIENT: SliderGradient = ["#D5D3D1", colors.neutral[500]];
-const BUBBLE_SURFACE = "#EAE8E6";
+const LIGHT_BUBBLE_BORDER_GRADIENT: SliderGradient = [
+  "#D5D3D1",
+  colors.neutral[500],
+];
+const DARK_BUBBLE_BORDER_GRADIENT: SliderGradient = [
+  colors.charcoal[700],
+  colors.charcoal[500],
+];
+const LIGHT_BUBBLE_SURFACE = "#EAE8E6";
+const DARK_BUBBLE_SURFACE = colors.charcoal[900];
 
 export function ValueSlider({
   min = 0,
@@ -165,6 +174,8 @@ export function ValueSlider({
   disabled = false,
   loading = false,
 }: ValueSliderProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [internalValue, setInternalValue] = useState(defaultValue);
   const [trackWidth, setTrackWidth] = useState(0);
   const [bubbleWidth, setBubbleWidth] = useState(DEFAULT_BUBBLE_WIDTH);
@@ -176,6 +187,16 @@ export function ValueSlider({
   const thumbLeft = progress * trackWidth;
   const shimmer = useSharedValue(-1);
   const isInactive = disabled || loading;
+  const bubbleBorderGradient = isDark
+    ? DARK_BUBBLE_BORDER_GRADIENT
+    : LIGHT_BUBBLE_BORDER_GRADIENT;
+  const bubbleSurface = isDark ? DARK_BUBBLE_SURFACE : LIGHT_BUBBLE_SURFACE;
+  const bubbleTextColor = isDark ? colors.charcoal[50] : "#0C0C0D";
+  const sliderMarkerColor = isDark ? colors.charcoal[300] : colors.neutral[500];
+  const sliderConnectorColor = isDark
+    ? colors.charcoal[300]
+    : colors.neutral[600];
+  const tickTextColor = isDark ? colors.charcoal[300] : colors.neutral[400];
 
   useEffect(() => {
     if (controlledValue == null) {
@@ -312,7 +333,7 @@ export function ValueSlider({
               top: END_DOT_TOP,
               width: END_DOT_SIZE,
               height: END_DOT_SIZE,
-              backgroundColor: colors.neutral[500],
+              backgroundColor: sliderMarkerColor,
               zIndex: 1,
             }}
           />
@@ -325,7 +346,7 @@ export function ValueSlider({
               top: TRACK_TOP - CONNECTOR_VISUAL_NUDGE,
               width: CONNECTOR_WIDTH,
               height: CONNECTOR_HEIGHT,
-              backgroundColor: colors.neutral[600],
+              backgroundColor: sliderConnectorColor,
               borderRadius: 999,
               zIndex: 2,
               transform: [{ translateX: -CONNECTOR_WIDTH / 2 }],
@@ -347,15 +368,25 @@ export function ValueSlider({
               }}
             >
               <LinearGradient
-                colors={BUBBLE_BORDER_GRADIENT}
+                colors={bubbleBorderGradient}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={styles.valueBubbleBorder}
               >
-                <RNView style={styles.valueBubbleInner}>
+                <RNView
+                  style={[
+                    styles.valueBubbleInner,
+                    { backgroundColor: bubbleSurface },
+                  ]}
+                >
                   <RNView style={styles.valueBubbleRow}>
                     {currencySymbol}
-                    <Text style={styles.valueBubbleText}>
+                    <Text
+                      style={[
+                        styles.valueBubbleText,
+                        { color: bubbleTextColor },
+                      ]}
+                    >
                       {value.toLocaleString()}
                     </Text>
                   </RNView>
@@ -396,7 +427,7 @@ export function ValueSlider({
                     color:
                       disabled || loading
                         ? "rgba(183, 180, 176, 0.5)"
-                        : colors.neutral[400],
+                        : tickTextColor,
                   }}
                 >
                   {label}
@@ -423,7 +454,6 @@ const styles = StyleSheet.create({
   valueBubbleInner: {
     borderRadius: 999,
     minWidth: DEFAULT_BUBBLE_WIDTH,
-    backgroundColor: BUBBLE_SURFACE,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
@@ -437,7 +467,6 @@ const styles = StyleSheet.create({
     fontFamily: "InstrumentSans-Regular",
     fontSize: 12,
     lineHeight: 16,
-    color: "#0C0C0D",
     fontVariant: ["tabular-nums"],
   },
   ticksContainer: {
