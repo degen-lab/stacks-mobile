@@ -34,7 +34,7 @@ type HookOptions = Partial<UseQueryOptions> & {
 
 const REFETCH_INTERVAL = 30_000;
 const MAINNET_DUAL_STACKING_V3_BALANCES_CONTRACT =
-  "SP1HFCRKEJ8BYW4D0E3FAWHFDX8A25PPAA83HWWZ9.dual-stacking-v3-balances";
+  "SP1HFCRKEJ8BYW4D0E3FAWHFDX8A25PPAA83HWWZ9.dual-stacking-v3_0_1-balances";
 const GET_USER_BALANCES_FN = "get-user-balances";
 
 export type UserStackingDefiBalances = {
