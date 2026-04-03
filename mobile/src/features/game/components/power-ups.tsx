@@ -88,10 +88,18 @@ const PowerUpsContainer = ({
 
   if (overlayState !== "PLAYING") return null;
 
+  const bottomPadding = androidBottomInset;
+  const containerStyle = {
+    paddingBottom: bottomPadding,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+  } as const;
+
   return (
-    <View pointerEvents="box-none" className="absolute inset-x-0 bottom-0">
+    <>
       <LinearGradient
-        pointerEvents="box-none"
+        pointerEvents="none"
+        className="absolute inset-x-0 bottom-0"
         colors={
           isDark
             ? [...VISUAL_CONFIG.DARK_SCENE.POWER_UP_GLOW]
@@ -101,12 +109,17 @@ const PowerUpsContainer = ({
         end={{ x: 0.5, y: 0 }}
         style={{
           height: 140 + androidBottomInset,
-          paddingBottom: androidBottomInset,
-          paddingTop: 20,
-          paddingHorizontal: 20,
         }}
+      />
+      <View
+        pointerEvents="box-none"
+        className="absolute inset-x-0 bottom-0"
+        style={containerStyle}
       >
-        <View className="w-full flex-row items-center justify-center gap-6 mt-4">
+        <View
+          pointerEvents="box-none"
+          className="w-full flex-row items-center justify-center gap-6 mt-4"
+        >
           {showDropPoint ? (
             <PowerUpButton
               icon={RulerIcon}
@@ -142,8 +155,8 @@ const PowerUpsContainer = ({
             />
           ) : null}
         </View>
-      </LinearGradient>
-    </View>
+      </View>
+    </>
   );
 };
 
