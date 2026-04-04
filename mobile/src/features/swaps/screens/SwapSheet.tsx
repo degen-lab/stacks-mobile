@@ -97,7 +97,7 @@ export function SwapSheet({
     <Modal
       ref={ref}
       title={title}
-      snapPoints={["74%", "88%", "90%"]}
+      snapPoints={["80%", "88%", "90%"]}
       handleBackgroundColor={isDark ? undefined : colors.neutral[50]}
       backgroundStyle={
         isDark ? undefined : { backgroundColor: colors.neutral[50] }

@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { useColorScheme } from "nativewind";
-import { View, Text, Pressable, Modal, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  StyleSheet,
+} from "react-native";
 import { Button, colors } from "@/components/ui";
+import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import { X } from "lucide-react-native";
 
 type Props = {
@@ -45,6 +54,9 @@ export function CustomPeriodModal({ visible, onClose, onApply }: Props) {
   const placeholderTextColor = isDark
     ? colors.charcoal[500]
     : colors.neutral[400];
+  const inputTextColor = isDark
+    ? resolveThemeTokenColor("dark", "--color-text-primary")
+    : colors.neutral[900];
 
   return (
     <Modal
@@ -53,7 +65,7 @@ export function CustomPeriodModal({ visible, onClose, onApply }: Props) {
       transparent={true}
       onRequestClose={onClose}
     >
-      <View className="flex-1 justify-end bg-black/50">
+      <KeyboardAvoidingView behavior="padding" style={styles.backdrop}>
         <View className="rounded-t-[24px] bg-surface-tertiary p-6 pb-8">
           <View className="flex-row items-center justify-between mb-4">
             <Text className="font-matter text-xl text-primary">
@@ -69,7 +81,8 @@ export function CustomPeriodModal({ visible, onClose, onApply }: Props) {
 
           <View className="mb-3 rounded-2xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-primary">
             <TextInput
-              className="border-0 bg-transparent p-0 font-matter text-3xl text-primary"
+              className="border-0 bg-transparent p-0 font-matter text-3xl"
+              style={{ color: inputTextColor }}
               placeholder="0"
               keyboardType="numeric"
               value={customInput}
@@ -123,7 +136,15 @@ export function CustomPeriodModal({ visible, onClose, onApply }: Props) {
             Min 1 cycle (2 weeks) • Max 260 cycles (10 years)
           </Text>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+});
