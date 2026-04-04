@@ -19,6 +19,7 @@ type CardProps = {
   description: string;
   className?: string;
   imageClassName?: string;
+  descriptionClassName?: string;
   onPress?: () => void;
 };
 
@@ -33,6 +34,7 @@ export function Card({
   description,
   className,
   imageClassName,
+  descriptionClassName,
   onPress,
 }: CardProps) {
   const svgUri = useSvgAsset(
@@ -101,7 +103,9 @@ export function Card({
       {renderImage()}
       <View>
         <Text className="mb-1.5 font-matter text-xl text-primary">{title}</Text>
-        <Text className="pr-12 text-sm font-instrument-sans-medium text-secondary leading-5">
+        <Text
+          className={`${descriptionClassName ?? "pr-12"} text-sm font-instrument-sans-medium text-secondary leading-5`}
+        >
           {description}
         </Text>
       </View>

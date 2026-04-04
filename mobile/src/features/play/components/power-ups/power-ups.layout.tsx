@@ -25,7 +25,7 @@ export function PowerUpsLayout({
   isPurchasing,
 }: PowerUpsLayoutProps) {
   return (
-    <View className="flex-1 px-6 pb-8" testID="power-ups-layout">
+    <View className="px-6 pb-8" testID="power-ups-layout">
       <View className="flex flex-row items-center justify-between mb-6">
         <Text className="text-3xl font-matter text-primary mb-3">
           Power-ups

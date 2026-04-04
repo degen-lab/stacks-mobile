@@ -1,5 +1,5 @@
 import { Modal } from "@/components/ui/modal";
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetView, type BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import { View } from "react-native";
@@ -20,15 +20,17 @@ export const SkinSelectorModal = React.forwardRef<
   return (
     <Modal
       ref={ref}
-      snapPoints={["45%"]}
+      enableDynamicSizing={true}
       enableContentPanningGesture={false}
       showHandle={true}
       handleBackgroundColor={bgColor}
       backgroundStyle={{ backgroundColor: bgColor }}
     >
-      <View style={{ backgroundColor: bgColor, paddingHorizontal: 0 }}>
-        <SkinSelectorContainer availablePoints={availablePoints ?? 0} />
-      </View>
+      <BottomSheetView style={{ backgroundColor: bgColor }}>
+        <View style={{ backgroundColor: bgColor, paddingHorizontal: 0 }}>
+          <SkinSelectorContainer availablePoints={availablePoints ?? 0} />
+        </View>
+      </BottomSheetView>
     </Modal>
   );
 });

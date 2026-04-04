@@ -1,4 +1,5 @@
 import { Modal } from "@/components/ui/modal";
+import { BottomSheetView } from "@gorhom/bottom-sheet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import React from "react";
 import PowerUpsContainer from "./power-ups";
@@ -6,8 +7,10 @@ import PowerUpsContainer from "./power-ups";
 export const PowerUpsModal = React.forwardRef<BottomSheetModal, object>(
   (_props, ref) => {
     return (
-      <Modal ref={ref} snapPoints={["60%"]}>
-        <PowerUpsContainer />
+      <Modal ref={ref} enableDynamicSizing={true}>
+        <BottomSheetView>
+          <PowerUpsContainer />
+        </BottomSheetView>
       </Modal>
     );
   },

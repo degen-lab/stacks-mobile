@@ -11,6 +11,10 @@ import { View } from "react-native";
 import FlashMessage from "react-native-flash-message";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { APIProvider } from "@/api";
 import { ReferralHeader } from "@/features/referral/components/referral-header";
@@ -91,23 +95,33 @@ function Providers({ children }: { children: React.ReactNode }) {
   const theme = useThemeConfig();
   return (
     <GestureHandlerRootView className={`flex-1 ${theme.dark ? "dark" : ""}`}>
-      <View style={[{ flex: 1 }, theme.dark ? darkThemeVars : lightThemeVars]}>
-        <KeyboardProvider>
-          <ThemeProvider value={theme}>
-            <APIProvider>
-              <BottomSheetModalProvider>
-                <TransferSheetProvider>
-                  <SwapSheetProvider>
-                    <TransakProvider>{children}</TransakProvider>
-                  </SwapSheetProvider>
-                </TransferSheetProvider>
-                <FlashMessage position="top" />
-                <BiometricSessionGate />
-              </BottomSheetModalProvider>
-            </APIProvider>
-          </ThemeProvider>
-        </KeyboardProvider>
-      </View>
+      <SafeAreaProvider>
+        <View
+          style={[{ flex: 1 }, theme.dark ? darkThemeVars : lightThemeVars]}
+        >
+          <KeyboardProvider>
+            <ThemeProvider value={theme}>
+              <APIProvider>
+                <BottomSheetModalProvider>
+                  <TransferSheetProvider>
+                    <SwapSheetProvider>
+                      <TransakProvider>{children}</TransakProvider>
+                    </SwapSheetProvider>
+                  </TransferSheetProvider>
+                  <FlashMessageHost />
+                  <BiometricSessionGate />
+                </BottomSheetModalProvider>
+              </APIProvider>
+            </ThemeProvider>
+          </KeyboardProvider>
+        </View>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
+}
+
+function FlashMessageHost() {
+  const insets = useSafeAreaInsets();
+
+  return <FlashMessage position="top" statusBarHeight={insets.top} />;
 }
