@@ -21,9 +21,9 @@ export const dailyChallenges: DailyStreakChallenge[] = [
   },
   {
     id: 4,
-    description: 'Pass 20 blocks and score at least 1000 points',
+    description: 'Pass 20 blocks and score at least 500 points',
     validator: (result: SessionValidationResult) =>
-      result.blocksPassed >= 20 && result.score >= 1000,
+      result.blocksPassed >= 20 && result.score >= 500,
   },
   {
     id: 5,
@@ -33,8 +33,8 @@ export const dailyChallenges: DailyStreakChallenge[] = [
   },
   {
     id: 6,
-    description: 'Score at least 2000 points',
-    validator: (result: SessionValidationResult) => result.score >= 2000,
+    description: 'Score at least 750 points',
+    validator: (result: SessionValidationResult) => result.score >= 750,
   },
   {
     id: 7,
@@ -43,13 +43,13 @@ export const dailyChallenges: DailyStreakChallenge[] = [
   },
   {
     id: 8,
-    description: 'Play for at least 2 minutes (120 seconds)',
-    validator: (result: SessionValidationResult) => result.timePlayed >= 120,
+    description: 'Play for at least 90 seconds',
+    validator: (result: SessionValidationResult) => result.timePlayed >= 90,
   },
   {
     id: 9,
-    description: 'Score at least 3000 points in one session',
-    validator: (result: SessionValidationResult) => result.score >= 3000,
+    description: 'Score at least 1000 points in one session',
+    validator: (result: SessionValidationResult) => result.score >= 1000,
   },
   {
     id: 10,
@@ -59,24 +59,25 @@ export const dailyChallenges: DailyStreakChallenge[] = [
   },
   {
     id: 11,
-    description: 'Score at least 1500 points in under 2 minutes',
+    description: 'Score at least 500 points in under 2 minutes',
     validator: (result: SessionValidationResult) =>
-      result.score >= 1500 && result.timePlayed <= 120,
+      result.score >= 500 && result.timePlayed <= 120,
   },
   {
     id: 12,
-    description: 'Pass at least 30 blocks',
-    validator: (result: SessionValidationResult) => result.blocksPassed >= 30,
+    description: 'Pass at least 20 blocks',
+    validator: (result: SessionValidationResult) => result.blocksPassed >= 20,
   },
   {
     id: 13,
-    description: 'Play for at least 3 minutes (180 seconds)',
-    validator: (result: SessionValidationResult) => result.timePlayed >= 180,
+    description: 'Play for at least 2 minutes (120 seconds)',
+    validator: (result: SessionValidationResult) => result.timePlayed >= 120,
   },
   {
     id: 14,
-    description: 'Score at least 5000 points',
-    validator: (result: SessionValidationResult) => result.score >= 5000,
+    description: 'Score at least 750 points and play for at least 90 seconds',
+    validator: (result: SessionValidationResult) =>
+      result.score >= 750 && result.timePlayed >= 90,
   },
   {
     id: 15,
@@ -86,41 +87,42 @@ export const dailyChallenges: DailyStreakChallenge[] = [
   },
   {
     id: 16,
-    description: 'Score at least 1000 points and pass 15 blocks',
+    description: 'Pass 25 blocks and score at least 600 points',
     validator: (result: SessionValidationResult) =>
-      result.score >= 1000 && result.blocksPassed >= 15,
+      result.score >= 600 && result.blocksPassed >= 25,
   },
   {
     id: 17,
-    description: 'Pass at least 40 blocks',
-    validator: (result: SessionValidationResult) => result.blocksPassed >= 40,
+    description: 'Pass at least 25 blocks',
+    validator: (result: SessionValidationResult) => result.blocksPassed >= 25,
   },
   {
     id: 18,
-    description: 'Score at least 2500 points in under 3 minutes',
+    description: 'Score at least 750 points in under 3 minutes',
     validator: (result: SessionValidationResult) =>
-      result.score >= 2500 && result.timePlayed <= 180,
+      result.score >= 750 && result.timePlayed <= 180,
   },
   {
     id: 19,
-    description: 'Play for at least 4 minutes (240 seconds)',
-    validator: (result: SessionValidationResult) => result.timePlayed >= 240,
+    description: 'Play for at least 3 minutes (180 seconds)',
+    validator: (result: SessionValidationResult) => result.timePlayed >= 180,
   },
   {
     id: 20,
-    description: 'Pass 20 blocks and score at least 30 points',
+    description: 'Pass 30 blocks and score at least 750 points',
     validator: (result: SessionValidationResult) =>
-      result.blocksPassed >= 20 && result.score >= 30,
+      result.blocksPassed >= 30 && result.score >= 750,
   },
   {
     id: 21,
-    description: 'Score at least 7500 points',
-    validator: (result: SessionValidationResult) => result.score >= 7500,
+    description: 'Score at least 1000 points and play for at least 2 minutes',
+    validator: (result: SessionValidationResult) =>
+      result.score >= 1000 && result.timePlayed >= 120,
   },
   {
     id: 22,
-    description: 'Pass at least 50 blocks',
-    validator: (result: SessionValidationResult) => result.blocksPassed >= 50,
+    description: 'Pass at least 30 blocks',
+    validator: (result: SessionValidationResult) => result.blocksPassed >= 30,
   },
   {
     id: 23,
@@ -130,30 +132,31 @@ export const dailyChallenges: DailyStreakChallenge[] = [
   },
   {
     id: 24,
-    description: 'Score at least 4000 points and play for at least 2 minutes',
+    description: 'Score at least 500 points and play for at least 2 minutes',
     validator: (result: SessionValidationResult) =>
-      result.score >= 4000 && result.timePlayed >= 120,
+      result.score >= 500 && result.timePlayed >= 120,
   },
   {
     id: 25,
-    description: 'Pass at least 35 blocks and score at least 3000 points',
+    description: 'Pass at least 35 blocks and score at least 1000 points',
     validator: (result: SessionValidationResult) =>
-      result.blocksPassed >= 35 && result.score >= 3000,
+      result.blocksPassed >= 35 && result.score >= 1000,
   },
   {
     id: 26,
-    description: 'Play for at least 5 minutes (300 seconds)',
-    validator: (result: SessionValidationResult) => result.timePlayed >= 300,
+    description: 'Play for at least 4 minutes (240 seconds)',
+    validator: (result: SessionValidationResult) => result.timePlayed >= 240,
   },
   {
     id: 27,
-    description: 'Score at least 10000 points',
-    validator: (result: SessionValidationResult) => result.score >= 10000,
+    description: 'Score at least 1000 points in under 4 minutes',
+    validator: (result: SessionValidationResult) =>
+      result.score >= 1000 && result.timePlayed <= 240,
   },
   {
     id: 28,
-    description: 'Pass at least 60 blocks',
-    validator: (result: SessionValidationResult) => result.blocksPassed >= 60,
+    description: 'Pass at least 35 blocks',
+    validator: (result: SessionValidationResult) => result.blocksPassed >= 35,
   },
   {
     id: 29,
@@ -163,8 +166,8 @@ export const dailyChallenges: DailyStreakChallenge[] = [
   },
   {
     id: 30,
-    description: 'Score at least 6000 points in under 4 minutes',
+    description: 'Pass 30 blocks in under 150 seconds',
     validator: (result: SessionValidationResult) =>
-      result.score >= 6000 && result.timePlayed <= 240,
+      result.blocksPassed >= 30 && result.timePlayed <= 150,
   },
 ];
