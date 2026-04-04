@@ -314,7 +314,6 @@ export default function AccountsListScreen() {
                   </View>
                 )}
               </View>
-
             </View>
 
             <View

@@ -1,6 +1,6 @@
 import type { ImageSource } from "expo-image";
 
-import { Image } from "@/components/ui";
+import { Image, View } from "@/components/ui";
 import type { ImgProps } from "@/components/ui/image";
 
 type AvatarProps = Omit<ImgProps, "source" | "className"> & {
@@ -27,11 +27,15 @@ export function Avatar({
   const resolvedSource = source ?? require("@/assets/images/icon.png");
 
   return (
-    <Image
-      source={resolvedSource}
-      contentFit="cover"
-      className={`${sizeClass} rounded-full bg-neutral-200 dark:bg-neutral-800 ${className}`}
-      {...imageProps}
-    />
+    <View
+      className={`${sizeClass} overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800 ${className}`}
+    >
+      <Image
+        source={resolvedSource}
+        contentFit="cover"
+        className="size-full rounded-full"
+        {...imageProps}
+      />
+    </View>
   );
 }
