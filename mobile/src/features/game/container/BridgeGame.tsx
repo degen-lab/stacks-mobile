@@ -64,7 +64,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     y: number;
     createdAt: number;
   } | null>(null);
-  const { canvasHeight, handleLayout, worldOffsetY } = useBridgeLayout();
+  const { canvasHeight, handleLayout, maxBridgeLength, worldOffsetY } =
+    useBridgeLayout();
   const [isStarting, setIsStarting] = useState(false);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [getAssetSheetOpen, setGetAssetSheetOpen] = useState(false);
@@ -193,6 +194,10 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
   }, [userProfile?.items]);
 
   const engineRef = useRef(new StacksBridgeEngine());
+
+  useEffect(() => {
+    engineRef.current.setMaxBridgeLength(maxBridgeLength);
+  }, [maxBridgeLength]);
 
   const {
     submissionContext,

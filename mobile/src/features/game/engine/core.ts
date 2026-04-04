@@ -178,10 +178,9 @@ class Platform {
 class Bridge {
   length = 0;
   rotation = 0;
-  grow(dt: number) {
+  grow(dt: number, maxLength: number) {
     this.length += PHYSICS_CONFIG.GROW_SPEED * dt;
-    if (this.length > VISUAL_CONFIG.MAX_BRIDGE_LENGTH)
-      this.length = VISUAL_CONFIG.MAX_BRIDGE_LENGTH;
+    if (this.length > maxLength) this.length = maxLength;
   }
   reset() {
     this.length = 0;
@@ -215,6 +214,7 @@ export class StacksBridgeEngine {
   private perfect = false;
   private lastMoveDebug: MoveClientDebug | null = null;
   private score = 0;
+  private maxBridgeLength = VISUAL_CONFIG.MAX_BRIDGE_LENGTH;
 
   //TODO: check if this is needed
   private lastJumpSucceeded = true;
@@ -269,6 +269,17 @@ export class StacksBridgeEngine {
   }
   getRunData() {
     return { seed: this.seed, moves: [...this.moves] };
+  }
+
+  setMaxBridgeLength(maxBridgeLength: number) {
+    this.maxBridgeLength = Math.max(
+      0,
+      Math.min(VISUAL_CONFIG.MAX_BRIDGE_LENGTH, Math.floor(maxBridgeLength)),
+    );
+
+    if (this.bridge.length > this.maxBridgeLength) {
+      this.bridge.length = this.maxBridgeLength;
+    }
   }
 
   revive() {
@@ -462,7 +473,7 @@ export class StacksBridgeEngine {
 
     if (this.currentPressStart !== null) {
       const maxDurationMs = Math.floor(
-        (VISUAL_CONFIG.MAX_BRIDGE_LENGTH / PHYSICS_CONFIG.GROW_SPEED) * 1000,
+        (this.maxBridgeLength / PHYSICS_CONFIG.GROW_SPEED) * 1000,
       );
       const pressDuration = Math.min(
         Math.floor(this.engineTimeMs) - this.currentPressStart,
@@ -512,7 +523,7 @@ export class StacksBridgeEngine {
 
     switch (this.phase) {
       case "GROWING":
-        this.bridge.grow(dt);
+        this.bridge.grow(dt, this.maxBridgeLength);
         this.camera.trigger(0.8);
         break;
       case "ROTATING":
