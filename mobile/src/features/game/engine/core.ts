@@ -678,7 +678,7 @@ export class StacksBridgeEngine {
 
     const old = this.platforms[1];
     if (old && this.platforms.length < 3) {
-      const lastX = old.spawnX + old.w;
+      const lastX = old.x + old.w; // use actual stopped position, not spawnX
       const newPlatform = this.generateNextPlatform(lastX, old.index + 1);
       this.platforms.push(newPlatform);
     }

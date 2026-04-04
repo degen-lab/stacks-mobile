@@ -241,9 +241,29 @@ export class GameSessionService {
     if (debug) debug.seedNumber = seedNumber;
     const rng = this.createRng(seedNumber);
 
-    const platforms = this.generatePlatformSequence(
+    if (debug?.platforms) {
+      debug.platforms.push({
+        x: 0,
+        w: BRIDGE_CONFIG.PLATFORM_START_WIDTH,
+        index: 0,
+        center: BRIDGE_CONFIG.PLATFORM_START_WIDTH / 2,
+        right: BRIDGE_CONFIG.PLATFORM_START_WIDTH,
+        isMoving: false,
+        minX: 0,
+        maxX: 0,
+        initialX: 0,
+        spawnX: 0,
+        baseSpeed: 0,
+        vx: 0,
+      } as SessionValidationPlatformDebug);
+    }
+
+    let lastXInt = BRIDGE_CONFIG.PLATFORM_START_WIDTH * PRECISION;
+    let nextPlatformIndex = 1;
+    let nextPlatform = this.generateNextPlatform(
       rng,
-      session.moves.length,
+      lastXInt,
+      nextPlatformIndex,
       debug?.platforms,
     );
 
@@ -251,10 +271,9 @@ export class GameSessionService {
     let blocksPassed = 0;
     let totalTimePlayed = 0;
     let isFraud = false;
-    let currentPlatformIndex = 0;
     let hasValidMoves = false;
 
-    let currentPlatformStoppedRight = platforms[0].right;
+    let currentPlatformStoppedRight = BRIDGE_CONFIG.PLATFORM_START_WIDTH;
 
     let perfectLandings = 0;
     let successfulLandings = 0;
@@ -304,24 +323,17 @@ export class GameSessionService {
       }
 
       const bridgeLength = this.calculateBridgeLength(pressDurationMs);
-
-      if (currentPlatformIndex + 1 >= platforms.length) {
-        break;
-      }
-
-      const nextPlatform = platforms[currentPlatformIndex + 1];
-
       const landingTimeMs = Math.floor(move.startTime + move.duration);
-
       const scaledSpeed = nextPlatform.baseSpeed;
 
-      const platformXAtRelease = calculatePlatformPosInt(
-        nextPlatform.minX,
-        nextPlatform.maxX,
-        scaledSpeed,
-        landingTimeMs,
-        nextPlatform.index,
-      );
+      const platformXAtRelease =
+        calculatePlatformPosInt(
+          Math.round(nextPlatform.minX * PRECISION),
+          Math.round(nextPlatform.maxX * PRECISION),
+          scaledSpeed,
+          landingTimeMs,
+          nextPlatform.index,
+        ) / PRECISION;
 
       const platformRightAtRelease = platformXAtRelease + nextPlatform.w;
       const platformCenterAtRelease = platformXAtRelease + nextPlatform.w / 2;
@@ -339,7 +351,7 @@ export class GameSessionService {
           idleDurationMs,
           client: move.debug,
           bridgeLength,
-          currentPlatformIndex,
+          currentPlatformIndex: nextPlatform.index - 1,
           currentPlatformStoppedRight,
           nextPlatformIndex: nextPlatform.index,
           platformIsMoving: nextPlatform.isMoving,
@@ -382,10 +394,16 @@ export class GameSessionService {
         score += points;
         blocksPassed++;
 
-        currentPlatformIndex++;
+        lastXInt = Math.round(
+          (platformXAtRelease + nextPlatform.w) * PRECISION,
+        );
+        nextPlatform = this.generateNextPlatform(
+          rng,
+          lastXInt,
+          ++nextPlatformIndex,
+          debug?.platforms,
+        );
         currentPlatformStoppedRight = platformRightAtRelease;
-
-        // Reset consecutive failures on success
         consecutiveFailures = 0;
       } else {
         consecutivePerfect = 0;
@@ -539,165 +557,124 @@ export class GameSessionService {
     return Number(seedBigInt & BigInt(0xffffffff));
   }
 
-  private generatePlatformSequence(
+  private generateNextPlatform(
     rng: () => number,
-    numMoves: number,
+    lastXInt: number,
+    index: number,
     debugPlatforms?: SessionValidationDebug['platforms'],
-  ): Platform[] {
-    const platforms: Platform[] = [];
+  ): Platform {
+    const gapRng = rng();
+    const minGapInt = BRIDGE_CONFIG.PLATFORM_MIN_GAP * PRECISION;
+    const maxGapInt = BRIDGE_CONFIG.PLATFORM_MAX_GAP * PRECISION;
+    const gapInt = Math.floor(minGapInt + gapRng * (maxGapInt - minGapInt));
 
-    // Frontend logic matches: initial platform at 0 with integer width
-    const firstPlatform: Platform = {
-      x: 0,
-      w: BRIDGE_CONFIG.PLATFORM_START_WIDTH,
-      index: 0,
-      center: Math.floor(BRIDGE_CONFIG.PLATFORM_START_WIDTH / 2),
-      right: BRIDGE_CONFIG.PLATFORM_START_WIDTH,
-      isMoving: false,
-      minX: 0,
-      maxX: 0,
-      initialX: 0,
-      spawnX: 0,
-      baseSpeed: 0,
+    const widthRng = rng();
+    const minWidthBaseInt = BRIDGE_CONFIG.PLATFORM_MIN_WIDTH * PRECISION;
+    const maxWidthBaseInt = BRIDGE_CONFIG.PLATFORM_MAX_WIDTH * PRECISION;
+    const baseWidthInt =
+      minWidthBaseInt + widthRng * (maxWidthBaseInt - minWidthBaseInt);
+
+    const shrinkStages =
+      index >= BRIDGE_CONFIG.PLATFORM_SHRINK_START_INDEX
+        ? Math.floor(
+            (index - BRIDGE_CONFIG.PLATFORM_SHRINK_START_INDEX) /
+              BRIDGE_CONFIG.PLATFORM_SHRINK_EVERY,
+          ) + 1
+        : 0;
+    const shrinkFactor = Math.pow(
+      BRIDGE_CONFIG.PLATFORM_SHRINK_FACTOR,
+      shrinkStages,
+    );
+    const minWidthThresholdInt =
+      (index < BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE_INDEX
+        ? BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_EARLY
+        : BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE) * PRECISION;
+    const wInt = Math.floor(
+      Math.max(baseWidthInt * shrinkFactor, minWidthThresholdInt),
+    );
+
+    const speedStages =
+      index >= BRIDGE_CONFIG.PLATFORM_SPEED_START_INDEX
+        ? Math.floor(
+            (index - BRIDGE_CONFIG.PLATFORM_SPEED_START_INDEX) /
+              BRIDGE_CONFIG.PLATFORM_SPEED_EVERY,
+          ) + 1
+        : 0;
+    const speedMultiplier =
+      1 + speedStages * BRIDGE_CONFIG.PLATFORM_SPEED_INCREMENT;
+    let rawBaseSpeed = Math.floor(
+      BRIDGE_CONFIG.PLATFORM_MOVE_VELOCITY * PRECISION * speedMultiplier,
+    );
+
+    const canMove = index >= BRIDGE_CONFIG.PLATFORM_MOVE_START_INDEX;
+    let shouldMove = false;
+    if (canMove) {
+      const moveChanceRng = rng();
+      if (moveChanceRng < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE) shouldMove = true;
+    }
+
+    let minXInt = 0;
+    let maxXInt = 0;
+    let spawnXInt = 0;
+    const idealXInt = lastXInt + gapInt;
+
+    if (shouldMove) {
+      const rangeRng = rng();
+      const minRangeInt = BRIDGE_CONFIG.PLATFORM_MOVE_MIN_RANGE * PRECISION;
+      const maxRangeInt = BRIDGE_CONFIG.PLATFORM_MOVE_MAX_RANGE * PRECISION;
+      const rangeInt = Math.floor(
+        minRangeInt + rangeRng * (maxRangeInt - minRangeInt),
+      );
+
+      const varianceRng = rng();
+      const varianceScaler = Math.floor(varianceRng * 4000) + 8000;
+      rawBaseSpeed = Math.floor((rawBaseSpeed * varianceScaler) / 10000);
+
+      minXInt = idealXInt - rangeInt;
+      maxXInt = idealXInt + rangeInt;
+
+      const safeMinXInt = lastXInt + minGapInt;
+      const safeMaxXInt = lastXInt + maxGapInt;
+      minXInt = Math.max(minXInt, safeMinXInt);
+      maxXInt = Math.min(maxXInt, safeMaxXInt);
+
+      if (maxXInt <= minXInt) {
+        shouldMove = false;
+        minXInt = maxXInt = idealXInt;
+        rawBaseSpeed = 0;
+        spawnXInt = idealXInt;
+      } else {
+        spawnXInt = Math.floor((minXInt + maxXInt) / 2);
+      }
+    } else {
+      rawBaseSpeed = 0;
+      spawnXInt = idealXInt;
+      minXInt = spawnXInt;
+      maxXInt = spawnXInt;
+    }
+
+    const platform: Platform = {
+      x: spawnXInt / PRECISION,
+      w: wInt / PRECISION,
+      index,
+      center: (spawnXInt + wInt / 2) / PRECISION,
+      right: (spawnXInt + wInt) / PRECISION,
+      isMoving: shouldMove,
+      minX: minXInt / PRECISION,
+      maxX: maxXInt / PRECISION,
+      initialX: spawnXInt / PRECISION,
+      spawnX: spawnXInt / PRECISION,
+      baseSpeed: rawBaseSpeed,
     };
-    platforms.push(firstPlatform);
 
     if (debugPlatforms) {
       debugPlatforms.push({
-        ...firstPlatform,
+        ...platform,
         vx: 0,
       } as SessionValidationPlatformDebug);
     }
 
-    let lastXInt = BRIDGE_CONFIG.PLATFORM_START_WIDTH * PRECISION;
-
-    for (let i = 1; i <= numMoves + 1; i++) {
-      const gapRng = rng();
-
-      const minGapInt = BRIDGE_CONFIG.PLATFORM_MIN_GAP * PRECISION;
-      const maxGapInt = BRIDGE_CONFIG.PLATFORM_MAX_GAP * PRECISION;
-      const gapInt = Math.floor(minGapInt + gapRng * (maxGapInt - minGapInt));
-
-      const widthRng = rng();
-
-      const minWidthBaseInt = BRIDGE_CONFIG.PLATFORM_MIN_WIDTH * PRECISION;
-      const maxWidthBaseInt = BRIDGE_CONFIG.PLATFORM_MAX_WIDTH * PRECISION;
-      const baseWidthInt =
-        minWidthBaseInt + widthRng * (maxWidthBaseInt - minWidthBaseInt);
-
-      const shrinkStages =
-        i >= BRIDGE_CONFIG.PLATFORM_SHRINK_START_INDEX
-          ? Math.floor(
-              (i - BRIDGE_CONFIG.PLATFORM_SHRINK_START_INDEX) /
-                BRIDGE_CONFIG.PLATFORM_SHRINK_EVERY,
-            ) + 1
-          : 0;
-
-      const shrinkFactor = Math.pow(
-        BRIDGE_CONFIG.PLATFORM_SHRINK_FACTOR,
-        shrinkStages,
-      );
-
-      const minWidthThresholdInt =
-        (i < BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE_INDEX
-          ? BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_EARLY
-          : BRIDGE_CONFIG.PLATFORM_MIN_WIDTH_LATE) * PRECISION;
-
-      const wInt = Math.floor(
-        Math.max(baseWidthInt * shrinkFactor, minWidthThresholdInt),
-      );
-
-      const speedStages =
-        i >= BRIDGE_CONFIG.PLATFORM_SPEED_START_INDEX
-          ? Math.floor(
-              (i - BRIDGE_CONFIG.PLATFORM_SPEED_START_INDEX) /
-                BRIDGE_CONFIG.PLATFORM_SPEED_EVERY,
-            ) + 1
-          : 0;
-      const speedMultiplier =
-        1 + speedStages * BRIDGE_CONFIG.PLATFORM_SPEED_INCREMENT;
-
-      let rawBaseSpeed = Math.floor(
-        BRIDGE_CONFIG.PLATFORM_MOVE_VELOCITY * PRECISION * speedMultiplier,
-      );
-
-      const canMove = i >= BRIDGE_CONFIG.PLATFORM_MOVE_START_INDEX;
-      let shouldMove = false;
-
-      if (canMove) {
-        const moveChanceRng = rng();
-        if (moveChanceRng < BRIDGE_CONFIG.PLATFORM_MOVE_CHANCE)
-          shouldMove = true;
-      }
-
-      let minXInt = 0;
-      let maxXInt = 0;
-      let spawnXInt = 0;
-
-      const idealXInt = lastXInt + gapInt;
-
-      if (shouldMove) {
-        const rangeRng = rng();
-        const minRangeInt = BRIDGE_CONFIG.PLATFORM_MOVE_MIN_RANGE * PRECISION;
-        const maxRangeInt = BRIDGE_CONFIG.PLATFORM_MOVE_MAX_RANGE * PRECISION;
-        const rangeInt = Math.floor(
-          minRangeInt + rangeRng * (maxRangeInt - minRangeInt),
-        );
-
-        const varianceRng = rng();
-        const varianceScaler = Math.floor(varianceRng * 4000) + 8000;
-
-        rawBaseSpeed = Math.floor((rawBaseSpeed * varianceScaler) / 10000);
-
-        minXInt = idealXInt - rangeInt;
-        maxXInt = idealXInt + rangeInt;
-
-        const safeMinXInt = lastXInt + minGapInt;
-        const safeMaxXInt = lastXInt + maxGapInt;
-
-        minXInt = Math.max(minXInt, safeMinXInt);
-        maxXInt = Math.min(maxXInt, safeMaxXInt);
-
-        if (maxXInt <= minXInt) {
-          shouldMove = false;
-          minXInt = maxXInt = idealXInt;
-          rawBaseSpeed = 0;
-          spawnXInt = idealXInt;
-        } else {
-          spawnXInt = Math.floor((minXInt + maxXInt) / 2);
-        }
-      } else {
-        rawBaseSpeed = 0;
-        spawnXInt = idealXInt;
-        minXInt = spawnXInt;
-        maxXInt = spawnXInt;
-      }
-
-      const platform: Platform = {
-        x: spawnXInt / PRECISION,
-        w: wInt / PRECISION,
-        index: i,
-        center: (spawnXInt + wInt / 2) / PRECISION,
-        right: (spawnXInt + wInt) / PRECISION,
-        isMoving: shouldMove,
-        minX: minXInt / PRECISION,
-        maxX: maxXInt / PRECISION,
-        initialX: spawnXInt / PRECISION,
-        spawnX: spawnXInt / PRECISION,
-        baseSpeed: rawBaseSpeed,
-      };
-      platforms.push(platform);
-
-      if (debugPlatforms) {
-        debugPlatforms.push({
-          ...platform,
-          vx: 0,
-        } as SessionValidationPlatformDebug);
-      }
-
-      lastXInt = spawnXInt + wInt;
-    }
-    return platforms;
+    return platform;
   }
 
   private getRotationTimeMs(): number {
