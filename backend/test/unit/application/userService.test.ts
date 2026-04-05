@@ -1,7 +1,12 @@
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { UserService } from '../../../src/application/user/userService';
 import { UserDomainService } from '../../../src/domain/service/userDomainService';
 import { User } from '../../../src/domain/entities/user';
+import { Submission } from '../../../src/domain/entities/submission';
+import {
+  SubmissionType,
+  TransactionStatus,
+} from '../../../src/domain/entities/enums';
 import {
   NicknameNotProvidedError,
   UserNotFoundError,
@@ -44,6 +49,7 @@ describe('User Service unit test', () => {
       save: jest.fn(),
       transaction: jest.fn(),
       findOne: jest.fn(),
+      find: jest.fn(),
     } as unknown as jest.Mocked<EntityManager>;
 
     // Mock UserDomainService
@@ -95,6 +101,62 @@ describe('User Service unit test', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('game submission counters', () => {
+    const makeSubmission = (
+      type: SubmissionType,
+      transactionStatus: TransactionStatus,
+    ) =>
+      ({
+        type,
+        isSponsored: true,
+        transactionStatus,
+        createdAt: new Date(),
+      }) as Submission;
+
+    it('ignores not-broadcasted and failed submissions in daily limits', async () => {
+      mockEntityManager.findOne.mockResolvedValue(
+        Object.assign(new User(), {
+          id: 1,
+          submissions: [
+            makeSubmission(SubmissionType.Raffle, TransactionStatus.NotBroadcasted),
+            makeSubmission(SubmissionType.Raffle, TransactionStatus.Processing),
+            makeSubmission(SubmissionType.WeeklyContest, TransactionStatus.Failed),
+            makeSubmission(SubmissionType.WeeklyContest, TransactionStatus.Success),
+          ],
+        }),
+      );
+
+      await expect(userService.getDailySubmissionsLeft(1)).resolves.toEqual({
+        dailyRaffleSubmissionsLeft: 2,
+        dailyWeeklyContestSubmissionsLeft: 2,
+      });
+    });
+
+    it('queries current tournament submissions by processing/pending/success status', async () => {
+      const weekly = { type: SubmissionType.WeeklyContest } as Submission;
+      const raffle = { type: SubmissionType.Raffle } as Submission;
+      mockEntityManager.find.mockResolvedValue([weekly, raffle]);
+
+      const result = await userService.getCurrentTournamentSubmissions(7);
+
+      expect(mockEntityManager.find).toHaveBeenCalledWith(Submission, {
+        where: {
+          user: { id: 7 },
+          tournamentId: 1,
+          transactionStatus: In([
+            TransactionStatus.Processing,
+            TransactionStatus.Pending,
+            TransactionStatus.Success,
+          ]),
+        },
+      });
+      expect(result).toEqual({
+        weeklyContestSubmissionsForCurrentTournament: [weekly],
+        raffleSubmissionsForCurrentTournament: [raffle],
+      });
+    });
   });
 
   describe('loginOrRegister', () => {

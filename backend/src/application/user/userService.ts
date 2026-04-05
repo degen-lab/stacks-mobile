@@ -1,4 +1,4 @@
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { logger } from '../../api/helpers/logger';
 import { SubmissionType, TransactionStatus } from '../../domain/entities/enums';
 import { FraudAttempt } from '../../domain/entities/fraudAttempt';
@@ -271,6 +271,9 @@ export class UserService {
       return (
         submission.type === SubmissionType.Raffle &&
         submission.isSponsored &&
+        (submission.transactionStatus === TransactionStatus.Processing ||
+          submission.transactionStatus === TransactionStatus.Pending ||
+          submission.transactionStatus === TransactionStatus.Success) &&
         submission.createdAt.toISOString().slice(0, 10) ===
           new Date().toISOString().slice(0, 10)
       );
@@ -280,15 +283,23 @@ export class UserService {
         return (
           submission.type === SubmissionType.WeeklyContest &&
           submission.isSponsored &&
+          (submission.transactionStatus === TransactionStatus.Processing ||
+            submission.transactionStatus === TransactionStatus.Pending ||
+            submission.transactionStatus === TransactionStatus.Success) &&
           submission.createdAt.toISOString().slice(0, 10) ===
             new Date().toISOString().slice(0, 10)
         );
       },
     );
     return {
-      dailyRaffleSubmissionsLeft: 3 - dailyRaffleSubmissions.length,
-      dailyWeeklyContestSubmissionsLeft:
+      dailyRaffleSubmissionsLeft: Math.max(
+        0,
+        3 - dailyRaffleSubmissions.length,
+      ),
+      dailyWeeklyContestSubmissionsLeft: Math.max(
+        0,
         3 - dailyWeeklyContestSubmissions.length,
+      ),
     };
   }
 
@@ -303,7 +314,11 @@ export class UserService {
           id: userId,
         },
         tournamentId,
-        transactionStatus: TransactionStatus.Success,
+        transactionStatus: In([
+          TransactionStatus.Processing,
+          TransactionStatus.Pending,
+          TransactionStatus.Success,
+        ]),
       },
     });
     return {

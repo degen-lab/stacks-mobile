@@ -66,7 +66,7 @@ describe('API routes smoke tests', () => {
     raffle.score = 50;
     raffle.tournamentId = 1;
     raffle.type = SubmissionType.Raffle;
-    raffle.transactionStatus = TransactionStatus.NotBroadcasted;
+    raffle.transactionStatus = TransactionStatus.Processing;
     raffle.isSponsored = true;
     raffle.user = user as User;
     const weekly = new Submission();
@@ -74,7 +74,7 @@ describe('API routes smoke tests', () => {
     weekly.score = 60;
     weekly.tournamentId = 1;
     weekly.type = SubmissionType.WeeklyContest;
-    weekly.transactionStatus = TransactionStatus.NotBroadcasted;
+    weekly.transactionStatus = TransactionStatus.Processing;
     weekly.isSponsored = true;
     weekly.user = user as User;
     await em.save([raffle, weekly]);

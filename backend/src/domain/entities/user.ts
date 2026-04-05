@@ -9,7 +9,7 @@ import { InvalidAmountError } from '../errors/userErrors';
 import { BaseAppEntity } from './baseAppEntity';
 import { ConsumableItem } from './consumableItem';
 import { DefaultItem } from './defaultItem';
-import { PurchaseType, SubmissionType } from './enums';
+import { PurchaseType, SubmissionType, TransactionStatus } from './enums';
 import { FraudAttempt } from './fraudAttempt';
 import { Submission } from './submission';
 import { UniqueItem } from './uniqueItem';
@@ -18,6 +18,7 @@ import { StackingData } from './stackingData';
 import { DefiOperation } from './defiOperation';
 
 import { SponsoredTransaction } from './sponsoredTransaction';
+
 @Entity()
 export class User extends BaseAppEntity {
   @Column({ type: 'varchar', unique: true })
@@ -125,10 +126,13 @@ export class User extends BaseAppEntity {
       return (
         sub.createdAt.toISOString().slice(0, 10) === today &&
         sub.type === SubmissionType.Raffle &&
-        sub.isSponsored
+        sub.isSponsored &&
+        (sub.transactionStatus === TransactionStatus.Processing ||
+          sub.transactionStatus === TransactionStatus.Pending ||
+          sub.transactionStatus === TransactionStatus.Success)
       );
     });
-    if (dailySubmissions.length === 3) {
+    if (dailySubmissions.length >= 3) {
       throw new DailySponsoredRaffleSubmissionNumberMetError();
     }
     return true;
@@ -140,11 +144,13 @@ export class User extends BaseAppEntity {
       return (
         sub.createdAt.toISOString().slice(0, 10) === today &&
         sub.type === SubmissionType.WeeklyContest &&
-        sub.isSponsored
+        sub.isSponsored &&
+        (sub.transactionStatus === TransactionStatus.Processing ||
+          sub.transactionStatus === TransactionStatus.Pending ||
+          sub.transactionStatus === TransactionStatus.Success)
       );
     });
-    // TODO: Change this back to 1
-    if (dailySubmissions.length === 999) {
+    if (dailySubmissions.length >= 1) {
       throw new DailySponsoredWeeklyContestSubmissionNumberMetError();
     }
   }

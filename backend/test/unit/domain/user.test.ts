@@ -1,4 +1,4 @@
-import { SubmissionType } from '../../../src/domain/entities/enums';
+import { SubmissionType, TransactionStatus } from '../../../src/domain/entities/enums';
 import { Submission } from '../../../src/domain/entities/submission';
 import { User } from '../../../src/domain/entities/user';
 import { DailySponsoredRaffleSubmissionNumberMetError } from '../../../src/domain/errors/submissionError';
@@ -37,6 +37,7 @@ describe('User domain class Unit tests', () => {
       s.type = type;
       s.createdAt = createdAt;
       s.isSponsored = true;
+      s.transactionStatus = TransactionStatus.Processing;
       testUser.submissions.push(s);
     };
 
