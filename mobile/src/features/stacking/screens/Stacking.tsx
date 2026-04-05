@@ -195,6 +195,9 @@ export function StackingScreen() {
   >(null);
   const [hasBroadcastedSponsoredApproval, setHasBroadcastedSponsoredApproval] =
     useState(false);
+  const [sponsoredApprovalNextNonce, setSponsoredApprovalNextNonce] = useState<
+    number | undefined
+  >(undefined);
   const [selectedFeeOption, setSelectedFeeOption] =
     useState<FeeOption>("standard");
   const [customFee, setCustomFee] = useState("");
@@ -281,7 +284,7 @@ export function StackingScreen() {
     loadingCopy: sponsoredApprovalLoadingCopy,
   } = useSponsoredRequestFlow({
     requestId: sponsoredApprovalRequestId,
-    completeOn: ["success"],
+    completeOn: ["pending", "success"],
     copy: {
       verifying: {
         title: "Verifying sponsorship...",
@@ -309,9 +312,12 @@ export function StackingScreen() {
           "Please wait while we finalize your sponsored approval request.",
       },
     },
-    onComplete: () => {
+    onComplete: ({ originNonce }) => {
       setSponsoredApprovalRequestId(null);
       setHasBroadcastedSponsoredApproval(true);
+      setSponsoredApprovalNextNonce(
+        originNonce != null ? originNonce + 1 : undefined,
+      );
       showMessage({
         message: "Approval confirmed",
         description: "You can now continue to stack your STX.",
@@ -328,6 +334,7 @@ export function StackingScreen() {
     onFailed: () => {
       setSponsoredApprovalRequestId(null);
       setHasBroadcastedSponsoredApproval(false);
+      setSponsoredApprovalNextNonce(undefined);
       setActiveFeeFlow(null);
       showMessage({
         message: "Approval failed",
@@ -339,6 +346,7 @@ export function StackingScreen() {
     onStatusUnavailable: ({ error }) => {
       setSponsoredApprovalRequestId(null);
       setHasBroadcastedSponsoredApproval(false);
+      setSponsoredApprovalNextNonce(undefined);
       setActiveFeeFlow(null);
       showMessage({
         message: "Approval status unavailable",
@@ -355,6 +363,7 @@ export function StackingScreen() {
   useEffect(() => {
     if (!isAllowed) return;
     setHasBroadcastedSponsoredApproval(false);
+    setSponsoredApprovalNextNonce(undefined);
   }, [isAllowed]);
 
   useEffect(() => {
@@ -491,7 +500,7 @@ export function StackingScreen() {
 
     try {
       const amountMicroStx = Math.floor(totalStackingAmount * MICRO_STX);
-      await delegateStxSponsored(amountMicroStx, feeMicroStx);
+      await delegateStxSponsored(amountMicroStx, feeMicroStx, sponsoredApprovalNextNonce);
 
       delegateSheetRef.current?.dismiss();
       setActiveFeeFlow(null);

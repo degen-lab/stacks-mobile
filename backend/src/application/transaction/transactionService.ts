@@ -47,6 +47,7 @@ type SponsoredRequestStatusResult = {
   requestId: number;
   status: 'not_broadcasted' | 'processing' | 'pending' | 'success' | 'failed';
   txId?: string | null;
+  originNonce?: number | null;
 };
 
 const SPONSORED_TTL_MS = 15 * 60 * 1000;
@@ -633,10 +634,14 @@ export class TransactionService {
   private serializeSponsoredRequestStatus(
     sponsoredRequest: SponsoredTransaction,
   ): SponsoredRequestStatusResult {
+    const originNonce = sponsoredRequest.serializedTx
+      ? parseSponsoredTransaction(sponsoredRequest.serializedTx).originNonce
+      : null;
     return {
       requestId: sponsoredRequest.id,
       status: this.getSponsoredRequestStatusName(sponsoredRequest.status),
       txId: sponsoredRequest.txId ?? null,
+      originNonce,
     };
   }
 

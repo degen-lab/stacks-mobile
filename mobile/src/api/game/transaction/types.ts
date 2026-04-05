@@ -91,5 +91,6 @@ export type GetSponsoredTransactionStatusResponse = {
     waitReason?: "previous_origin_pending" | null;
     blockingRequestId?: number | null;
     blockingTxId?: string | null;
+    originNonce?: number | null;
   };
 };

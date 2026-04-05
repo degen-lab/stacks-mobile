@@ -51,24 +51,28 @@ export type SponsoredTxSummary =
   | {
       kind: 'submission';
       originAddress: string;
+      originNonce: number;
       contractId: string;
       functionName: string;
     }
   | {
       kind: 'contract_call';
       originAddress: string;
+      originNonce: number;
       contractId: string;
       functionName: string;
     }
   | {
       kind: 'swap';
       originAddress: string;
+      originNonce: number;
       contractId: string;
       functionName: string;
     }
   | {
       kind: 'stx_transfer';
       originAddress: string;
+      originNonce: number;
       recipient: string;
     };
 
@@ -114,6 +118,7 @@ export function parseSponsoredTransaction(
       spendingCondition.signer,
     ),
   );
+  const originNonce = Number(spendingCondition.nonce);
 
   if (isTokenTransferPayload(transaction.payload)) {
     if (defiOperation) {
@@ -124,6 +129,7 @@ export function parseSponsoredTransaction(
     return {
       kind: 'stx_transfer',
       originAddress,
+      originNonce,
       recipient: String(cvToValue(transaction.payload.recipient)),
     };
   }
@@ -139,6 +145,7 @@ export function parseSponsoredTransaction(
       return {
         kind: 'submission',
         originAddress,
+        originNonce,
         contractId,
         functionName,
       };
@@ -165,7 +172,7 @@ export function parseSponsoredTransaction(
           'Swap transaction sender does not match the DefiOperation sender address',
         );
       }
-      return { kind: 'swap', originAddress, contractId, functionName };
+      return { kind: 'swap', originAddress, originNonce, contractId, functionName };
     }
 
     const supportedCalls = SUPPORTED_CONTRACT_CALLS[STACKS_NETWORK] ?? {};
@@ -179,6 +186,7 @@ export function parseSponsoredTransaction(
     return {
       kind: 'contract_call',
       originAddress,
+      originNonce,
       contractId,
       functionName,
     };

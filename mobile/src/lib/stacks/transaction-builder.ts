@@ -21,6 +21,7 @@ type BuildUnsignedContractCallOptions = {
   sponsored?: boolean;
   postConditionMode?: PostConditionMode;
   postConditions?: PostCondition[];
+  nonce?: number;
 };
 
 type BuildUnsignedStxTransferOptions = {
@@ -43,6 +44,7 @@ export async function buildUnsignedContractCall({
   sponsored = false,
   postConditionMode = PostConditionMode.Allow,
   postConditions = [],
+  nonce,
 }: BuildUnsignedContractCallOptions): Promise<string> {
   const [contractAddress, contractName] = contractId.split(".");
   if (!contractAddress || !contractName) {
@@ -60,6 +62,7 @@ export async function buildUnsignedContractCall({
     sponsored,
     postConditionMode,
     postConditions,
+    ...(nonce !== undefined && { nonce: BigInt(nonce) }),
   });
 
   return `0x${serializeTransaction(transaction)}`;

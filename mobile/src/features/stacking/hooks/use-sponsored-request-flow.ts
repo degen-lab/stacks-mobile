@@ -19,6 +19,7 @@ type BroadcastedArgs = {
   requestId: number;
   status: "pending" | "success";
   txId?: string | null;
+  originNonce?: number | null;
 };
 
 type FailedArgs = {
@@ -79,6 +80,7 @@ export function useSponsoredRequestFlow({
 
   const status = statusResponse?.data?.status ?? null;
   const waitReason = statusResponse?.data?.waitReason ?? null;
+  const originNonce = statusResponse?.data?.originNonce ?? null;
 
   const loadingCopy = useMemo(() => {
     switch (status) {
@@ -131,6 +133,7 @@ export function useSponsoredRequestFlow({
       requestId,
       status,
       txId: statusResponse?.data?.txId ?? null,
+      originNonce: statusResponse?.data?.originNonce ?? null,
     });
   }, [
     completeOn,
