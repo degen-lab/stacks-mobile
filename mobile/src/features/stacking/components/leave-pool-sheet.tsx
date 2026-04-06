@@ -491,7 +491,21 @@ export function LeavePoolSheet({
           title: "Transaction broadcasted",
           message: "Your sponsored transaction is now on chain.",
         }}
-        dismissibleWhenLoading={false}
+        dismissibleWhenLoading={true}
+        onOpenChange={(open) => {
+          if (open || !activeSponsoredStep) return;
+          const dismissedStep = activeSponsoredStep;
+          setSponsoredRequestId(null);
+          setActiveSponsoredStep(null);
+          activeSheetRef.current = dismissedStep;
+          requestAnimationFrame(() => {
+            if (dismissedStep === "revoke") {
+              presentRevoke();
+            } else {
+              presentDisallow();
+            }
+          });
+        }}
         enableDynamicSizing={true}
       />
     </>

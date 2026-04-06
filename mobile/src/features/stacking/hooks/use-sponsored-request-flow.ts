@@ -49,6 +49,7 @@ export function useSponsoredRequestFlow({
   onStatusUnavailable,
 }: UseSponsoredRequestFlowArgs) {
   const handledOutcomeRef = useRef<string | null>(null);
+  const completesOnPending = completeOn.includes("pending");
 
   const {
     data: statusResponse,
@@ -60,13 +61,14 @@ export function useSponsoredRequestFlow({
     enabled: requestId !== null,
     retry: 2,
     refetchInterval: (query) => {
-      const status = query.state.data?.data?.status;
-      const waitReason = query.state.data?.data?.waitReason;
+      const statusData = query.state.data?.data;
+      const status = statusData?.status;
+      const waitReason = statusData?.waitReason;
       if (status === "failed" || status === "success") {
         return false;
       }
       if (status === "pending") {
-        return completeOn.includes("pending") ? false : 8000;
+        return completesOnPending ? false : 8000;
       }
       if (status === "processing") {
         return waitReason === "previous_origin_pending" ? 10000 : 5000;
@@ -78,9 +80,11 @@ export function useSponsoredRequestFlow({
     },
   });
 
-  const status = statusResponse?.data?.status ?? null;
-  const waitReason = statusResponse?.data?.waitReason ?? null;
-  const originNonce = statusResponse?.data?.originNonce ?? null;
+  const statusData = statusResponse?.data;
+  const status = statusData?.status ?? null;
+  const waitReason = statusData?.waitReason ?? null;
+  const txId = statusData?.txId ?? null;
+  const originNonce = statusData?.originNonce ?? null;
 
   const loadingCopy = useMemo(() => {
     switch (status) {
@@ -116,7 +120,7 @@ export function useSponsoredRequestFlow({
     if (!status || status === "not_broadcasted" || status === "processing") {
       return;
     }
-    if (status === "pending" && !completeOn.includes("pending")) {
+    if (status === "pending" && !completesOnPending) {
       return;
     }
 
@@ -132,16 +136,17 @@ export function useSponsoredRequestFlow({
     onComplete?.({
       requestId,
       status,
-      txId: statusResponse?.data?.txId ?? null,
-      originNonce: statusResponse?.data?.originNonce ?? null,
+      txId,
+      originNonce,
     });
   }, [
-    completeOn,
+    completesOnPending,
     onComplete,
     onFailed,
+    originNonce,
     requestId,
     status,
-    statusResponse?.data?.txId,
+    txId,
   ]);
 
   useEffect(() => {

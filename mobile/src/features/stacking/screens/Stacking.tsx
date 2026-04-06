@@ -318,24 +318,13 @@ export function StackingScreen() {
       setSponsoredApprovalNextNonce(
         originNonce != null ? originNonce + 1 : undefined,
       );
-      showMessage({
-        message: "Approval confirmed",
-        description: "You can now continue to stack your STX.",
-        type: "success",
-      });
-
-      if (pendingAmount !== undefined && pendingAmount > 0) {
-        setActiveFeeFlow("delegate");
-        requestAnimationFrame(() => {
-          delegateSheetRef.current?.present();
-        });
-      }
     },
     onFailed: () => {
       setSponsoredApprovalRequestId(null);
       setHasBroadcastedSponsoredApproval(false);
       setSponsoredApprovalNextNonce(undefined);
       setActiveFeeFlow(null);
+      delegateSheetRef.current?.dismiss();
       showMessage({
         message: "Approval failed",
         description:
@@ -348,6 +337,7 @@ export function StackingScreen() {
       setHasBroadcastedSponsoredApproval(false);
       setSponsoredApprovalNextNonce(undefined);
       setActiveFeeFlow(null);
+      delegateSheetRef.current?.dismiss();
       showMessage({
         message: "Approval status unavailable",
         description:
@@ -467,6 +457,9 @@ export function StackingScreen() {
 
       setSponsoredApprovalRequestId(requestId);
       setHasBroadcastedSponsoredApproval(false);
+      if (pendingAmount !== undefined && pendingAmount > 0) {
+        pendingSheetTransitionRef.current = "delegate";
+      }
       approvalSheetRef.current?.dismiss();
       showMessage({
         message: "Approval queued",
@@ -500,7 +493,11 @@ export function StackingScreen() {
 
     try {
       const amountMicroStx = Math.floor(totalStackingAmount * MICRO_STX);
-      await delegateStxSponsored(amountMicroStx, feeMicroStx, sponsoredApprovalNextNonce);
+      await delegateStxSponsored(
+        amountMicroStx,
+        feeMicroStx,
+        sponsoredApprovalNextNonce,
+      );
 
       delegateSheetRef.current?.dismiss();
       setActiveFeeFlow(null);

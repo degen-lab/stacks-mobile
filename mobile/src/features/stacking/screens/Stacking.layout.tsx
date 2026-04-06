@@ -12,7 +12,6 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { WarningLabel } from "@/components/warning-label";
 import { StackingHistoryCard } from "../components/stacking-history-card";
 import type { UserStackingDataRow } from "@/api/stacking";
-import { TransactionStatusSheet } from "@/features/dual-stacking/components/layout/modals/transaction-status-sheet";
 
 interface PoolState {
   availableStxBalance: number;
@@ -327,21 +326,13 @@ export function StackingScreenLayout({
         onConfirm={onConfirmDelegate}
         onSponsoredConfirm={onConfirmSponsoredDelegate}
         isProcessing={isProcessing}
-        isSponsoredProcessing={isSponsoredSubmitting}
+        isSponsoredProcessing={
+          isSponsoredSubmitting || isSponsoredApprovalBroadcasting
+        }
+        isWaitingForSponsoredApproval={isSponsoredApprovalBroadcasting}
+        sponsoredApprovalStatusCopy={sponsoredApprovalLoadingCopy}
         inPreparePhase={stackingInfo.inPreparePhase}
         timeTillPreparePhase={stackingInfo.timeTillPreparePhase}
-      />
-
-      <TransactionStatusSheet
-        open={isSponsoredApprovalBroadcasting}
-        isLoading={true}
-        loading={sponsoredApprovalLoadingCopy}
-        success={{
-          title: "Approval broadcasted",
-          message: "You can now continue to stack your STX.",
-        }}
-        dismissibleWhenLoading={false}
-        enableDynamicSizing={true}
       />
 
       <TransactionLoadingOverlay
