@@ -5,6 +5,7 @@ import { Button, View } from "@/components/ui";
 
 type TransactionFundingActionsProps = {
   sponsoredLabel?: string;
+  adsRequired?: number;
   walletLabel: string;
   onPressSponsored?: () => void;
   onPressWallet: () => void;
@@ -15,7 +16,8 @@ type TransactionFundingActionsProps = {
 };
 
 export function TransactionFundingActions({
-  sponsoredLabel = "Watch an ad",
+  sponsoredLabel,
+  adsRequired,
   walletLabel,
   onPressSponsored,
   onPressWallet,
@@ -24,6 +26,11 @@ export function TransactionFundingActions({
   sponsoredLoading = false,
   walletLoading = false,
 }: TransactionFundingActionsProps) {
+  const derivedSponsoredLabel =
+    sponsoredLabel ??
+    (adsRequired && adsRequired > 1
+      ? `Watch ${adsRequired} ads`
+      : "Watch an ad");
   const showSponsored = typeof onPressSponsored === "function";
 
   return (
@@ -31,7 +38,7 @@ export function TransactionFundingActions({
       {showSponsored ? (
         <>
           <Button
-            label={sponsoredLabel}
+            label={derivedSponsoredLabel}
             onPress={onPressSponsored}
             disabled={sponsoredDisabled || walletLoading}
             loading={sponsoredLoading}

@@ -92,5 +92,7 @@ export type GetSponsoredTransactionStatusResponse = {
     blockingRequestId?: number | null;
     blockingTxId?: string | null;
     originNonce?: number | null;
+    adsRequired: number;
+    adsWatchedCount: number;
   };
 };

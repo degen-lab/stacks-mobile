@@ -69,6 +69,7 @@ describe('TransactionService', () => {
     submission.id = 19;
 
     entityManagerMock.findOne.mockResolvedValue(user);
+    entityManagerMock.find.mockResolvedValue([]);
     entityManagerMock.save.mockResolvedValue(submission);
     transactionClientMock.getTournamentId.mockResolvedValue(44);
     submissionDomainServiceMock.createSubmission.mockReturnValue(submission);
@@ -109,6 +110,7 @@ describe('TransactionService', () => {
     sponsoredTransaction.expiresAt = new Date('2026-03-12T10:15:00.000Z');
 
     entityManagerMock.findOne.mockResolvedValue(user);
+    entityManagerMock.find.mockResolvedValue([]);
     entityManagerMock.save
       .mockResolvedValueOnce(submission)
       .mockResolvedValueOnce(sponsoredTransaction);
@@ -161,7 +163,8 @@ describe('TransactionService', () => {
     sponsoredTransaction.user = user;
     sponsoredTransaction.originAddress = 'STORIGIN';
     sponsoredTransaction.status = TransactionStatus.NotBroadcasted;
-    sponsoredTransaction.adWatched = false;
+    sponsoredTransaction.adsRequired = 1;
+    sponsoredTransaction.adsWatchedCount = 0;
     sponsoredTransaction.expiresAt = new Date(Date.now() + 60_000);
 
     entityManagerMock.findOne.mockResolvedValue(sponsoredTransaction);
@@ -197,7 +200,8 @@ describe('TransactionService', () => {
     sponsoredTransaction.user = user;
     sponsoredTransaction.submission = submission;
     sponsoredTransaction.status = TransactionStatus.NotBroadcasted;
-    sponsoredTransaction.adWatched = false;
+    sponsoredTransaction.adsRequired = 1;
+    sponsoredTransaction.adsWatchedCount = 0;
     sponsoredTransaction.expiresAt = new Date(Date.now() + 60_000);
 
     entityManagerMock.findOne.mockResolvedValue(sponsoredTransaction);
@@ -207,7 +211,7 @@ describe('TransactionService', () => {
 
     await service.markSponsoredTransactionAdWatched(user.id, String(23));
 
-    expect(sponsoredTransaction.adWatched).toBe(true);
+    expect(sponsoredTransaction.adsWatchedCount).toBe(1);
     expect(entityManagerMock.save).toHaveBeenCalledWith(sponsoredTransaction);
   });
 
@@ -224,7 +228,8 @@ describe('TransactionService', () => {
     sponsoredTransaction.user = user;
     sponsoredTransaction.submission = submission;
     sponsoredTransaction.status = TransactionStatus.NotBroadcasted;
-    sponsoredTransaction.adWatched = false;
+    sponsoredTransaction.adsRequired = 1;
+    sponsoredTransaction.adsWatchedCount = 0;
     sponsoredTransaction.serializedTx = 'signed-sponsored-submission';
     sponsoredTransaction.expiresAt = new Date(Date.now() + 60_000);
 
@@ -235,7 +240,7 @@ describe('TransactionService', () => {
 
     await service.markSponsoredTransactionAdWatched(user.id, String(24));
 
-    expect(sponsoredTransaction.adWatched).toBe(true);
+    expect(sponsoredTransaction.adsWatchedCount).toBe(1);
     expect(sponsoredTransaction.status).toBe(TransactionStatus.Processing);
     expect(submission.transactionStatus).toBe(TransactionStatus.Processing);
   });

@@ -1,4 +1,7 @@
-import { SubmissionType, TransactionStatus } from '../../../src/domain/entities/enums';
+import {
+  SubmissionType,
+  TransactionStatus,
+} from '../../../src/domain/entities/enums';
 import { Submission } from '../../../src/domain/entities/submission';
 import { User } from '../../../src/domain/entities/user';
 import { DailySponsoredRaffleSubmissionNumberMetError } from '../../../src/domain/errors/submissionError';

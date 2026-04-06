@@ -14,6 +14,7 @@ import {
   Pc,
   PostConditionMode,
   principalCV,
+  serializePayload,
   serializeTransaction,
   sponsorTransaction,
   tupleCV,
@@ -30,6 +31,7 @@ import {
   GAME_CONTRACT_ADDRESS,
   GOLD_TIER_USTX_BONUS,
   SEND_REWARDS_CONTRACT_ADDRESS,
+  SPONSORED_FEE_MAX_MICRO_STX,
   STACKS_NETWORK,
 } from '../../shared/constants';
 import { ContractFunctions } from '../helpers/types';
@@ -316,11 +318,45 @@ export class TransactionClient implements TransactionClientPort {
     return privateKey;
   }
 
+  private async estimateSponsorFee(serializedTx: string): Promise<number> {
+    // TODO: when AdMob Reporting API metrics are available, derive adsRequired dynamically:
+    //   perAdBudgetUsd = rewardedAdEcpmUsd / 1000
+    //   perAdSponsorBudgetMicroStx = floor((perAdBudgetUsd / stxPriceUsd) * 1_000_000)
+    //   adsRequired = ceil(sponsorFeeMicroStx / perAdSponsorBudgetMicroStx)
+    try {
+      const transaction = deserializeTransaction(serializedTx);
+      const payloadBytes = serializePayload(transaction.payload);
+      const url = `${this.network.client.baseUrl}/v2/fees/transaction`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transaction_payload: payloadBytes.toString(),
+          estimated_len: payloadBytes.length + 180,
+        }),
+      });
+      if (!response.ok) {
+        logger.warn({
+          msg: 'Fee estimation failed, using fallback',
+          status: response.status,
+        });
+        return SPONSORED_FEE_MAX_MICRO_STX;
+      }
+      const data = await response.json();
+      const fee = data.estimations?.[0]?.fee ?? SPONSORED_FEE_MAX_MICRO_STX;
+      return Math.min(fee, SPONSORED_FEE_MAX_MICRO_STX);
+    } catch (error) {
+      logger.warn({ msg: 'Fee estimation error, using fallback', err: error });
+      return SPONSORED_FEE_MAX_MICRO_STX;
+    }
+  }
+
   /**
    * Broadcast a transaction with automatic sponsor nonce management
    */
   async broadcastSponsoredTransaction(serializedTx: string): Promise<string> {
     const transaction = deserializeTransaction(serializedTx);
+    const fee = await this.estimateSponsorFee(serializedTx);
 
     // Get next nonce (sequential increment)
     const sponsorNonce = await this.getNextSponsorNonce();
@@ -329,6 +365,7 @@ export class TransactionClient implements TransactionClientPort {
       msg: 'Sponsoring transaction with sequential nonce',
       network: this.network.client.baseUrl,
       sponsorNonce,
+      fee,
     });
 
     const sponsoredTx = await sponsorTransaction({
@@ -336,7 +373,7 @@ export class TransactionClient implements TransactionClientPort {
       sponsorPrivateKey: ADMIN_PRIVATE_KEY,
       sponsorNonce: sponsorNonce,
       network: this.network,
-      fee: 1000, // 0.001 STX = 1000 microSTX
+      fee,
     });
 
     logger.info({
@@ -369,14 +406,17 @@ export class TransactionClient implements TransactionClientPort {
       );
     }
 
-    // If transaction was rejected, handle BadNonce by refetching nonce
+    // Retry common nonce conflicts once.
     if (response.error) {
       const errorReason = response.reason || 'Unknown reason';
 
-      // If BadNonce error, refetch nonce from network and retry once
-      if (errorReason === 'BadNonce') {
+      // Refetch the nonce before retrying.
+      if (
+        errorReason === 'BadNonce' ||
+        errorReason === 'ConflictingNonceInMempool'
+      ) {
         logger.warn({
-          msg: 'BadNonce error detected, refetching nonce from network',
+          msg: 'Nonce error detected, refetching nonce from network',
           txid: response.txid,
           currentNonce: this.sponsorNonce,
           errorData: response.reason_data,
@@ -401,7 +441,7 @@ export class TransactionClient implements TransactionClientPort {
           sponsorPrivateKey: ADMIN_PRIVATE_KEY,
           sponsorNonce: fetchedNonce,
           network: this.network,
-          fee: 1000,
+          fee,
         });
 
         // Increment our tracking after successful sponsorship

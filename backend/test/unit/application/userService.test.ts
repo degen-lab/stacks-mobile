@@ -120,10 +120,19 @@ describe('User Service unit test', () => {
         Object.assign(new User(), {
           id: 1,
           submissions: [
-            makeSubmission(SubmissionType.Raffle, TransactionStatus.NotBroadcasted),
+            makeSubmission(
+              SubmissionType.Raffle,
+              TransactionStatus.NotBroadcasted,
+            ),
             makeSubmission(SubmissionType.Raffle, TransactionStatus.Processing),
-            makeSubmission(SubmissionType.WeeklyContest, TransactionStatus.Failed),
-            makeSubmission(SubmissionType.WeeklyContest, TransactionStatus.Success),
+            makeSubmission(
+              SubmissionType.WeeklyContest,
+              TransactionStatus.Failed,
+            ),
+            makeSubmission(
+              SubmissionType.WeeklyContest,
+              TransactionStatus.Success,
+            ),
           ],
         }),
       );

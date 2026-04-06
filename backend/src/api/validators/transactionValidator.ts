@@ -26,6 +26,7 @@ export const broadcastTxSchema = z.object({
 export const enqueueSponsoredTransactionSchema = z.object({
   requestId: z.number().int().positive(),
   serializedTx: z.string(),
+  dependsOnRequestId: z.number().int().positive().optional(),
 });
 
 export const createSponsoredTransactionSchema = z.object({

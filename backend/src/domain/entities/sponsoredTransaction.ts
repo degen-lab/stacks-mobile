@@ -41,8 +41,14 @@ export class SponsoredTransaction {
   })
   status: TransactionStatus;
 
-  @Column({ type: 'bool', default: false })
-  adWatched: boolean;
+  @Column({ type: 'int', default: 1 })
+  adsRequired: number;
+
+  @Column({ type: 'int', default: 0 })
+  adsWatchedCount: number;
+
+  @Column({ type: 'int', nullable: true })
+  dependsOnRequestId?: number | null;
 
   @Column({ type: 'text' })
   originAddress: string;

@@ -89,3 +89,12 @@ export class CannotDeleteSubmittedTransactionError extends BaseError {
     super(message);
   }
 }
+
+export class ConflictingNonceInMempoolError extends BaseError {
+  readonly name = 'ConflictingNonceInMempoolError';
+  readonly statusCode = 409;
+
+  constructor(message: string) {
+    super(message);
+  }
+}

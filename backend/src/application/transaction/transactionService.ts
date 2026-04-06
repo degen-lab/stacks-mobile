@@ -48,6 +48,8 @@ type SponsoredRequestStatusResult = {
   status: 'not_broadcasted' | 'processing' | 'pending' | 'success' | 'failed';
   txId?: string | null;
   originNonce?: number | null;
+  adsRequired: number;
+  adsWatchedCount: number;
 };
 
 const SPONSORED_TTL_MS = 15 * 60 * 1000;
@@ -224,6 +226,7 @@ export class TransactionService {
     userId: number,
     requestId: number,
     serializedTx: string,
+    dependsOnRequestId?: number,
   ): Promise<SponsoredTransaction> {
     const sponsoredRequest = await this.loadOwnedSponsoredRequest(
       requestId,
@@ -270,9 +273,22 @@ export class TransactionService {
       );
     }
 
+    if (dependsOnRequestId != null) {
+      const parent = await this.entityManager.findOne(SponsoredTransaction, {
+        where: { id: dependsOnRequestId, user: { id: userId } },
+      });
+      if (!parent) {
+        throw new SponsoredTransactionNotFoundError(
+          `Dependent sponsored transaction ${dependsOnRequestId} not found`,
+        );
+      }
+      sponsoredRequest.dependsOnRequestId = dependsOnRequestId;
+    }
+
     sponsoredRequest.serializedTx = serializedTx;
     const isReadyForBroadcast =
-      sponsoredRequest.adWatched || NODE_ENV !== 'production';
+      sponsoredRequest.adsWatchedCount >= sponsoredRequest.adsRequired ||
+      NODE_ENV !== 'production';
     sponsoredRequest.status = isReadyForBroadcast
       ? TransactionStatus.Processing
       : TransactionStatus.NotBroadcasted;
@@ -313,7 +329,7 @@ export class TransactionService {
 
     this.assertRequestNotExpired(sponsoredRequest);
 
-    if (sponsoredRequest.adWatched) {
+    if (sponsoredRequest.adsWatchedCount >= sponsoredRequest.adsRequired) {
       throw new AdAlreadyWatchedError(
         `Ad already watched for sponsored transaction ${requestId}`,
       );
@@ -324,13 +340,16 @@ export class TransactionService {
       );
     }
 
-    sponsoredRequest.adWatched = true;
-    if (sponsoredRequest.serializedTx) {
+    sponsoredRequest.adsWatchedCount += 1;
+    const adRequirementMet =
+      sponsoredRequest.adsWatchedCount >= sponsoredRequest.adsRequired;
+
+    if (adRequirementMet && sponsoredRequest.serializedTx) {
       sponsoredRequest.status = TransactionStatus.Processing;
     }
     await this.entityManager.save(sponsoredRequest);
 
-    if (sponsoredRequest.submission && sponsoredRequest.serializedTx) {
+    if (adRequirementMet && sponsoredRequest.serializedTx) {
       await this.markLinkedSubmissionProcessing(sponsoredRequest);
     }
   }
@@ -357,8 +376,6 @@ export class TransactionService {
 
   /**
    * Worker entry point. Refreshes already-broadcast pending rows, then sends queued rows in order.
-   * Per-origin gate: an origin with a Pending tx is skipped this cycle; unrelated origins proceed.
-   * At most one tx per origin is broadcast per cycle to prevent back-to-back origin-nonce conflicts.
    */
   async processSponsoredBroadcastQueue(): Promise<void> {
     logger.info({
@@ -398,12 +415,18 @@ export class TransactionService {
   }
 
   private async broadcastQueuedSponsoredTransactions(): Promise<void> {
-    // Origins that already have a Pending tx on-chain — skip those this cycle.
+    // Pending txs with a txId block unrelated broadcasts.
     const pendingTxs = await this.entityManager.find(SponsoredTransaction, {
       where: { status: TransactionStatus.Pending },
-      select: ['originAddress'],
+      select: ['id', 'originAddress', 'txId'],
     });
-    const blockedOrigins = new Set(pendingTxs.map((tx) => tx.originAddress));
+
+    const pendingOrigins = new Set(
+      pendingTxs.filter((tx) => tx.txId).map((tx) => tx.originAddress),
+    );
+    const pendingTxIds = new Set(
+      pendingTxs.filter((tx) => tx.txId).map((tx) => tx.id),
+    );
 
     const queuedTransactions = await this.entityManager.find(
       SponsoredTransaction,
@@ -415,10 +438,52 @@ export class TransactionService {
       },
     );
 
-    // One tx per origin per cycle — prevents back-to-back origin-nonce conflicts.
+    // Fail children whose parent already failed.
+    const dependentIds = queuedTransactions
+      .map((tx) => tx.dependsOnRequestId)
+      .filter((id): id is number => id != null);
+
+    if (dependentIds.length > 0) {
+      const failedParents = await this.entityManager.find(
+        SponsoredTransaction,
+        {
+          where: { id: In(dependentIds), status: TransactionStatus.Failed },
+          select: ['id'],
+        },
+      );
+      const failedParentIds = new Set(failedParents.map((p) => p.id));
+
+      for (const tx of queuedTransactions) {
+        if (
+          tx.dependsOnRequestId &&
+          failedParentIds.has(tx.dependsOnRequestId)
+        ) {
+          tx.status = TransactionStatus.Failed;
+          await this.entityManager.save(tx);
+          await this.syncLinkedSubmissionStatus(tx);
+          logger.warn({
+            msg: 'Cascading failure to child tx — parent failed',
+            requestId: tx.id,
+            dependsOnRequestId: tx.dependsOnRequestId,
+          });
+        }
+      }
+    }
+
+    const stillQueued = queuedTransactions.filter(
+      (tx) => tx.status === TransactionStatus.Processing,
+    );
+
+    const queuedIds = new Set(stillQueued.map((tx) => tx.id));
     const seenOrigins = new Set<string>();
-    const eligible = queuedTransactions.filter((tx) => {
-      if (blockedOrigins.has(tx.originAddress)) return false;
+    const eligible = stillQueued.filter((tx) => {
+      if (tx.dependsOnRequestId && queuedIds.has(tx.dependsOnRequestId))
+        return false;
+
+      if (pendingOrigins.has(tx.originAddress)) {
+        if (!tx.dependsOnRequestId) return false;
+        if (!pendingTxIds.has(tx.dependsOnRequestId)) return false;
+      }
       if (seenOrigins.has(tx.originAddress)) return false;
       seenOrigins.add(tx.originAddress);
       return true;
@@ -426,9 +491,9 @@ export class TransactionService {
 
     logger.info({
       msg: 'Broadcasting sponsored transactions',
-      queuedCount: queuedTransactions.length,
+      queuedCount: stillQueued.length,
       eligibleCount: eligible.length,
-      skippedOrigins: blockedOrigins.size,
+      skippedOrigins: pendingOrigins.size,
     });
 
     for (const queuedTransaction of eligible) {
@@ -584,7 +649,6 @@ export class TransactionService {
     sponsoredRequest.user = user;
     sponsoredRequest.originAddress = originAddress;
     sponsoredRequest.status = TransactionStatus.NotBroadcasted;
-    sponsoredRequest.adWatched = false;
     sponsoredRequest.expiresAt = new Date(Date.now() + SPONSORED_TTL_MS);
     return await this.entityManager.save(sponsoredRequest);
   }
@@ -642,6 +706,8 @@ export class TransactionService {
       status: this.getSponsoredRequestStatusName(sponsoredRequest.status),
       txId: sponsoredRequest.txId ?? null,
       originNonce,
+      adsRequired: sponsoredRequest.adsRequired,
+      adsWatchedCount: sponsoredRequest.adsWatchedCount,
     };
   }
 

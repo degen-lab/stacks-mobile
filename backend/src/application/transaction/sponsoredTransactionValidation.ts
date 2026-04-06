@@ -172,7 +172,13 @@ export function parseSponsoredTransaction(
           'Swap transaction sender does not match the DefiOperation sender address',
         );
       }
-      return { kind: 'swap', originAddress, originNonce, contractId, functionName };
+      return {
+        kind: 'swap',
+        originAddress,
+        originNonce,
+        contractId,
+        functionName,
+      };
     }
 
     const supportedCalls = SUPPORTED_CONTRACT_CALLS[STACKS_NETWORK] ?? {};

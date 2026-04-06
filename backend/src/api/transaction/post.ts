@@ -193,6 +193,7 @@ export default function transactionPostRoutes(
             user.id,
             body.data.requestId,
             body.data.serializedTx,
+            body.data.dependsOnRequestId,
           );
 
         return reply.status(200).send({
