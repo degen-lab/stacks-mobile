@@ -169,6 +169,7 @@ describe('TransactionService', () => {
     jest.mocked(parseSponsoredTransaction).mockReturnValue({
       kind: 'contract_call',
       originAddress: 'STORIGIN',
+      originNonce: 0,
       contractId: 'STTEST.contract',
       functionName: 'enroll',
     });
