@@ -282,6 +282,11 @@ export class TransactionService {
           `Dependent sponsored transaction ${dependsOnRequestId} not found`,
         );
       }
+      if (parent.originAddress !== sponsoredRequest.originAddress) {
+        throw new UnsupportedSponsoredTransactionError(
+          'Dependent sponsored transaction must use the same origin address',
+        );
+      }
       sponsoredRequest.dependsOnRequestId = dependsOnRequestId;
     }
 

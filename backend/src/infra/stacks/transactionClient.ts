@@ -1,4 +1,6 @@
 import {
+  addressFromVersionHash,
+  addressToString,
   broadcastTransaction,
   bufferCV,
   BufferCV,
@@ -326,12 +328,13 @@ export class TransactionClient implements TransactionClientPort {
     try {
       const transaction = deserializeTransaction(serializedTx);
       const payloadBytes = serializePayload(transaction.payload);
+      const payloadHex = Buffer.from(payloadBytes).toString('hex');
       const url = `${this.network.client.baseUrl}/v2/fees/transaction`;
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          transaction_payload: payloadBytes.toString(),
+          transaction_payload: payloadHex,
           estimated_len: payloadBytes.length + 180,
         }),
       });
@@ -355,6 +358,8 @@ export class TransactionClient implements TransactionClientPort {
    * Broadcast a transaction with automatic sponsor nonce management
    */
   async broadcastSponsoredTransaction(serializedTx: string): Promise<string> {
+    await this.assertOriginNonceIsCurrent(serializedTx);
+
     const transaction = deserializeTransaction(serializedTx);
     const fee = await this.estimateSponsorFee(serializedTx);
 
@@ -506,6 +511,55 @@ export class TransactionClient implements TransactionClientPort {
     });
 
     return response.txid;
+  }
+
+  private async assertOriginNonceIsCurrent(
+    serializedTx: string,
+  ): Promise<void> {
+    const transaction = deserializeTransaction(serializedTx);
+    const spendingCondition = transaction.auth.spendingCondition;
+
+    if (!spendingCondition?.signer) {
+      return;
+    }
+
+    const originAddress = addressToString(
+      addressFromVersionHash(
+        this.network.addressVersion.singleSig,
+        spendingCondition.signer,
+      ),
+    );
+    const signedOriginNonce = Number(spendingCondition.nonce);
+
+    let networkOriginNonce: number;
+    try {
+      networkOriginNonce = Number(
+        await fetchNonce({
+          address: originAddress,
+          network: this.network,
+        }),
+      );
+    } catch (error) {
+      logger.warn({
+        msg: 'Unable to verify origin nonce before sponsored broadcast',
+        err: error,
+        originAddress,
+        signedOriginNonce,
+      });
+      return;
+    }
+
+    if (networkOriginNonce > signedOriginNonce) {
+      logger.warn({
+        msg: 'Refusing sponsored broadcast with stale origin nonce',
+        originAddress,
+        signedOriginNonce,
+        networkOriginNonce,
+      });
+      throw new Error(
+        `Signed transaction nonce ${signedOriginNonce} is stale for ${originAddress}; network expects ${networkOriginNonce}`,
+      );
+    }
   }
 
   async createTournamentUnsignedTransaction(

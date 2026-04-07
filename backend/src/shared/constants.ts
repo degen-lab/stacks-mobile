@@ -102,7 +102,7 @@ export const REDIS_PASSWORD: string = configParser(
 export const MAX_FRAUD_ATTEMPTS: number = 10;
 
 export const SPONSORED_FEE_MAX_MICRO_STX: number = parseInt(
-  configParser('SPONSORED_FEE_MAX_MICRO_STX', '50000'),
+  configParser('SPONSORED_FEE_MAX_MICRO_STX', '10000'),
 );
 
 export const SCORE_MULTIPLIER: number = 10;
