@@ -769,7 +769,7 @@ export class TransactionService {
       sponsoredRequest.status =
         txStatus === 'success'
           ? TransactionStatus.Success
-          : txStatus === 'pending'
+          : txStatus === 'pending' || txStatus === 'dropped_replace_by_fee'
             ? TransactionStatus.Pending
             : TransactionStatus.Failed;
 
