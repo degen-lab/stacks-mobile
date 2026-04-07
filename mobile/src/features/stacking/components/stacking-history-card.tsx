@@ -56,8 +56,8 @@ function DelegationCard({ delegation, index, stxPrice }: CardProps) {
     delegation.rewardedStxAmount == null
       ? null
       : Number(delegation.rewardedStxAmount);
-  const stackedUsd =
-    stxPrice != null ? Number(delegation.amountOfStxStacked) * stxPrice : null;
+  const actualStacked = Math.max(0, Number(delegation.amountOfStxStacked) - 1);
+  const stackedUsd = stxPrice != null ? actualStacked * stxPrice : null;
   const rewardUsd =
     stxReward != null && stxPrice != null ? stxReward * stxPrice : null;
 
@@ -127,7 +127,7 @@ function DelegationCard({ delegation, index, stxPrice }: CardProps) {
             Delegated
           </Text>
           <Text className="text-sm font-instrument-sans-medium text-primary">
-            {fmt(delegation.amountOfStxStacked)} STX
+            {fmt(actualStacked)} STX
             {stackedUsd != null ? ` • $${fmt(stackedUsd)}` : ""}
           </Text>
         </View>
@@ -196,7 +196,7 @@ export function StackingHistoryCard({
   }
 
   const totalStacked = delegations.reduce(
-    (acc, r) => acc + Number(r.amountOfStxStacked),
+    (acc, r) => acc + Math.max(0, Number(r.amountOfStxStacked) - 1),
     0,
   );
   const totalRewards = delegations.reduce(

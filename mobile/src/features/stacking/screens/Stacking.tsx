@@ -31,6 +31,8 @@ import { useFastPoolActions } from "../hooks/use-fast-pool-actions";
 import { useSponsoredRequestFlow } from "../hooks/use-sponsored-request-flow";
 import { getFastPoolPositionState } from "../utils/fast-pool-position";
 import { getStackingAmountState } from "../utils/stacking-amounts";
+import { CONTRACTS } from "@/lib/stacks/contracts";
+import { MICRO_STX } from "@/lib/format/currency";
 
 export function StackingScreen() {
   const { stackingInfo, daysPerCycle, calculate } = useStacking();
@@ -98,11 +100,19 @@ export function StackingScreen() {
       getFastPoolPositionState({
         currentLockTx,
         poolContract,
+        poxContract: CONTRACTS[selectedNetwork].pox,
         isStacking,
         lockedBalance,
         userStackingData,
       }),
-    [currentLockTx, isStacking, lockedBalance, poolContract, userStackingData],
+    [
+      currentLockTx,
+      isStacking,
+      selectedNetwork,
+      lockedBalance,
+      poolContract,
+      userStackingData,
+    ],
   );
 
   const saveStackingData = useSaveStackingDataMutation();

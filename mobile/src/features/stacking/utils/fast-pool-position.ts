@@ -12,25 +12,34 @@ const getString = (
   return typeof candidate === "string" ? candidate : undefined;
 };
 
-export function isFastPoolLockTransaction(
+function isContractCall(
   value: unknown,
-  poolContract: string,
+  contractId: string,
+  functionName: string,
 ): boolean {
   if (!isRecord(value)) return false;
-
-  const contractCall = value.contract_call;
-  const contractCallRecord = isRecord(contractCall) ? contractCall : null;
+  const contractCallRecord = isRecord(value.contract_call)
+    ? value.contract_call
+    : null;
   if (!contractCallRecord) return false;
-
   return (
-    getString(contractCallRecord, "contract_id") === poolContract &&
-    getString(contractCallRecord, "function_name") === "delegate-stx"
+    getString(contractCallRecord, "contract_id") === contractId &&
+    getString(contractCallRecord, "function_name") === functionName
   );
 }
+
+export const isFastPoolLockTransaction = (
+  value: unknown,
+  poolContract: string,
+) => isContractCall(value, poolContract, "delegate-stx");
+
+const isRevokedDelegationTransaction = (value: unknown, poxContract: string) =>
+  isContractCall(value, poxContract, "revoke-delegate-stx");
 
 type FastPoolPositionStateArgs = {
   currentLockTx: unknown;
   poolContract: string;
+  poxContract: string;
   isStacking: boolean;
   lockedBalance: number;
   userStackingData: UserStackingDataRow[];
@@ -39,6 +48,7 @@ type FastPoolPositionStateArgs = {
 export function getFastPoolPositionState({
   currentLockTx,
   poolContract,
+  poxContract,
   isStacking,
   lockedBalance,
   userStackingData,
@@ -51,7 +61,11 @@ export function getFastPoolPositionState({
     currentLockTx,
     poolContract,
   );
-  const isUnlocking = !isStacking && lockedBalance > 0 && currentLockIsFastPool;
+  const isUnlocking =
+    !isStacking &&
+    lockedBalance > 0 &&
+    (currentLockIsFastPool ||
+      isRevokedDelegationTransaction(currentLockTx, poxContract));
 
   if (!isStacking && !isUnlocking) {
     return {

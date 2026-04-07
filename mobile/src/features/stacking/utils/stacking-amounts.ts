@@ -38,13 +38,13 @@ export function getStackingAmountState({
   const currentLockedAmountMicroStx = toClampedUstx(
     activePosition?.lockedAmount ?? 0,
   );
-  const desiredLockedAmountMicroStx =
+  const pendingAmountMicroStx =
     pendingAmount !== undefined
       ? toClampedUstx(pendingAmount)
       : currentLockedAmountMicroStx;
   const delegateAmountMicroStx =
-    desiredLockedAmountMicroStx > 0
-      ? desiredLockedAmountMicroStx + STACKING_BUFFER_MICRO_STX
+    pendingAmountMicroStx > 0
+      ? pendingAmountMicroStx + STACKING_BUFFER_MICRO_STX
       : 0;
   const delegateAmountStx = fromUstxToStx(delegateAmountMicroStx);
   const isUnlocking = activePosition?.status === "UNLOCKING";
@@ -89,12 +89,12 @@ export function getStackingAmountState({
       : minimumRequiredLockedAmountStx;
   const effectiveLockedAmountMicroStx =
     pendingAmount !== undefined
-      ? Math.min(desiredLockedAmountMicroStx, maxLockableAmountMicroStx)
+      ? Math.min(delegateAmountMicroStx, maxLockableAmountMicroStx)
       : undefined;
   const isDecreaseBlocked = Boolean(
     activePosition &&
     pendingAmount !== undefined &&
-    desiredLockedAmountMicroStx < currentLockedAmountMicroStx,
+    delegateAmountMicroStx < currentLockedAmountMicroStx,
   );
   const hasEffectiveIncrease = Boolean(
     activePosition &&
@@ -119,7 +119,7 @@ export function getStackingAmountState({
     : isAlreadyStackedForNextCycle
       ? requiresAdditionalFundsForIncrease
         ? `To increase for next cycle, you need ${nextCycleMinimumLockedAmountLabel} STX locked, which requires ${nextCycleMinimumRequiredBalanceLabel} STX total so 1 STX stays unlocked.`
-        : `Enter at least ${nextCycleMinimumLockedAmountLabel} STX for next cycle.`
+        : ``
       : undefined;
   const hasSufficientFunds =
     pendingAmount !== undefined && pendingAmount > 0

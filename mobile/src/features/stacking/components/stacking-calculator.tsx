@@ -122,16 +122,9 @@ export function StackingCalculator({
   const currentTotalEarningsUsd = currentTotalEarningsStx * price;
 
   const earningsDeltaUsd = totalEarningsUsd - currentTotalEarningsUsd;
-  const availableLabel = isUnlocking
-    ? "Max lockable"
-    : activePosition
-      ? "Available to add"
-      : "Max lockable";
-  const availableLabelAmount = isUnlocking
-    ? maxLockableAmount
-    : activePosition
-      ? availableToAddAmount
-      : maxLockableAmount;
+  const availableLabel = isUnlocking ? "Max lockable" : "Available to add";
+  const availableLabelAmount =
+    activePosition && !isUnlocking ? availableToAddAmount : maxLockableAmount;
   const placeholderTextColor = isDark
     ? colors.charcoal[500]
     : colors.neutral[400];
@@ -166,13 +159,13 @@ export function StackingCalculator({
       {/* Amount Input */}
       <View className="mb-3">
         <Text className="font-matter text-xl text-primary">
-          {isUnlocking
-            ? "Next cycle amount"
-            : activePosition
-              ? inputAmount === activePosition.lockedAmount
-                ? "Your stacking amount"
+          {activePosition
+            ? inputAmount === activePosition.lockedAmount
+              ? "Your stacking amount"
+              : isUnlocking
+                ? "Set next cycle amount"
                 : "New stacking amount"
-              : "Stacking amount"}
+            : "Stacking amount"}
         </Text>
       </View>
       <View className="mb-4 rounded-2xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-primary">

@@ -14,6 +14,7 @@ import { StackingHistoryCard } from "../components/stacking-history-card";
 import type { UserStackingDataRow } from "@/api/stacking";
 import type { StackingPosition } from "../types";
 import { formatLockedUntilLabel } from "@/lib/utils/time";
+import { formatMicroStx, fromStxToUstx } from "@/lib/format/currency";
 
 interface PoolState {
   /** Fast Pool already allowed on PoX — user skips approval sheet. */
@@ -216,16 +217,13 @@ export function StackingScreenLayout({
     isLoadingPool,
   ]);
 
-  const unlockingWarningLabel =
-    isUnlocking && activePosition
-      ? stackingInfo.nextCycleStart
-        ? `Your ${activePosition.lockedAmount.toLocaleString(undefined, {
-            maximumFractionDigits: 6,
-          })} STX is locked until ${formatLockedUntilLabel(stackingInfo.nextCycleStart)}.`
-        : `Your ${activePosition.lockedAmount.toLocaleString(undefined, {
-            maximumFractionDigits: 6,
-          })} STX is locked until this cycle ends.`
-      : "";
+  const unlockingWarningLabel = useMemo(() => {
+    if (!isUnlocking || !activePosition) return "";
+    const amount = formatMicroStx(fromStxToUstx(activePosition.lockedAmount));
+    return stackingInfo.nextCycleStart
+      ? `Your ${amount} STX unlocks around ${formatLockedUntilLabel(stackingInfo.nextCycleStart)}.`
+      : `Your ${amount} STX unlocks at the end of this cycle.`;
+  }, [isUnlocking, activePosition, stackingInfo.nextCycleStart]);
 
   const getCtaLabel = () => {
     if (isSponsoredApprovalBroadcasting) return "Broadcasting approval...";
@@ -322,7 +320,9 @@ export function StackingScreenLayout({
 
             {blockedStackingReason && (
               <View className="mb-4">
-                {isDecreaseBlocked && onLeavePool ? (
+                {isDecreaseBlocked && activePosition?.status === "UNLOCKING" ? (
+                  <WarningLabel label="Fast Pool only supports increasing. To decrease amount, wait for your funds to unlock." />
+                ) : isDecreaseBlocked && onLeavePool ? (
                   <WarningLabel label="Fast Pool only supports increasing. To decrease amount ">
                     <Text
                       className="font-instrument-sans text-sm underline"

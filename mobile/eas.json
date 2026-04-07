@@ -21,7 +21,7 @@
       }
     },
     "staging": {
-      "distribution": "internal",
+      "distribution": "store",
       "channel": "staging",
       "environment": "preview",
       "android": {

@@ -37,6 +37,11 @@ const FAQ_ITEMS: readonly FaqHelpItem[] = [
     title: "What happens if I revoke?",
     body: "If you revoke delegation, your STX does not unlock instantly. It becomes available after the current locked cycle ends.",
   },
+  {
+    id: "keep-stx-for-fees",
+    title: "Why should I keep some STX unlocked?",
+    body: "Always keep at least 1 STX unlocked in your wallet. You need unlocked STX to pay transaction fees — including the fee to revoke your delegation and unlock your funds when the time comes.",
+  },
 ] as const;
 
 export function StackingGuideModal({ modalRef }: Props) {

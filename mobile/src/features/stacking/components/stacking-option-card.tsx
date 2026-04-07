@@ -70,7 +70,7 @@ export function StackingOptionCard({
                         : "text-green-600"
                     }`}
                   >
-                    {isUnlocking ? "Cycle locked" : "Active"}
+                    {isUnlocking ? "Locked" : "Active"}
                   </Text>
                 </View>
               )}
