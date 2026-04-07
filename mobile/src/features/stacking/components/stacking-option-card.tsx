@@ -16,6 +16,7 @@ type Props = {
   activePosition?: StackingPosition;
   price?: number;
   timeTillRewardPhase?: string;
+  cycleEndsInLabel?: string;
 };
 
 export function StackingOptionCard({
@@ -26,22 +27,19 @@ export function StackingOptionCard({
   registrationStatus = "open",
   registrationClosesIn,
   lockingTime = "2-week cycles",
-  minimumStx = 41,
+  minimumStx = 40,
   activePosition,
   price = 0,
   timeTillRewardPhase,
+  cycleEndsInLabel,
 }: Props) {
   const isActive = !!activePosition;
   const displayApy = Number((apy * 100).toFixed(1));
+  const isUnlocking = activePosition?.status === "UNLOCKING";
 
   const usdValue = activePosition
     ? (activePosition.lockedAmount * price).toFixed(2)
     : "0.00";
-
-  // Unlock ETA is only relevant when the user has revoked but funds are still locked until the current cycle settles.
-  // TODO: derive this from delegation status + next cycle end timestamp (e.g., nextUnlockDays or cycleEnd + ~1 day buffer).
-  const isRevoking = activePosition?.status === "UNLOCKING";
-  const unlocksCopy = `${activePosition?.nextUnlockDays ?? "~X"} days`;
 
   return (
     <Pressable
@@ -58,9 +56,21 @@ export function StackingOptionCard({
             <View className="flex-row items-center gap-2 mb-1">
               <Text className="font-matter text-lg text-primary">{title}</Text>
               {isActive && (
-                <View className="rounded-full bg-green-500/10 px-2 py-1">
-                  <Text className="text-[10px] font-instrument-sans-semibold text-green-600 uppercase tracking-wide">
-                    Active
+                <View
+                  className={`rounded-full px-2 py-1 ${
+                    isUnlocking
+                      ? "bg-feedback-yellow-100 dark:bg-[#3A3214]"
+                      : "bg-green-500/10"
+                  }`}
+                >
+                  <Text
+                    className={`text-[10px] font-instrument-sans-semibold uppercase tracking-wide ${
+                      isUnlocking
+                        ? "text-[#A99100] dark:text-[#FCE7A0]"
+                        : "text-green-600"
+                    }`}
+                  >
+                    {isUnlocking ? "Cycle locked" : "Active"}
                   </Text>
                 </View>
               )}
@@ -92,21 +102,22 @@ export function StackingOptionCard({
 
       {isActive && activePosition ? (
         <View className="gap-3 pt-4 mt-4 border-t border-surface-secondary/40">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-sm font-instrument-sans text-secondary">
-              Rewards phase starts in
-            </Text>
-            <Text className="text-sm font-matter text-primary">
-              {timeTillRewardPhase || "~X days"}
-            </Text>
-          </View>
-          {isRevoking && (
+          {isUnlocking ? (
             <View className="flex-row items-center justify-between">
               <Text className="text-sm font-instrument-sans text-secondary">
-                Funds unlock in
+                Cycle ends in
               </Text>
               <Text className="text-sm font-matter text-primary">
-                {unlocksCopy}
+                {cycleEndsInLabel ?? "—"}
+              </Text>
+            </View>
+          ) : (
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-instrument-sans text-secondary">
+                Rewards phase starts in
+              </Text>
+              <Text className="text-sm font-matter text-primary">
+                {timeTillRewardPhase || "~X days"}
               </Text>
             </View>
           )}

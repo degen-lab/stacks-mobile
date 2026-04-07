@@ -31,7 +31,7 @@ export function useStacking() {
       currentCycle: poxInfo?.current_cycle.id ?? 0,
       apy: DEFAULT_STACKING_APY,
       price: stxMarketData?.usd ?? 0,
-      nextCycleStart: nextCycleDate ?? new Date(),
+      nextCycleStart: nextCycleDate,
       timeTillNextCycle,
       nextRewardPhaseDate,
       timeTillRewardPhase,

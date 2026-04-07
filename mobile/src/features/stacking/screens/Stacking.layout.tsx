@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { Button, Text } from "@/components/ui";
 import { StackingOptionCard } from "../components/stacking-option-card";
@@ -12,26 +12,24 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { WarningLabel } from "@/components/warning-label";
 import { StackingHistoryCard } from "../components/stacking-history-card";
 import type { UserStackingDataRow } from "@/api/stacking";
+import type { StackingPosition } from "../types";
+import { formatLockedUntilLabel } from "@/lib/utils/time";
 
 interface PoolState {
-  availableStxBalance: number;
-  activePosition?: {
-    lockedAmount: number;
-    lockDuration: number;
-    nextUnlockDays: number;
-    status: "ACTIVE";
-    poolName: string;
-    rewardedStxAmount?: number | null;
-  };
+  /** Fast Pool already allowed on PoX — user skips approval sheet. */
+  hasPoolApproval: boolean;
+  activePosition?: StackingPosition;
   stackingInfo: {
     apy: number;
     price: number;
     currentCycle: number;
+    nextCycleStart?: Date;
     timeTillNextCycle?: string;
     timeTillRewardPhase?: string;
     inPreparePhase?: boolean;
     timeTillPreparePhase?: string;
   };
+  daysPerCycle: number;
   isMainnet: boolean;
   selectedNetwork: string;
   isLoadingPool: boolean;
@@ -43,6 +41,16 @@ interface FormState {
   hasChanges: boolean;
   isValidUpdate: boolean;
   pendingAmount?: number;
+  delegateAmountStx: number;
+  delegateAmountMicroStx: number;
+  isDecreaseBlocked: boolean;
+  isAlreadyStackedForNextCycle: boolean;
+  requiresAdditionalFundsForIncrease: boolean;
+  blockedStackingReason?: string;
+  minimumRequiredLockedAmountLabel: string;
+  calculatorMinimumAmountStx: number;
+  maxLockableAmountStx: number;
+  availableToAddAmountStx: number;
   hasSufficientFunds: boolean;
   calculate: (amount: number) => {
     daily: number;
@@ -55,9 +63,11 @@ interface FormState {
 interface FeeState {
   selectedFeeOption: FeeOption;
   customFee: string;
-  isFeeValid: boolean;
+  isApprovalFeeValid: boolean;
+  isDelegateFeeValid: boolean;
   isLoadingFees: boolean;
-  feeMicroStx?: number;
+  approvalFeeMicroStx?: number;
+  delegateFeeMicroStx?: number;
 }
 
 interface UiState {
@@ -65,7 +75,12 @@ interface UiState {
   isProcessing: boolean;
   isSponsoredSubmitting: boolean;
   isSponsoredApprovalBroadcasting: boolean;
+  isSponsoredDelegateBroadcasting: boolean;
   sponsoredApprovalLoadingCopy: {
+    title: string;
+    message: string;
+  };
+  sponsoredDelegateLoadingCopy: {
     title: string;
     message: string;
   };
@@ -117,7 +132,7 @@ export function StackingScreenLayout({
   stackingHistory,
 }: StackingScreenLayoutProps) {
   const {
-    availableStxBalance,
+    hasPoolApproval,
     activePosition,
     stackingInfo,
     isMainnet,
@@ -125,12 +140,23 @@ export function StackingScreenLayout({
     isLoadingPool,
     poolContract,
     poxContract,
+    daysPerCycle,
   } = poolState;
 
   const {
     hasChanges,
     isValidUpdate,
     pendingAmount,
+    delegateAmountStx,
+    delegateAmountMicroStx,
+    isDecreaseBlocked,
+    isAlreadyStackedForNextCycle,
+    requiresAdditionalFundsForIncrease,
+    blockedStackingReason,
+    minimumRequiredLockedAmountLabel,
+    calculatorMinimumAmountStx,
+    maxLockableAmountStx,
+    availableToAddAmountStx,
     hasSufficientFunds,
     calculate,
   } = formState;
@@ -138,9 +164,11 @@ export function StackingScreenLayout({
   const {
     selectedFeeOption,
     customFee,
-    isFeeValid,
+    isApprovalFeeValid,
+    isDelegateFeeValid,
     isLoadingFees,
-    feeMicroStx,
+    approvalFeeMicroStx,
+    delegateFeeMicroStx,
   } = feeState;
 
   const {
@@ -148,7 +176,9 @@ export function StackingScreenLayout({
     isProcessing,
     isSponsoredSubmitting,
     isSponsoredApprovalBroadcasting,
+    isSponsoredDelegateBroadcasting,
     sponsoredApprovalLoadingCopy,
+    sponsoredDelegateLoadingCopy,
     isApprovalPending,
     isDelegatePending,
     approvalSheetRef,
@@ -170,15 +200,52 @@ export function StackingScreenLayout({
   } = actions;
   const { delegations, isLoading, isError } = stackingHistory;
   const registrationClosesIn = stackingInfo.timeTillRewardPhase || "~4 Days";
+  const isUnlocking = activePosition?.status === "UNLOCKING";
+
+  /** Block-based countdown when PoX is ready; otherwise wall-clock from next cycle date (same as banner). */
+  const cycleEndsInLabel = useMemo(() => {
+    const ttc = stackingInfo.timeTillNextCycle;
+    if (ttc && ttc !== "--") return ttc;
+    if (stackingInfo.nextCycleStart) {
+      return formatLockedUntilLabel(stackingInfo.nextCycleStart);
+    }
+    return isLoadingPool ? "…" : "—";
+  }, [
+    stackingInfo.timeTillNextCycle,
+    stackingInfo.nextCycleStart,
+    isLoadingPool,
+  ]);
+
+  const unlockingWarningLabel =
+    isUnlocking && activePosition
+      ? stackingInfo.nextCycleStart
+        ? `Your ${activePosition.lockedAmount.toLocaleString(undefined, {
+            maximumFractionDigits: 6,
+          })} STX is locked until ${formatLockedUntilLabel(stackingInfo.nextCycleStart)}.`
+        : `Your ${activePosition.lockedAmount.toLocaleString(undefined, {
+            maximumFractionDigits: 6,
+          })} STX is locked until this cycle ends.`
+      : "";
+
   const getCtaLabel = () => {
     if (isSponsoredApprovalBroadcasting) return "Broadcasting approval...";
+    if (isDecreaseBlocked) return "Cannot decrease locked amount";
+    if (requiresAdditionalFundsForIncrease) return "Add Funds";
+    if (isAlreadyStackedForNextCycle) return "Already stacked for next cycle";
     if (!hasSufficientFunds) return "Add Funds";
+    if (isUnlocking) {
+      if (!isValidUpdate)
+        return `Enter at least ${minimumRequiredLockedAmountLabel} STX`;
+      return "Set Next Cycle Amount";
+    }
     if (!activePosition) return "Start Stacking";
     if (!hasChanges) return "No changes";
 
     if (activePosition && pendingAmount !== undefined) {
-      if (pendingAmount < 0) return "Cannot decrease locked amount";
-      if (pendingAmount > 0) return "Increase Stacking";
+      if (pendingAmount < activePosition.lockedAmount)
+        return "Cannot decrease locked amount";
+      if (pendingAmount > activePosition.lockedAmount)
+        return "Increase Stacking";
     }
 
     if (!isValidUpdate) return "Cannot apply";
@@ -190,8 +257,12 @@ export function StackingScreenLayout({
     if (!isMainnet) return true;
     if (isSponsoredApprovalBroadcasting) return true;
     if (isProcessing || isLoadingPool) return true;
+    if (isDecreaseBlocked || isAlreadyStackedForNextCycle) {
+      return !requiresAdditionalFundsForIncrease;
+    }
 
     if (pendingAmount === undefined) return true;
+    if (isUnlocking) return !isValidUpdate;
     if (activePosition && pendingAmount <= 0) return true;
 
     if (!hasSufficientFunds) return false;
@@ -235,20 +306,47 @@ export function StackingScreenLayout({
                 registrationStatus="open"
                 registrationClosesIn={registrationClosesIn}
                 lockingTime="2-week cycles"
-                minimumStx={41}
+                minimumStx={40}
                 activePosition={activePosition}
                 price={stackingInfo.price}
                 timeTillRewardPhase={stackingInfo.timeTillRewardPhase}
+                cycleEndsInLabel={cycleEndsInLabel}
               />
             </View>
 
+            {isUnlocking && activePosition && (
+              <View className="mb-4">
+                <WarningLabel label={unlockingWarningLabel} />
+              </View>
+            )}
+
+            {blockedStackingReason && (
+              <View className="mb-4">
+                {isDecreaseBlocked && onLeavePool ? (
+                  <WarningLabel label="Fast Pool only supports increasing. To decrease amount ">
+                    <Text
+                      className="font-instrument-sans text-sm underline"
+                      onPress={onLeavePool}
+                    >
+                      leave pool
+                    </Text>
+                    {" and stack again after your funds unlock."}
+                  </WarningLabel>
+                ) : (
+                  <WarningLabel label={blockedStackingReason} />
+                )}
+              </View>
+            )}
+
             <View className="mb-4">
               <StackingCalculator
-                availableBalance={availableStxBalance}
                 activePosition={activePosition}
                 onUpdateChange={onUpdateChange}
                 calculate={calculate}
                 price={stackingInfo.price}
+                minimumAmount={calculatorMinimumAmountStx}
+                maxLockableAmount={maxLockableAmountStx}
+                availableToAddAmount={availableToAddAmountStx}
               />
             </View>
 
@@ -285,6 +383,7 @@ export function StackingScreenLayout({
         onClose={() => setShowPoolOptions(false)}
         activePosition={activePosition}
         onLeavePool={onLeavePool}
+        cycleEndsInLabel={cycleEndsInLabel}
       />
 
       <ApprovePoolSheet
@@ -297,22 +396,32 @@ export function StackingScreenLayout({
         onSelectFee={onSelectFee}
         customFee={customFee}
         onCustomFeeChange={onCustomFeeChange}
-        isFeeValid={isFeeValid}
+        isFeeValid={isApprovalFeeValid}
         isLoadingFees={isLoadingFees}
-        feeMicroStx={feeMicroStx}
+        feeMicroStx={approvalFeeMicroStx}
         stackingPrice={stackingInfo.price}
         onConfirm={onConfirmApproval}
         onSponsoredConfirm={onConfirmSponsoredApproval}
         isLoading={isProcessing || isApprovalPending}
         isSponsoredLoading={isSponsoredSubmitting}
-        confirmDisabled={!isFeeValid}
+        confirmDisabled={!isApprovalFeeValid}
+        sheetTitle={isUnlocking ? "Step 1: Allow PoX access" : undefined}
       />
 
       <StackStxSheet
         sheetRef={delegateSheetRef}
         onClose={onSheetClose}
-        isStacking={!!activePosition}
+        isStacking={activePosition?.status === "ACTIVE"}
+        flowTitle={
+          isUnlocking
+            ? hasPoolApproval
+              ? "Delegate STX for next cycle"
+              : "Step 2: Delegate STX"
+            : undefined
+        }
         pendingAmount={pendingAmount}
+        delegateAmount={delegateAmountStx}
+        delegateAmountMicroStx={delegateAmountMicroStx}
         stackingPrice={stackingInfo.price}
         network={selectedNetwork}
         poolAddress={poolContract}
@@ -320,27 +429,41 @@ export function StackingScreenLayout({
         onSelectFee={onSelectFee}
         customFee={customFee}
         onCustomFeeChange={onCustomFeeChange}
-        isFeeValid={isFeeValid}
+        isFeeValid={isDelegateFeeValid}
         isLoadingFees={isLoadingFees}
-        feeMicroStx={feeMicroStx}
+        feeMicroStx={delegateFeeMicroStx}
         onConfirm={onConfirmDelegate}
         onSponsoredConfirm={onConfirmSponsoredDelegate}
         isProcessing={isProcessing}
         isSponsoredProcessing={
-          isSponsoredSubmitting || isSponsoredApprovalBroadcasting
+          isSponsoredSubmitting ||
+          isSponsoredApprovalBroadcasting ||
+          isSponsoredDelegateBroadcasting
         }
         isWaitingForSponsoredApproval={isSponsoredApprovalBroadcasting}
-        sponsoredApprovalStatusCopy={sponsoredApprovalLoadingCopy}
+        sponsoredApprovalStatusCopy={
+          isSponsoredApprovalBroadcasting
+            ? sponsoredApprovalLoadingCopy
+            : sponsoredDelegateLoadingCopy
+        }
         inPreparePhase={stackingInfo.inPreparePhase}
         timeTillPreparePhase={stackingInfo.timeTillPreparePhase}
+        nextCycleStart={stackingInfo.nextCycleStart}
+        daysPerCycle={daysPerCycle}
       />
 
       <TransactionLoadingOverlay
-        visible={isApprovalPending || isDelegatePending}
+        visible={
+          isApprovalPending ||
+          isDelegatePending ||
+          isSponsoredDelegateBroadcasting
+        }
         message={
           isApprovalPending
             ? "Approving Pool Access"
-            : "Broadcasting Delegation"
+            : isDelegatePending
+              ? "Broadcasting Delegation"
+              : sponsoredDelegateLoadingCopy.title
         }
       />
     </KeyboardAvoidingView>

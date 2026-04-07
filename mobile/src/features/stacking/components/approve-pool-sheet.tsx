@@ -28,6 +28,8 @@ interface ApprovePoolSheetProps {
   isLoading: boolean;
   isSponsoredLoading?: boolean;
   confirmDisabled?: boolean;
+  /** Default is “Approve Pool”; use “Step 1: …” when guiding next-cycle flow. */
+  sheetTitle?: string;
 }
 
 export function ApprovePoolSheet({
@@ -49,6 +51,7 @@ export function ApprovePoolSheet({
   isLoading,
   isSponsoredLoading = false,
   confirmDisabled,
+  sheetTitle = "Approve Pool",
 }: ApprovePoolSheetProps) {
   const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
 
@@ -60,7 +63,7 @@ export function ApprovePoolSheet({
       >
         <ContractTxDetails
           network={network}
-          title="Approve Pool"
+          title={sheetTitle}
           contractAddress={poxContract}
           functionName="allow-contract-caller"
           contractArgs={[
@@ -90,11 +93,7 @@ export function ApprovePoolSheet({
         {!showAdvancedOnly && (
           <View>
             <Text className="mb-4 font-instrument-sans text-sm leading-relaxed text-secondary">
-              To stake with Fast Pool, approve it to lock your STX. This is an{" "}
-              <Text className="font-instrument-sans-medium text-primary">
-                one-time action
-              </Text>
-              .
+              Approve Fast Pool to lock your STX. One-time action.
             </Text>
 
             <TransactionFundingActions

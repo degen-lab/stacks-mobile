@@ -43,6 +43,7 @@ export type BroadcastTransactionResponse = {
 export type BroadcastSponsoredTransactionRequest = {
   requestId: number;
   serializedTx: string;
+  dependsOnRequestId?: number;
 };
 
 export type BroadcastSponsoredTransactionResponse = {

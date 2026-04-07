@@ -39,6 +39,7 @@ const mockEngine = {
   ),
   getRunData: jest.fn(() => ({ seed: 12345, moves: [] as PlayerMove[] })),
   setParticleEmitter: jest.fn(),
+  setMaxBridgeLength: jest.fn(),
   state: { score: 0, streak: 0, phase: "IDLE" as const },
 };
 

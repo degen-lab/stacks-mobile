@@ -13,7 +13,10 @@ interface StackStxSheetProps {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   onClose: () => void;
   isStacking: boolean;
+  flowTitle?: string;
   pendingAmount?: number;
+  delegateAmount?: number;
+  delegateAmountMicroStx?: number;
   stackingPrice: number;
   network: string;
   poolAddress: string;
@@ -35,13 +38,18 @@ interface StackStxSheetProps {
   };
   inPreparePhase?: boolean;
   timeTillPreparePhase?: string;
+  nextCycleStart?: Date;
+  daysPerCycle?: number;
 }
 
 export function StackStxSheet({
   sheetRef,
   onClose,
   isStacking,
+  flowTitle,
   pendingAmount,
+  delegateAmount,
+  delegateAmountMicroStx,
   stackingPrice,
   network,
   poolAddress,
@@ -60,19 +68,23 @@ export function StackStxSheet({
   sponsoredApprovalStatusCopy,
   inPreparePhase,
   timeTillPreparePhase,
+  nextCycleStart,
+  daysPerCycle,
 }: StackStxSheetProps) {
   const [showAdvancedOnly, setShowAdvancedOnly] = React.useState(false);
   const [showFeeSelector, setShowFeeSelector] = React.useState(false);
 
   const estimatedUnlockDate = React.useMemo(() => {
-    const date = new Date();
-    date.setDate(date.getDate() + 14);
+    if (!nextCycleStart || !daysPerCycle) return null;
+    const date = new Date(
+      nextCycleStart.getTime() + daysPerCycle * 24 * 3600 * 1000,
+    );
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
-  }, []);
+  }, [nextCycleStart, daysPerCycle]);
   const feeDisplayLabel =
     selectedFeeOption === "custom" && customFee && !showFeeSelector
       ? `${customFee} STX`
@@ -86,21 +98,25 @@ export function StackStxSheet({
         <View className="px-6">
           {/* Contract Details with Title */}
           <ContractTxDetails
-            title={isStacking ? "Confirm Increase" : "Start Stacking"}
+            title={
+              flowTitle ?? (isStacking ? "Confirm Increase" : "Start Stacking")
+            }
             network={network}
             contractAddress={poolAddress}
             functionName="delegate-stx"
             contractArgs={[
               {
                 name: "amount-ustx",
-                value: pendingAmount
-                  ? `${(pendingAmount * MICRO_STX).toLocaleString()} µSTX`
+                value: delegateAmountMicroStx
+                  ? `${delegateAmountMicroStx.toLocaleString()} µSTX`
                   : "0",
                 type: "uint",
               },
               {
                 name: "amount-stx",
-                value: pendingAmount ? `${pendingAmount.toFixed(6)} STX` : "0",
+                value: delegateAmount
+                  ? `${delegateAmount.toFixed(6)} STX`
+                  : "0",
               },
               {
                 name: "delegate-to",
@@ -140,6 +156,9 @@ export function StackStxSheet({
                     </Text>
                     <Text className="font-instrument-sans text-xs text-secondary">
                       ${(pendingAmount * stackingPrice).toFixed(2)}
+                    </Text>
+                    <Text className="font-instrument-sans text-[11px] text-secondary">
+                      1 STX stays unlocked
                     </Text>
                   </View>
                 )}
@@ -208,7 +227,9 @@ export function StackStxSheet({
                   label={
                     isStacking && !inPreparePhase && timeTillPreparePhase
                       ? `Only ${timeTillPreparePhase} left to increase for the next cycle`
-                      : `This action will lock your funds until ~${estimatedUnlockDate}.`
+                      : estimatedUnlockDate
+                        ? `This action will lock your funds until ~${estimatedUnlockDate}.`
+                        : "This action will lock your funds for the current cycle."
                   }
                 />
               </View>

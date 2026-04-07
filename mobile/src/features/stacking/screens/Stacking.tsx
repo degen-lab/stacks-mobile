@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { showMessage } from "react-native-flash-message";
-import { useTransactions } from "@/api/stacks/use-stacks-api";
-import { MICRO_STX } from "@/lib/format/currency";
+import {
+  usePoxData,
+  useTxById,
+  useUserBalances,
+} from "@/api/stacks/use-stacks-api";
 import { useStacking } from "../hooks/use-stacking";
 import {
   getAllowanceArgs,
@@ -26,82 +29,8 @@ import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useSelectedNetwork } from "@/lib/store/settings";
 import { useFastPoolActions } from "../hooks/use-fast-pool-actions";
 import { useSponsoredRequestFlow } from "../hooks/use-sponsored-request-flow";
-
-type AddressTransactionSummary = {
-  txId: string;
-  txStatus: string;
-  senderAddress?: string;
-  contractCall?: {
-    functionName?: string;
-    contractId?: string;
-  };
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-const getString = (
-  value: Record<string, unknown>,
-  key: string,
-): string | undefined => {
-  const candidate = value[key];
-  return typeof candidate === "string" ? candidate : undefined;
-};
-
-const parseAddressTransaction = (
-  value: unknown,
-): AddressTransactionSummary | null => {
-  if (!isRecord(value)) return null;
-
-  const txRecord =
-    value.tx && isRecord(value.tx)
-      ? value.tx
-      : (value as Record<string, unknown>);
-  const txId = getString(txRecord, "tx_id");
-  if (!txId) return null;
-
-  const contractCall = txRecord.contract_call;
-  const contractCallRecord = isRecord(contractCall) ? contractCall : null;
-
-  return {
-    txId,
-    txStatus: getString(txRecord, "tx_status") ?? "",
-    senderAddress: getString(txRecord, "sender_address"),
-    contractCall: contractCallRecord
-      ? {
-          functionName: getString(contractCallRecord, "function_name"),
-          contractId: getString(contractCallRecord, "contract_id"),
-        }
-      : undefined,
-  };
-};
-
-const findLatestFastPoolDelegateTxId = (
-  response: unknown,
-  address: string,
-  poolContract: string,
-): string | null => {
-  if (!isRecord(response)) return null;
-  const results = response.results;
-  if (!Array.isArray(results)) return null;
-
-  for (const result of results) {
-    const transaction = parseAddressTransaction(result);
-    if (!transaction) continue;
-    if (transaction.senderAddress !== address) continue;
-    if (transaction.contractCall?.functionName !== "delegate-stx") continue;
-    if (transaction.contractCall?.contractId !== poolContract) continue;
-    if (
-      transaction.txStatus !== "pending" &&
-      transaction.txStatus !== "success"
-    ) {
-      continue;
-    }
-    return transaction.txId;
-  }
-
-  return null;
-};
+import { getFastPoolPositionState } from "../utils/fast-pool-position";
+import { getStackingAmountState } from "../utils/stacking-amounts";
 
 export function StackingScreen() {
   const { stackingInfo, daysPerCycle, calculate } = useStacking();
@@ -109,8 +38,14 @@ export function StackingScreen() {
     balance: stxBalance,
     availableBalance: availableStxBalance,
     lockedBalance,
+    burnchainUnlockHeight,
   } = useStxBalance();
+  const { data: poxInfo } = usePoxData();
   const { stxAddress: address } = useWalletAddresses();
+  const { data: userBalances } = useUserBalances({
+    variables: { address: address ?? "" },
+    enabled: Boolean(address),
+  });
   const { data: userProfile } = useUserProfile();
   const {
     data: userStackingData = [],
@@ -141,6 +76,7 @@ export function StackingScreen() {
     poolContract,
     poxContract,
     isSubmittingSponsored,
+    invalidateFastPoolState,
     approvePoolSponsored,
     delegateStxSponsored,
     revokeDelegation,
@@ -148,35 +84,26 @@ export function StackingScreen() {
     disallowPoolPermission,
     disallowPoolPermissionSponsored,
   } = useFastPoolActions(address ?? undefined);
+  const currentLockTxId = userBalances?.stx.lock_tx_id || null;
+  const { data: currentLockTx } = useTxById({
+    variables: { txId: currentLockTxId ?? "" },
+    enabled: Boolean(
+      currentLockTxId && lockedBalance > 0 && !poolStatus?.isLocked,
+    ),
+  });
 
   const isStacking = poolStatus?.isLocked ?? false;
-  const totalRewardedStx = useMemo(
+  const { currentLockIsFastPool, activePosition } = useMemo(
     () =>
-      userStackingData.reduce(
-        (total, delegation) =>
-          total + Number(delegation.rewardedStxAmount ?? 0),
-        0,
-      ),
-    [userStackingData],
+      getFastPoolPositionState({
+        currentLockTx,
+        poolContract,
+        isStacking,
+        lockedBalance,
+        userStackingData,
+      }),
+    [currentLockTx, isStacking, lockedBalance, poolContract, userStackingData],
   );
-  const hasTrackedRewards = useMemo(
-    () =>
-      userStackingData.some(
-        (delegation) => delegation.rewardedStxAmount != null,
-      ),
-    [userStackingData],
-  );
-
-  const activePosition = isStacking
-    ? {
-        lockedAmount: lockedBalance,
-        lockDuration: 1,
-        nextUnlockDays: daysPerCycle,
-        status: "ACTIVE" as const,
-        poolName: "Fast Pool",
-        rewardedStxAmount: hasTrackedRewards ? totalRewardedStx : undefined,
-      }
-    : undefined;
 
   const saveStackingData = useSaveStackingDataMutation();
   const recoveredHistoryTxIdRef = useRef<string | null>(null);
@@ -193,11 +120,18 @@ export function StackingScreen() {
   const [sponsoredApprovalRequestId, setSponsoredApprovalRequestId] = useState<
     number | null
   >(null);
+  const [sponsoredDelegateRequestId, setSponsoredDelegateRequestId] = useState<
+    number | null
+  >(null);
   const [hasBroadcastedSponsoredApproval, setHasBroadcastedSponsoredApproval] =
     useState(false);
   const [sponsoredApprovalNextNonce, setSponsoredApprovalNextNonce] = useState<
     number | undefined
   >(undefined);
+  const [
+    sponsoredApprovalDependencyRequestId,
+    setSponsoredApprovalDependencyRequestId,
+  ] = useState<number | undefined>(undefined);
   const [selectedFeeOption, setSelectedFeeOption] =
     useState<FeeOption>("standard");
   const [customFee, setCustomFee] = useState("");
@@ -212,22 +146,50 @@ export function StackingScreen() {
     activeFeeFlow === "approve" ? poxContract : poolContract;
   const [contractAddress, contractName] = feeEstimationContractId.split(".");
 
-  const currentLockedStx = activePosition?.lockedAmount ?? 0;
-  const pendingAmountStx = pendingAmount ?? 0;
-  // pendingAmount from calculator already represents the TOTAL desired amount
-  const totalStackingAmount = pendingAmountStx || currentLockedStx;
-  const totalAmountMicroStx =
-    totalStackingAmount > 0 ? Math.floor(totalStackingAmount * MICRO_STX) : 0;
+  const {
+    delegateAmountMicroStx,
+    delegateAmountStx,
+    minimumRequiredLockedAmountLabel,
+    calculatorMinimumAmountStx,
+    maxLockableAmountStx,
+    availableToAddAmountStx,
+    isDecreaseBlocked,
+    isAlreadyStackedForNextCycle,
+    requiresAdditionalFundsForIncrease,
+    blockedStackingReason,
+    hasSufficientFunds,
+  } = useMemo(
+    () =>
+      getStackingAmountState({
+        activePosition,
+        pendingAmount,
+        stxBalance,
+        availableStxBalance,
+        burnchainUnlockHeight,
+        nextCycleRewardPhaseStartBurnHeight:
+          poxInfo?.next_cycle.reward_phase_start_block_height,
+        hasChanges,
+      }),
+    [
+      activePosition,
+      availableStxBalance,
+      burnchainUnlockHeight,
+      hasChanges,
+      pendingAmount,
+      poxInfo?.next_cycle.reward_phase_start_block_height,
+      stxBalance,
+    ],
+  );
 
   const feeEstimationArgs = useMemo(() => {
     if (activeFeeFlow === "approve") {
       return getAllowanceArgs(poolContract);
     }
     if (activeFeeFlow === "delegate") {
-      return getDelegateArgs(totalAmountMicroStx);
+      return getDelegateArgs(delegateAmountMicroStx);
     }
     return [];
-  }, [activeFeeFlow, poolContract, totalAmountMicroStx]);
+  }, [activeFeeFlow, delegateAmountMicroStx, poolContract]);
 
   const functionName =
     activeFeeFlow === "approve" ? "allow-contract-caller" : "delegate-stx";
@@ -243,24 +205,12 @@ export function StackingScreen() {
     },
   );
 
-  const shouldRecoverStackingHistory =
-    Boolean(address) &&
-    Boolean(userProfile?.id) &&
-    isStacking &&
-    !isUserStackingDataLoading &&
-    userStackingData.length === 0 &&
-    !saveStackingData.isPending;
-
-  const { data: recentAddressTransactions } = useTransactions({
-    variables: { address: address ?? "" },
-    enabled: shouldRecoverStackingHistory,
-  });
-
-  const feeMicroStx = useMemo(() => {
+  const resolvedFeeMicroStx = useMemo(() => {
     if (selectedFeeOption === "custom") {
       const parsed = parseFloat(customFee) * MICRO_STX;
-      return isNaN(parsed) ? undefined : parsed;
+      return Number.isNaN(parsed) ? undefined : parsed;
     }
+
     if (estimations.length === 0) return undefined;
 
     if (selectedFeeOption === "low") return estimations[0]?.fee;
@@ -270,14 +220,32 @@ export function StackingScreen() {
       return estimations[2]?.fee ?? estimations[1]?.fee;
 
     return estimations[1]?.fee;
-  }, [estimations, selectedFeeOption, customFee]);
+  }, [customFee, estimations, selectedFeeOption]);
 
-  const isFeeValid =
-    selectedFeeOption !== "custom" && feeMicroStx !== undefined
-      ? true
-      : selectedFeeOption === "custom" &&
-        feeMicroStx !== undefined &&
-        feeMicroStx > 0;
+  const approvalFeeMicroStx =
+    activeFeeFlow === "approve" ? resolvedFeeMicroStx : undefined;
+  const delegateFeeMicroStx =
+    activeFeeFlow === "delegate" ? resolvedFeeMicroStx : undefined;
+
+  const isSelectedFeeValid = (
+    selectedOption: FeeOption,
+    feeMicroStx?: number,
+  ) => {
+    if (selectedOption !== "custom") {
+      return feeMicroStx !== undefined;
+    }
+
+    return feeMicroStx !== undefined && feeMicroStx > 0;
+  };
+
+  const isApprovalFeeValid =
+    activeFeeFlow === "approve"
+      ? isSelectedFeeValid(selectedFeeOption, approvalFeeMicroStx)
+      : false;
+  const isDelegateFeeValid =
+    activeFeeFlow === "delegate"
+      ? isSelectedFeeValid(selectedFeeOption, delegateFeeMicroStx)
+      : false;
 
   const {
     isBroadcasting: isSponsoredApprovalBroadcasting,
@@ -312,9 +280,10 @@ export function StackingScreen() {
           "Please wait while we finalize your sponsored approval request.",
       },
     },
-    onComplete: ({ originNonce }) => {
+    onComplete: ({ requestId, originNonce }) => {
       setSponsoredApprovalRequestId(null);
       setHasBroadcastedSponsoredApproval(true);
+      setSponsoredApprovalDependencyRequestId(requestId);
       setSponsoredApprovalNextNonce(
         originNonce != null ? originNonce + 1 : undefined,
       );
@@ -322,6 +291,7 @@ export function StackingScreen() {
     onFailed: () => {
       setSponsoredApprovalRequestId(null);
       setHasBroadcastedSponsoredApproval(false);
+      setSponsoredApprovalDependencyRequestId(undefined);
       setSponsoredApprovalNextNonce(undefined);
       setActiveFeeFlow(null);
       delegateSheetRef.current?.dismiss();
@@ -335,6 +305,7 @@ export function StackingScreen() {
     onStatusUnavailable: ({ error }) => {
       setSponsoredApprovalRequestId(null);
       setHasBroadcastedSponsoredApproval(false);
+      setSponsoredApprovalDependencyRequestId(undefined);
       setSponsoredApprovalNextNonce(undefined);
       setActiveFeeFlow(null);
       delegateSheetRef.current?.dismiss();
@@ -348,37 +319,126 @@ export function StackingScreen() {
       });
     },
   });
+  const {
+    isBroadcasting: isSponsoredDelegateBroadcasting,
+    loadingCopy: sponsoredDelegateLoadingCopy,
+  } = useSponsoredRequestFlow({
+    requestId: sponsoredDelegateRequestId,
+    completeOn: ["success"],
+    copy: {
+      verifying: {
+        title: "Verifying delegation...",
+        message:
+          "Waiting for ad verification before your delegation can be broadcast.",
+      },
+      queued: {
+        title: "Delegation queued...",
+        message:
+          "Your sponsored delegation is queued and will be broadcast shortly.",
+      },
+      blocked: {
+        title: "Waiting for previous transaction...",
+        message:
+          "Another sponsored transaction from this wallet is still pending. Delegation will continue once that transaction confirms.",
+      },
+      confirming: {
+        title: "Delegation pending...",
+        message:
+          "Your sponsored delegation is on chain. Waiting for confirmation.",
+      },
+      preparing: {
+        title: "Preparing delegation...",
+        message:
+          "Please wait while we finalize your sponsored delegation request.",
+      },
+    },
+    onComplete: ({ txId: broadcastedTxId }) => {
+      invalidateFastPoolState();
+      if (broadcastedTxId) {
+        saveStackingData.mutate({
+          txId: broadcastedTxId,
+          poolName: "Fast Pool",
+        });
+      }
+      setSponsoredDelegateRequestId(null);
+      setActiveFeeFlow(null);
+      showMessage({
+        message: isStacking ? "Stacking updated" : "Stacking confirmed",
+        description: isStacking
+          ? "Your updated STX amount is now delegated to Fast Pool."
+          : "Your STX is now delegated to Fast Pool.",
+        type: "success",
+      });
+    },
+    onFailed: () => {
+      setSponsoredDelegateRequestId(null);
+      setActiveFeeFlow(null);
+      showMessage({
+        message: "Delegation failed",
+        description:
+          "The sponsored delegation did not confirm. Please try again.",
+        type: "danger",
+      });
+    },
+    onStatusUnavailable: ({ error }) => {
+      setSponsoredDelegateRequestId(null);
+      setActiveFeeFlow(null);
+      showMessage({
+        message: "Delegation status unavailable",
+        description:
+          error instanceof Error
+            ? error.message
+            : "We couldn't confirm the sponsored delegation status.",
+        type: "danger",
+      });
+      console.error("Sponsored delegation status unavailable:", error);
+    },
+  });
   const hasPoolApproval = Boolean(isAllowed) || hasBroadcastedSponsoredApproval;
 
   useEffect(() => {
     if (!isAllowed) return;
     setHasBroadcastedSponsoredApproval(false);
+    setSponsoredApprovalDependencyRequestId(undefined);
     setSponsoredApprovalNextNonce(undefined);
   }, [isAllowed]);
 
   useEffect(() => {
-    if (!shouldRecoverStackingHistory || !address) return;
+    if (!currentLockTxId || !currentLockIsFastPool) return;
+    if (!userProfile?.id || isUserStackingDataLoading) return;
+    if (userStackingData.length > 0 || saveStackingData.isPending) return;
+    if (recoveredHistoryTxIdRef.current === currentLockTxId) return;
 
-    const recoveredTxId = findLatestFastPoolDelegateTxId(
-      recentAddressTransactions,
-      address,
-      poolContract,
-    );
-    if (!recoveredTxId) return;
-    if (recoveredHistoryTxIdRef.current === recoveredTxId) return;
-
-    recoveredHistoryTxIdRef.current = recoveredTxId;
-    void saveStackingData.mutateAsync({
-      txId: recoveredTxId,
-      poolName: "Fast Pool",
-    });
+    recoveredHistoryTxIdRef.current = currentLockTxId;
+    void saveStackingData
+      .mutateAsync({
+        txId: currentLockTxId,
+        poolName: "Fast Pool",
+      })
+      .catch(() => {
+        recoveredHistoryTxIdRef.current = null;
+      });
   }, [
-    address,
-    poolContract,
-    recentAddressTransactions,
+    currentLockIsFastPool,
+    currentLockTxId,
+    isUserStackingDataLoading,
     saveStackingData,
-    shouldRecoverStackingHistory,
+    userProfile?.id,
+    userStackingData.length,
   ]);
+
+  const showBlockedStackingMessage = () => {
+    if (!blockedStackingReason) return false;
+
+    showMessage({
+      message: isDecreaseBlocked
+        ? "Cannot decrease locked amount"
+        : "Already stacked for next cycle",
+      description: blockedStackingReason,
+      type: "danger",
+    });
+    return true;
+  };
 
   const { isPending: isApprovalPending } = useTrackTx({
     txId: approvalTxId,
@@ -443,7 +503,7 @@ export function StackingScreen() {
   const handleConfirmApproval = async () => {
     setIsProcessing(true);
     try {
-      const txId = await approveAsync(feeMicroStx);
+      const txId = await approveAsync(approvalFeeMicroStx);
       setApprovalTxId(txId);
     } catch (error) {
       console.error("Failed to approve pool:", error);
@@ -453,7 +513,7 @@ export function StackingScreen() {
 
   const handleSponsoredApproval = async () => {
     try {
-      const requestId = await approvePoolSponsored(feeMicroStx);
+      const requestId = await approvePoolSponsored(approvalFeeMicroStx);
 
       setSponsoredApprovalRequestId(requestId);
       setHasBroadcastedSponsoredApproval(false);
@@ -461,11 +521,6 @@ export function StackingScreen() {
         pendingSheetTransitionRef.current = "delegate";
       }
       approvalSheetRef.current?.dismiss();
-      showMessage({
-        message: "Approval queued",
-        description: "Your sponsored approval will be broadcast shortly.",
-        type: "success",
-      });
     } catch (error) {
       console.error("Failed to sponsor pool approval:", error);
     }
@@ -473,13 +528,13 @@ export function StackingScreen() {
 
   const handleConfirmDelegate = async () => {
     if (pendingAmount === undefined || pendingAmount <= 0) return;
+    if (showBlockedStackingMessage()) return;
 
     setIsProcessing(true);
     try {
-      const amountMicroStx = Math.floor(totalStackingAmount * MICRO_STX);
       const txId = await delegateAsync({
-        amount: amountMicroStx,
-        fee: feeMicroStx,
+        amount: delegateAmountMicroStx,
+        fee: delegateFeeMicroStx,
       });
       setDelegateTxId(txId);
     } catch (error) {
@@ -490,33 +545,33 @@ export function StackingScreen() {
 
   const handleSponsoredDelegate = async () => {
     if (pendingAmount === undefined || pendingAmount <= 0) return;
+    if (showBlockedStackingMessage()) return;
 
     try {
-      const amountMicroStx = Math.floor(totalStackingAmount * MICRO_STX);
-      await delegateStxSponsored(
-        amountMicroStx,
-        feeMicroStx,
+      const requestId = await delegateStxSponsored(
+        delegateAmountMicroStx,
+        delegateFeeMicroStx,
         sponsoredApprovalNextNonce,
+        sponsoredApprovalDependencyRequestId,
       );
 
+      setSponsoredDelegateRequestId(requestId);
       delegateSheetRef.current?.dismiss();
-      setActiveFeeFlow(null);
-      showMessage({
-        message: "Delegation queued",
-        description: "Your sponsored delegation will be broadcast shortly.",
-        type: "success",
-      });
     } catch (error) {
       console.error("Failed to sponsor delegation:", error);
     }
   };
 
-  const hasSufficientFunds =
-    pendingAmount !== undefined && pendingAmount > 0
-      ? pendingAmount <= stxBalance
-      : true;
-
   const handleStackOrIncrease = async () => {
+    if (requiresAdditionalFundsForIncrease) {
+      setGetAssetSheetOpen(true);
+      return;
+    }
+
+    if (showBlockedStackingMessage()) {
+      return;
+    }
+
     if (!hasSufficientFunds) {
       setGetAssetSheetOpen(true);
       return;
@@ -582,9 +637,10 @@ export function StackingScreen() {
   };
 
   const poolState = {
-    availableStxBalance,
+    hasPoolApproval,
     activePosition,
     stackingInfo,
+    daysPerCycle,
     isMainnet,
     selectedNetwork,
     isLoadingPool,
@@ -596,6 +652,16 @@ export function StackingScreen() {
     hasChanges,
     isValidUpdate,
     pendingAmount,
+    delegateAmountStx,
+    delegateAmountMicroStx,
+    isDecreaseBlocked,
+    isAlreadyStackedForNextCycle,
+    requiresAdditionalFundsForIncrease,
+    blockedStackingReason,
+    minimumRequiredLockedAmountLabel,
+    calculatorMinimumAmountStx,
+    maxLockableAmountStx,
+    availableToAddAmountStx,
     hasSufficientFunds,
     calculate,
   };
@@ -603,9 +669,11 @@ export function StackingScreen() {
   const feeState = {
     selectedFeeOption,
     customFee,
-    isFeeValid,
+    isApprovalFeeValid,
+    isDelegateFeeValid,
     isLoadingFees,
-    feeMicroStx,
+    approvalFeeMicroStx,
+    delegateFeeMicroStx,
   };
 
   const uiState = {
@@ -614,7 +682,9 @@ export function StackingScreen() {
       isProcessing || isDelegatePending || isRevoking || isDisallowing,
     isSponsoredSubmitting: isSubmittingSponsored,
     isSponsoredApprovalBroadcasting,
+    isSponsoredDelegateBroadcasting,
     sponsoredApprovalLoadingCopy,
+    sponsoredDelegateLoadingCopy,
     isApprovalPending,
     isDelegatePending,
     approvalSheetRef,

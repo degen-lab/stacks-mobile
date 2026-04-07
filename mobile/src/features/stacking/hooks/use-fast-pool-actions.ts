@@ -23,6 +23,7 @@ type SponsoredContractCallArgs = {
   functionArgs: ClarityValue[];
   feeMicroStx?: number;
   nonce?: number;
+  dependsOnRequestId?: number;
 };
 
 export function useFastPoolActions(userAddress?: string) {
@@ -49,6 +50,7 @@ export function useFastPoolActions(userAddress?: string) {
       functionArgs,
       feeMicroStx,
       nonce,
+      dependsOnRequestId,
     }: SponsoredContractCallArgs) => {
       const { account, accountIndex, address } = await getActiveWalletAccount();
       const unsignedSerializedTx = await buildUnsignedContractCall({
@@ -67,6 +69,7 @@ export function useFastPoolActions(userAddress?: string) {
         originAddress: address,
         accountIndex,
         unsignedSerializedTx,
+        dependsOnRequestId,
       });
     },
     [selectedNetwork, submitSponsoredTransaction],
@@ -168,19 +171,26 @@ export function useFastPoolActions(userAddress?: string) {
   );
 
   const delegateStxSponsored = useCallback(
-    async (amountMicroStx: number, feeMicroStx?: number, nonce?: number) => {
-      await sponsorContractCall({
+    async (
+      amountMicroStx: number,
+      feeMicroStx?: number,
+      nonce?: number,
+      dependsOnRequestId?: number,
+    ) => {
+      const requestId = await sponsorContractCall({
         contractId: poolContract,
         functionName:
           SC_FUNCTIONS.stackingFastPool.publicFunctions.DELEGATE_STX,
         functionArgs: getDelegateArgs(amountMicroStx),
         feeMicroStx,
         nonce,
+        dependsOnRequestId,
       });
       invalidateFastPoolState();
       void trackEvent("stacking_stx_delegated", {
         amount_micro_stx: amountMicroStx,
       });
+      return requestId;
     },
     [invalidateFastPoolState, poolContract, sponsorContractCall],
   );

@@ -17,6 +17,7 @@ type Props = {
   onClose: () => void;
   activePosition: StackingPosition | undefined;
   onLeavePool?: () => void;
+  cycleEndsInLabel?: string;
 };
 
 type ViewState = "main" | "advanced" | "change_address" | "leave_pool";
@@ -26,6 +27,7 @@ export function PoolOptionsModal({
   onClose,
   activePosition,
   onLeavePool,
+  cycleEndsInLabel,
 }: Props) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -128,7 +130,7 @@ export function PoolOptionsModal({
             Next Unlock
           </Text>
           <Text className="font-matter text-primary">
-            ~{activePosition?.nextUnlockDays} days
+            {cycleEndsInLabel ?? "—"}
           </Text>
         </View>
         {activePosition?.rewardedStxAmount !== undefined &&

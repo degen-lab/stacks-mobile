@@ -18,6 +18,7 @@ import { useSignTransaction } from "./use-sign-transaction";
 type QueuedSponsoredTransaction = {
   requestId: number;
   serializedTx: string;
+  dependsOnRequestId?: number;
 };
 
 type PendingSponsoredRequest = {
@@ -30,12 +31,14 @@ type SubmitSponsoredTransactionOptions = {
   accountIndex: number;
   unsignedSerializedTx: string;
   defiOperationId?: number;
+  dependsOnRequestId?: number;
 };
 
 type SubmitPreparedSponsoredTransactionOptions = {
   requestId: number;
   accountIndex: number;
   unsignedSerializedTx: string;
+  dependsOnRequestId?: number;
 };
 
 const toError = (error: unknown) =>
@@ -81,6 +84,7 @@ export function useSponsoredStacksTransaction() {
         await broadcastSponsoredTransactionMutation.mutateAsync({
           requestId: pendingTx.requestId,
           serializedTx: pendingTx.serializedTx,
+          dependsOnRequestId: pendingTx.dependsOnRequestId,
         });
         resolvePendingRequest(pendingTx.requestId);
       },
@@ -117,6 +121,7 @@ export function useSponsoredStacksTransaction() {
       requestId,
       accountIndex,
       unsignedSerializedTx,
+      dependsOnRequestId,
     }: SubmitPreparedSponsoredTransactionOptions): Promise<number> => {
       if (!userId) {
         throw new Error("User profile not available.");
@@ -144,6 +149,7 @@ export function useSponsoredStacksTransaction() {
           {
             requestId,
             serializedTx: signedSerializedTx,
+            dependsOnRequestId,
           },
           {
             userId: String(userId),
@@ -162,6 +168,7 @@ export function useSponsoredStacksTransaction() {
       accountIndex,
       unsignedSerializedTx,
       defiOperationId,
+      dependsOnRequestId,
     }: SubmitSponsoredTransactionOptions): Promise<number> => {
       if (!userId) {
         throw new Error("User profile not available.");
@@ -180,6 +187,7 @@ export function useSponsoredStacksTransaction() {
         requestId,
         accountIndex,
         unsignedSerializedTx,
+        dependsOnRequestId,
       });
     },
     [

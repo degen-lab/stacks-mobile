@@ -43,6 +43,40 @@ export function formatTimeUntil(
   return `${Math.max(0, timeUntil.minutes)} mins`;
 }
 
+/** Same day split as {@link blocksToTime}, but from wall-clock ms until target. */
+function msUntilToDayParts(ms: number) {
+  const totalMinutes = Math.max(0, Math.floor(ms / (60 * 1000)));
+  return {
+    days: Math.floor(totalMinutes / MINUTES_PER_DAY),
+    hours: Math.floor((totalMinutes % MINUTES_PER_DAY) / 60),
+    minutes: Math.floor(totalMinutes % 60),
+  };
+}
+
+/**
+ * If the target is at least ~1 day away: calendar date only.
+ * If under 1 day: relative time like Dual Stacking empty chart ({@link formatTimeUntil}).
+ */
+export function formatLockedUntilLabel(target: Date, now = Date.now()): string {
+  const msUntil = target.getTime() - now;
+  if (msUntil >= MS_PER_DAY) {
+    return new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(target);
+  }
+  if (msUntil > 0) {
+    return formatTimeUntil(msUntilToDayParts(msUntil));
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(target);
+}
+
 export function timeUntilBlock(
   currentHeight: number | bigint,
   targetHeight: number | bigint,

@@ -9,6 +9,7 @@ type UseStxBalanceResult = {
   balance: number;
   lockedBalance: number;
   availableBalance: number;
+  burnchainUnlockHeight: number;
   isLoading: boolean;
   error: string | null;
   refresh: () => void;
@@ -36,6 +37,7 @@ export const useStxBalance = (
         balance: 0,
         lockedBalance: 0,
         availableBalance: 0,
+        burnchainUnlockHeight: 0,
       };
     }
 
@@ -47,6 +49,7 @@ export const useStxBalance = (
       balance,
       lockedBalance: locked,
       availableBalance: available,
+      burnchainUnlockHeight: data.stx.burnchain_unlock_height || 0,
     };
   }, [data]);
 

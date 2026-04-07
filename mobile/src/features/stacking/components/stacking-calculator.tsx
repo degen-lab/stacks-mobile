@@ -10,7 +10,6 @@ import { CustomPeriodModal } from "./custom-period-modal";
 import type { StackingPosition } from "../types";
 
 type Props = {
-  availableBalance?: number;
   activePosition?: StackingPosition;
   calculate: (
     amount: number,
@@ -21,6 +20,9 @@ type Props = {
     yearly: number;
   } | null;
   price: number;
+  minimumAmount: number;
+  maxLockableAmount: number;
+  availableToAddAmount: number;
   onUpdateChange?: (
     hasChanges: boolean,
     valid: boolean,
@@ -39,17 +41,24 @@ const LOCK_PERIODS = [
 ];
 
 export function StackingCalculator({
-  availableBalance = 0,
   activePosition,
   calculate,
   price,
+  minimumAmount,
+  maxLockableAmount,
+  availableToAddAmount,
   onUpdateChange,
 }: Props) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const isUnlocking = activePosition?.status === "UNLOCKING";
+  const formatEditableAmount = (amount: number) =>
+    amount.toFixed(6).replace(/\.?0+$/, "");
   // Initialize state with active position if available, else defaults
   const [stxAmount, setStxAmount] = useState(
-    activePosition ? String(activePosition.lockedAmount) : "41",
+    activePosition
+      ? formatEditableAmount(activePosition.lockedAmount)
+      : formatEditableAmount(minimumAmount),
   );
   const [weeks, setWeeks] = useState(
     activePosition ? activePosition.lockDuration : 12,
@@ -64,11 +73,11 @@ export function StackingCalculator({
 
   useEffect(() => {
     if (activePosition?.lockedAmount) {
-      setStxAmount(String(activePosition.lockedAmount));
+      setStxAmount(formatEditableAmount(activePosition.lockedAmount));
     } else {
-      setStxAmount("41");
+      setStxAmount(formatEditableAmount(minimumAmount));
     }
-  }, [activePosition?.lockedAmount]);
+  }, [activePosition?.lockedAmount, minimumAmount]);
 
   const inputAmount = Number(stxAmount) || 0;
   // Input now represents the total amount, not the delta
@@ -81,17 +90,19 @@ export function StackingCalculator({
     const newAmount = inputAmount;
 
     if (activePosition) {
-      // User has active position - check for changes
-      const hasChange = newAmount !== activePosition.lockedAmount;
-      const isValid = newAmount >= activePosition.lockedAmount;
+      const hasChange =
+        activePosition.status === "UNLOCKING"
+          ? newAmount >= minimumAmount
+          : newAmount !== activePosition.lockedAmount;
+      const isValid = newAmount >= minimumAmount;
       onUpdateChange(hasChange, isValid, newAmount);
     } else {
       // User is stacking for the first time
       const hasChange = false; // No existing position to compare
-      const isValid = newAmount >= 41;
+      const isValid = newAmount >= minimumAmount;
       onUpdateChange(hasChange, isValid, newAmount);
     }
-  }, [inputAmount, activePosition, onUpdateChange]);
+  }, [inputAmount, activePosition, minimumAmount, onUpdateChange]);
 
   const cycles = weeks / 2;
 
@@ -111,16 +122,22 @@ export function StackingCalculator({
   const currentTotalEarningsUsd = currentTotalEarningsStx * price;
 
   const earningsDeltaUsd = totalEarningsUsd - currentTotalEarningsUsd;
-  const maxStackingAmount = activePosition
-    ? activePosition.lockedAmount + availableBalance
-    : availableBalance;
-  const availableLabel = activePosition ? "Available to add" : "Available";
+  const availableLabel = isUnlocking
+    ? "Max lockable"
+    : activePosition
+      ? "Available to add"
+      : "Max lockable";
+  const availableLabelAmount = isUnlocking
+    ? maxLockableAmount
+    : activePosition
+      ? availableToAddAmount
+      : maxLockableAmount;
   const placeholderTextColor = isDark
     ? colors.charcoal[500]
     : colors.neutral[400];
 
   const handleMax = () => {
-    setStxAmount(maxStackingAmount.toFixed(2));
+    setStxAmount(formatEditableAmount(maxLockableAmount));
   };
 
   const handlePeriodSelect = (period: (typeof LOCK_PERIODS)[number]) => {
@@ -149,11 +166,13 @@ export function StackingCalculator({
       {/* Amount Input */}
       <View className="mb-3">
         <Text className="font-matter text-xl text-primary">
-          {activePosition
-            ? inputAmount === activePosition.lockedAmount
-              ? "Your stacking amount"
-              : "New stacking amount"
-            : "Stacking amount"}
+          {isUnlocking
+            ? "Next cycle amount"
+            : activePosition
+              ? inputAmount === activePosition.lockedAmount
+                ? "Your stacking amount"
+                : "New stacking amount"
+              : "Stacking amount"}
         </Text>
       </View>
       <View className="mb-4 rounded-2xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-primary">
@@ -183,7 +202,7 @@ export function StackingCalculator({
             ≈ ${usdValue}
           </Text>
           <Text className="text-sm font-instrument-sans text-secondary">
-            {availableLabel}: {availableBalance.toFixed(2)} STX
+            {availableLabel}: {availableLabelAmount.toFixed(2)} STX
           </Text>
         </View>
       </View>
@@ -281,14 +300,15 @@ export function StackingCalculator({
                 bottom: -13,
                 right: -5,
                 zIndex: 10,
-                opacity: results && Number(stxAmount) >= 41 ? 1 : 0.3,
+                opacity:
+                  results && Number(stxAmount) >= minimumAmount ? 1 : 0.3,
               }}
             >
               <SvgUri uri={stacksCoinsUri} width={170} height={90} />
             </View>
           )}
 
-          {results && Number(stxAmount) >= 41 ? (
+          {results && Number(stxAmount) >= minimumAmount ? (
             <View>
               <View className="mb-2 flex-row items-center gap-2">
                 <Text className="text-sm font-instrument-sans text-secondary">
