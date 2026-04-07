@@ -105,10 +105,15 @@ export function GooglePasswordScreen({
             variant="outline"
             size="icon"
             onPress={onBack}
+            hitSlop={8}
             className="mb-4 self-start"
             testID="google-password-back"
           >
-            <ChevronLeft size={20} className="text-secondary" />
+            <ChevronLeft
+              size={20}
+              className="text-secondary"
+              pointerEvents="none"
+            />
           </Button>
         )}
         <View className="flex-1 justify-between">

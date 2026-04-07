@@ -38,12 +38,14 @@ export function PasswordInput({
       <TouchableOpacity
         onPress={onToggleShowPassword}
         testID={toggleTestID}
+        hitSlop={12}
         className="absolute right-4 top-5 items-center justify-center"
+        accessibilityRole="button"
       >
         {showPassword ? (
-          <EyeOff size={20} className="text-secondary" />
+          <EyeOff size={20} className="text-secondary" pointerEvents="none" />
         ) : (
-          <Eye size={20} className="text-secondary" />
+          <Eye size={20} className="text-secondary" pointerEvents="none" />
         )}
       </TouchableOpacity>
     </View>
