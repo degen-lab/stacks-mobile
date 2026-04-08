@@ -30,6 +30,7 @@ type LeavePoolSheetProps = {
   onSponsoredRevoke?: SponsoredLeavePoolAction;
   onDisallow?: LeavePoolAction;
   onSponsoredDisallow?: SponsoredLeavePoolAction;
+  onSponsoredSuccess?: () => void;
   onGoBack?: () => void;
 };
 
@@ -48,6 +49,7 @@ export function LeavePoolSheet({
   onSponsoredRevoke,
   onDisallow,
   onSponsoredDisallow,
+  onSponsoredSuccess,
   onGoBack,
 }: LeavePoolSheetProps) {
   const {
@@ -73,7 +75,13 @@ export function LeavePoolSheet({
   const [activeSponsoredStep, setActiveSponsoredStep] =
     useState<SponsoredStep>(null);
   const activeSheetRef = useRef<ActiveSheet>("none");
+  const activeSponsoredStepRef = useRef<SponsoredStep>(null);
   const isClosingRef = useRef(false);
+
+  const updateActiveSponsoredStep = useCallback((step: SponsoredStep) => {
+    activeSponsoredStepRef.current = step;
+    setActiveSponsoredStep(step);
+  }, []);
 
   const needsRevoke = isStacking && !hasRevokedLocally;
   const needsDisallow = isAllowed || hasRevokedLocally;
@@ -89,14 +97,14 @@ export function LeavePoolSheet({
       isClosingRef.current = true;
       activeSheetRef.current = "none";
       setSponsoredRequestId(null);
-      setActiveSponsoredStep(null);
+      updateActiveSponsoredStep(null);
       dismissForm();
       dismissRevoke();
       dismissDisallow();
       setIsSubmitting(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, updateActiveSponsoredStep]);
 
   useEffect(() => {
     if (!isStacking && !isAllowed) {
@@ -166,8 +174,9 @@ export function LeavePoolSheet({
       if (isClosingRef.current || !activeSponsoredStep) return;
 
       const completedStep = activeSponsoredStep;
+      onSponsoredSuccess?.();
       setSponsoredRequestId(null);
-      setActiveSponsoredStep(null);
+      updateActiveSponsoredStep(null);
 
       if (completedStep === "revoke") {
         setHasRevokedLocally(true);
@@ -195,7 +204,7 @@ export function LeavePoolSheet({
 
       const failedStep = activeSponsoredStep;
       setSponsoredRequestId(null);
-      setActiveSponsoredStep(null);
+      updateActiveSponsoredStep(null);
       activeSheetRef.current = failedStep;
       showMessage({
         message:
@@ -219,7 +228,7 @@ export function LeavePoolSheet({
 
       const failedStep = activeSponsoredStep;
       setSponsoredRequestId(null);
-      setActiveSponsoredStep(null);
+      updateActiveSponsoredStep(null);
       activeSheetRef.current = failedStep;
       showMessage({
         message: "Transaction status unavailable",
@@ -334,7 +343,7 @@ export function LeavePoolSheet({
     );
     if (typeof requestId !== "number") return;
 
-    setActiveSponsoredStep("revoke");
+    updateActiveSponsoredStep("revoke");
     setSponsoredRequestId(requestId);
     activeSheetRef.current = "none";
     dismissRevoke();
@@ -358,7 +367,7 @@ export function LeavePoolSheet({
     );
     if (typeof requestId !== "number") return;
 
-    setActiveSponsoredStep("disallow");
+    updateActiveSponsoredStep("disallow");
     setSponsoredRequestId(requestId);
     activeSheetRef.current = "none";
     dismissDisallow();
@@ -493,18 +502,13 @@ export function LeavePoolSheet({
         }}
         dismissibleWhenLoading={true}
         onOpenChange={(open) => {
-          if (open || !activeSponsoredStep) return;
-          const dismissedStep = activeSponsoredStep;
+          if (open) return;
+
+          if (!activeSponsoredStepRef.current) return;
+
           setSponsoredRequestId(null);
-          setActiveSponsoredStep(null);
-          activeSheetRef.current = dismissedStep;
-          requestAnimationFrame(() => {
-            if (dismissedStep === "revoke") {
-              presentRevoke();
-            } else {
-              presentDisallow();
-            }
-          });
+          updateActiveSponsoredStep(null);
+          closeFlow(true);
         }}
         enableDynamicSizing={true}
       />

@@ -291,6 +291,7 @@ export function StackingScreen() {
       },
     },
     onComplete: ({ requestId, originNonce }) => {
+      invalidateFastPoolState();
       setSponsoredApprovalRequestId(null);
       setHasBroadcastedSponsoredApproval(true);
       setSponsoredApprovalDependencyRequestId(requestId);
@@ -752,6 +753,7 @@ export function StackingScreen() {
         onSponsoredRevoke={handleSponsoredRevoke}
         onDisallow={handleDisallow}
         onSponsoredDisallow={handleSponsoredDisallow}
+        onSponsoredSuccess={invalidateFastPoolState}
       />
     </>
   );

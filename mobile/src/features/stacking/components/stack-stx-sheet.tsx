@@ -31,11 +31,6 @@ interface StackStxSheetProps {
   onSponsoredConfirm?: () => void;
   isProcessing: boolean;
   isSponsoredProcessing?: boolean;
-  isWaitingForSponsoredApproval?: boolean;
-  sponsoredApprovalStatusCopy?: {
-    title: string;
-    message: string;
-  };
   inPreparePhase?: boolean;
   timeTillPreparePhase?: string;
   nextCycleStart?: Date;
@@ -64,8 +59,6 @@ export function StackStxSheet({
   onSponsoredConfirm,
   isProcessing,
   isSponsoredProcessing = false,
-  isWaitingForSponsoredApproval = false,
-  sponsoredApprovalStatusCopy,
   inPreparePhase,
   timeTillPreparePhase,
   nextCycleStart,
@@ -233,17 +226,6 @@ export function StackStxSheet({
                   }
                 />
               </View>
-
-              {isWaitingForSponsoredApproval && sponsoredApprovalStatusCopy ? (
-                <View className="mb-4 rounded-xl border border-surface-secondary px-4 py-3 dark:border-border-primary">
-                  <Text className="font-matter text-base text-primary">
-                    {sponsoredApprovalStatusCopy.title}
-                  </Text>
-                  <Text className="mt-1 font-instrument-sans text-sm text-secondary">
-                    {sponsoredApprovalStatusCopy.message}
-                  </Text>
-                </View>
-              ) : null}
 
               {/* Actions */}
               <TransactionFundingActions

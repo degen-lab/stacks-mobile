@@ -178,7 +178,6 @@ export function StackingScreenLayout({
     isSponsoredSubmitting,
     isSponsoredApprovalBroadcasting,
     isSponsoredDelegateBroadcasting,
-    sponsoredApprovalLoadingCopy,
     sponsoredDelegateLoadingCopy,
     isApprovalPending,
     isDelegatePending,
@@ -440,12 +439,6 @@ export function StackingScreenLayout({
           isSponsoredApprovalBroadcasting ||
           isSponsoredDelegateBroadcasting
         }
-        isWaitingForSponsoredApproval={isSponsoredApprovalBroadcasting}
-        sponsoredApprovalStatusCopy={
-          isSponsoredApprovalBroadcasting
-            ? sponsoredApprovalLoadingCopy
-            : sponsoredDelegateLoadingCopy
-        }
         inPreparePhase={stackingInfo.inPreparePhase}
         timeTillPreparePhase={stackingInfo.timeTillPreparePhase}
         nextCycleStart={stackingInfo.nextCycleStart}
@@ -455,15 +448,18 @@ export function StackingScreenLayout({
       <TransactionLoadingOverlay
         visible={
           isApprovalPending ||
+          isSponsoredApprovalBroadcasting ||
           isDelegatePending ||
           isSponsoredDelegateBroadcasting
         }
         message={
           isApprovalPending
             ? "Approving Pool Access"
-            : isDelegatePending
-              ? "Broadcasting Delegation"
-              : sponsoredDelegateLoadingCopy.title
+            : isSponsoredApprovalBroadcasting
+              ? "Processing Approval"
+              : isDelegatePending
+                ? "Broadcasting Delegation"
+                : sponsoredDelegateLoadingCopy.title
         }
       />
     </KeyboardAvoidingView>

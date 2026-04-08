@@ -96,6 +96,11 @@ export function getStackingAmountState({
     pendingAmount !== undefined &&
     delegateAmountMicroStx < currentLockedAmountMicroStx,
   );
+  const isIncreaseAttempt = Boolean(
+    activePosition &&
+    pendingAmount !== undefined &&
+    pendingAmountMicroStx > currentLockedAmountMicroStx,
+  );
   const hasEffectiveIncrease = Boolean(
     activePosition &&
     effectiveLockedAmountMicroStx !== undefined &&
@@ -103,7 +108,7 @@ export function getStackingAmountState({
   );
   const requiresAdditionalFundsForIncrease = Boolean(
     activePosition &&
-    hasChanges &&
+    (hasChanges || isIncreaseAttempt) &&
     !isDecreaseBlocked &&
     isLockedThroughNextCycle &&
     nextCycleMinimumRequiredBalanceMicroStx > maxFundingBalanceMicroStx,
