@@ -25,6 +25,7 @@
       "channel": "staging",
       "environment": "preview",
       "android": {
+        "distribution": "internal",
         "buildType": "apk"
       },
       "env": {
