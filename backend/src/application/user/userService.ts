@@ -254,6 +254,22 @@ export class UserService {
     return await this.entityManager.save(user);
   }
 
+  async deleteAccount(userId: number): Promise<void> {
+    await this.entityManager.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new UserNotFoundError(
+          `Invalid id, user with id ${userId} not found`,
+        );
+      }
+
+      await manager.delete(User, { id: userId });
+    });
+  }
+
   async getDailySubmissionsLeft(userId: number): Promise<{
     dailyRaffleSubmissionsLeft: number;
     dailyWeeklyContestSubmissionsLeft: number;

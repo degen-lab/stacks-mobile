@@ -3,6 +3,7 @@ import { UserService } from '../../application/user/userService';
 import userPostRoutes from './post';
 import userGetRoutes from './get';
 import userPutRoutes from './put';
+import userDeleteRoutes from './delete';
 
 export default async function userRoutes(
   app: FastifyInstance,
@@ -19,6 +20,9 @@ export default async function userRoutes(
     userService,
   });
   app.register(userPutRoutes, {
+    userService,
+  });
+  app.register(userDeleteRoutes, {
     userService,
   });
 }
