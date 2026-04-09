@@ -2,10 +2,12 @@ import { NetworkType } from "@degenlab/stacks-wallet-kit-core";
 import { create } from "zustand";
 
 import { Env } from "@/lib/env";
-import { getString, setString } from "@/lib/storage/storage";
+import { getString, removeItem, setString } from "@/lib/storage/storage";
 import { walletKit } from "@/lib/stacks/wallet";
 
 const SELECTED_NETWORK_KEY = "settings.network";
+const SECURITY_METHOD_KEY = "settings.securityMethod";
+const ACTIVE_ACCOUNT_INDEX_KEY = "settings.activeAccountIndex";
 
 const isNetwork = (value?: string | null): value is NetworkType => {
   return value === "mainnet" || value === "testnet" || value === "devnet";
@@ -45,7 +47,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setSecurityMethod: async (method) => {
     set({ securityMethod: method });
     try {
-      await setString("settings.securityMethod", method);
+      await setString(SECURITY_METHOD_KEY, method);
     } catch (error) {
       console.error("Failed to save security method:", error);
     }
@@ -53,7 +55,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setActiveAccountIndex: async (index) => {
     set({ activeAccountIndex: index });
     try {
-      await setString("settings.activeAccountIndex", String(index));
+      await setString(ACTIVE_ACCOUNT_INDEX_KEY, String(index));
     } catch (error) {
       console.error("Failed to save active account index:", error);
     }
@@ -64,8 +66,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const [storedNetwork, storedSecurity, storedActiveAccount] =
         await Promise.all([
           getString(SELECTED_NETWORK_KEY),
-          getString("settings.securityMethod"),
-          getString("settings.activeAccountIndex"),
+          getString(SECURITY_METHOD_KEY),
+          getString(ACTIVE_ACCOUNT_INDEX_KEY),
         ]);
       const nextNetwork = isNetwork(storedNetwork)
         ? storedNetwork
@@ -89,6 +91,28 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
 export const loadSettings = async () => {
   await useSettingsStore.getState().hydrate();
+};
+
+export const resetSettingsForSignedOutUser = async () => {
+  useSettingsStore.setState((state) => ({
+    ...state,
+    securityMethod: "none",
+    activeAccountIndex: 0,
+    hasHydrated: true,
+  }));
+
+  const removals = await Promise.allSettled([
+    removeItem(SECURITY_METHOD_KEY),
+    removeItem(ACTIVE_ACCOUNT_INDEX_KEY),
+  ]);
+
+  const failedRemoval = removals.find(
+    (result): result is PromiseRejectedResult => result.status === "rejected",
+  );
+
+  if (failedRemoval) {
+    throw failedRemoval.reason;
+  }
 };
 
 export const useSelectedNetwork = () => {

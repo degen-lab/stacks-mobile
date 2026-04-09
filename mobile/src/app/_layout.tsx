@@ -72,6 +72,10 @@ export default function RootLayout() {
           name="settings/privacy-ads"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="settings/delete-account"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen
           name="referral"

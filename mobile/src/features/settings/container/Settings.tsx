@@ -48,6 +48,12 @@ export default function SettingsScreen() {
           />
           <View className="mx-4 border-b border-surface-secondary" />
           <HelpItem />
+          <View className="mx-4 border-b border-surface-secondary" />
+          <Item
+            label="Delete Account"
+            variant="danger"
+            onPress={() => router.push("/settings/delete-account" as any)}
+          />
         </View>
 
         <View className="items-center">
