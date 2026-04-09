@@ -34,6 +34,7 @@ export const SC_FUNCTIONS = {
   game: {
     readOnlyFunctions: {
       GET_CURRENT_TOURNAMENT: "get-current-tournament",
+      GET_USER_NONCE: "get-user-nonce",
     },
     publicFunctions: {
       SUBMIT_SCORE: "submit-score",

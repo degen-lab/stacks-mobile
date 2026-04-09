@@ -15,6 +15,7 @@ export type CreateGameSubmissionTransactionRequest = {
   score: number;
   submissionType: SubmissionType;
   isSponsored: boolean;
+  feeMicroStx?: number;
 };
 
 export type CreateGameSubmissionTransactionResponse = {

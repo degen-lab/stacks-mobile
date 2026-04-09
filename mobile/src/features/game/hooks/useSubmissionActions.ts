@@ -103,6 +103,8 @@ export const useSubmissionActions = ({
       submissionContext?.kind === "raffle"
         ? SubmissionType.Lottery
         : SubmissionType.WeeklyContest;
+    const submissionKind =
+      submissionContext?.kind === "raffle" ? "raffle" : "tournament";
     const response = await createGameSubmissionTransactionMutation.mutateAsync({
       address: originAddress,
       publicKey: account.publicKey,
@@ -120,7 +122,7 @@ export const useSubmissionActions = ({
       accountIndex,
       unsignedSerializedTx: unsigned.serializedTx,
     });
-    markPendingSubmission(getCurrentSubmissionCount());
+    markPendingSubmission(getCurrentSubmissionCount(), submissionKind);
     return String(requestId);
   }, [
     createGameSubmissionTransactionMutation,
@@ -132,55 +134,62 @@ export const useSubmissionActions = ({
     submitPreparedSponsoredTransaction,
   ]);
 
-  const handleSubmitWallet = useCallback(async () => {
-    const {
-      account,
-      accountIndex,
-      address: originAddress,
-    } = await getActiveWalletAccount();
-    const submissionScore = runSummary?.score ?? score;
-    if (submissionScore <= 0) {
-      throw new Error("Score must be greater than 0.");
-    }
-    const submissionType =
-      submissionContext?.kind === "raffle"
-        ? SubmissionType.Lottery
-        : SubmissionType.WeeklyContest;
-    const response = await createGameSubmissionTransactionMutation.mutateAsync({
-      address: originAddress,
-      publicKey: account.publicKey,
-      score: submissionScore,
-      submissionType,
-      isSponsored: false,
-    });
+  const handleSubmitWallet = useCallback(
+    async (feeMicroStx?: number) => {
+      const {
+        account,
+        accountIndex,
+        address: originAddress,
+      } = await getActiveWalletAccount();
+      const submissionScore = runSummary?.score ?? score;
+      if (submissionScore <= 0) {
+        throw new Error("Score must be greater than 0.");
+      }
+      const submissionType =
+        submissionContext?.kind === "raffle"
+          ? SubmissionType.Lottery
+          : SubmissionType.WeeklyContest;
+      const submissionKind =
+        submissionContext?.kind === "raffle" ? "raffle" : "tournament";
+      const response =
+        await createGameSubmissionTransactionMutation.mutateAsync({
+          address: originAddress,
+          publicKey: account.publicKey,
+          score: submissionScore,
+          submissionType,
+          isSponsored: false,
+          feeMicroStx,
+        });
 
-    const unsigned = response.data?.unsignedGameSubmissionTransaction;
-    if (!unsigned?.submission?.id || !unsigned.serializedTx) {
-      throw new Error("Invalid transaction response.");
-    }
+      const unsigned = response.data?.unsignedGameSubmissionTransaction;
+      if (!unsigned?.submission?.id || !unsigned.serializedTx) {
+        throw new Error("Invalid transaction response.");
+      }
 
-    await submitWalletTransaction({
-      accountIndex,
-      unsignedSerializedTx: unsigned.serializedTx,
-      linkedSubmissionId: unsigned.submission.id,
-    });
+      await submitWalletTransaction({
+        accountIndex,
+        unsignedSerializedTx: unsigned.serializedTx,
+        linkedSubmissionId: unsigned.submission.id,
+      });
 
-    const eventName =
-      submissionContext?.kind === "raffle"
-        ? "raffle_entered"
-        : "score_submitted";
-    void trackEvent(eventName, { method: "wallet" });
-    markPendingSubmission(getCurrentSubmissionCount());
-    return String(unsigned.submission.id);
-  }, [
-    createGameSubmissionTransactionMutation,
-    getCurrentSubmissionCount,
-    markPendingSubmission,
-    runSummary?.score,
-    score,
-    submissionContext?.kind,
-    submitWalletTransaction,
-  ]);
+      const eventName =
+        submissionContext?.kind === "raffle"
+          ? "raffle_entered"
+          : "score_submitted";
+      void trackEvent(eventName, { method: "wallet" });
+      markPendingSubmission(getCurrentSubmissionCount(), submissionKind);
+      return String(unsigned.submission.id);
+    },
+    [
+      createGameSubmissionTransactionMutation,
+      getCurrentSubmissionCount,
+      markPendingSubmission,
+      runSummary?.score,
+      score,
+      submissionContext?.kind,
+      submitWalletTransaction,
+    ],
+  );
 
   return { handleSubmissionSuccess, handleSubmitSponsored, handleSubmitWallet };
 };

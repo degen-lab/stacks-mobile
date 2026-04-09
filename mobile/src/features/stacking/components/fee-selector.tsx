@@ -1,4 +1,5 @@
-import { Button, Text, View } from "@/components/ui";
+import { Text, View } from "@/components/ui";
+import { Toggle } from "@/components/ui/toggle";
 import { ActivityIndicator } from "react-native";
 
 export type FeeOption = "low" | "standard" | "high" | "custom";
@@ -16,6 +17,19 @@ export function FeeSelector({
   isLoading,
   showCustom = true,
 }: FeeSelectorProps) {
+  const options: { value: FeeOption; label: string }[] = showCustom
+    ? [
+        { value: "low", label: "Low" },
+        { value: "standard", label: "Standard" },
+        { value: "high", label: "High" },
+        { value: "custom", label: "Custom" },
+      ]
+    : [
+        { value: "low", label: "Low" },
+        { value: "standard", label: "Standard" },
+        { value: "high", label: "High" },
+      ];
+
   if (isLoading) {
     return (
       <View className="rounded-xl border border-surface-secondary bg-sand-100 px-4 py-3 dark:bg-surface-primary">
@@ -30,27 +44,8 @@ export function FeeSelector({
   }
 
   return (
-    <View className="flex-row gap-2">
-      {(["low", "standard", "high"] as FeeOption[]).map((option) => (
-        <Button
-          key={option}
-          label={option.charAt(0).toUpperCase() + option.slice(1)}
-          variant={selectedFee === option ? "default" : "outline"}
-          size="sm"
-          className="flex-1 rounded-xl"
-          onPress={() => onSelectFee(option)}
-        />
-      ))}
-
-      {showCustom ? (
-        <Button
-          label="Custom"
-          variant={selectedFee === "custom" ? "default" : "outline"}
-          size="sm"
-          className="flex-1 rounded-xl"
-          onPress={() => onSelectFee("custom")}
-        />
-      ) : null}
+    <View className="self-start">
+      <Toggle value={selectedFee} options={options} onChange={onSelectFee} />
     </View>
   );
 }
