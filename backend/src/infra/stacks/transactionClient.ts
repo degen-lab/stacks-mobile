@@ -567,6 +567,7 @@ export class TransactionClient implements TransactionClientPort {
     publicKey: string,
     score: number,
     sponsored: boolean,
+    feeMicroStx?: number,
   ): Promise<string> {
     const tournamentId = await this.getTournamentId();
     const userNonce = await this.getUserNonce(address, tournamentId);
@@ -592,6 +593,7 @@ export class TransactionClient implements TransactionClientPort {
       postConditionMode: PostConditionMode.Deny, // No STX should be transferred
       publicKey: publicKey.startsWith('0x') ? publicKey.slice(2) : publicKey,
       network: this.network,
+      fee: sponsored ? undefined : feeMicroStx,
       sponsored,
     };
 

@@ -84,11 +84,12 @@ describe('TransactionService', () => {
       123,
       SubmissionType.WeeklyContest,
       false,
+      12000,
     );
 
     expect(
       transactionClientMock.createTournamentUnsignedTransaction,
-    ).toHaveBeenCalledWith('STTESTADDRESS', 'public-key', 123, false);
+    ).toHaveBeenCalledWith('STTESTADDRESS', 'public-key', 123, false, 12000);
     expect(result).toEqual({
       serializedTx: 'unsigned-submission',
       submission,
@@ -127,12 +128,16 @@ describe('TransactionService', () => {
       88,
       SubmissionType.Raffle,
       true,
+      50000,
     );
 
     expect(result.sponsoredRequest).toEqual({
       requestId: 55,
       expiresAt: sponsoredTransaction.expiresAt,
     });
+    expect(
+      transactionClientMock.createTournamentUnsignedTransaction,
+    ).toHaveBeenCalledWith('STSPONSORED', 'public-key', 88, true, undefined);
   });
 
   it('creates a generic sponsored transaction request', async () => {

@@ -60,6 +60,7 @@ export default function transactionPostRoutes(
             data.score,
             data.submissionType,
             data.isSponsored,
+            data.feeMicroStx,
           );
 
         return reply.status(200).send({

@@ -16,6 +16,7 @@ export const createGameSubmissionTransactionSchema = z.object({
   score: z.number(),
   submissionType: z.enum(SubmissionType),
   isSponsored: z.boolean(),
+  feeMicroStx: z.number().int().positive().optional(),
 });
 
 export const broadcastTxSchema = z.object({
