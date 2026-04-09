@@ -34,7 +34,6 @@ export const useSubmissionSheet = () => {
     return {
       tournamentId: isRaffle ? "weekly-raffle" : "weekly-tournament",
       tournamentName: isRaffle ? "Weekly Raffle" : "Weekly Tournament",
-      rewardAmount: isRaffle ? "1000 STX" : "500 STX",
       showRankChange: !isRaffle,
     };
   }, [submissionContext?.kind]);

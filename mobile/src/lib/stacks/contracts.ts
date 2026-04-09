@@ -1,6 +1,6 @@
 export const CONTRACTS = {
   mainnet: {
-    game: "",
+    game: "SP1DV38HH1EFFJCCNJX8RX730RRZAY3PGWBJ3XT6Y.game-1_0_0",
     stackingFastPool:
       "SP21YTSM60CAY6D011EZVEVNKXVW8FVZE198XEFFP.pox4-fast-pool-v3",
     yield: "SP1HFCRKEJ8BYW4D0E3FAWHFDX8A25PPAA83HWWZ9.dual-stacking-v2_1_0",

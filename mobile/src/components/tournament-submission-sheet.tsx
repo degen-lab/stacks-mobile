@@ -37,7 +37,6 @@ type TournamentSubmissionSheetProps = {
   onSubmitWallet: () => Promise<string | void>;
   onCancel: () => void;
   onSuccess: (txId: string) => void;
-  rewardAmount?: string;
   estimatedFee?: number;
   userAvatarSource?: ImageSource;
   userDisplayName?: string;
@@ -103,6 +102,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
       setSheetState("initial");
       setLastMethod(null);
       setErrorMessage(null);
+      setShowAdvancedOnly(false);
     }, []);
 
     React.useEffect(() => {
@@ -117,10 +117,16 @@ export const TournamentSubmissionSheet = React.forwardRef<
     const sponsoredLabel = !canSubmit
       ? "Please wait for Submit Phase to start"
       : sponsoredLeft === 0
-        ? "All free entries used today"
+        ? showRankChange
+          ? "All free entries used today"
+          : "All sponsored entries used today"
         : canUseSponsored
-          ? `Submit for free by watching an ad (${sponsoredLeft} left)`
-          : "Watch an ad to submit";
+          ? showRankChange
+            ? `Submit for free by watching an ad (${sponsoredLeft} left)`
+            : `Watch an ad for sponsored entry (${sponsoredLeft} left)`
+          : showRankChange
+            ? "Watch an ad to submit"
+            : "Watch an ad for sponsored entry";
     const canUseSponsoredButton =
       canSubmit && (sponsoredLeft === undefined || sponsoredLeft > 0);
 
@@ -158,13 +164,12 @@ export const TournamentSubmissionSheet = React.forwardRef<
         case "error":
           return "Submission Failed";
         default:
-          return showRankChange ? "Submit Highscore!" : "Submit Raffle Entry";
+          return showRankChange ? "Submit Highscore!" : "Weekly Entry";
       }
     }, [sheetState, showRankChange]);
 
     const submittingLabel = React.useMemo(
-      () =>
-        showRankChange ? "Submitting highscore" : "Submitting raffle entry",
+      () => (showRankChange ? "Submitting highscore" : "Submitting entry"),
       [showRankChange],
     );
 
@@ -231,6 +236,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
               {/* Transaction Details */}
               {network && contractAddress && functionName && (
                 <ContractTxDetails
+                  key={`${resetKey ?? "default"}-${tournamentId}-${showRankChange ? "tournament" : "raffle"}`}
                   title={title}
                   network={network}
                   contractAddress={contractAddress}
@@ -260,7 +266,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
                     <View className="mt-2 mb-4">
                       <View className="mb-4">
                         <WarningLabel
-                          label={`We are using blockchain to ensure transparency. \n Transaction fee:  ~${cappedFee} STX.`}
+                          label={`On-chain submission fee: ~${cappedFee} STX.`}
                         />
                       </View>
                       <View className="flex-row items-center justify-center gap-2 my-4">
@@ -273,10 +279,15 @@ export const TournamentSubmissionSheet = React.forwardRef<
                         ))}
                       </View>
                       <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
-                        Higher scores = increased chance of winning
+                        Pay the network fee, or watch an ad for a sponsored
+                        entry.
                       </Text>
                       <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
-                        More submissions = increased chance of winning
+                        The ad covers entry costs and does not affect selection.
+                      </Text>
+                      <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
+                        Eligible entries may receive rewards at the end of the
+                        cycle.
                       </Text>
                     </View>
                   )}

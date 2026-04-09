@@ -12,8 +12,8 @@ const FAQ_ITEMS: readonly FaqHelpItem[] = [
   },
   {
     id: "what-do-i-win",
-    title: "What do I win?",
-    body: "Points every run. Submit your score to the weekly contest and you could win real STX.",
+    title: "What do I get?",
+    body: "Points every run. Weekly contest high scores and Weekly Raffle entries may receive on-chain rewards.",
   },
   {
     id: "how-revives-work",

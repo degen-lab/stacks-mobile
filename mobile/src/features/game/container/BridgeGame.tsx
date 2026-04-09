@@ -206,7 +206,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     handleSubmissionCancel,
     handleSubmitLeaderboard,
     handleSubmitRaffle,
-    rewardAmount,
     showRankChange,
     tournamentId,
     tournamentName,
@@ -551,7 +550,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
         walletHasEnoughBalance={walletHasEnoughBalance}
         sponsoredSubmissionsLeft={sponsoredSubmissionsLeftForContext}
         onAddFunds={handleAddFunds}
-        rewardAmount={rewardAmount}
         estimatedFee={0.002}
         showRankChange={showRankChange}
         userDisplayName={displayName}
