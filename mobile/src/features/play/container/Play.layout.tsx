@@ -2,8 +2,7 @@ import type { UserProfile } from "@/api/user/types";
 import { ScrollView, Text, useModal, colors } from "@/components/ui";
 import { StackIcon } from "@/components/ui/icons/stack";
 import { SparkleIcon } from "@/components/ui/icons/sparkle";
-import { LeaderboardList } from "@/features/leaderboard/components/leaderboard-list";
-import { Podium } from "@/features/leaderboard/components/podium";
+import { LeaderboardSection } from "@/features/leaderboard/components/leaderboard-section";
 import type { LeaderboardUser } from "@/features/leaderboard/types";
 import {
   ChallengeCard,
@@ -110,15 +109,11 @@ export function PlayLayout({
       <View className="flex flex-row items-center justify-between pt-4">
         <Text className="text-xl mb-3">Leaderboard</Text>
       </View>
-      <View className="">
-        <Podium users={podiumUsers} />
-      </View>
-      <View className="">
-        <LeaderboardList
-          users={leaderboardUsers}
-          currentUserRank={currentUserRank}
-        />
-      </View>
+      <LeaderboardSection
+        podiumUsers={podiumUsers}
+        leaderboardUsers={leaderboardUsers}
+        currentUserRank={currentUserRank}
+      />
       <SkinSelectorModal
         ref={skinSelectorModalRef}
         availablePoints={userProfile?.points}

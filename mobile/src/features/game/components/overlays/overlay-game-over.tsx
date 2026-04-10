@@ -37,10 +37,13 @@ export default function GameOverOverlay({
   const trophyColor =
     colorScheme === "dark" ? colors.charcoal[200] : colors.neutral[900];
   const { data: userProfile } = useUserProfile();
-  const { data: sponsoredSubmissionsLeft } = useSponsoredSubmissionsLeft();
+  const { data: sponsoredSubmissionsLeft } = useSponsoredSubmissionsLeft({
+    refetchOnWindowFocus: true,
+  });
   const raffleSubmissionsLeft =
     sponsoredSubmissionsLeft?.dailyRaffleSubmissionsLeft ?? 0;
-  const hasRaffleEntries = raffleSubmissionsLeft > 0;
+  const hasRaffleEntries = raffleSubmissionsLeft > 0 || summary.submittedRaffle;
+
   const hasPositiveScore = summary.score > 0;
   const canSubmitToRaffle =
     hasRaffleEntries &&

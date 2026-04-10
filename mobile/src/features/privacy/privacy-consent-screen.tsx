@@ -1,12 +1,12 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { showMessage } from "react-native-flash-message";
 
-import { FocusAwareStatusBar, useModal } from "@/components/ui";
+import { FocusAwareStatusBar, useModal, View } from "@/components/ui";
 import { AnalyticsConsentModal } from "@/features/privacy/analytics-consent-modal";
-import { PrivacyConsentOnboarding } from "@/features/privacy/privacy-consent-onboarding";
 import { CURRENT_CONSENT_VERSION, needsConsentGate } from "@/lib/consent/types";
 import { useConsentActions } from "@/lib/consent/use-consent-actions";
+import { useAdsConsentStore } from "@/lib/store/ads-consent";
 import { useAuth } from "@/lib/store/auth";
 import { useConsentStore } from "@/lib/store/consent";
 
@@ -17,13 +17,17 @@ export default function PrivacyConsentScreen() {
   const consent = pendingSync?.localConsent ?? backendUserData?.consent ?? null;
   const { isSaving, saveConsent } = useConsentActions();
   const analyticsModal = useModal();
-  const analyticsModalPresentedRef = useRef(false);
-  const [analyticsDecision, setAnalyticsDecision] = useState<boolean | null>(
-    null,
+  const modalPresentedRef = useRef(false);
+  const decisionMadeRef = useRef(false);
+
+  // UMP must resolve before we show the modal so adsPersonalization is known.
+  const umpResolved = useAdsConsentStore((state) => state.hasResolved);
+  const adsPersonalization = useAdsConsentStore(
+    (state) => state.adsPersonalization,
   );
 
   useEffect(() => {
-    if (!hasHydrated || !consentHydrated) return;
+    if (!hasHydrated || !consentHydrated || !umpResolved) return;
     if (!isAuthenticated) {
       router.replace("/login");
       return;
@@ -33,8 +37,8 @@ export default function PrivacyConsentScreen() {
       router.replace("/");
       return;
     }
-    if (analyticsModalPresentedRef.current) return;
-    analyticsModalPresentedRef.current = true;
+    if (modalPresentedRef.current) return;
+    modalPresentedRef.current = true;
     analyticsModal.present();
   }, [
     analyticsModal,
@@ -43,18 +47,23 @@ export default function PrivacyConsentScreen() {
     consent,
     hasHydrated,
     isAuthenticated,
+    umpResolved,
     router,
   ]);
 
-  const handleAnalyticsDecision = (allow: boolean) => {
-    setAnalyticsDecision(allow);
-    analyticsModal.dismiss();
+  const handleModalDismiss = () => {
+    if (!decisionMadeRef.current) {
+      void handleDecision(false);
+    }
   };
 
-  const handleAdsDecision = async (adsPersonalization: boolean) => {
+  const handleDecision = async (analytics: boolean) => {
+    decisionMadeRef.current = true;
+    // adsPersonalization comes from UMP — null means not required (non-EEA),
+    // treated as false (standard ads, no personalization assumed).
     const result = await saveConsent({
-      analytics: analyticsDecision ?? false,
-      adsPersonalization,
+      analytics,
+      adsPersonalization: adsPersonalization ?? false,
       version: CURRENT_CONSENT_VERSION,
     });
 
@@ -70,22 +79,16 @@ export default function PrivacyConsentScreen() {
     router.replace("/");
   };
 
-  if (!hasHydrated || !consentHydrated || !backendUserData) {
-    return null;
-  }
-
   return (
     <>
       <FocusAwareStatusBar />
-      <PrivacyConsentOnboarding
-        onEnable={() => void handleAdsDecision(true)}
-        onSkip={() => void handleAdsDecision(false)}
-        loading={isSaving}
-      />
+      <View className="flex-1 bg-surface-tertiary" />
       <AnalyticsConsentModal
         modalRef={analyticsModal.ref}
-        onAllow={() => handleAnalyticsDecision(true)}
-        onDecline={() => handleAnalyticsDecision(false)}
+        onAllow={() => void handleDecision(true)}
+        onDecline={() => void handleDecision(false)}
+        onDismiss={handleModalDismiss}
+        loading={isSaving}
       />
     </>
   );

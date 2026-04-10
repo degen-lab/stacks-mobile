@@ -2,6 +2,9 @@ import type { User } from "@degenlab/stacks-wallet-kit-core";
 import { create } from "zustand";
 
 import type { UserData as BackendUserData } from "@/api/auth";
+import { queryClient } from "@/api/common/api-provider";
+import { resetConsentStore } from "@/lib/store/consent";
+import { resetSettingsForSignedOutUser } from "@/lib/store/settings";
 import { getItem, removeItem, setItem } from "@/lib/storage/storage";
 import { walletKit } from "@/lib/stacks/wallet";
 
@@ -17,6 +20,23 @@ export type AuthMethod = "none" | "google";
 export type SignInResult = {
   hasBackup: boolean;
   userData: User | null;
+};
+
+type ClearLocalAccountDataOptions = {
+  throwOnFailure?: boolean;
+};
+
+const SIGNED_OUT_STATE = {
+  authMethod: "none" as const,
+  accessToken: null,
+  backendToken: null,
+  isAuthenticated: false,
+  isAuthenticating: false,
+  hasHydrated: true,
+  hasBackup: false,
+  userData: null,
+  backendUserData: null,
+  referralUsed: false,
 };
 
 interface AuthState {
@@ -97,36 +117,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
-    set({
-      authMethod: "none",
-      accessToken: null,
-      backendToken: null,
-      isAuthenticated: false,
-      isAuthenticating: false,
-      hasHydrated: true,
-      hasBackup: false,
-      userData: null,
-      backendUserData: null,
-      referralUsed: false,
-    });
-
-    const cleanupSettlements = await Promise.allSettled([
-      walletKit.signOut(),
-      removeItem(ACCESS_TOKEN_KEY),
-      removeItem(USER_DATA_KEY),
-      removeItem(BACKEND_TOKEN_KEY),
-      removeItem(BACKEND_USER_KEY),
-      removeItem(REFERRAL_USED_KEY),
-      removeItem(HAS_BACKUP_KEY),
-    ]);
-
-    const failedCleanup = cleanupSettlements.find(
-      (result): result is PromiseRejectedResult => result.status === "rejected",
-    );
-
-    if (failedCleanup) {
-      console.error("Sign out failed:", failedCleanup.reason);
-    }
+    await clearLocalAccountData();
   },
 
   hydrate: async () => {
@@ -260,6 +251,37 @@ const useAuthStore = create<AuthState>((set, get) => ({
 
 export function useAuth(): AuthState {
   return useAuthStore();
+}
+
+export async function clearLocalAccountData(
+  options: ClearLocalAccountDataOptions = {},
+): Promise<void> {
+  useAuthStore.setState(SIGNED_OUT_STATE);
+  queryClient.clear();
+
+  const cleanupSettlements = await Promise.allSettled([
+    walletKit.signOut(),
+    removeItem(ACCESS_TOKEN_KEY),
+    removeItem(USER_DATA_KEY),
+    removeItem(BACKEND_TOKEN_KEY),
+    removeItem(BACKEND_USER_KEY),
+    removeItem(REFERRAL_USED_KEY),
+    removeItem(HAS_BACKUP_KEY),
+    resetConsentStore(),
+    resetSettingsForSignedOutUser(),
+  ]);
+
+  const failedCleanup = cleanupSettlements.find(
+    (result): result is PromiseRejectedResult => result.status === "rejected",
+  );
+
+  if (failedCleanup) {
+    console.error("Failed to clear local account data:", failedCleanup.reason);
+
+    if (options.throwOnFailure) {
+      throw new Error("Failed to clear local account data.");
+    }
+  }
 }
 
 export const signOut = () => useAuthStore.getState().signOut();

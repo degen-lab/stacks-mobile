@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-import { initializeAds } from "@/lib/ads/initialize-ads";
 import { hydrateAuth } from "@/lib/store/auth";
 import { loadBalanceVisibility } from "@/lib/store/balance-visibility";
 import { useConsentStore } from "@/lib/store/consent";
@@ -25,7 +24,6 @@ export function useAppBootstrap() {
           loadSettings(),
           useGameStore.getState().hydrateSelectedSkin(),
           useConsentStore.getState().hydrate(),
-          initializeAds(),
         ]);
       } catch (error) {
         console.error("Failed to initialize app:", error);

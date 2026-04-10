@@ -1,4 +1,5 @@
 import type { ImageSource } from "expo-image";
+import type { ClarityValue } from "@stacks/transactions";
 
 import {
   Button,
@@ -13,9 +14,10 @@ import { WeeklyTournamentPreview } from "@/features/leaderboard/components/submi
 import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useColorScheme } from "nativewind";
 import React from "react";
+import { useContractCallFee } from "@/hooks/use-contract-call-fee";
+import { MICRO_STX } from "@/lib/format/currency";
 import { resolveThemeTokenColor } from "@/lib/theme/theme-tokens";
 import { TransactionFundingActions } from "./transaction-funding-actions";
-import { WarningLabel } from "./warning-label";
 import {
   ContractTxDetails,
   type ContractArgument,
@@ -34,11 +36,9 @@ type TournamentSubmissionSheetProps = {
   canSubmit?: boolean;
   walletBalance?: number;
   onSubmitSponsored: () => Promise<string | void>;
-  onSubmitWallet: () => Promise<string | void>;
+  onSubmitWallet: (feeMicroStx?: number) => Promise<string | void>;
   onCancel: () => void;
   onSuccess: (txId: string) => void;
-  rewardAmount?: string;
-  estimatedFee?: number;
   userAvatarSource?: ImageSource;
   userDisplayName?: string;
   walletHasEnoughBalance?: boolean;
@@ -53,6 +53,8 @@ type TournamentSubmissionSheetProps = {
   contractAddress?: string;
   functionName?: string;
   contractArgs?: ContractArgument[];
+  feeFunctionArgs?: ClarityValue[];
+  isLoadingFeeArgs?: boolean;
 };
 
 export const TournamentSubmissionSheet = React.forwardRef<
@@ -71,11 +73,11 @@ export const TournamentSubmissionSheet = React.forwardRef<
       onSubmitWallet,
       onCancel,
       onSuccess,
+      walletBalance,
       walletHasEnoughBalance,
       onAddFunds,
       showRankChange = true,
       resetKey,
-      estimatedFee,
       userAvatarSource,
       userDisplayName,
       sponsoredSubmissionsLeft,
@@ -85,6 +87,8 @@ export const TournamentSubmissionSheet = React.forwardRef<
       contractAddress,
       functionName,
       contractArgs,
+      feeFunctionArgs,
+      isLoadingFeeArgs = false,
     },
     ref,
   ) => {
@@ -98,35 +102,81 @@ export const TournamentSubmissionSheet = React.forwardRef<
     const sheetBackground = isDark
       ? resolveThemeTokenColor("dark", "--color-surface-primary")
       : colors.white;
+    const showFeeSelector = Boolean(
+      network && contractAddress?.includes(".") && functionName,
+    );
+    const {
+      selectedFeeOption,
+      setSelectedFeeOption,
+      customFee,
+      setCustomFee,
+      feeMicroStx,
+      isFeeValid,
+      isFeeUnavailable,
+      isLoadingFees,
+      resetFeeState,
+    } = useContractCallFee({
+      contractId: contractAddress ?? "",
+      functionName: functionName ?? "",
+      functionArgs: feeFunctionArgs ?? [],
+      enabled:
+        showFeeSelector &&
+        !isLoadingFeeArgs &&
+        sheetState === "initial" &&
+        Boolean(feeFunctionArgs?.length),
+    });
+    const walletFeeLoading =
+      showFeeSelector && (isLoadingFeeArgs || isLoadingFees);
+    const canUseWalletEstimatedFee =
+      showFeeSelector &&
+      selectedFeeOption !== "custom" &&
+      !walletFeeLoading &&
+      (feeMicroStx === undefined || isFeeUnavailable);
+    const isWalletFeeInvalid =
+      showFeeSelector &&
+      !walletFeeLoading &&
+      !isFeeValid &&
+      !canUseWalletEstimatedFee;
+    const hasEnoughWalletBalance =
+      walletBalance == null
+        ? walletHasEnoughBalance !== false
+        : feeMicroStx !== undefined
+          ? walletBalance >= feeMicroStx / MICRO_STX
+          : walletBalance > 0;
 
     const resetState = React.useCallback(() => {
       setSheetState("initial");
       setLastMethod(null);
       setErrorMessage(null);
+      setShowAdvancedOnly(false);
     }, []);
 
     React.useEffect(() => {
       resetState();
-    }, [resetKey, resetState]);
+      resetFeeState();
+    }, [resetFeeState, resetKey, resetState]);
 
-    const walletCtaLabel =
-      walletHasEnoughBalance === false ? "Add funds" : "Use wallet balance";
+    const walletCtaLabel = hasEnoughWalletBalance
+      ? "Use wallet balance"
+      : "Add funds";
     const sponsoredLeft = showRankChange
       ? weeklyContestSubmissionsLeft
       : raffleSubmissionsLeft;
     const sponsoredLabel = !canSubmit
       ? "Please wait for Submit Phase to start"
       : sponsoredLeft === 0
-        ? "All free entries used today"
+        ? showRankChange
+          ? "All free entries used today"
+          : "All sponsored entries used today"
         : canUseSponsored
-          ? `Submit for free by watching an ad (${sponsoredLeft} left)`
-          : "Watch an ad to submit";
+          ? showRankChange
+            ? `Submit for free by watching an ad (${sponsoredLeft} left)`
+            : `Watch an ad for sponsored entry (${sponsoredLeft} left)`
+          : showRankChange
+            ? "Watch an ad to submit"
+            : "Watch an ad for sponsored entry";
     const canUseSponsoredButton =
       canSubmit && (sponsoredLeft === undefined || sponsoredLeft > 0);
-
-    // TODO: Calculate real estimated fee based on actual transaction size and current network fee rates
-    // This should query the Stacks API or use a fee estimation service to get accurate fees
-    const cappedFee = estimatedFee ? Math.min(estimatedFee, 0.01) : 0;
     const fallbackAvatar = React.useMemo(
       () => require("@/assets/images/icon.png"),
       [],
@@ -158,18 +208,17 @@ export const TournamentSubmissionSheet = React.forwardRef<
         case "error":
           return "Submission Failed";
         default:
-          return showRankChange ? "Submit Highscore!" : "Submit Raffle Entry";
+          return showRankChange ? "Submit Highscore!" : "Weekly Entry";
       }
     }, [sheetState, showRankChange]);
 
     const submittingLabel = React.useMemo(
-      () =>
-        showRankChange ? "Submitting highscore" : "Submitting raffle entry",
+      () => (showRankChange ? "Submitting highscore" : "Submitting entry"),
       [showRankChange],
     );
 
     const handleSubmit = React.useCallback(
-      async (method: TransactionMethod) => {
+      async (method: TransactionMethod, walletFeeMicroStx?: number) => {
         setLastMethod(method);
         setErrorMessage(null);
         setSheetState("submitting");
@@ -177,7 +226,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
           const txId =
             method === "sponsored"
               ? await onSubmitSponsored()
-              : await onSubmitWallet();
+              : await onSubmitWallet(walletFeeMicroStx);
           if (txId) {
             onSuccess(txId);
           }
@@ -197,16 +246,19 @@ export const TournamentSubmissionSheet = React.forwardRef<
 
     const handleRetry = React.useCallback(() => {
       if (!lastMethod) return;
-      void handleSubmit(lastMethod);
-    }, [handleSubmit, lastMethod]);
+      void handleSubmit(
+        lastMethod,
+        lastMethod === "wallet" ? feeMicroStx : undefined,
+      );
+    }, [feeMicroStx, handleSubmit, lastMethod]);
 
     const handleWalletPress = React.useCallback(() => {
-      if (walletHasEnoughBalance === false && onAddFunds) {
+      if (!hasEnoughWalletBalance && onAddFunds) {
         onAddFunds();
         return;
       }
-      void handleSubmit("wallet");
-    }, [walletHasEnoughBalance, onAddFunds, handleSubmit]);
+      void handleSubmit("wallet", feeMicroStx);
+    }, [feeMicroStx, handleSubmit, hasEnoughWalletBalance, onAddFunds]);
 
     return (
       <Modal
@@ -231,11 +283,26 @@ export const TournamentSubmissionSheet = React.forwardRef<
               {/* Transaction Details */}
               {network && contractAddress && functionName && (
                 <ContractTxDetails
+                  key={`${resetKey ?? "default"}-${tournamentId}-${showRankChange ? "tournament" : "raffle"}`}
                   title={title}
                   network={network}
                   contractAddress={contractAddress}
                   functionName={functionName}
                   contractArgs={contractArgs}
+                  showFeeSelector={showFeeSelector}
+                  feeHelperText={
+                    showFeeSelector
+                      ? "Wallet submissions only use this fee."
+                      : undefined
+                  }
+                  selectedFeeOption={selectedFeeOption}
+                  onSelectFee={setSelectedFeeOption}
+                  customFee={customFee}
+                  onCustomFeeChange={setCustomFee}
+                  feeMicroStx={feeMicroStx}
+                  isLoadingFees={walletFeeLoading}
+                  isFeeValid={isFeeValid}
+                  isFeeUnavailable={isFeeUnavailable}
                   onAdvancedToggle={setShowAdvancedOnly}
                 />
               )}
@@ -244,13 +311,6 @@ export const TournamentSubmissionSheet = React.forwardRef<
                 <>
                   {showRankChange ? (
                     <>
-                      {estimatedFee && cappedFee > 0 && (
-                        <View className="my-2">
-                          <WarningLabel
-                            label={`We are using blockchain to ensure transparency. \n Transaction fee:  ~${cappedFee} STX.`}
-                          />
-                        </View>
-                      )}
                       <WeeklyTournamentPreview
                         projectedUser={projectedUser ?? undefined}
                         avatarFallback={fallbackAvatar}
@@ -258,11 +318,6 @@ export const TournamentSubmissionSheet = React.forwardRef<
                     </>
                   ) : (
                     <View className="mt-2 mb-4">
-                      <View className="mb-4">
-                        <WarningLabel
-                          label={`We are using blockchain to ensure transparency. \n Transaction fee:  ~${cappedFee} STX.`}
-                        />
-                      </View>
                       <View className="flex-row items-center justify-center gap-2 my-4">
                         {Array.from({ length: 3 }).map((_, index) => (
                           <ClassicTicket
@@ -273,10 +328,15 @@ export const TournamentSubmissionSheet = React.forwardRef<
                         ))}
                       </View>
                       <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
-                        Higher scores = increased chance of winning
+                        Pay the network fee, or watch an ad for a sponsored
+                        entry.
                       </Text>
                       <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
-                        More submissions = increased chance of winning
+                        The ad covers entry costs and does not affect selection.
+                      </Text>
+                      <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
+                        Eligible entries may receive rewards at the end of the
+                        cycle.
                       </Text>
                     </View>
                   )}
@@ -290,7 +350,11 @@ export const TournamentSubmissionSheet = React.forwardRef<
                   onPressSponsored={() => void handleSubmit("sponsored")}
                   onPressWallet={handleWalletPress}
                   sponsoredDisabled={!canUseSponsoredButton}
-                  walletDisabled={!canSubmit}
+                  walletDisabled={
+                    !canSubmit ||
+                    (hasEnoughWalletBalance &&
+                      (walletFeeLoading || isWalletFeeInvalid))
+                  }
                 />
               )}
             </>

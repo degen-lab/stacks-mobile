@@ -36,7 +36,8 @@ export default function PlayScreen() {
   const submittedHighscore = leaderboardData?.userSubmission?.score ?? null;
   const weeklyContestSubmissions =
     currentTournamentSubmissions?.weeklyContestSubmissionsForCurrentTournament
-      .length;
+      ?.length ?? 0;
+
   const navigateToStacksBridge = () => {
     router.navigate("/stacks-bridge");
   };

@@ -20,6 +20,7 @@ import { CryptoPurchase } from '../../domain/entities/cryptoPurchase';
 import { StackingData } from '../../domain/entities/stackingData';
 import { SponsoredTransaction } from '../../domain/entities/sponsoredTransaction';
 import { DefiOperation } from '../../domain/entities/defiOperation';
+import { UserReport } from '../../domain/entities/userReport';
 
 const shouldSynchronize =
   process.env.DB_SYNCHRONIZE === 'true' || process.env.NODE_ENV === 'test';
@@ -48,6 +49,7 @@ export const AppDataSource = new DataSource({
     CryptoPurchase,
     DefiOperation,
     SponsoredTransaction,
+    UserReport,
   ],
   subscribers: [],
   migrations: [join(__dirname, 'migrations/**/*.{ts,js}')],

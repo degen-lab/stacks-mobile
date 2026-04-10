@@ -47,6 +47,7 @@ describe('User Service unit test', () => {
     mockEntityManager = {
       getRepository: jest.fn().mockReturnValue(mockUserRepository),
       save: jest.fn(),
+      delete: jest.fn(),
       transaction: jest.fn(),
       findOne: jest.fn(),
       find: jest.fn(),
@@ -324,6 +325,47 @@ describe('User Service unit test', () => {
       expect(mockEntityManager.transaction).not.toHaveBeenCalled();
       expect(mockUserDomainService.addReferrerBonus).not.toHaveBeenCalled();
       expect(result).toEqual({ user: newUser, isNewUser: true });
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('deletes an existing user inside a transaction', async () => {
+      const user = Object.assign(new User(), { id: 12 });
+      const transactionManager = {
+        findOne: jest.fn().mockResolvedValue(user),
+        delete: jest.fn().mockResolvedValue({ affected: 1 }),
+      } as unknown as jest.Mocked<EntityManager>;
+
+      (mockEntityManager.transaction as jest.Mock).mockImplementation(
+        async (callback: (manager: EntityManager) => Promise<void>) => {
+          await callback(transactionManager);
+        },
+      );
+
+      await userService.deleteAccount(12);
+
+      expect(transactionManager.findOne).toHaveBeenCalledWith(User, {
+        where: { id: 12 },
+      });
+      expect(transactionManager.delete).toHaveBeenCalledWith(User, { id: 12 });
+    });
+
+    it('throws when trying to delete a missing user', async () => {
+      const transactionManager = {
+        findOne: jest.fn().mockResolvedValue(null),
+        delete: jest.fn(),
+      } as unknown as jest.Mocked<EntityManager>;
+
+      (mockEntityManager.transaction as jest.Mock).mockImplementation(
+        async (callback: (manager: EntityManager) => Promise<void>) => {
+          await callback(transactionManager);
+        },
+      );
+
+      await expect(userService.deleteAccount(99)).rejects.toThrow(
+        UserNotFoundError,
+      );
+      expect(transactionManager.delete).not.toHaveBeenCalled();
     });
   });
 

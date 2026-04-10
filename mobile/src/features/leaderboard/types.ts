@@ -9,6 +9,7 @@ export type LeaderboardUser = {
   photoUri?: ImageSource;
   tier?: "Gold" | "Silver" | "Bronze";
   isCurrentUser?: boolean;
+  userId?: number;
 };
 
 export type PodiumUser = LeaderboardUser;

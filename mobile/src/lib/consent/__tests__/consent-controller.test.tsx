@@ -12,6 +12,7 @@ const mockSyncPendingConsent = jest.fn();
 
 let mockAuthState: any;
 let mockConsentState: any;
+let mockAdsConsentState: any;
 
 jest.mock("expo-router", () => ({
   usePathname: () => "/",
@@ -38,6 +39,11 @@ jest.mock("@/lib/store/auth", () => ({
   useAuth: () => mockAuthState,
 }));
 
+jest.mock("@/lib/store/ads-consent", () => ({
+  useAdsConsentStore: (selector: (state: any) => unknown) =>
+    selector(mockAdsConsentState),
+}));
+
 jest.mock("@/lib/store/consent", () => ({
   useConsentStore: () => mockConsentState,
   resetConsentStore: (...args: unknown[]) => mockResetConsentStore(...args),
@@ -49,7 +55,7 @@ const consentedUser = {
     consent: {
       analytics: true,
       adsPersonalization: false,
-      version: "v5",
+      version: "v1",
       updatedAt: "2024-01-01T00:00:00.000Z",
     },
   },
@@ -63,6 +69,7 @@ describe("ConsentController", () => {
     jest.clearAllMocks();
     mockAuthState = consentedUser;
     mockConsentState = { hasHydrated: true, pendingSync: null };
+    mockAdsConsentState = { adsPersonalization: false };
   });
 
   it("enables analytics and sets user identity for a consented user", async () => {
@@ -79,6 +86,27 @@ describe("ConsentController", () => {
       });
     });
     expect(mockClearUserContext).not.toHaveBeenCalled();
+  });
+
+  it("keeps analytics disabled until analytics consent is current", async () => {
+    mockAuthState = {
+      ...consentedUser,
+      backendUserData: {
+        ...consentedUser.backendUserData,
+        consent: {
+          analytics: null,
+          adsPersonalization: null,
+          version: null,
+          updatedAt: null,
+        },
+      },
+    };
+
+    render(<ConsentController />);
+
+    await waitFor(() => {
+      expect(mockSetEnabled).toHaveBeenCalledWith(false);
+    });
   });
 
   it("disables analytics and clears identity on sign out", async () => {

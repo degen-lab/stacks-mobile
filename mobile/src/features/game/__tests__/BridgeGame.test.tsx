@@ -159,6 +159,7 @@ jest.mock("@/features/transfer/components/get-asset-sheet", () => ({
 
 jest.mock("@/lib/store/settings", () => ({
   useSelectedNetwork: () => ({ selectedNetwork: "testnet" }),
+  useActiveAccountIndex: () => ({ activeAccountIndex: 0 }),
   useSettingsStore: {
     getState: () => ({ network: "testnet" }),
   },
@@ -255,6 +256,14 @@ jest.mock("../hooks/useSubmissionActions", () => ({
   }),
 }));
 
+jest.mock("../hooks/useGameSubmissionFeeArgs", () => ({
+  useGameSubmissionFeeArgs: () => ({
+    feeFunctionArgs: [],
+    nextUserNonce: undefined,
+    isLoadingFeeArgs: false,
+  }),
+}));
+
 jest.mock("../hooks/useSubmissionSheet", () => ({
   useSubmissionSheet: () => ({
     submissionContext: null,
@@ -271,6 +280,10 @@ jest.mock("../hooks/useSubmissionSheet", () => ({
 }));
 
 // Mock the Layout component to capture props
+jest.mock("@/components/tournament-submission-sheet", () => ({
+  TournamentSubmissionSheet: () => null,
+}));
+
 jest.mock("../container/BridgeGame.layout", () => ({
   __esModule: true,
   default: (props: Record<string, any>) => {

@@ -16,6 +16,7 @@ import { BackHandler, StatusBar } from "react-native";
 import { useGameAds } from "../hooks/useGameAds";
 import { useBridgeLayout } from "../hooks/useBridgeLayout";
 import { useAutoStart } from "../hooks/useAutoStart";
+import { useGameSubmissionFeeArgs } from "../hooks/useGameSubmissionFeeArgs";
 import { useGameSession } from "../hooks/useGameSession";
 import { usePowerUpInventory } from "../hooks/usePowerUpInventory";
 import { useRunSummary } from "../hooks/useRunSummary";
@@ -206,7 +207,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     handleSubmissionCancel,
     handleSubmitLeaderboard,
     handleSubmitRaffle,
-    rewardAmount,
     showRankChange,
     tournamentId,
     tournamentName,
@@ -398,6 +398,43 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       setHighscore,
       raffleSubmissionsUsed,
     });
+  const submissionScore = runSummary?.score ?? score;
+  const gameContractId = CONTRACTS[selectedNetwork]?.game || "";
+  const { feeFunctionArgs, isLoadingFeeArgs, nextUserNonce } =
+    useGameSubmissionFeeArgs({
+      contractId: gameContractId,
+      score: submissionScore,
+      tournamentId: tournamentData?.tournamentId,
+      enabled: submissionContext !== null,
+    });
+  const contractArgs = useMemo(
+    () => [
+      ...(tournamentData?.tournamentId != null
+        ? [
+            {
+              name: "tournament-id",
+              value: String(tournamentData.tournamentId),
+              type: "uint",
+            },
+          ]
+        : []),
+      {
+        name: "score",
+        value: String(submissionScore),
+        type: "uint",
+      },
+      ...(nextUserNonce != null
+        ? [
+            {
+              name: "user-nonce",
+              value: String(nextUserNonce),
+              type: "uint",
+            },
+          ]
+        : []),
+    ],
+    [nextUserNonce, submissionScore, tournamentData?.tournamentId],
+  );
 
   const avatarSource = useMemo(
     () => (userData?.user.photo ? { uri: userData.user.photo } : undefined),
@@ -541,7 +578,7 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       </View>
       <TournamentSubmissionSheet
         ref={submissionSheetRef}
-        score={runSummary?.score ?? score}
+        score={submissionScore}
         currentRank={null}
         projectedRank={null}
         tournamentId={tournamentId}
@@ -551,8 +588,6 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
         walletHasEnoughBalance={walletHasEnoughBalance}
         sponsoredSubmissionsLeft={sponsoredSubmissionsLeftForContext}
         onAddFunds={handleAddFunds}
-        rewardAmount={rewardAmount}
-        estimatedFee={0.002}
         showRankChange={showRankChange}
         userDisplayName={displayName}
         userAvatarSource={avatarSource}
@@ -567,19 +602,11 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
         network={
           selectedNetwork.charAt(0).toUpperCase() + selectedNetwork.slice(1)
         }
-        contractAddress={CONTRACTS[selectedNetwork]?.game || "Not configured"}
+        contractAddress={gameContractId || "Not configured"}
         functionName={SC_FUNCTIONS.game.publicFunctions.SUBMIT_SCORE}
-        contractArgs={[
-          {
-            name: "score",
-            value: score.toString(),
-            type: "uint",
-          },
-          {
-            name: "tournament-id",
-            value: tournamentId,
-          },
-        ]}
+        contractArgs={contractArgs}
+        feeFunctionArgs={feeFunctionArgs}
+        isLoadingFeeArgs={isLoadingFeeArgs}
       />
       <GetAssetSheet
         open={getAssetSheetOpen}

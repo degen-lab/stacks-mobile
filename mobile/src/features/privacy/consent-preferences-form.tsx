@@ -11,13 +11,14 @@ import {
 
 type ConsentPreferencesFormProps = {
   analyticsEnabled: boolean;
-  personalizedAdsEnabled: boolean;
   onAnalyticsChange: (value: boolean) => void;
-  onPersonalizedAdsChange: (value: boolean) => void;
   primaryLabel: string;
   onPrimaryPress: () => void;
   secondaryLabel?: string;
   onSecondaryPress?: () => void;
+  manageAdChoicesLabel?: string;
+  onManageAdChoices?: () => void;
+  manageAdChoicesLoading?: boolean;
   loading?: boolean;
   testIDPrefix?: string;
   withSafeArea?: boolean;
@@ -71,14 +72,15 @@ function PreferenceRow({
 
 export function ConsentPreferencesForm({
   analyticsEnabled,
-  personalizedAdsEnabled,
   loading = false,
   onAnalyticsChange,
-  onPersonalizedAdsChange,
   onPrimaryPress,
   onSecondaryPress,
   primaryLabel,
   secondaryLabel,
+  manageAdChoicesLabel,
+  onManageAdChoices,
+  manageAdChoicesLoading = false,
   testIDPrefix = "consent",
   withSafeArea = true,
 }: ConsentPreferencesFormProps) {
@@ -99,15 +101,29 @@ export function ConsentPreferencesForm({
             value={analyticsEnabled}
             onChange={onAnalyticsChange}
             testID={`${testIDPrefix}-analytics`}
-            withDivider={true}
+            withDivider={!!manageAdChoicesLabel && !!onManageAdChoices}
           />
-          <PreferenceRow
-            title="Personalized ads"
-            description="Support sponsored transactions with more relevant ads."
-            value={personalizedAdsEnabled}
-            onChange={onPersonalizedAdsChange}
-            testID={`${testIDPrefix}-ads-personalization`}
-          />
+          {manageAdChoicesLabel && onManageAdChoices ? (
+            <View className="px-4 py-4">
+              <Text className="font-instrument-sans text-base text-primary">
+                Ad choices
+              </Text>
+              <Text className="mt-1 text-sm leading-6 text-secondary">
+                Manage Google ad consent using the privacy options available in
+                your region.
+              </Text>
+              <Button
+                size="lg"
+                variant="outline"
+                className="mt-4 rounded-full"
+                label={manageAdChoicesLabel}
+                onPress={onManageAdChoices}
+                loading={manageAdChoicesLoading}
+                disabled={loading || manageAdChoicesLoading}
+                testID={`${testIDPrefix}-manage-ad-choices`}
+              />
+            </View>
+          ) : null}
         </View>
       </ScrollView>
       <View

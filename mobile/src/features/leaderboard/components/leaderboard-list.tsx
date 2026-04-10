@@ -8,11 +8,13 @@ import { useRouter } from "expo-router";
 export type LeaderboardListProps = {
   users?: LeaderboardUser[];
   currentUserRank?: number | null;
+  onReport?: (user: LeaderboardUser) => void;
 };
 
 export function LeaderboardList({
   users = [],
   currentUserRank,
+  onReport,
 }: LeaderboardListProps) {
   const router = useRouter();
   const { userData } = useAuth();
@@ -70,6 +72,7 @@ export function LeaderboardList({
             onMissingSubmission={
               user.isCurrentUser ? onMissingSubmission : undefined
             }
+            onReport={!user.isCurrentUser ? () => onReport?.(user) : undefined}
           />
         );
       })}

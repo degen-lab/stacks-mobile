@@ -75,3 +75,8 @@ export type UpdateUserConsentApiResponse = {
   message: string;
   data: ConsentDto;
 };
+
+export type DeleteAccountApiResponse = {
+  success: boolean;
+  message: string;
+};

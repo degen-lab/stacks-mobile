@@ -14,9 +14,6 @@ jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );
 
-global.setImmediate ??= (callback, ...args) => setTimeout(callback, 0, ...args);
-global.clearImmediate ??= (handle) => clearTimeout(handle);
-
 jest.mock("@react-native-google-signin/google-signin", () => ({
   GoogleSignin: {
     configure: jest.fn(),
@@ -41,6 +38,94 @@ jest.mock("@react-native-firebase/analytics", () => ({
   setUserId: jest.fn(() => Promise.resolve()),
   setUserProperties: jest.fn(() => Promise.resolve()),
 }));
+
+jest.mock("react-native-google-mobile-ads", () => {
+  const createRewardedAd = () => ({
+    load: jest.fn(),
+    show: jest.fn(),
+    addAdEventListener: jest.fn(() => jest.fn()),
+  });
+
+  const mobileAds = jest.fn(() => ({
+    setRequestConfiguration: jest.fn(() => Promise.resolve()),
+    initialize: jest.fn(() => Promise.resolve()),
+  }));
+
+  return {
+    __esModule: true,
+    default: mobileAds,
+    AdsConsent: {
+      reset: jest.fn(() => Promise.resolve()),
+      requestInfoUpdate: jest.fn(() =>
+        Promise.resolve({
+          status: "NOT_REQUIRED",
+          canRequestAds: true,
+          privacyOptionsRequirementStatus: "NOT_REQUIRED",
+          isConsentFormAvailable: false,
+        }),
+      ),
+      loadAndShowConsentFormIfRequired: jest.fn(() =>
+        Promise.resolve({
+          status: "OBTAINED",
+          canRequestAds: true,
+          privacyOptionsRequirementStatus: "REQUIRED",
+          isConsentFormAvailable: true,
+        }),
+      ),
+      showPrivacyOptionsForm: jest.fn(() =>
+        Promise.resolve({
+          status: "OBTAINED",
+          canRequestAds: true,
+          privacyOptionsRequirementStatus: "REQUIRED",
+          isConsentFormAvailable: true,
+        }),
+      ),
+      getConsentInfo: jest.fn(() =>
+        Promise.resolve({
+          status: "NOT_REQUIRED",
+          canRequestAds: true,
+          privacyOptionsRequirementStatus: "NOT_REQUIRED",
+          isConsentFormAvailable: false,
+        }),
+      ),
+      getUserChoices: jest.fn(() =>
+        Promise.resolve({
+          selectPersonalisedAds: true,
+        }),
+      ),
+    },
+    AdsConsentStatus: {
+      UNKNOWN: "UNKNOWN",
+      REQUIRED: "REQUIRED",
+      NOT_REQUIRED: "NOT_REQUIRED",
+      OBTAINED: "OBTAINED",
+    },
+    AdsConsentDebugGeography: {
+      DISABLED: 0,
+      EEA: 1,
+    },
+    AdsConsentPrivacyOptionsRequirementStatus: {
+      UNKNOWN: "UNKNOWN",
+      NOT_REQUIRED: "NOT_REQUIRED",
+      REQUIRED: "REQUIRED",
+    },
+    MaxAdContentRating: {
+      PG: "PG",
+    },
+    RewardedAd: {
+      createForAdRequest: jest.fn(() => createRewardedAd()),
+    },
+    AdEventType: {
+      OPENED: "opened",
+      CLOSED: "closed",
+      ERROR: "error",
+    },
+    RewardedAdEventType: {
+      LOADED: "loaded",
+      EARNED_REWARD: "earned_reward",
+    },
+  };
+});
 
 jest.mock("react-native-safe-area-context", () => {
   const { View } = require("react-native");
@@ -86,7 +171,6 @@ jest.mock("@gorhom/bottom-sheet", () => {
 
 global.setImmediate ??= (callback, ...args) => setTimeout(callback, 0, ...args);
 global.clearImmediate ??= (handle) => clearTimeout(handle);
-
 
 jest.mock("expo-tracking-transparency", () => ({
   getTrackingPermissionsAsync: jest.fn(() =>

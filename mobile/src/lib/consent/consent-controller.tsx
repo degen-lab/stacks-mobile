@@ -11,6 +11,7 @@ import {
 import { needsConsentGate } from "@/lib/consent/types";
 import { Env } from "@/lib/env";
 import { useConsentActions } from "@/lib/consent/use-consent-actions";
+import { useAdsConsentStore } from "@/lib/store/ads-consent";
 import { useAuth } from "@/lib/store/auth";
 import { resetConsentStore, useConsentStore } from "@/lib/store/consent";
 
@@ -25,6 +26,9 @@ export function ConsentController() {
   } = useAuth();
   const { hasHydrated: consentHydrated, pendingSync } = useConsentStore();
   const { syncPendingConsent } = useConsentActions();
+  const umpAdsPersonalization = useAdsConsentStore(
+    (state) => state.adsPersonalization,
+  );
 
   const ready = authHydrated && consentHydrated;
   const consent = pendingSync?.localConsent ?? backendUserData?.consent ?? null;
@@ -68,7 +72,8 @@ export function ConsentController() {
     if (prevEnabled === false) {
       void trackEvent("consent_saved", {
         analytics_enabled: consent?.analytics ?? false,
-        ads_personalization_enabled: consent?.adsPersonalization ?? false,
+        ads_personalization_enabled:
+          umpAdsPersonalization ?? consent?.adsPersonalization ?? false,
       });
     }
     const currentPathname = pathnameRef.current;
@@ -76,7 +81,14 @@ export function ConsentController() {
       screenTrackingRef.current = currentPathname;
       void trackScreen(currentPathname);
     }
-  }, [ready, analyticsEnabled, backendUserData, hasBackup, consent]);
+  }, [
+    ready,
+    analyticsEnabled,
+    backendUserData,
+    hasBackup,
+    consent,
+    umpAdsPersonalization,
+  ]);
 
   // Screen tracking on navigation
   useEffect(() => {

@@ -93,11 +93,11 @@ export default function RaffleSubmission({
         >
           <View className="mb-3">
             <Text className="text-xl font-semibold text-primary">
-              Weekly Raffle - 500 STX
+              Weekly Raffle
             </Text>
             <Text className="mt-1 text-sm text-secondary">
               {statusMessage ??
-                `You have ${sponsoredSubmissionsLeft} free submissions left today.`}
+                `Submit your score on-chain. ${sponsoredSubmissionsLeft} sponsored entries left today.`}
             </Text>
           </View>
           <RaffleEntryIndicator

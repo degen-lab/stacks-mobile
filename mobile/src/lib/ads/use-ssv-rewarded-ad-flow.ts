@@ -105,8 +105,8 @@ export function useSsvRewardedAdFlow<TPayload>(
       !ad.loading &&
       !hasLoadedRef.current
     ) {
-      ad.loadAd();
-      hasLoadedRef.current = true;
+      const didStartLoading = ad.loadAd();
+      hasLoadedRef.current = didStartLoading;
     }
     prevSsvRef.current = ssvData;
   }, [ad, ssvData]);

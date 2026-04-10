@@ -6,6 +6,8 @@ import {
   type RewardedAdReward,
 } from "react-native-google-mobile-ads";
 
+import { useAdsConsentStore } from "@/lib/store/ads-consent";
+
 type UseRewardedAdOptions = {
   adUnitId: string;
   keywords?: string[];
@@ -25,8 +27,9 @@ type UseRewardedAdState = {
   loaded: boolean;
   loading: boolean;
   error: string | null;
-  loadAd: () => void;
-  showAd: () => void;
+  canRequestAds: boolean;
+  loadAd: () => boolean;
+  showAd: () => boolean;
 };
 
 export default function useRewardedAd({
@@ -40,6 +43,14 @@ export default function useRewardedAd({
   onAdOpened,
   onAdError,
 }: UseRewardedAdOptions): UseRewardedAdState {
+  const hasResolvedConsent = useAdsConsentStore((state) => state.hasResolved);
+  const canRequestAds = useAdsConsentStore((state) => state.canRequestAds);
+  const isMobileAdsInitialized = useAdsConsentStore(
+    (state) => state.isMobileAdsInitialized,
+  );
+  const canUseAds =
+    hasResolvedConsent && canRequestAds && isMobileAdsInitialized;
+
   const rewarded = useMemo(
     () =>
       RewardedAd.createForAdRequest(adUnitId, {
@@ -75,17 +86,19 @@ export default function useRewardedAd({
   }, [onEarnedReward, onAdClosed, onAdOpened, onAdError]);
 
   const loadAd = useCallback(() => {
-    if (loading || loaded) return;
+    if (!canUseAds || loading || loaded) return false;
     setLoading(true);
     setError(null);
     rewarded.load();
-  }, [rewarded, loading, loaded]);
+    return true;
+  }, [canUseAds, rewarded, loading, loaded]);
 
   const showAd = useCallback(() => {
-    if (!loaded) return;
+    if (!canUseAds || !loaded) return false;
     rewardProcessedRef.current = false; // Reset flag when showing new ad
     rewarded.show();
-  }, [loaded, rewarded]);
+    return true;
+  }, [canUseAds, loaded, rewarded]);
 
   useEffect(() => {
     const unsubscribeLoaded = rewarded.addAdEventListener(
@@ -144,7 +157,10 @@ export default function useRewardedAd({
       },
     );
 
-    if (loadOnMount) {
+    if (!canUseAds) {
+      setLoaded(false);
+      setLoading(false);
+    } else if (loadOnMount) {
       loadAd();
     }
 
@@ -155,12 +171,13 @@ export default function useRewardedAd({
       unsubscribeClosed();
       unsubscribeError();
     };
-  }, [rewarded, loadOnMount, loadAd]);
+  }, [rewarded, canUseAds, loadOnMount, loadAd]);
 
   return {
     loaded,
     loading,
     error,
+    canRequestAds: canUseAds,
     loadAd,
     showAd,
   };

@@ -200,8 +200,10 @@ export function StackStxSheet({
                   <Button
                     label={showFeeSelector ? "Done" : "Edit"}
                     onPress={() => setShowFeeSelector(!showFeeSelector)}
-                    variant="link"
+                    variant="outline"
                     size="sm"
+                    className="rounded-lg border-2 border-border-secondary bg-transparent"
+                    textClassName="text-xs font-instrument-sans-medium text-secondary"
                   />
                 </View>
               </View>

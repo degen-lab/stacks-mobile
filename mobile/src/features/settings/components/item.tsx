@@ -9,6 +9,7 @@ type ItemProps = {
   value?: string;
   onPress?: () => void;
   icon?: React.ReactNode;
+  variant?: "default" | "danger";
 };
 
 export const Item = ({
@@ -17,8 +18,10 @@ export const Item = ({
   value,
   icon,
   onPress,
+  variant = "default",
 }: ItemProps) => {
   const isPressable = onPress !== undefined;
+  const isDanger = variant === "danger";
 
   return (
     <Pressable
@@ -35,7 +38,11 @@ export const Item = ({
           </View>
         ) : null}
         <View className="flex-1">
-          <Text className="text-base font-instrument-sans text-primary">
+          <Text
+            className={`text-base font-instrument-sans ${
+              isDanger ? "text-red-600 dark:text-red-400" : "text-primary"
+            }`}
+          >
             {label}
           </Text>
           {description ? (
@@ -49,7 +56,12 @@ export const Item = ({
           <Text className="mr-2 text-base text-secondary">{value}</Text>
         ) : null}
         {isPressable ? (
-          <ChevronRight size={18} className="text-secondary" />
+          <ChevronRight
+            size={18}
+            className={
+              isDanger ? "text-red-600 dark:text-red-400" : "text-secondary"
+            }
+          />
         ) : null}
       </View>
     </Pressable>

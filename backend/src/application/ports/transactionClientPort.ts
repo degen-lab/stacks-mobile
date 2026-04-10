@@ -7,6 +7,7 @@ export interface TransactionClientPort {
     publicKey: string,
     score: number,
     sponsored: boolean,
+    feeMicroStx?: number,
   ): Promise<string>;
   broadcastSponsoredTransaction(serializedTx: string): Promise<string>;
   getTournamentId(): Promise<number>;

@@ -27,6 +27,7 @@ interface ContractTxDetailsProps {
   onAdvancedToggle?: (isAdvanced: boolean) => void;
 
   showFeeSelector?: boolean;
+  feeHelperText?: string;
   selectedFeeOption?: FeeOption;
   onSelectFee?: (option: FeeOption) => void;
   customFee?: string;
@@ -48,6 +49,7 @@ export function ContractTxDetails({
   title,
   onAdvancedToggle,
   showFeeSelector = false,
+  feeHelperText,
   selectedFeeOption = "standard",
   onSelectFee,
   customFee = "",
@@ -174,49 +176,58 @@ export function ContractTxDetails({
 
       {/* Fee Section */}
       {showFeeSelector && (
-        <View className="mb-6 rounded-xl border border-surface-secondary px-4 py-3 dark:border-border-primary">
-          <View className="flex-row items-center justify-between gap-4">
-            <View className="flex-1">
-              <Text className="font-instrument-sans text-sm text-secondary">
-                Network fee
-              </Text>
-              <View className="mt-1 min-h-[24px] justify-center">
-                {selectedFeeOption === "custom" && showFeePicker ? (
-                  <TextInput
-                    keyboardType="decimal-pad"
-                    value={customFee}
-                    onChangeText={onCustomFeeChange}
-                    placeholder="Enter custom fee"
-                    placeholderTextColor="rgb(var(--color-text-tertiary))"
-                    autoFocus
-                    className="border-0 border-b border-surface-secondary p-0 pb-1 font-instrument-sans-medium text-base text-primary dark:border-border-primary"
-                    style={{
-                      paddingVertical: 0,
-                      textAlignVertical: "center",
-                    }}
-                  />
-                ) : (
-                  <Text className="font-instrument-sans-medium text-base text-primary">
-                    {feeDisplayLabel}
-                  </Text>
-                )}
+        <View className="mb-6 gap-2">
+          {feeHelperText ? (
+            <Text className="text-sm font-instrument-sans text-secondary dark:text-neutral-300">
+              {feeHelperText}
+            </Text>
+          ) : null}
+          <View className="rounded-xl border border-surface-secondary px-4 py-3 dark:border-border-primary">
+            <View className="flex-row items-center justify-between gap-4">
+              <View className="flex-1">
+                <Text className="font-instrument-sans text-sm text-secondary">
+                  Network fee
+                </Text>
+                <View className="mt-1 min-h-[24px] justify-center">
+                  {selectedFeeOption === "custom" && showFeePicker ? (
+                    <TextInput
+                      keyboardType="decimal-pad"
+                      value={customFee}
+                      onChangeText={onCustomFeeChange}
+                      placeholder="Enter custom fee"
+                      placeholderTextColor="rgb(var(--color-text-tertiary))"
+                      autoFocus
+                      className="border-0 border-b border-surface-secondary p-0 pb-1 font-instrument-sans-medium text-base text-primary dark:border-border-primary"
+                      style={{
+                        paddingVertical: 0,
+                        textAlignVertical: "center",
+                      }}
+                    />
+                  ) : (
+                    <Text className="font-instrument-sans-medium text-base text-primary">
+                      {feeDisplayLabel}
+                    </Text>
+                  )}
+                </View>
               </View>
+              {onSelectFee && (
+                <Button
+                  label={showFeePicker ? "Done" : "Edit"}
+                  onPress={() => setShowFeePicker(!showFeePicker)}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg border-2 border-border-secondary bg-transparent"
+                  textClassName="text-xs font-instrument-sans-medium text-secondary"
+                />
+              )}
             </View>
-            {onSelectFee && (
-              <Button
-                label={showFeePicker ? "Done" : "Edit"}
-                onPress={() => setShowFeePicker(!showFeePicker)}
-                variant="link"
-                size="sm"
-              />
-            )}
           </View>
         </View>
       )}
 
       {/* Fee Selector Pills */}
       {showFeeSelector && showFeePicker && onSelectFee && (
-        <View className="mb-4">
+        <View className="w-full">
           <FeeSelector
             selectedFee={selectedFeeOption}
             onSelectFee={onSelectFee}

@@ -1,5 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, Video } from "lucide-react-native";
+import { useColorScheme } from "nativewind";
+import { StyleSheet } from "react-native";
 
 import {
   ActivityIndicator,
@@ -23,6 +25,28 @@ type ReviveOverlayProps = {
   adError: string | null;
 };
 
+const styles = StyleSheet.create({
+  button: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  reviveButtonActive: {
+    backgroundColor: colors.stacks.bloodOrange,
+  },
+  reviveButtonInactiveLight: {
+    backgroundColor: colors.neutral[300],
+  },
+  reviveButtonInactiveDark: {
+    backgroundColor: colors.charcoal[700],
+  },
+});
+
 export default function ReviveOverlay({
   score,
   highScore = 0,
@@ -33,6 +57,8 @@ export default function ReviveOverlay({
   adLoading,
   adError,
 }: ReviveOverlayProps) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const canCompareHighScore = highScore > 0;
   const newScore = getDisplayScore(score);
   const isHighScorePace = canCompareHighScore && newScore >= highScore;
@@ -86,11 +112,14 @@ export default function ReviveOverlay({
             <Pressable
               onPress={onRevive}
               disabled={adLoading}
-              className={`w-full flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3 ${
+              style={[
+                styles.button,
                 adLoaded
-                  ? "bg-stacks-blood-orange"
-                  : "bg-sand-300 dark:bg-surface-secondary"
-              }`}
+                  ? styles.reviveButtonActive
+                  : isDark
+                    ? styles.reviveButtonInactiveDark
+                    : styles.reviveButtonInactiveLight,
+              ]}
             >
               {adLoading ? (
                 <ActivityIndicator size="small" className="text-white" />

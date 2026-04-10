@@ -78,6 +78,7 @@ export class TransactionService {
     score: number,
     submissionType: SubmissionType,
     isSponsored: boolean,
+    feeMicroStx?: number,
   ): Promise<CreateGameSubmissionTransactionResult> {
     const user = await this.entityManager.findOne(User, {
       where: { id: userId },
@@ -133,6 +134,7 @@ export class TransactionService {
         publicKey,
         score,
         isSponsored,
+        isSponsored ? undefined : feeMicroStx,
       );
 
     if (!isSponsored) {

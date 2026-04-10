@@ -8,11 +8,8 @@ import {
 import { useUserProfile } from "@/api/user";
 import { requestIosAdTracking } from "@/lib/ads/ios-tracking-permission";
 import { getRewardedAdUnitId } from "@/lib/ads/rewarded-ad-unit";
-import { CURRENT_CONSENT_VERSION } from "@/lib/consent/types";
-import { useConsentActions } from "@/lib/consent/use-consent-actions";
 import { useSsvRewardedAdFlow } from "@/lib/ads/use-ssv-rewarded-ad-flow";
-import { useAuth } from "@/lib/store/auth";
-import { useConsentStore } from "@/lib/store/consent";
+import { useAdsConsentStore } from "@/lib/store/ads-consent";
 import { useSignTransaction } from "./use-sign-transaction";
 
 type QueuedSponsoredTransaction = {
@@ -47,14 +44,20 @@ const toError = (error: unknown) =>
 export function useSponsoredStacksTransaction() {
   const { data: userProfile } = useUserProfile();
   const userId = userProfile?.id;
-  const { backendUserData } = useAuth();
-  const pendingSync = useConsentStore((state) => state.pendingSync);
-  const consent = pendingSync?.localConsent ?? backendUserData?.consent ?? null;
+  const hasResolvedAdsConsent = useAdsConsentStore(
+    (state) => state.hasResolved,
+  );
+  const canRequestAds = useAdsConsentStore((state) => state.canRequestAds);
+  const adsPersonalization = useAdsConsentStore(
+    (state) => state.adsPersonalization,
+  );
+  const isMobileAdsInitialized = useAdsConsentStore(
+    (state) => state.isMobileAdsInitialized,
+  );
   const createSponsoredTransactionMutation =
     useCreateSponsoredTransactionMutation();
   const broadcastSponsoredTransactionMutation =
     useBroadcastSponsoredTransactionMutation();
-  const { saveConsent } = useConsentActions();
   const signTransaction = useSignTransaction();
   const pendingRequestRef = useRef<PendingSponsoredRequest | null>(null);
 
@@ -96,25 +99,29 @@ export function useSponsoredStacksTransaction() {
       },
     });
 
+  const ensureSponsoredAdsAvailable = useCallback(() => {
+    if (!hasResolvedAdsConsent) {
+      throw new Error("Ads are still preparing. Please try again in a moment.");
+    }
+
+    if (!canRequestAds || !isMobileAdsInitialized) {
+      throw new Error("Sponsored transactions are unavailable right now.");
+    }
+  }, [canRequestAds, hasResolvedAdsConsent, isMobileAdsInitialized]);
+
   const getRewardedAdRequestOptions = useCallback(async () => {
-    if (consent?.adsPersonalization !== true || Platform.OS !== "ios") {
+    ensureSponsoredAdsAvailable();
+
+    if (adsPersonalization !== true || Platform.OS !== "ios") {
       return {
-        requestNonPersonalizedAdsOnly: consent?.adsPersonalization !== true,
+        requestNonPersonalizedAdsOnly: adsPersonalization !== true,
       };
     }
 
     const tracking = await requestIosAdTracking();
 
-    if (tracking === "declined") {
-      await saveConsent({
-        analytics: consent?.analytics === true,
-        adsPersonalization: false,
-        version: CURRENT_CONSENT_VERSION,
-      });
-    }
-
     return { requestNonPersonalizedAdsOnly: tracking !== "granted" };
-  }, [consent?.adsPersonalization, consent?.analytics, saveConsent]);
+  }, [adsPersonalization, ensureSponsoredAdsAvailable]);
 
   const submitPreparedSponsoredTransaction = useCallback(
     async ({
@@ -132,12 +139,12 @@ export function useSponsoredStacksTransaction() {
         );
       }
 
+      const { requestNonPersonalizedAdsOnly } =
+        await getRewardedAdRequestOptions();
       const signedSerializedTx = await signTransaction(
         unsignedSerializedTx,
         accountIndex,
       );
-      const { requestNonPersonalizedAdsOnly } =
-        await getRewardedAdRequestOptions();
 
       return new Promise<number>((resolve, reject) => {
         pendingRequestRef.current = {
@@ -173,6 +180,7 @@ export function useSponsoredStacksTransaction() {
       if (!userId) {
         throw new Error("User profile not available.");
       }
+      ensureSponsoredAdsAvailable();
 
       const response = await createSponsoredTransactionMutation.mutateAsync({
         originAddress,
@@ -192,6 +200,7 @@ export function useSponsoredStacksTransaction() {
     },
     [
       createSponsoredTransactionMutation,
+      ensureSponsoredAdsAvailable,
       submitPreparedSponsoredTransaction,
       userId,
     ],

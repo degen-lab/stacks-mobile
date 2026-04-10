@@ -1,4 +1,5 @@
 import { EntityManager, In } from 'typeorm';
+import { UserReport, ReportReason } from '../../domain/entities/userReport';
 import { logger } from '../../api/helpers/logger';
 import { SubmissionType, TransactionStatus } from '../../domain/entities/enums';
 import { FraudAttempt } from '../../domain/entities/fraudAttempt';
@@ -254,6 +255,22 @@ export class UserService {
     return await this.entityManager.save(user);
   }
 
+  async deleteAccount(userId: number): Promise<void> {
+    await this.entityManager.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new UserNotFoundError(
+          `Invalid id, user with id ${userId} not found`,
+        );
+      }
+
+      await manager.delete(User, { id: userId });
+    });
+  }
+
   async getDailySubmissionsLeft(userId: number): Promise<{
     dailyRaffleSubmissionsLeft: number;
     dailyWeeklyContestSubmissionsLeft: number;
@@ -339,5 +356,22 @@ export class UserService {
       return true;
     }
     return false;
+  }
+
+  async reportUser(
+    reporterId: number,
+    reportedId: number,
+    reason: ReportReason,
+  ): Promise<void> {
+    const reportedExists = await this.entityManager
+      .getRepository(User)
+      .existsBy({ id: reportedId });
+    if (!reportedExists)
+      throw new UserNotFoundError(`User ${reportedId} not found`);
+    await this.entityManager.getRepository(UserReport).save({
+      reporter: { id: reporterId } as User,
+      reported: { id: reportedId } as User,
+      reason,
+    });
   }
 }
