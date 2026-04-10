@@ -3,8 +3,13 @@ import { useCallback } from "react";
 import { queryClient } from "@/api/common/api-provider";
 import { useUpdateUserConsent } from "@/api/user";
 import type { UserProfile } from "@/api/user/types";
-import type { ConsentDecision, ConsentDto } from "@/lib/consent/types";
-import { createLocalConsent } from "@/lib/consent/types";
+import {
+  CURRENT_CONSENT_VERSION,
+  createLocalConsent,
+  isAnalyticsConsentCurrent,
+  type ConsentDecision,
+  type ConsentDto,
+} from "@/lib/consent/types";
 import { useAuth } from "@/lib/store/auth";
 import { useConsentStore } from "@/lib/store/consent";
 
@@ -89,9 +94,59 @@ export function useConsentActions() {
     userId,
   ]);
 
+  const syncAdsPersonalizationMirror = useCallback(
+    async (adsPersonalization: boolean) => {
+      if (!userId || !backendUserData) {
+        return null;
+      }
+
+      const pendingSync = useConsentStore.getState().pendingSync;
+      const effectiveConsent =
+        pendingSync?.localConsent ?? backendUserData.consent ?? null;
+
+      if (!isAnalyticsConsentCurrent(effectiveConsent)) {
+        return null;
+      }
+
+      const decision: ConsentDecision = {
+        analytics: effectiveConsent.analytics === true,
+        adsPersonalization,
+        version: CURRENT_CONSENT_VERSION,
+      };
+
+      if (
+        pendingSync?.payload.analytics === decision.analytics &&
+        pendingSync.payload.adsPersonalization ===
+          decision.adsPersonalization &&
+        pendingSync.payload.version === decision.version
+      ) {
+        return {
+          consent: pendingSync.localConsent,
+          synced: false,
+          skipped: true,
+        } as const;
+      }
+
+      if (
+        effectiveConsent.adsPersonalization === adsPersonalization &&
+        effectiveConsent.version === CURRENT_CONSENT_VERSION
+      ) {
+        return {
+          consent: effectiveConsent,
+          synced: true,
+          skipped: true,
+        } as const;
+      }
+
+      return await saveConsent(decision);
+    },
+    [backendUserData, saveConsent, userId],
+  );
+
   return {
     isSaving: updateConsentMutation.isPending,
     saveConsent,
     syncPendingConsent,
+    syncAdsPersonalizationMirror,
   };
 }

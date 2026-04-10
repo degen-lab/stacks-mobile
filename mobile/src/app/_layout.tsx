@@ -20,6 +20,7 @@ import { APIProvider } from "@/api";
 import { ReferralHeader } from "@/features/referral/components/referral-header";
 import { SwapSheetProvider } from "@/features/swaps";
 import { TransferSheetProvider } from "@/features/transfer";
+import { AdsConsentController } from "@/lib/ads/ads-consent-controller";
 import { useAppBootstrap } from "@/lib/app/use-app-bootstrap";
 import { ConsentController } from "@/lib/consent/consent-controller";
 import { fontConfig } from "@/lib/fonts";
@@ -50,6 +51,7 @@ export default function RootLayout() {
 
   return (
     <Providers>
+      <AdsConsentController />
       <ConsentController />
       <Stack>
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
@@ -69,7 +71,7 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="settings/privacy-ads"
+          name="settings/privacy"
           options={{ headerShown: false }}
         />
         <Stack.Screen

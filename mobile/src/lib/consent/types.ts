@@ -26,15 +26,19 @@ export function createLocalConsent(
   return { ...decision, updatedAt };
 }
 
-export function isConsentCurrent(consent: ConsentDto | null | undefined) {
+export function isAnalyticsConsentCurrent(
+  consent: ConsentDto | null | undefined,
+) {
   if (!consent) return false;
   return (
-    consent.version === CURRENT_CONSENT_VERSION &&
-    consent.analytics !== null &&
-    consent.adsPersonalization !== null
+    consent.version === CURRENT_CONSENT_VERSION && consent.analytics !== null
   );
 }
 
+export function isConsentCurrent(consent: ConsentDto | null | undefined) {
+  return isAnalyticsConsentCurrent(consent);
+}
+
 export function needsConsentGate(consent: ConsentDto | null | undefined) {
-  return !isConsentCurrent(consent);
+  return !isAnalyticsConsentCurrent(consent);
 }

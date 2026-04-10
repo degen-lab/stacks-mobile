@@ -10,8 +10,7 @@ const mockClearPendingSync = jest.fn();
 const mockSetBackendUserData = jest.fn();
 
 let mockPendingSync: PendingConsentSync | null = null;
-
-const backendUserData = {
+let mockBackendUserData: any = {
   id: 7,
   nickname: "Tester",
   referralCode: "ABCDEFGH",
@@ -43,7 +42,7 @@ jest.mock("@/api/user", () => ({
 
 jest.mock("@/lib/store/auth", () => ({
   useAuth: () => ({
-    backendUserData,
+    backendUserData: mockBackendUserData,
     setBackendUserData: (...args: unknown[]) => mockSetBackendUserData(...args),
   }),
 }));
@@ -68,6 +67,15 @@ describe("useConsentActions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPendingSync = null;
+    mockBackendUserData = {
+      id: 7,
+      nickname: "Tester",
+      referralCode: "ABCDEFGH",
+      streak: 0,
+      points: 0,
+      isNewUser: false,
+      consent: null,
+    };
     mockMutateAsync.mockResolvedValue({ data: serverConsent });
   });
 
@@ -84,7 +92,7 @@ describe("useConsentActions", () => {
       expect(outcome.consent).toEqual(serverConsent);
       expect(mockClearPendingSync).toHaveBeenCalledTimes(1);
       expect(mockSetBackendUserData).toHaveBeenCalledWith({
-        ...backendUserData,
+        ...mockBackendUserData,
         consent: serverConsent,
       });
       expect(mockSetQueryData).toHaveBeenCalledWith(
@@ -132,7 +140,7 @@ describe("useConsentActions", () => {
 
       expect(mockClearPendingSync).toHaveBeenCalledTimes(1);
       expect(mockSetBackendUserData).toHaveBeenCalledWith({
-        ...backendUserData,
+        ...mockBackendUserData,
         consent: serverConsent,
       });
     });
@@ -147,6 +155,56 @@ describe("useConsentActions", () => {
 
       expect(mockMutateAsync).not.toHaveBeenCalled();
       expect(mockClearPendingSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("syncAdsPersonalizationMirror", () => {
+    it("persists a UMP-derived ads preference when analytics consent is current", async () => {
+      mockBackendUserData = {
+        ...mockBackendUserData,
+        consent: {
+          analytics: true,
+          adsPersonalization: false,
+          version: CURRENT_CONSENT_VERSION,
+          updatedAt: "2024-01-01T00:00:00.000Z",
+        },
+      };
+      mockMutateAsync.mockResolvedValue({
+        data: { ...serverConsent, adsPersonalization: true },
+      });
+
+      const { result } = renderHook(() => useConsentActions());
+
+      await act(async () => {
+        await result.current.syncAdsPersonalizationMirror(true);
+      });
+
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        analytics: true,
+        adsPersonalization: true,
+        version: CURRENT_CONSENT_VERSION,
+      });
+    });
+
+    it("skips syncing when analytics consent is not current yet", async () => {
+      mockBackendUserData = {
+        ...mockBackendUserData,
+        consent: {
+          analytics: null,
+          adsPersonalization: false,
+          version: null,
+          updatedAt: null,
+        },
+      };
+
+      const { result } = renderHook(() => useConsentActions());
+
+      await act(async () => {
+        await result.current.syncAdsPersonalizationMirror(true);
+      });
+
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+      expect(mockSetPendingSync).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,6 +1,6 @@
 import mobileAds, { MaxAdContentRating } from "react-native-google-mobile-ads";
 
-let initializePromise: Promise<void> | null = null;
+let initializePromise: Promise<boolean> | null = null;
 
 /**
  * Get your device's test ID for adding to testDeviceIdentifiers
@@ -27,10 +27,9 @@ export function getTestDeviceIds(): string[] {
  * Initialize Google Mobile Ads SDK with request configuration
  * This must be called before loading any ads
  */
-export async function initializeAds() {
+export async function initializeAds(): Promise<boolean> {
   if (initializePromise) {
-    await initializePromise;
-    return;
+    return await initializePromise;
   }
 
   initializePromise = (async () => {
@@ -59,12 +58,13 @@ export async function initializeAds() {
       await mobileAds().initialize();
 
       console.log("[Ads] Google Mobile Ads SDK initialized successfully");
+      return true;
     } catch (error) {
       initializePromise = null;
       console.error("[Ads] Failed to initialize Google Mobile Ads SDK:", error);
-      // Don't throw - allow app to continue even if ads fail to initialize
+      return false;
     }
   })();
 
-  await initializePromise;
+  return await initializePromise;
 }

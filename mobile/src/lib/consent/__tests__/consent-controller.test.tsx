@@ -4,7 +4,6 @@ import { render, waitFor } from "@/lib/tests";
 
 import { ConsentController } from "../consent-controller";
 
-const mockInitializeAds = jest.fn();
 const mockSetEnabled = jest.fn();
 const mockSetUserContext = jest.fn();
 const mockClearUserContext = jest.fn();
@@ -13,14 +12,11 @@ const mockSyncPendingConsent = jest.fn();
 
 let mockAuthState: any;
 let mockConsentState: any;
+let mockAdsConsentState: any;
 
 jest.mock("expo-router", () => ({
   usePathname: () => "/",
   useRouter: () => ({ replace: jest.fn() }),
-}));
-
-jest.mock("@/lib/ads/initialize-ads", () => ({
-  initializeAds: (...args: unknown[]) => mockInitializeAds(...args),
 }));
 
 jest.mock("@/lib/analytics", () => ({
@@ -41,6 +37,11 @@ jest.mock("@/lib/consent/use-consent-actions", () => ({
 
 jest.mock("@/lib/store/auth", () => ({
   useAuth: () => mockAuthState,
+}));
+
+jest.mock("@/lib/store/ads-consent", () => ({
+  useAdsConsentStore: (selector: (state: any) => unknown) =>
+    selector(mockAdsConsentState),
 }));
 
 jest.mock("@/lib/store/consent", () => ({
@@ -68,13 +69,13 @@ describe("ConsentController", () => {
     jest.clearAllMocks();
     mockAuthState = consentedUser;
     mockConsentState = { hasHydrated: true, pendingSync: null };
+    mockAdsConsentState = { adsPersonalization: false };
   });
 
   it("enables analytics and sets user identity for a consented user", async () => {
     render(<ConsentController />);
 
     await waitFor(() => {
-      expect(mockInitializeAds).toHaveBeenCalledTimes(1);
       expect(mockSetEnabled).toHaveBeenCalledWith(true);
       expect(mockSetUserContext).toHaveBeenCalledWith({
         userId: "42",
@@ -87,7 +88,7 @@ describe("ConsentController", () => {
     expect(mockClearUserContext).not.toHaveBeenCalled();
   });
 
-  it("does not initialize ads before consent is current", async () => {
+  it("keeps analytics disabled until analytics consent is current", async () => {
     mockAuthState = {
       ...consentedUser,
       backendUserData: {
@@ -106,7 +107,6 @@ describe("ConsentController", () => {
     await waitFor(() => {
       expect(mockSetEnabled).toHaveBeenCalledWith(false);
     });
-    expect(mockInitializeAds).not.toHaveBeenCalled();
   });
 
   it("disables analytics and clears identity on sign out", async () => {

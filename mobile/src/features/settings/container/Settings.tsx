@@ -44,7 +44,7 @@ export default function SettingsScreen() {
           <View className="mx-4 border-b border-surface-secondary" />
           <Item
             label="Privacy"
-            onPress={() => router.push("/settings/privacy-ads" as any)}
+            onPress={() => router.push("/settings/privacy" as any)}
           />
           <View className="mx-4 border-b border-surface-secondary" />
           <HelpItem />
