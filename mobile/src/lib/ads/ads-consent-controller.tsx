@@ -51,16 +51,18 @@ export function AdsConsentController() {
 
     hasAttemptedInitRef.current = true;
 
-    initializeAds().then((initialized) => {
-      if (!initialized) {
-        // Allow one retry on the next canRequestAds trigger.
+    initializeAds()
+      .then((initialized) => {
+        if (!initialized) {
+          // Allow one retry on the next canRequestAds trigger.
+          hasAttemptedInitRef.current = false;
+        }
+        setMobileAdsInitialized(initialized);
+      })
+      .catch((error) => {
         hasAttemptedInitRef.current = false;
-      }
-      setMobileAdsInitialized(initialized);
-    }).catch((error) => {
-      hasAttemptedInitRef.current = false;
-      console.error("[AdsConsent] Mobile Ads init failed:", error);
-    });
+        console.error("[AdsConsent] Mobile Ads init failed:", error);
+      });
   }, [
     canRequestAds,
     hasResolved,

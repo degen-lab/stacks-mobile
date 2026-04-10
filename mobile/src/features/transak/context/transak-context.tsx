@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useRef, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useRef,
+  useCallback,
+  useState,
+} from "react";
 import { TransakDrawer } from "../container/TransakDrawer";
+import { ComingSoonSheet } from "../components/coming-soon-sheet";
 import type { AssetOption, TransakDrawerRef } from "../types";
 
 type TransakContextType = {
@@ -11,13 +18,11 @@ const TransakContext = createContext<TransakContextType | undefined>(undefined);
 
 export function TransakProvider({ children }: { children: React.ReactNode }) {
   const drawerRef = useRef<TransakDrawerRef>(null);
+  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
 
-  const openTransak = useCallback(
-    (defaultAsset?: AssetOption, action?: "buy" | "sell") => {
-      drawerRef.current?.present(defaultAsset, action);
-    },
-    [],
-  );
+  const openTransak = useCallback(() => {
+    setIsComingSoonOpen(true);
+  }, []);
 
   const closeTransak = useCallback(() => {
     drawerRef.current?.dismiss();
@@ -27,6 +32,10 @@ export function TransakProvider({ children }: { children: React.ReactNode }) {
     <TransakContext.Provider value={{ openTransak, closeTransak }}>
       {children}
       <TransakDrawer drawerRef={drawerRef} />
+      <ComingSoonSheet
+        open={isComingSoonOpen}
+        onClose={() => setIsComingSoonOpen(false)}
+      />
     </TransakContext.Provider>
   );
 }

@@ -63,14 +63,17 @@ async function getAdsPersonalization(
   consentInfo: AdsConsentInfo,
 ): Promise<boolean | null> {
   try {
-    const userChoices: AdsConsentUserChoices = await AdsConsent.getUserChoices();
+    const userChoices: AdsConsentUserChoices =
+      await AdsConsent.getUserChoices();
     return userChoices.selectPersonalisedAds === true;
   } catch {
     return consentInfo.status === AdsConsentStatus.NOT_REQUIRED ? true : null;
   }
 }
 
-async function createSnapshot(consentInfo: AdsConsentInfo): Promise<AdsConsentSnapshot> {
+async function createSnapshot(
+  consentInfo: AdsConsentInfo,
+): Promise<AdsConsentSnapshot> {
   return {
     status: consentInfo.status,
     canRequestAds: consentInfo.canRequestAds,
