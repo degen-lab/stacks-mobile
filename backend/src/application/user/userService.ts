@@ -1,4 +1,5 @@
 import { EntityManager, In } from 'typeorm';
+import { UserReport, ReportReason } from '../../domain/entities/userReport';
 import { logger } from '../../api/helpers/logger';
 import { SubmissionType, TransactionStatus } from '../../domain/entities/enums';
 import { FraudAttempt } from '../../domain/entities/fraudAttempt';
@@ -355,5 +356,22 @@ export class UserService {
       return true;
     }
     return false;
+  }
+
+  async reportUser(
+    reporterId: number,
+    reportedId: number,
+    reason: ReportReason,
+  ): Promise<void> {
+    const reportedExists = await this.entityManager
+      .getRepository(User)
+      .existsBy({ id: reportedId });
+    if (!reportedExists)
+      throw new UserNotFoundError(`User ${reportedId} not found`);
+    await this.entityManager.getRepository(UserReport).save({
+      reporter: { id: reporterId } as User,
+      reported: { id: reportedId } as User,
+      reason,
+    });
   }
 }

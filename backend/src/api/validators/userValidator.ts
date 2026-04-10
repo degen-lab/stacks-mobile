@@ -23,3 +23,8 @@ export const updateConsentSchema = z.object({
   adsPersonalization: z.boolean(),
   version: z.string().min(1),
 });
+
+export const reportUserSchema = z.object({
+  reportedUserId: z.number().int().positive(),
+  reason: z.enum(['inappropriate_photo', 'offensive_username', 'other']),
+});

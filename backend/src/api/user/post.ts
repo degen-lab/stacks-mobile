@@ -1,7 +1,10 @@
 import { FastifyInstance } from 'fastify';
 import { UserService } from '../../application/user/userService';
 import { rateLimitOptions } from '../config/rateLimitConfig';
-import { registerOrLoginSchema } from '../validators/userValidator';
+import {
+  registerOrLoginSchema,
+  reportUserSchema,
+} from '../validators/userValidator';
 import { logger } from '../helpers/logger';
 import { UserToken } from '../config/types';
 import { BaseError } from '../../shared/errors/baseError';
@@ -78,6 +81,70 @@ export default async function userPostRoutes(
       } catch (error) {
         logger.error({
           msg: 'Error in login route',
+          method: request.method,
+          err: error,
+        });
+
+        if (error instanceof BaseError) {
+          return reply.status(400).send({
+            success: false,
+            message: error.message,
+          });
+        }
+        return reply.status(500).send({
+          success: false,
+          message: 'An unknown error occurred',
+        });
+      }
+    },
+  });
+
+  app.post('/report', {
+    preHandler: app.authenticateUser,
+    config: {
+      rateLimit: rateLimitOptions({
+        max: 5,
+        timeWindow: '60000',
+        errorResponseBuilder: () => ({
+          statusCode: 429,
+          error: 'Too many requests',
+          message: 'Too many requests, please try again later',
+        }),
+      }),
+    },
+    handler: async (request, reply) => {
+      try {
+        const user = request.user as UserToken;
+        const body = reportUserSchema.safeParse(request.body);
+
+        if (!body.success) {
+          return reply.status(400).send({
+            success: false,
+            message: 'Invalid body',
+            error: body.error.message,
+          });
+        }
+
+        if (body.data.reportedUserId === user.id) {
+          return reply.status(400).send({
+            success: false,
+            message: 'Cannot report yourself',
+          });
+        }
+
+        await userService.reportUser(
+          user.id,
+          body.data.reportedUserId,
+          body.data.reason,
+        );
+
+        return reply.status(200).send({
+          success: true,
+          message: 'Report submitted successfully',
+        });
+      } catch (error) {
+        logger.error({
+          msg: 'Error in POST /report route',
           method: request.method,
           err: error,
         });
