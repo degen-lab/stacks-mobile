@@ -83,20 +83,22 @@ export function PrivacyConsentOnboarding({
 
         <View className="mt-12 gap-3">
           <Button
-            variant="primaryNavbar"
+            variant="outline"
             size="lg"
             label="Allow personalized ads"
             onPress={onEnable}
             loading={loading}
             className="rounded-full"
+            textClassName="font-instrument-sans-medium text-primary"
           />
           <Button
-            variant="ghost"
+            variant="outline"
             size="lg"
             label="Continue without"
             onPress={onSkip}
             disabled={loading}
-            textClassName="font-instrument-sans-medium text-secondary"
+            className="rounded-full"
+            textClassName="font-instrument-sans-medium text-primary"
           />
         </View>
       </ScrollView>

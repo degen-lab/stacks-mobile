@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "expo-router";
 
+import { initializeAds } from "@/lib/ads/initialize-ads";
 import {
   clearUserContext,
   setEnabled,
@@ -32,6 +33,7 @@ export function ConsentController() {
     consent?.analytics === true && isAuthenticated && !!backendUserData;
 
   const attemptedSyncRef = useRef<string | null>(null);
+  const adsInitializedRef = useRef(false);
   const screenTrackingRef = useRef<string | null>(null);
   const prevAnalyticsEnabledRef = useRef<boolean | null>(null);
   const prevIsAuthenticatedRef = useRef<boolean | null>(null);
@@ -77,6 +79,16 @@ export function ConsentController() {
       void trackScreen(currentPathname);
     }
   }, [ready, analyticsEnabled, backendUserData, hasBackup, consent]);
+
+  // Ads SDK must not initialize before the user finishes the consent gate.
+  useEffect(() => {
+    if (!ready || adsInitializedRef.current || needsConsentGate(consent)) {
+      return;
+    }
+
+    adsInitializedRef.current = true;
+    void initializeAds();
+  }, [ready, consent]);
 
   // Screen tracking on navigation
   useEffect(() => {

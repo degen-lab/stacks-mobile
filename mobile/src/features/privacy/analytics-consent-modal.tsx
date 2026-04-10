@@ -38,18 +38,20 @@ export function AnalyticsConsentModal({ modalRef, onAllow, onDecline }: Props) {
 
           <View className="mt-8 gap-3">
             <Button
-              variant="primaryNavbar"
+              variant="outline"
               className="rounded-full"
               size="lg"
               label="Allow analytics"
               onPress={onAllow}
+              textClassName="font-instrument-sans-medium text-primary"
             />
             <Button
-              variant="ghost"
+              variant="outline"
+              className="rounded-full"
               size="lg"
               label="Not now"
               onPress={onDecline}
-              textClassName="font-instrument-sans-medium text-secondary"
+              textClassName="font-instrument-sans-medium text-primary"
             />
           </View>
         </View>
