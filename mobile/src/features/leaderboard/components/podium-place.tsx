@@ -1,19 +1,19 @@
-import type { ImageSource } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ViewStyle } from "react-native";
+import { Pressable } from "react-native";
 
 import { Text, View } from "@/components/ui";
 import { Avatar } from "@/features/header/components/Avatar";
+import type { PodiumUser } from "@/features/leaderboard/types";
 import { getLeaderboardDisplayName } from "@/features/leaderboard/utils";
 
 export type PodiumPlaceProps = {
+  user: PodiumUser;
   rank: number;
-  name: string;
-  score: number;
-  photoUri?: ImageSource;
   borderRadiusLeft?: number;
   borderRadiusRight?: number;
   showBorder?: boolean;
+  onReport?: () => void;
 };
 
 const getHeight = (rank: number): number => {
@@ -52,22 +52,21 @@ const getGradientColors = (
 };
 
 export function PodiumPlace({
+  user,
   rank,
-  name,
-  score,
-  photoUri,
   borderRadiusLeft = 8,
   borderRadiusRight = 8,
   showBorder = false,
+  onReport,
 }: PodiumPlaceProps) {
   const fallbackAvatar = require("@/assets/images/icon.png");
-  const avatarSource = photoUri || fallbackAvatar;
+  const avatarSource = user.photoUri || fallbackAvatar;
   const height = getHeight(rank);
   const backgroundColor = getBackgroundColor(rank);
   const gradientColors = getGradientColors(rank);
   const isFirstPlace = rank === 1;
   const useGradient = isFirstPlace && gradientColors !== null;
-  const displayName = getLeaderboardDisplayName(name);
+  const displayName = getLeaderboardDisplayName(user.name);
   const borderWidth = 2;
   const borderColors: [string, string] = ["#F7F6F5", "#FF9835"];
   const borderLocations: [number, number] = [0.37, 1];
@@ -113,13 +112,24 @@ export function PodiumPlace({
           {displayName}
         </Text>
         <Text className="mb-2 text-sm font-instrument-sans text-secondary dark:text-white">
-          {score.toLocaleString()}
+          {user.score.toLocaleString()}
         </Text>
-        <View
-          className={showBorder ? "border-[3px] border-white rounded-full" : ""}
+        <Pressable
+          onPress={onReport}
+          disabled={!onReport}
+          hitSlop={8}
+          style={({ pressed }) => ({
+            opacity: pressed && onReport ? 0.7 : 1,
+          })}
         >
-          <Avatar source={avatarSource} size="lg" />
-        </View>
+          <View
+            className={
+              showBorder ? "border-[3px] border-white rounded-full" : ""
+            }
+          >
+            <Avatar source={avatarSource} size="lg" />
+          </View>
+        </Pressable>
       </View>
       {useGradient && gradientColors ? (
         <LinearGradient

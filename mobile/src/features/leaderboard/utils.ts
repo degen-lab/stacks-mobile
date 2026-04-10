@@ -42,6 +42,7 @@ const toUser = (
     : undefined,
   tier,
   isCurrentUser,
+  userId: submission.user?.id,
 });
 
 export const buildPodiumUsers = (data?: LeaderboardData): LeaderboardUser[] => {

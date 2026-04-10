@@ -10,6 +10,7 @@ export type LeaderboardItemProps = {
   user: LeaderboardUser;
   isFirst?: boolean;
   onMissingSubmission?: () => void;
+  onReport?: () => void;
   isLast?: boolean;
   avatarFallback?: ImageSource;
   highlight?: boolean;
@@ -20,6 +21,7 @@ export function LeaderboardItem({
   isFirst = false,
   isLast = false,
   onMissingSubmission,
+  onReport,
   avatarFallback,
   highlight = false,
 }: LeaderboardItemProps) {
@@ -34,8 +36,10 @@ export function LeaderboardItem({
           : null;
   const displayName = getLeaderboardDisplayName(user.name);
 
+  const pressHandler = user.isCurrentUser ? onMissingSubmission : onReport;
+
   return (
-    <Pressable onPress={onMissingSubmission} disabled={!onMissingSubmission}>
+    <Pressable onPress={pressHandler} disabled={!pressHandler}>
       <View
         className={`flex-row items-center bg-sand-100 dark:bg-surface-primary border border-border-secondary p-4 ${
           isFirst ? "rounded-t-xl" : ""

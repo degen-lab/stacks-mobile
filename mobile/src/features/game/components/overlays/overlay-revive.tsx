@@ -25,6 +25,28 @@ type ReviveOverlayProps = {
   adError: string | null;
 };
 
+const styles = StyleSheet.create({
+  button: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  reviveButtonActive: {
+    backgroundColor: colors.stacks.bloodOrange,
+  },
+  reviveButtonInactiveLight: {
+    backgroundColor: colors.neutral[300],
+  },
+  reviveButtonInactiveDark: {
+    backgroundColor: colors.charcoal[700],
+  },
+});
+
 export default function ReviveOverlay({
   score,
   highScore = 0,

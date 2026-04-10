@@ -4,64 +4,66 @@ import { PodiumPlace } from "./podium-place";
 
 export type PodiumProps = {
   users?: PodiumUser[];
+  onReport?: (user: PodiumUser) => void;
 };
 
-export function Podium({ users = [] }: PodiumProps) {
+export function Podium({ users = [], onReport }: PodiumProps) {
   const sortedUsers = [...users].sort((a, b) => a.rank - b.rank);
 
-  // Arrange podium: 3rd place (left), 1st place (center), 2nd place (right)
   const secondPlace = sortedUsers.find((u) => u.rank === 2);
   const firstPlace = sortedUsers.find((u) => u.rank === 1);
   const thirdPlace = sortedUsers.find((u) => u.rank === 3);
 
   const userCount = sortedUsers.length;
 
-  // Handle empty state
-  if (userCount === 0) {
-    return null;
-  }
+  if (userCount === 0) return null;
 
-  // Handle single user - center it
   if (userCount === 1 && firstPlace) {
     return (
       <View className="flex-row items-end justify-center px-10 pt-1">
         <View className="flex-1 max-w-[120px]">
           <PodiumPlace
+            user={firstPlace}
             rank={firstPlace.rank}
-            name={firstPlace.name}
-            score={firstPlace.score}
-            photoUri={firstPlace.photoUri}
             borderRadiusLeft={8}
             borderRadiusRight={8}
             showBorder={true}
+            onReport={
+              !firstPlace.isCurrentUser
+                ? () => onReport?.(firstPlace)
+                : undefined
+            }
           />
         </View>
       </View>
     );
   }
 
-  // Handle two users - show 1st (center) and 2nd (right), with spacer on left
   if (userCount === 2 && firstPlace && secondPlace) {
     return (
       <View className="flex-row items-end justify-center px-10 pt-1">
         <View className="flex-1" />
         <PodiumPlace
+          user={firstPlace}
           rank={firstPlace.rank}
-          name={firstPlace.name}
-          score={firstPlace.score}
-          photoUri={firstPlace.photoUri}
           borderRadiusLeft={8}
           borderRadiusRight={0}
           showBorder={true}
+          onReport={
+            !firstPlace.isCurrentUser ? () => onReport?.(firstPlace) : undefined
+          }
         />
         <PodiumPlace
+          user={secondPlace}
           rank={secondPlace.rank}
-          name={secondPlace.name}
-          score={secondPlace.score}
-          photoUri={secondPlace.photoUri}
           borderRadiusLeft={0}
           borderRadiusRight={8}
           showBorder={false}
+          onReport={
+            !secondPlace.isCurrentUser
+              ? () => onReport?.(secondPlace)
+              : undefined
+          }
         />
         <View className="flex-1" />
       </View>
@@ -72,35 +74,40 @@ export function Podium({ users = [] }: PodiumProps) {
     <View className="flex-row items-end justify-center px-10 pt-1">
       {secondPlace && (
         <PodiumPlace
+          user={secondPlace}
           rank={secondPlace.rank}
-          name={secondPlace.name}
-          score={secondPlace.score}
-          photoUri={secondPlace.photoUri}
           borderRadiusLeft={8}
           borderRadiusRight={0}
           showBorder={false}
+          onReport={
+            !secondPlace.isCurrentUser
+              ? () => onReport?.(secondPlace)
+              : undefined
+          }
         />
       )}
       {firstPlace && (
         <PodiumPlace
+          user={firstPlace}
           rank={firstPlace.rank}
-          name={firstPlace.name}
-          score={firstPlace.score}
-          photoUri={firstPlace.photoUri}
           borderRadiusLeft={0}
           borderRadiusRight={0}
           showBorder={true}
+          onReport={
+            !firstPlace.isCurrentUser ? () => onReport?.(firstPlace) : undefined
+          }
         />
       )}
       {thirdPlace && (
         <PodiumPlace
+          user={thirdPlace}
           rank={thirdPlace.rank}
-          name={thirdPlace.name}
-          score={thirdPlace.score}
-          photoUri={thirdPlace.photoUri}
           borderRadiusLeft={0}
           borderRadiusRight={8}
           showBorder={false}
+          onReport={
+            !thirdPlace.isCurrentUser ? () => onReport?.(thirdPlace) : undefined
+          }
         />
       )}
     </View>
