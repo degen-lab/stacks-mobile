@@ -8,7 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   description: `${Env.NAME} Mobile App`,
   owner: Env.EXPO_ACCOUNT_OWNER,
   scheme: Env.SCHEME,
-  slug: 'stacks-mobile',
+  slug: 'enter-stacks',
   version: Env.VERSION.toString(),
   orientation: 'portrait',
   icon: './src/assets/images/icon.png',
@@ -98,7 +98,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'expo-tracking-transparency',
       {
         userTrackingPermission:
-          'Allow StacksApp to use data to show more relevant ads. Declining still keeps sponsored transactions available.',
+          'Allow Enter Stacks to use data to show more relevant ads. Declining still keeps sponsored transactions available.',
       },
     ],
     'react-native-edge-to-edge',

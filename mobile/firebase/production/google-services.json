@@ -7,12 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:699077676132:android:779a2b2fb9759975602371",
+        "mobilesdk_app_id": "1:699077676132:android:ad6cbf50e7b797e1602371",
         "android_client_info": {
-          "package_name": "com.stacksapp"
+          "package_name": "com.enterstacks"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "699077676132-rucasda3gg3ptp7b8fq95e3mret5s2op.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDA02O5uHIzIHA3iOvCo3jxYp_18askurA"
@@ -20,7 +25,55 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699077676132-rucasda3gg3ptp7b8fq95e3mret5s2op.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699077676132-vmq8u1196nlnaklaoq0th4qjiiihc1cr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.stacksapp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699077676132:android:779a2b2fb9759975602371",
+        "android_client_info": {
+          "package_name": "com.stacksapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "699077676132-rucasda3gg3ptp7b8fq95e3mret5s2op.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA02O5uHIzIHA3iOvCo3jxYp_18askurA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699077676132-rucasda3gg3ptp7b8fq95e3mret5s2op.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699077676132-vmq8u1196nlnaklaoq0th4qjiiihc1cr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.stacksapp"
+              }
+            }
+          ]
         }
       }
     },
@@ -31,7 +84,12 @@
           "package_name": "com.stacksapp.development"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "699077676132-rucasda3gg3ptp7b8fq95e3mret5s2op.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDA02O5uHIzIHA3iOvCo3jxYp_18askurA"
@@ -39,7 +97,55 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699077676132-rucasda3gg3ptp7b8fq95e3mret5s2op.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699077676132-vmq8u1196nlnaklaoq0th4qjiiihc1cr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.stacksapp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699077676132:android:f0676d886629cdf4602371",
+        "android_client_info": {
+          "package_name": "com.stacksapp.staging"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "699077676132-rucasda3gg3ptp7b8fq95e3mret5s2op.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA02O5uHIzIHA3iOvCo3jxYp_18askurA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699077676132-rucasda3gg3ptp7b8fq95e3mret5s2op.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699077676132-vmq8u1196nlnaklaoq0th4qjiiihc1cr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.stacksapp"
+              }
+            }
+          ]
         }
       }
     }

@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "mobile-google-web3",
-    "slug": "mobile-google-web3",
+    "name": "Enter Stacks",
+    "slug": "enter-stacks",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
-    "scheme": "mobilegoogleweb3",
+    "scheme": "enterstacks",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.stacksapp.development",
+      "bundleIdentifier": "com.enterstacks.development",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.stacksapp.development",
+      "package": "com.enterstacks.development",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./src/assets/images/android-icon-foreground.png",

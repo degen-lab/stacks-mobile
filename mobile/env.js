@@ -56,15 +56,15 @@ if (!isEasBuild) {
  * Such as: bundle id, package name, app name.
  *
  * You can add them to the .env file but we think it's better to keep them here as as we use prefix to generate this values based on the APP_ENV
- * for example: if the APP_ENV is staging, the bundle id will be com.stacksapp.staging
+ * for example: if the APP_ENV is staging, the bundle id will be com.enterstacks.staging
  */
 
 // TODO: Replace these values with your own
-const BUNDLE_ID = 'com.stacksapp'; // ios bundle id
-const PACKAGE = 'com.stacksapp'; // android package name
-const NAME = 'StacksApp'; // app name
+const BUNDLE_ID = 'com.enterstacks'; // ios bundle id
+const PACKAGE = 'com.enterstacks'; // android package name
+const NAME = 'Enter Stacks'; // app name
 const EXPO_ACCOUNT_OWNER = 'degenlab'; // expo account owner
-const SCHEME = 'stacksapp'; // app scheme
+const SCHEME = 'enterstacks'; // app scheme
 
 /**
  * We declare a function withEnvSuffix that will add a suffix to the variable name based on the APP_ENV
