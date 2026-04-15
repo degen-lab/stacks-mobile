@@ -21,6 +21,7 @@ async function fetchBitcoin<T>(
   const url = `${getBitcoinApiBaseUrl(network)}${path}`;
   const response = await fetch(url, {
     ...init,
+    signal: AbortSignal.timeout(15_000),
     headers: {
       ...jsonHeaders,
       ...(init?.headers || {}),

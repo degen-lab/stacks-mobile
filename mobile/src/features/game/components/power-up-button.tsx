@@ -43,7 +43,7 @@ export default function PowerUpButton({
     : undefined;
   const statusColor = isDark
     ? VISUAL_CONFIG.DARK_SCENE.POWER_UP_STATUS
-    : colors.primary[600];
+    : undefined;
   const opacity = isUsed && !isActive ? 0.35 : 1;
 
   return (
@@ -58,8 +58,8 @@ export default function PowerUpButton({
         className="size-16 items-center justify-center rounded-full border-2 border-border-secondary"
         style={{
           backgroundColor,
-          borderColor,
           opacity,
+          ...(borderColor ? { borderColor } : null),
         }}
       >
         <Icon size={28} color={iconColor} />
@@ -71,8 +71,8 @@ export default function PowerUpButton({
         {label}
       </Text>
       <Text
-        className="text-xs font-instrument-sans-medium"
-        style={{ color: statusColor }}
+        className="text-xs font-instrument-sans-medium text-primary"
+        style={statusColor ? { color: statusColor } : undefined}
       >
         {status}
       </Text>

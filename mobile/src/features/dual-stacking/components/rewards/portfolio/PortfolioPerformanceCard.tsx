@@ -11,6 +11,7 @@ export type PortfolioPerformanceCardProps = {
   chartData: YieldChartPoint[];
   data: PortfolioPerformanceData;
   isEmptyChart: boolean;
+  isAwaitingRewardsData?: boolean;
   isContractActive?: boolean;
   onUnitChange: (unit: Unit) => void;
   onPeriodChange: (period: TimePeriod) => void;
@@ -24,6 +25,7 @@ export function PortfolioPerformanceCard({
   chartData,
   data,
   isEmptyChart,
+  isAwaitingRewardsData,
   isContractActive,
   timeUntilCycleStartLabel,
   timeUntilContractActiveLabel,
@@ -54,6 +56,7 @@ export function PortfolioPerformanceCard({
           unit={unit}
           period={period}
           isEmptyChart={isEmptyChart}
+          isAwaitingRewardsData={isAwaitingRewardsData}
           isContractActive={isContractActive}
           onPeriodChange={onPeriodChange}
           onUnitChange={onUnitChange}

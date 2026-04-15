@@ -100,10 +100,12 @@ export function PortfolioPerformanceCardContainer() {
     return items;
   }, [totalSbtc, stxStacked, baseApr, boostedApr, stackingApr]);
 
-  const { timeUntil: cycleTimeUntil } = useDaysUntilCycleStarts();
+  const { timeUntil: cycleTimeUntil, isFinalized } = useDaysUntilCycleStarts();
   const timeUntilLabel = formatTimeUntil(cycleTimeUntil);
 
   const isEmptyUserStats = Array.isArray(userStats) && userStats.length === 0;
+  const isAwaitingRewardsData =
+    isEmptyUserStats && enrolledNextCycle && isFinalized;
   const isEmptyChart = isEmptyUserStats && enrolledNextCycle;
 
   const [unit, setUnit] = useState<Unit>("percent");
@@ -181,6 +183,7 @@ export function PortfolioPerformanceCardContainer() {
       chartData={chartData}
       data={data}
       isEmptyChart={Boolean(isEmptyChart)}
+      isAwaitingRewardsData={Boolean(isAwaitingRewardsData)}
       isContractActive={Boolean(isContractActive)}
       onUnitChange={setUnit}
       onPeriodChange={setPeriod}

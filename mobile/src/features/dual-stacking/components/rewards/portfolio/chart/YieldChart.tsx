@@ -68,6 +68,7 @@ interface Props {
   timeUntilCycleStartLabel?: string;
   timeUntilContractActiveLabel?: string;
   isEmpty?: boolean;
+  isAwaitingRewardsData?: boolean;
   isContractActive?: boolean;
 }
 
@@ -202,6 +203,7 @@ export default function YieldChart({
   timeUntilCycleStartLabel,
   timeUntilContractActiveLabel,
   isEmpty = false,
+  isAwaitingRewardsData = false,
   isContractActive,
 }: Props) {
   const font = useFont(
@@ -318,6 +320,21 @@ export default function YieldChart({
             {timeUntilContractActiveLabel}
           </Text>
           {"."}
+        </Text>
+      </EmptyState>
+    );
+  }
+
+  if (chartData.length === 0 && isAwaitingRewardsData) {
+    return (
+      <EmptyState ticks={EMPTY_TICKS}>
+        <Text className="font-instrument-sans-medium text-tertiary text-center text-sm leading-5">
+          {"You do not have any Dual Stacking rewards yet."}
+        </Text>
+        <Text className="font-instrument-sans-medium text-tertiary text-center text-sm leading-5">
+          {
+            "Rewards for this cycle are finalized, but none are available to display yet."
+          }
         </Text>
       </EmptyState>
     );

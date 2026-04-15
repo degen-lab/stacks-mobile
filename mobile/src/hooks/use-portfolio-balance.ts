@@ -507,6 +507,7 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
     loadingBtc ||
     loadingSbtc ||
     loadingSbtcDefi;
+
   const isPriceLoading = loadingStxPrice || loadingBtcPrice;
   const isAssetLoading =
     tokenListQuery.isLoading ||
