@@ -11,6 +11,7 @@ import {
   View,
 } from "@/components/ui";
 import colors from "@/components/ui/colors";
+import { Env } from "@/lib/env";
 import { getDisplayScore, getBaseScore } from "../../utils/scoreCalculation";
 import type { ActionHandler } from "../../types";
 
@@ -59,6 +60,7 @@ export default function ReviveOverlay({
 }: ReviveOverlayProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const adsEnabled = Env.ADS_ENABLED === "true";
   const canCompareHighScore = highScore > 0;
   const newScore = getDisplayScore(score);
   const isHighScorePace = canCompareHighScore && newScore >= highScore;
@@ -99,9 +101,19 @@ export default function ReviveOverlay({
           </View>
         </View>
 
-        {!isWatchingAd ? (
+        {adsEnabled && isWatchingAd ? (
+          <View className="w-full items-center gap-2">
+            <ActivityIndicator size="small" className="text-secondary" />
+            <Text className="text-base font-semibold text-secondary">
+              Watching ad to revive...
+            </Text>
+            <Text className="text-xs text-secondary">
+              Keep the ad open to continue your run.
+            </Text>
+          </View>
+        ) : (
           <View className="w-full gap-2">
-            {adError ? (
+            {adsEnabled && adError ? (
               <View className="rounded-xl bg-feedback-yellow-100 px-4 py-3">
                 <Text className="text-xs text-feedback-yellow-700">
                   Ad unavailable. Tap again to retry.
@@ -111,31 +123,34 @@ export default function ReviveOverlay({
 
             <Pressable
               onPress={onRevive}
-              disabled={adLoading}
+              disabled={!adsEnabled || adLoading}
               style={[
                 styles.button,
-                adLoaded
+                adsEnabled && adLoaded
                   ? styles.reviveButtonActive
                   : isDark
                     ? styles.reviveButtonInactiveDark
                     : styles.reviveButtonInactiveLight,
               ]}
             >
-              {adLoading ? (
+              {adsEnabled && adLoading ? (
                 <ActivityIndicator size="small" className="text-white" />
               ) : (
                 <Video size={18} color="#fff" />
               )}
               <Text className="text-base font-semibold text-white">
-                {adLoading
-                  ? "Loading ad..."
-                  : adLoaded
-                    ? "Keep going!"
-                    : adError
-                      ? "Retry"
-                      : "Loading..."}
+                {!adsEnabled
+                  ? "Keep going! (Coming Soon)"
+                  : adLoading
+                    ? "Loading ad..."
+                    : adLoaded
+                      ? "Keep going!"
+                      : adError
+                        ? "Retry"
+                        : "Loading..."}
               </Text>
             </Pressable>
+
             <Pressable
               className="w-full items-center rounded-2xl border border-sand-300 px-4 py-3 dark:border-surface-secondary"
               onPress={onDeclineRevive}
@@ -144,16 +159,6 @@ export default function ReviveOverlay({
                 End run
               </Text>
             </Pressable>
-          </View>
-        ) : (
-          <View className="w-full items-center gap-2">
-            <ActivityIndicator size="small" className="text-secondary" />
-            <Text className="text-base font-semibold text-secondary">
-              Watching ad to revive...
-            </Text>
-            <Text className="text-xs text-secondary">
-              Keep the ad open to continue your run.
-            </Text>
           </View>
         )}
       </View>

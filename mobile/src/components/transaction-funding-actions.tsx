@@ -2,6 +2,7 @@ import React from "react";
 
 import { OrDivider } from "@/components/or-divider";
 import { Button, View } from "@/components/ui";
+import { Env } from "@/lib/env";
 
 type TransactionFundingActionsProps = {
   sponsoredLabel?: string;
@@ -26,11 +27,13 @@ export function TransactionFundingActions({
   sponsoredLoading = false,
   walletLoading = false,
 }: TransactionFundingActionsProps) {
-  const derivedSponsoredLabel =
-    sponsoredLabel ??
-    (adsRequired && adsRequired > 1
-      ? `Watch ${adsRequired} ads`
-      : "Watch an ad");
+  const adsEnabled = Env.ADS_ENABLED === "true";
+  const derivedSponsoredLabel = !adsEnabled
+    ? "Watch an ad (Coming Soon)"
+    : (sponsoredLabel ??
+      (adsRequired && adsRequired > 1
+        ? `Watch ${adsRequired} ads`
+        : "Watch an ad"));
   const showSponsored = typeof onPressSponsored === "function";
 
   return (
@@ -40,7 +43,7 @@ export function TransactionFundingActions({
           <Button
             label={derivedSponsoredLabel}
             onPress={onPressSponsored}
-            disabled={sponsoredDisabled || walletLoading}
+            disabled={!adsEnabled || sponsoredDisabled || walletLoading}
             loading={sponsoredLoading}
             variant="gamePrimary"
             size="game"
