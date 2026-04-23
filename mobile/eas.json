@@ -42,7 +42,8 @@
     "production": {
       "ios": {
         "appleTeamId": "3GTZV85AXU",
-        "bundleIdentifier": "com.enterstacks"
+        "bundleIdentifier": "com.enterstacks",
+        "ascAppId": "6763343534"
       }
     }
   }
