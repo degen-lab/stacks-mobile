@@ -32,6 +32,9 @@
       "distribution": "store",
       "channel": "production",
       "environment": "production",
+      "android": {
+        "buildType": "apk"
+      },
       "autoIncrement": true,
       "env": {
         "APP_ENV": "production"
