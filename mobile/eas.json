@@ -29,7 +29,7 @@
       }
     },
     "production": {
-      "distribution": "store",
+      "distribution": "internal",
       "channel": "production",
       "environment": "production",
       "android": {
