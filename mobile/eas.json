@@ -21,7 +21,7 @@
       }
     },
     "staging": {
-      "distribution": "store",
+      "distribution": "internal",
       "channel": "staging",
       "environment": "preview",
       "env": {
