@@ -593,7 +593,7 @@ export class TransactionClient implements TransactionClientPort {
       postConditionMode: PostConditionMode.Deny, // No STX should be transferred
       publicKey: publicKey.startsWith('0x') ? publicKey.slice(2) : publicKey,
       network: this.network,
-      fee: sponsored ? undefined : feeMicroStx,
+      ...(feeMicroStx !== undefined && { fee: feeMicroStx }),
       sponsored,
     };
 

@@ -8,6 +8,8 @@ import {
 import { TransactionClientPort } from '../../../src/application/ports/transactionClientPort';
 import { EntityManager } from 'typeorm';
 import { User } from '../../../src/domain/entities/user';
+import { RewardsDistributionData } from '../../../src/domain/entities/rewardsDistributionData';
+import { RAFFLE_TIER_BONUS } from '../../../src/shared/constants';
 
 describe('RewardsService - extractRaffleWinners', () => {
   const transactionClientMock: jest.Mocked<
@@ -89,5 +91,61 @@ describe('RewardsService - extractRaffleWinners', () => {
     expect(randomSpy).toHaveBeenCalledTimes(5);
     expect(winners).toHaveLength(3);
     expect(winners.map((w) => w.id)).toEqual([1, 2, 3]);
+  });
+
+  it('awards raffle winners points and saves a points distribution reference', async () => {
+    const winnerOne = new Submission();
+    winnerOne.id = 1;
+    winnerOne.stacksAddress = 'addr-1';
+    const winnerOneUser = new User();
+    winnerOneUser.id = 10;
+    winnerOneUser.points = 100;
+    winnerOneUser.googleId = 'google-10';
+    winnerOneUser.nickName = 'winner-10';
+    winnerOneUser.referralCode = 'WINNER10';
+    winnerOne.user = winnerOneUser;
+
+    const winnerTwo = new Submission();
+    winnerTwo.id = 2;
+    winnerTwo.stacksAddress = 'addr-2';
+    const winnerTwoUser = new User();
+    winnerTwoUser.id = 11;
+    winnerTwoUser.points = 200;
+    winnerTwoUser.googleId = 'google-11';
+    winnerTwoUser.nickName = 'winner-11';
+    winnerTwoUser.referralCode = 'WINNER11';
+    winnerTwo.user = winnerTwoUser;
+
+    jest
+      .spyOn(rewardsService, 'extractRaffleWinners')
+      .mockResolvedValue([winnerOne, winnerTwo]);
+
+    const saveMock = jest.fn().mockImplementation(async (entity) => entity);
+    (entityManagerMock.transaction as jest.Mock).mockImplementation(
+      async (fn: (m: EntityManager) => Promise<void>) =>
+        fn({ save: saveMock } as unknown as EntityManager),
+    );
+
+    const transactionId = await rewardsService.distributeRaffleRewards(2);
+
+    expect(transactionId).toBe('points-distribution:raffle:123');
+    expect(winnerOne.user.points).toBe(100 + RAFFLE_TIER_BONUS);
+    expect(winnerTwo.user.points).toBe(200 + RAFFLE_TIER_BONUS);
+    expect(saveMock).toHaveBeenCalledWith(winnerOne.user);
+    expect(saveMock).toHaveBeenCalledWith(winnerTwo.user);
+    expect(transactionClientMock.distributeRewards).not.toHaveBeenCalled();
+
+    const savedDistribution = saveMock.mock.calls.find(
+      (call) => call[0] instanceof RewardsDistributionData,
+    )?.[0] as RewardsDistributionData;
+    expect(savedDistribution).toBeDefined();
+    expect(savedDistribution.tournamentId).toBe(123);
+    expect(savedDistribution.transactionId).toBe(
+      'points-distribution:raffle:123',
+    );
+    expect(savedDistribution.rewardedSubmissions).toEqual([
+      winnerOne,
+      winnerTwo,
+    ]);
   });
 });

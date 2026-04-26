@@ -81,8 +81,8 @@ describe("Leaderboard Utils", () => {
       const podium = buildPodiumUsers(data);
 
       expect(podium).toHaveLength(2);
-      expect(podium[0]).toMatchObject({ rank: 1, tier: "Gold" });
-      expect(podium[1]).toMatchObject({ rank: 2, tier: "Silver" });
+      expect(podium[0]).toMatchObject({ rank: 1, name: "Alice", tier: "Gold" });
+      expect(podium[1]).toMatchObject({ rank: 2, name: "Bob", tier: "Silver" });
     });
 
     it("should handle single user", () => {
@@ -98,10 +98,10 @@ describe("Leaderboard Utils", () => {
       const podium = buildPodiumUsers(data);
 
       expect(podium).toHaveLength(1);
-      expect(podium[0]).toMatchObject({ rank: 1, tier: "Gold" });
+      expect(podium[0]).toMatchObject({ rank: 1, name: "Alice", tier: "Gold" });
     });
 
-    it("should prioritize tier from tier arrays over rank-based tier", () => {
+    it("should prioritize tier from tier arrays over rank-based tiers", () => {
       const data: LeaderboardData = {
         top: [
           createSubmission(1, 100, 1, "Alice"),
@@ -119,8 +119,8 @@ describe("Leaderboard Utils", () => {
 
       const podium = buildPodiumUsers(data);
 
-      expect(podium[0].tier).toBe("Gold");
-      expect(podium[1].tier).toBe("Gold"); // Uses tier from array, not rank
+      expect(podium[0]).toMatchObject({ rank: 1, name: "Alice", tier: "Gold" });
+      expect(podium[1]).toMatchObject({ rank: 2, name: "Bob", tier: "Gold" });
     });
 
     it("should fallback to rank-based tier when not in tier arrays", () => {
@@ -139,9 +139,9 @@ describe("Leaderboard Utils", () => {
 
       const podium = buildPodiumUsers(data);
 
-      expect(podium[0].tier).toBe("Gold");
-      expect(podium[1].tier).toBe("Silver");
-      expect(podium[2].tier).toBe("Bronze");
+      expect(podium[0]).toMatchObject({ rank: 1, tier: "Gold" });
+      expect(podium[1]).toMatchObject({ rank: 2, tier: "Silver" });
+      expect(podium[2]).toMatchObject({ rank: 3, tier: "Bronze" });
     });
 
     it("should handle anonymous users", () => {
@@ -437,7 +437,7 @@ describe("Leaderboard Utils", () => {
       expect(bobCount).toBe(1);
     });
 
-    it("should assign tiers from tier arrays", () => {
+    it("should keep backend tiers on leaderboard users outside the podium", () => {
       const data: LeaderboardData = {
         top: [
           createSubmission(1, 100, 1, "Alice"),
@@ -454,7 +454,7 @@ describe("Leaderboard Utils", () => {
 
       const users = buildLeaderboardUsers(data);
 
-      expect(users[0]).toMatchObject({ name: "David", tier: "Gold" });
+      expect(users[0]).toMatchObject({ name: "David", rank: 4, tier: "Gold" });
     });
 
     it("should have undefined tier when not in tier arrays and rank > 3", () => {

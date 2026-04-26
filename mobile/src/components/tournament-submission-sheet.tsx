@@ -335,8 +335,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
                         The ad covers entry costs and does not affect selection.
                       </Text>
                       <Text className="text-center text-sm font-instrument-sans text-secondary/70 dark:text-neutral-400">
-                        Eligible entries may receive rewards at the end of the
-                        cycle.
+                        Confirmed entries count toward this week&apos;s raffle.
                       </Text>
                     </View>
                   )}

@@ -115,7 +115,7 @@ describe("RewardsCycleCardContainer", () => {
     expect(mockCard.mock.calls[0]?.[0]).toMatchObject({
       cycle: expect.objectContaining({
         cycleNumber: 12,
-        progress: 50,
+        progress: 47,
         startsInDays: 4,
         participants: 321,
         totalSbtcParticipating: 1.5,

@@ -107,9 +107,13 @@ export const SPONSORED_FEE_MAX_MICRO_STX: number = parseInt(
 
 export const SCORE_MULTIPLIER: number = 10;
 
-export const SILVER_TIER_BONUS: number = 1000;
+export const SILVER_TIER_BONUS: number = 750;
 
 export const BRONZE_TIER_BONUS: number = 500;
+
+export const GOLD_TIER_BONUS: number = 1000;
+
+export const RAFFLE_TIER_BONUS: number = 250;
 
 export const GOLD_TIER_USTX_BONUS: number = 50000000;
 

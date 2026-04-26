@@ -17,6 +17,7 @@ import {
 import { SubmissionTier } from '../../../src/domain/helpers/types';
 import {
   BRONZE_TIER_BONUS,
+  GOLD_TIER_BONUS,
   SILVER_TIER_BONUS,
 } from '../../../src/shared/constants';
 
@@ -94,7 +95,6 @@ describe('RewardsService application class Unit tests', () => {
   describe('distributeRewards', () => {
     it('should successfully distribute rewards for all tiers', async () => {
       const tournamentId = 1;
-      const txId = 'transaction-123';
       const user1 = createUser(1, 100);
       const user2 = createUser(2, 200);
       const user3 = createUser(3, 300);
@@ -139,8 +139,6 @@ describe('RewardsService application class Unit tests', () => {
         silver: [silverSubmission],
         bronze: [bronzeSubmission, bronzeSubmission2],
       });
-      mockTransactionClient.distributeRewards.mockResolvedValue(txId);
-
       const mockManager = {
         connection: mockConnection,
         query: jest.fn().mockResolvedValue([
@@ -185,14 +183,14 @@ describe('RewardsService application class Unit tests', () => {
       expect(bronzeSubmission2.user.points).toBe(400 + BRONZE_TIER_BONUS);
       expect(bronzeSubmission2.tier).toBe(SubmissionTier.Bronze);
 
-      // Verify gold tier: tier set and submission saved
+      // Verify gold tier: points awarded and submission saved
+      expect(goldSubmission.user.points).toBe(100 + GOLD_TIER_BONUS);
       expect(goldSubmission.tier).toBe(SubmissionTier.Gold);
       expect(mockManager.save).toHaveBeenCalledWith(goldSubmission);
+      expect(mockManager.save).toHaveBeenCalledWith(goldSubmission.user);
 
-      // Verify blockchain transaction was called with correct addresses
-      expect(mockTransactionClient.distributeRewards).toHaveBeenCalledWith([
-        goldSubmission.stacksAddress,
-      ]);
+      // Verify blockchain distribution stays disabled in the active path
+      expect(mockTransactionClient.distributeRewards).not.toHaveBeenCalled();
 
       // Verify RewardsDistributionData was saved
       const savedRewardsData = mockManager.save.mock.calls.find(
@@ -200,7 +198,9 @@ describe('RewardsService application class Unit tests', () => {
       )?.[0] as RewardsDistributionData;
       expect(savedRewardsData).toBeDefined();
       expect(savedRewardsData.tournamentId).toBe(tournamentId);
-      expect(savedRewardsData.transactionId).toBe(txId);
+      expect(savedRewardsData.transactionId).toBe(
+        'points-distribution:weekly:1',
+      );
       expect(savedRewardsData.rewardedSubmissions).toHaveLength(4);
     });
 
@@ -272,8 +272,6 @@ describe('RewardsService application class Unit tests', () => {
         silver: [],
         bronze: [],
       });
-      mockTransactionClient.distributeRewards.mockResolvedValue('tx-123');
-
       const mockManager = {
         connection: mockConnection,
         query: jest.fn().mockResolvedValue([{ id: 1, userId: 1 }]),
@@ -346,8 +344,6 @@ describe('RewardsService application class Unit tests', () => {
         silver: [silver1],
         bronze: [],
       });
-      mockTransactionClient.distributeRewards.mockResolvedValue('tx-123');
-
       const mockManager = {
         connection: mockConnection,
         query: jest.fn().mockResolvedValue([
@@ -370,17 +366,13 @@ describe('RewardsService application class Unit tests', () => {
       // Verify both gold submissions were saved
       expect(mockManager.save).toHaveBeenCalledWith(gold1);
       expect(mockManager.save).toHaveBeenCalledWith(gold2);
-
-      // Verify distributeRewards was called with both addresses
-      expect(mockTransactionClient.distributeRewards).toHaveBeenCalledWith([
-        gold1.stacksAddress,
-        gold2.stacksAddress,
-      ]);
+      expect(mockManager.save).toHaveBeenCalledWith(gold1.user);
+      expect(mockManager.save).toHaveBeenCalledWith(gold2.user);
+      expect(mockTransactionClient.distributeRewards).not.toHaveBeenCalled();
     });
 
     it('should correctly save RewardsDistributionData with all rewarded submissions', async () => {
       const tournamentId = 1;
-      const txId = 'tx-456';
       const user1 = createUser(1);
       const user2 = createUser(2);
       const user3 = createUser(3);
@@ -415,8 +407,6 @@ describe('RewardsService application class Unit tests', () => {
         silver: [silver],
         bronze: [bronze],
       });
-      mockTransactionClient.distributeRewards.mockResolvedValue(txId);
-
       const mockManager = {
         connection: mockConnection,
         query: jest.fn().mockResolvedValue([
@@ -444,7 +434,7 @@ describe('RewardsService application class Unit tests', () => {
 
       const rewardsData = rewardsDataCalls[0][0] as RewardsDistributionData;
       expect(rewardsData.tournamentId).toBe(tournamentId);
-      expect(rewardsData.transactionId).toBe(txId);
+      expect(rewardsData.transactionId).toBe('points-distribution:weekly:1');
       expect(rewardsData.rewardedSubmissions).toHaveLength(3);
       expect(rewardsData.rewardedSubmissions).toContain(gold);
       expect(rewardsData.rewardedSubmissions).toContain(silver);
@@ -478,8 +468,6 @@ describe('RewardsService application class Unit tests', () => {
         silver: [],
         bronze: [],
       });
-      mockTransactionClient.distributeRewards.mockResolvedValue('tx-123');
-
       const mockManager = {
         connection: mockConnection,
         query: jest.fn().mockResolvedValue([{ id: 1, userId: 1 }]),
@@ -500,6 +488,30 @@ describe('RewardsService application class Unit tests', () => {
         'submission.user',
         'user',
       );
+    });
+
+    it('treats points distribution references as already anchored', async () => {
+      const isAnchored = await rewardsService.waitForDistributeRewardsAnchored(
+        'points-distribution:weekly:1',
+      );
+
+      expect(isAnchored).toBe(true);
+      expect(mockTransactionClient.getTransactionStatus).not.toHaveBeenCalled();
+    });
+
+    it('treats saved points distribution references as completed', async () => {
+      const rewardsDistributionData = new RewardsDistributionData();
+      rewardsDistributionData.transactionId = 'points-distribution:raffle:1';
+
+      mockEntityManager.findOne.mockResolvedValue(
+        rewardsDistributionData as RewardsDistributionData,
+      );
+
+      const isCompleted =
+        await rewardsService.isRewardsDistributionCompleted(1);
+
+      expect(isCompleted).toBe(true);
+      expect(mockTransactionClient.getTransactionStatus).not.toHaveBeenCalled();
     });
   });
 
