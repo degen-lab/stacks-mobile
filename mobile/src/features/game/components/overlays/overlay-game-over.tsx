@@ -74,10 +74,10 @@ export default function GameOverOverlay({
     <OverlayPanel>
       <View className="w-full flex-col items-center gap-4">
         <View className="items-center">
-          <Text className="text-base font-instrument-sans uppercase tracking-widest text-secondary text-secondary">
+          <Text className="text-base font-instrument-sans uppercase tracking-widest text-secondary">
             {summary.isHighScore ? "NEW HIGHSCORE" : "Score"}
           </Text>
-          <Text className="font-matter text-7xl text-primary text-primary leading-tight">
+          <Text className="font-matter text-7xl text-primary leading-tight">
             {summary.score}
           </Text>
         </View>
@@ -85,7 +85,7 @@ export default function GameOverOverlay({
           <View className="w-full rounded-xl border border-surface-secondary bg-sand-100 p-4 dark:bg-surface-secondary">
             <View className="flex-row items-center gap-2">
               <TrophyIcon size={20} color={trophyColor} />
-              <Text className="text-sm text-secondary text-secondary">
+              <Text className="text-sm text-secondary">
                 Only{" "}
                 <Text className="font-semibold">
                   {Math.max(1, highScore - summary.score + 10)}
