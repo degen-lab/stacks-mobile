@@ -48,6 +48,7 @@ type TournamentSubmissionSheetProps = {
   sponsoredSubmissionsLeft?: number;
   weeklyContestSubmissionsLeft?: number;
   raffleSubmissionsLeft?: number;
+  pendingSubmissionBlocked?: boolean;
   // Transaction details
   network?: string;
   contractAddress?: string;
@@ -83,6 +84,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
       sponsoredSubmissionsLeft,
       weeklyContestSubmissionsLeft,
       raffleSubmissionsLeft,
+      pendingSubmissionBlocked = false,
       network,
       contractAddress,
       functionName,
@@ -162,21 +164,25 @@ export const TournamentSubmissionSheet = React.forwardRef<
     const sponsoredLeft = showRankChange
       ? weeklyContestSubmissionsLeft
       : raffleSubmissionsLeft;
-    const sponsoredLabel = !canSubmit
-      ? "Please wait for Submit Phase to start"
-      : sponsoredLeft === 0
-        ? showRankChange
-          ? "All free entries used today"
-          : "All sponsored entries used today"
-        : canUseSponsored
+    const sponsoredLabel = pendingSubmissionBlocked
+      ? "Transaction in progress, please wait"
+      : !canSubmit
+        ? "Please wait for Submit Phase to start"
+        : sponsoredLeft === 0
           ? showRankChange
-            ? `Submit for free by watching an ad (${sponsoredLeft} left)`
-            : `Watch an ad for sponsored entry (${sponsoredLeft} left)`
-          : showRankChange
-            ? "Watch an ad to submit"
-            : "Watch an ad for sponsored entry";
+            ? "All free entries used today"
+            : "All sponsored entries used today"
+          : canUseSponsored
+            ? showRankChange
+              ? `Submit for free by watching an ad (${sponsoredLeft} left)`
+              : `Watch an ad for sponsored entry (${sponsoredLeft} left)`
+            : showRankChange
+              ? "Watch an ad to submit"
+              : "Watch an ad for sponsored entry";
     const canUseSponsoredButton =
-      canSubmit && (sponsoredLeft === undefined || sponsoredLeft > 0);
+      canSubmit &&
+      !pendingSubmissionBlocked &&
+      (sponsoredLeft === undefined || sponsoredLeft > 0);
     const fallbackAvatar = React.useMemo(
       () => require("@/assets/images/icon.png"),
       [],
@@ -351,6 +357,7 @@ export const TournamentSubmissionSheet = React.forwardRef<
                   sponsoredDisabled={!canUseSponsoredButton}
                   walletDisabled={
                     !canSubmit ||
+                    pendingSubmissionBlocked ||
                     (hasEnoughWalletBalance &&
                       (walletFeeLoading || isWalletFeeInvalid))
                   }

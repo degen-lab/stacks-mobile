@@ -53,7 +53,7 @@ export default function GameOverOverlay({
   const highscoreSubmitted = summary.submittedHighscore;
   const canSubmitScore = summary.canSubmitScore && hasPositiveScore;
   const submitStatusMessage = summary.submittedRaffle
-    ? "Already submitted this run."
+    ? "Entry submitted for this run!"
     : canSubmitScore
       ? undefined
       : !summary.canSubmitScore

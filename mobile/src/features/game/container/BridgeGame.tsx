@@ -149,12 +149,32 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     useCurrentTournamentSubmissions(queryOptions);
   const { data: sponsoredSubmissionsLeft } =
     useSponsoredSubmissionsLeft(queryOptions);
+
+  const hasPendingSubmissionRaw = useMemo(() => {
+    const all = [
+      ...(currentTournamentSubmissions?.weeklyContestSubmissionsForCurrentTournament ??
+        []),
+      ...(currentTournamentSubmissions?.raffleSubmissionsForCurrentTournament ??
+        []),
+    ];
+    return all.some(
+      (s) => s.transactionStatus === 0 || s.transactionStatus === 4,
+    );
+  }, [currentTournamentSubmissions]);
+
+  useCurrentTournamentSubmissions({
+    enabled: !isPlaying && hasPendingSubmissionRaw,
+    refetchInterval: 8_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
   const {
     bestSubmittedScore,
     canSubmitTournament,
     weeklyContestSubmissionsLeft,
     raffleSubmissionsLeft,
     raffleSubmissionsUsed,
+    hasPendingSubmission,
   } = useMemo(
     () => ({
       bestSubmittedScore: leaderboardData?.userSubmission?.score ?? null,
@@ -167,12 +187,14 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
       raffleSubmissionsUsed:
         currentTournamentSubmissions?.raffleSubmissionsForCurrentTournament
           .length ?? 0,
+      hasPendingSubmission: hasPendingSubmissionRaw,
     }),
     [
       leaderboardData,
       tournamentData,
       sponsoredSubmissionsLeft,
       currentTournamentSubmissions,
+      hasPendingSubmissionRaw,
     ],
   );
 
@@ -595,7 +617,8 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
         onSubmitWallet={handleSubmitWallet}
         onCancel={handleSubmissionCancel}
         onSuccess={handleSubmissionSuccess}
-        canSubmit={canSubmitTournament}
+        canSubmit={canSubmitTournament && !hasPendingSubmission}
+        pendingSubmissionBlocked={hasPendingSubmission}
         resetKey={submissionOpenCount}
         weeklyContestSubmissionsLeft={weeklyContestSubmissionsLeft}
         raffleSubmissionsLeft={raffleSubmissionsLeft}
