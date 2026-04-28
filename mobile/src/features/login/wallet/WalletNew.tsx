@@ -28,6 +28,16 @@ export default function WalletNew() {
     }
   }, [createWallet, password, router]);
 
+  const handlePasswordChange = useCallback(
+    (nextPassword: string) => {
+      setPassword(nextPassword);
+      if (error) {
+        setError(undefined);
+      }
+    },
+    [error],
+  );
+
   const handleBack = useCallback(async () => {
     await signOut();
     router.replace("/login");
@@ -39,7 +49,7 @@ export default function WalletNew() {
       <GooglePasswordScreen
         mode="create"
         password={password}
-        onPasswordChange={setPassword}
+        onPasswordChange={handlePasswordChange}
         onContinue={handleCreateWallet}
         onBack={handleBack}
         error={error}

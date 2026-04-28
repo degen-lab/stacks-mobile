@@ -414,26 +414,26 @@ export function StackingScreen() {
     setSponsoredApprovalNextNonce(undefined);
   }, [isAllowed]);
 
+  const saveStackingDataMutateRef = useRef(saveStackingData.mutateAsync);
+  saveStackingDataMutateRef.current = saveStackingData.mutateAsync;
+
   useEffect(() => {
     if (!currentLockTxId || !currentLockIsFastPool) return;
     if (!userProfile?.id || isUserStackingDataLoading) return;
-    if (userStackingData.length > 0 || saveStackingData.isPending) return;
+    if (userStackingData.length > 0) return;
     if (recoveredHistoryTxIdRef.current === currentLockTxId) return;
 
     recoveredHistoryTxIdRef.current = currentLockTxId;
-    void saveStackingData
-      .mutateAsync({
+    void saveStackingDataMutateRef
+      .current({
         txId: currentLockTxId,
         poolName: "Fast Pool",
       })
-      .catch(() => {
-        recoveredHistoryTxIdRef.current = null;
-      });
+      .catch(() => {});
   }, [
     currentLockIsFastPool,
     currentLockTxId,
     isUserStackingDataLoading,
-    saveStackingData,
     userProfile?.id,
     userStackingData.length,
   ]);

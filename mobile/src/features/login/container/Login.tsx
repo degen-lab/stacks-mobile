@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { queryClient } from "@/api";
 import { useAuthMutation } from "@/api/auth/use-user-auth";
 import { useIsNewUser } from "@/api/user";
+import { useUserProfile } from "@/api/user/use-user-profile";
 import { showError, showErrorMessage } from "@/components/ui/utils";
 import {
   ReferralCodeModal,
@@ -20,6 +21,7 @@ export default function LoginScreen() {
     signInWithGoogle,
     isAuthenticating,
     setBackendSession,
+    setBackendUserData,
     referralUsed,
   } = useAuth();
   const referralModal = useReferralCodeModal();
@@ -49,6 +51,18 @@ export default function LoginScreen() {
           referralCode: trimmedReferralCode || undefined,
         });
         await setBackendSession(response.token, response.data, true);
+        await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+        const profile = await queryClient.fetchQuery(
+          useUserProfile.getFetchOptions(),
+        );
+        await setBackendUserData({
+          ...response.data,
+          nickname: profile.nickname,
+          points: profile.points,
+          streak: profile.streak,
+          referralCode: profile.referralCode,
+          consent: profile.consent,
+        });
 
         const nextRoute = googleResult.hasBackup
           ? "/wallet-restore"
@@ -71,6 +85,7 @@ export default function LoginScreen() {
       referralModal,
       router,
       setBackendSession,
+      setBackendUserData,
     ],
   );
 

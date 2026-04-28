@@ -1,4 +1,11 @@
 import { type BottomSheetModal } from "@gorhom/bottom-sheet";
+import {
+  BackupNotFoundError,
+  GoogleApiError,
+  InvalidEncryptedWalletError,
+  InvalidPasswordError,
+  InvalidPasswordOrSaltOrEncryptedWalletError,
+} from "@degenlab/stacks-wallet-kit-core";
 import { useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { InteractionManager } from "react-native";
@@ -11,6 +18,29 @@ import {
   useRestoreWallet,
 } from "@/hooks/use-create-wallet";
 import { useAuth } from "@/lib/store/auth";
+
+function getRestoreErrorMessage(error: unknown) {
+  if (error instanceof InvalidPasswordError) {
+    return "Incorrect backup password. Enter the password used to create this Google Drive wallet backup.";
+  }
+
+  if (
+    error instanceof InvalidPasswordOrSaltOrEncryptedWalletError ||
+    error instanceof InvalidEncryptedWalletError
+  ) {
+    return "We couldn't decrypt this Google Drive wallet backup. The password may be wrong or the backup may be corrupted.";
+  }
+
+  if (error instanceof BackupNotFoundError) {
+    return "No Google Drive wallet backup was found for this account.";
+  }
+
+  if (error instanceof GoogleApiError) {
+    return "We couldn't access your Google Drive wallet backup. Please try again.";
+  }
+
+  return "We couldn't restore your wallet backup. Please try again.";
+}
 
 export default function WalletRestore() {
   const router = useRouter();
@@ -33,13 +63,23 @@ export default function WalletRestore() {
     try {
       await restoreWallet({ password });
       router.replace("/");
-    } catch (err) {
-      console.error(err);
-      setError("Restore failed. Please try again.");
+    } catch (error) {
+      console.error(error);
+      setError(getRestoreErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   }, [password, restoreWallet, router]);
+
+  const handlePasswordChange = useCallback(
+    (nextPassword: string) => {
+      setPassword(nextPassword);
+      if (error) {
+        setError(undefined);
+      }
+    },
+    [error],
+  );
 
   const handleForgotPassword = useCallback(() => {
     setDeleteError(undefined);
@@ -81,7 +121,7 @@ export default function WalletRestore() {
       <GooglePasswordScreen
         mode="recover"
         password={password}
-        onPasswordChange={setPassword}
+        onPasswordChange={handlePasswordChange}
         onContinue={handleRestore}
         onForgotPassword={handleForgotPassword}
         onBack={handleBack}

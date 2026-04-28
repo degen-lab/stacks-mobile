@@ -11,8 +11,10 @@ const mockAuthState = {
 
 const mockSignInWithGoogle = jest.fn();
 const mockSetBackendSession = jest.fn();
+const mockSetBackendUserData = jest.fn();
 const mockMutateAsync = jest.fn();
 const mockFetchQuery = jest.fn();
+const mockInvalidateQueries = jest.fn();
 const mockShowError = jest.fn();
 const mockShowErrorMessage = jest.fn();
 const authMutationState = { isPending: false };
@@ -29,6 +31,20 @@ const mockLatestModalProps: { current: Record<string, any> | null } = {
   current: null,
 };
 
+const mockUserProfile = {
+  nickname: "Test User",
+  points: 0,
+  streak: 0,
+  referralCode: null,
+  consent: null,
+};
+
+const mockUserProfileFetchOptions = { queryKey: ["user-profile"] };
+
+const mockIsNewUserFetchOptions = (params: unknown) => ({
+  queryKey: ["is-new-user", params],
+});
+
 const authState = mockAuthState;
 const signInWithGoogle = mockSignInWithGoogle;
 const setBackendSession = mockSetBackendSession;
@@ -42,6 +58,7 @@ const latestModalProps = mockLatestModalProps;
 jest.mock("@/api", () => ({
   queryClient: {
     fetchQuery: (...args: unknown[]) => mockFetchQuery(...args),
+    invalidateQueries: (...args: unknown[]) => mockInvalidateQueries(...args),
   },
 }));
 
@@ -54,7 +71,13 @@ jest.mock("@/api/auth/use-user-auth", () => ({
 
 jest.mock("@/api/user", () => ({
   useIsNewUser: {
-    getFetchOptions: (params: unknown) => params,
+    getFetchOptions: (params: unknown) => mockIsNewUserFetchOptions(params),
+  },
+}));
+
+jest.mock("@/api/user/use-user-profile", () => ({
+  useUserProfile: {
+    getFetchOptions: () => mockUserProfileFetchOptions,
   },
 }));
 
@@ -76,6 +99,7 @@ jest.mock("@/lib/store/auth", () => ({
     signInWithGoogle: (...args: unknown[]) => mockSignInWithGoogle(...args),
     isAuthenticating: mockAuthState.isAuthenticating,
     setBackendSession: (...args: unknown[]) => mockSetBackendSession(...args),
+    setBackendUserData: (...args: unknown[]) => mockSetBackendUserData(...args),
     referralUsed: mockAuthState.referralUsed,
   }),
 }));
@@ -114,6 +138,12 @@ describe("LoginScreen", () => {
     authState.isAuthenticating = false;
     authState.referralUsed = false;
     authMutationState.isPending = false;
+    fetchQuery.mockImplementation((options) => {
+      if (options === mockUserProfileFetchOptions) {
+        return Promise.resolve(mockUserProfile);
+      }
+      return Promise.resolve({ isNewUser: false });
+    });
   });
 
   afterEach(() => {
@@ -122,7 +152,6 @@ describe("LoginScreen", () => {
 
   it("routes existing users without backup to /wallet-new", async () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult(false));
-    fetchQuery.mockResolvedValue({ isNewUser: false });
     mutateAsync.mockResolvedValue({
       token: "token",
       data: { id: "backend-user", isNewUser: false },
@@ -146,7 +175,6 @@ describe("LoginScreen", () => {
 
   it("routes existing users with backup to /wallet-restore", async () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult(true));
-    fetchQuery.mockResolvedValue({ isNewUser: false });
     mutateAsync.mockResolvedValue({
       token: "token",
       data: { id: "backend-user", isNewUser: false },
@@ -194,7 +222,7 @@ describe("LoginScreen", () => {
 
   it("opens referral modal for new users", async () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult());
-    fetchQuery.mockResolvedValue({ isNewUser: true });
+    fetchQuery.mockResolvedValueOnce({ isNewUser: true });
 
     const { getByTestId } = render(<LoginScreen />);
     fireEvent.press(getByTestId("google-signin-button"));
@@ -207,7 +235,7 @@ describe("LoginScreen", () => {
 
   it("confirms referral and routes to /wallet-restore when backup exists", async () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult(true));
-    fetchQuery.mockResolvedValue({ isNewUser: true });
+    fetchQuery.mockResolvedValueOnce({ isNewUser: true });
     mutateAsync.mockResolvedValue({
       token: "token",
       data: { id: "backend-user", isNewUser: true },
@@ -249,7 +277,9 @@ describe("LoginScreen", () => {
     fireEvent.press(getByTestId("google-signin-button"));
 
     await waitFor(() => {
-      expect(fetchQuery).not.toHaveBeenCalled();
+      expect(fetchQuery).not.toHaveBeenCalledWith(
+        mockIsNewUserFetchOptions({ googleId: "user-1" }),
+      );
       expect(referralModal.present).not.toHaveBeenCalled();
       expect(mutateAsync).toHaveBeenCalledTimes(1);
     });
@@ -257,7 +287,7 @@ describe("LoginScreen", () => {
 
   it("continues sign in when referral modal is dismissed", async () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult(false));
-    fetchQuery.mockResolvedValue({ isNewUser: true });
+    fetchQuery.mockResolvedValueOnce({ isNewUser: true });
     mutateAsync.mockResolvedValue({
       token: "token",
       data: { id: "backend-user", isNewUser: true },
@@ -280,7 +310,7 @@ describe("LoginScreen", () => {
 
   it("continues sign in when new user check fails", async () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult(false));
-    fetchQuery.mockRejectedValue(new Error("network down")); // Failure
+    fetchQuery.mockRejectedValueOnce(new Error("network down"));
     mutateAsync.mockResolvedValue({
       token: "token",
       data: { id: "backend-user", isNewUser: false },
@@ -323,7 +353,6 @@ describe("LoginScreen", () => {
 
   it("shows axios error when auth fails", async () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult(false));
-    fetchQuery.mockResolvedValue({ isNewUser: false });
 
     mutateAsync.mockRejectedValue({
       isAxiosError: true,
@@ -340,7 +369,6 @@ describe("LoginScreen", () => {
 
   it("shows generic error when auth fails without axios", async () => {
     signInWithGoogle.mockResolvedValue(createGoogleResult(false));
-    fetchQuery.mockResolvedValue({ isNewUser: false });
     mutateAsync.mockRejectedValue(new Error("unknown boom"));
 
     const { getByTestId } = render(<LoginScreen />);
