@@ -1,6 +1,7 @@
 import { Button, Modal, Text, View } from "@/components/ui";
 import { WarningLabel } from "@/components/warning-label";
 import { trackEvent } from "@/lib/analytics";
+import { useAuth } from "@/lib/store/auth";
 import { useActiveAccountIndex } from "@/lib/store/settings";
 import { walletKit } from "@/lib/stacks/wallet";
 import { PasswordInput } from "@/features/login/components/password-input";
@@ -210,6 +211,8 @@ export const ReplaceBackupModal = forwardRef<
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { authMethod } = useAuth();
+  const authProvider = authMethod === "apple" ? "apple" : "google";
   const { setActiveAccountIndex } = useActiveAccountIndex();
 
   const mnemonicValidation = useMemo(
@@ -330,7 +333,7 @@ export const ReplaceBackupModal = forwardRef<
 
               // Delete existing backup
               try {
-                await walletKit.deleteBackupWithoutPassword();
+                await walletKit.deleteBackup(authProvider);
               } catch (error: any) {
                 if (!error?.message?.includes("not found")) {
                   console.warn("Failed to delete old backup:", error);
@@ -345,7 +348,7 @@ export const ReplaceBackupModal = forwardRef<
               await setActiveAccountIndex(0);
 
               // Create new backup
-              await walletKit.backupWallet(password);
+              await walletKit.backupWallet(password, [authProvider]);
 
               void trackEvent("replace_cloud_backup");
 
@@ -383,6 +386,7 @@ export const ReplaceBackupModal = forwardRef<
       ],
     );
   }, [
+    authProvider,
     mnemonicWords,
     mnemonicPassphrase,
     password,

@@ -28,10 +28,13 @@ export function Header() {
 
   const isEarnScreen =
     pathname.startsWith("/(app)/Earn") || pathname.startsWith("/Earn");
+  const displayName =
+    userProfile?.nickname ?? userData?.name ?? "Stacks user";
+  const displayPhoto = userProfile?.photoUri ?? userData?.photo;
 
   const avatarSource = useMemo(
-    () => (userData?.user.photo ? { uri: userData.user.photo } : {}),
-    [userData?.user.photo],
+    () => (displayPhoto ? { uri: displayPhoto } : {}),
+    [displayPhoto],
   );
 
   const streakDays = useMemo(
@@ -113,8 +116,8 @@ export function Header() {
   return (
     <>
       <HeaderLayout
-        name={userData?.user.name ?? "Stacks user"}
-        email={userData?.user.email ?? ""}
+        name={displayName}
+        email={userData?.email ?? ""}
         points={userProfile?.points ?? null}
         streak={userProfile?.streak ?? null}
         streakDays={streakDays}

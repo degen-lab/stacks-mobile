@@ -9,7 +9,8 @@ import { useAuth } from "@/lib/store/auth";
 export default function WalletNew() {
   const router = useRouter();
   const { createWallet } = useCreateWallet();
-  const { signOut } = useAuth();
+  const { authMethod, signOut } = useAuth();
+  const backupProviderName = authMethod === "apple" ? "iCloud" : "Google Drive";
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +55,7 @@ export default function WalletNew() {
         onBack={handleBack}
         error={error}
         isLoading={isSubmitting}
+        loadingSubtitleOverride={`Backing up to ${backupProviderName}`}
       />
     </>
   );

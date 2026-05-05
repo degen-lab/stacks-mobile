@@ -82,11 +82,11 @@ describe("Header", () => {
     mockUsePathname.mockReturnValue("/Earn");
     mockUseAuth.mockReturnValue({
       userData: {
-        user: {
-          name: "Nikos",
-          email: "nikos@example.com",
-          photo: "https://example.com/avatar.png",
-        },
+        id: "user-1",
+        name: "Nikos",
+        email: "nikos@example.com",
+        photo: "https://example.com/avatar.png",
+        givenName: "Nikos",
       },
     });
     mockUseUserProfile.mockReturnValue({

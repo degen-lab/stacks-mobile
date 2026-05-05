@@ -10,6 +10,7 @@ const mockAuthState = {
 };
 
 const mockSignInWithGoogle = jest.fn();
+const mockSignInWithApple = jest.fn();
 const mockSetBackendSession = jest.fn();
 const mockSetBackendUserData = jest.fn();
 const mockMutateAsync = jest.fn();
@@ -47,6 +48,7 @@ const mockIsNewUserFetchOptions = (params: unknown) => ({
 
 const authState = mockAuthState;
 const signInWithGoogle = mockSignInWithGoogle;
+const signInWithApple = mockSignInWithApple;
 const setBackendSession = mockSetBackendSession;
 const mutateAsync = mockMutateAsync;
 const fetchQuery = mockFetchQuery;
@@ -97,6 +99,7 @@ jest.mock("@/features/login/components/referral-modal", () => ({
 jest.mock("@/lib/store/auth", () => ({
   useAuth: () => ({
     signInWithGoogle: (...args: unknown[]) => mockSignInWithGoogle(...args),
+    signInWithApple: (...args: unknown[]) => mockSignInWithApple(...args),
     isAuthenticating: mockAuthState.isAuthenticating,
     setBackendSession: (...args: unknown[]) => mockSetBackendSession(...args),
     setBackendUserData: (...args: unknown[]) => mockSetBackendUserData(...args),
@@ -106,17 +109,11 @@ jest.mock("@/lib/store/auth", () => ({
 
 const createGoogleResult = (hasBackup = false): SignInResult => {
   const userData: NonNullable<SignInResult["userData"]> = {
-    idToken: "id-token",
-    serverAuthCode: "server-auth-code",
-    scopes: [],
-    user: {
-      id: "user-1",
-      name: "Test User",
-      givenName: "Test",
-      photo: "https://example.com/photo.png",
-      email: "",
-      familyName: null,
-    },
+    id: "user-1",
+    name: "Test User",
+    givenName: "Test",
+    photo: "https://example.com/photo.png",
+    email: "",
   };
 
   return { userData, hasBackup };
@@ -218,6 +215,21 @@ describe("LoginScreen", () => {
 
     expect(getByTestId("google-signin-button-activity-indicator")).toBeTruthy();
     expect(queryByText("Continue with Google")).toBeNull();
+  });
+
+  it("shows loading only on the selected provider button", async () => {
+    signInWithApple.mockImplementation(() => new Promise(() => {}));
+
+    const { getByTestId, queryByText } = render(<LoginScreen />);
+    fireEvent.press(getByTestId("apple-signin-button"));
+
+    await waitFor(() => {
+      expect(
+        getByTestId("apple-signin-button-activity-indicator"),
+      ).toBeTruthy();
+      expect(queryByText("Continue with Apple")).toBeNull();
+      expect(queryByText("Continue with Google")).toBeTruthy();
+    });
   });
 
   it("opens referral modal for new users", async () => {

@@ -8,6 +8,12 @@ jest.mock("@/lib/stacks/wallet", () => ({
   },
 }));
 
+jest.mock("@/lib/store/auth", () => ({
+  useAuth: () => ({
+    authMethod: "google",
+  }),
+}));
+
 jest.mock("react-native-flash-message", () => ({
   showMessage: jest.fn(),
 }));

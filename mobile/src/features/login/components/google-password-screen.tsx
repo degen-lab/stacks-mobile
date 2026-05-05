@@ -1,6 +1,6 @@
 import { ChevronLeft } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform } from "react-native";
+import { Keyboard, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button, LoadingView, Text, View } from "@/components/ui";
@@ -82,6 +82,11 @@ export function GooglePasswordScreen({
     onContinue();
   }
 
+  function handleForgotPassword() {
+    Keyboard.dismiss();
+    onForgotPassword?.();
+  }
+
   if (isLoading) {
     return (
       <LoadingView
@@ -147,7 +152,7 @@ export function GooglePasswordScreen({
               <Button
                 variant="link"
                 label="Forgot password?"
-                onPress={onForgotPassword}
+                onPress={handleForgotPassword}
                 className="mb-2"
                 size="sm"
                 textClassName="text-center"

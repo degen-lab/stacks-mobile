@@ -46,7 +46,8 @@ export default function WalletRestore() {
   const router = useRouter();
   const { restoreWallet } = useRestoreWallet();
   const { deleteBackupWithoutPassword } = useDeleteGoogleBackup();
-  const { signOut } = useAuth();
+  const { authMethod, signOut } = useAuth();
+  const backupProviderName = authMethod === "apple" ? "iCloud" : "Google Drive";
 
   const deleteBackupSheetRef = useRef<BottomSheetModal>(null);
   const shouldNavigateAfterDeleteRef = useRef(false);
@@ -127,11 +128,13 @@ export default function WalletRestore() {
         onBack={handleBack}
         isLoading={isSubmitting}
         error={error}
+        loadingSubtitleOverride={`Downloading from ${backupProviderName}`}
       />
       <WarningSheet
         ref={deleteBackupSheetRef}
-        title="Delete Google Backup?"
-        description="To create a new wallet, we need to permanently delete your Google Drive backup. This action cannot be undone."
+        title={`Delete ${backupProviderName} Backup?`}
+        description={`To create a new wallet, we need to permanently delete your ${backupProviderName} backup. This action cannot be undone.`}
+        confirmLabel="Delete backup"
         onConfirm={handleDeleteBackup}
         onCancel={() => deleteBackupSheetRef.current?.dismiss()}
         loading={isDeletingBackup}

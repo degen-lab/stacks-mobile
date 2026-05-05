@@ -1,4 +1,5 @@
 import { Modal, Text } from "@/components/ui";
+import { useAuth } from "@/lib/store/auth";
 import { walletKit } from "@/lib/stacks/wallet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
@@ -18,6 +19,7 @@ export const SaveBackupModal = forwardRef<
   BottomSheetModal,
   SaveBackupModalProps
 >(({ onSuccess }, ref) => {
+  const { authMethod } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +47,9 @@ export const SaveBackupModal = forwardRef<
 
     try {
       setLoading(true);
-      await walletKit.backupWallet(password);
+      await walletKit.backupWallet(password, [
+        authMethod === "apple" ? "apple" : "google",
+      ]);
       showMessage({
         message: "Cloud backup saved successfully",
         type: "success",
@@ -68,7 +72,7 @@ export const SaveBackupModal = forwardRef<
     } finally {
       setLoading(false);
     }
-  }, [password, validation.isValid, onSuccess]);
+  }, [authMethod, password, validation.isValid, onSuccess]);
 
   return (
     <Modal
