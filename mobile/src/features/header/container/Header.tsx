@@ -28,8 +28,7 @@ export function Header() {
 
   const isEarnScreen =
     pathname.startsWith("/(app)/Earn") || pathname.startsWith("/Earn");
-  const displayName =
-    userProfile?.nickname ?? userData?.name ?? "Stacks user";
+  const displayName = userProfile?.nickname ?? userData?.name ?? "Stacks user";
   const displayPhoto = userProfile?.photoUri ?? userData?.photo;
 
   const avatarSource = useMemo(

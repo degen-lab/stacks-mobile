@@ -43,6 +43,10 @@ export const extractError = (data: unknown): string => {
   }
 
   if (typeof data === "object" && data !== null) {
+    const record = data as Record<string, unknown>;
+    if (typeof record.message === "string") {
+      return record.message;
+    }
     const messages = Object.entries(data).map((item) => {
       const [key, value] = item;
       const separator = Array.isArray(value) ? ":\n " : ": ";

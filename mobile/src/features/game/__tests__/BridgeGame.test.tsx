@@ -132,7 +132,13 @@ jest.mock("@/hooks/use-stx-balance", () => ({
 
 jest.mock("@/lib/store/auth", () => ({
   useAuth: () => ({
-    userData: { user: { name: "Test User", photo: null } },
+    userData: {
+      id: "user-1",
+      name: "Test User",
+      email: "",
+      photo: null,
+      givenName: "Test",
+    },
   }),
 }));
 

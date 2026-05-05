@@ -458,13 +458,13 @@ const BridgeGame = ({ autoStart = true }: BridgeGameProps) => {
     [nextUserNonce, submissionScore, tournamentData?.tournamentId],
   );
 
-  const avatarSource = useMemo(
-    () => (userData?.user.photo ? { uri: userData.user.photo } : undefined),
-    [userData?.user.photo],
-  );
+  const avatarSource = useMemo(() => {
+    const photoUri = userProfile?.photoUri ?? userData?.photo;
+    return photoUri ? { uri: photoUri } : undefined;
+  }, [userData?.photo, userProfile?.photoUri]);
   const displayName = useMemo(
-    () => userData?.user.name ?? "Stacks user",
-    [userData?.user.name],
+    () => userProfile?.nickname ?? userData?.name ?? "Stacks user",
+    [userData?.name, userProfile?.nickname],
   );
   const walletHasEnoughBalance = walletBalance > 0;
   const sponsoredSubmissionsLeftForContext =

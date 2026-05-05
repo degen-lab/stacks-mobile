@@ -7,11 +7,9 @@ import { useDeleteGoogleBackup } from "@/hooks/use-create-wallet";
 import { clearLocalAccountData, useAuth } from "@/lib/store/auth";
 
 const CLOUD_BACKUP_ERROR_MESSAGE =
-  "Failed to delete cloud backup. Your account was not deleted.";
+  "Your account was deleted, but the cloud backup could not be removed.";
 const DELETE_ACCOUNT_ERROR_MESSAGE =
   "Failed to delete account. Please try again.";
-const DELETE_ACCOUNT_WITHOUT_BACKUP_MESSAGE =
-  "Account deletion failed after the cloud backup was removed. Please try again.";
 const LOCAL_CLEANUP_ERROR_MESSAGE =
   "Your account was deleted, but local cleanup did not finish. Please restart the app.";
 
@@ -36,41 +34,44 @@ export function useDeleteAccountFlow() {
     setIsDeleting(true);
     let backupRemoved = false;
     let accountDeleted = false;
+    let backupCleanupFailed = false;
 
     try {
+      await deleteAccountMutation.mutateAsync();
+      accountDeleted = true;
+
       if (hasBackup) {
         try {
           await deleteBackupWithoutPassword();
           backupRemoved = true;
         } catch (error) {
           if (!isBackupNotFoundError(error)) {
-            throw new Error(CLOUD_BACKUP_ERROR_MESSAGE);
+            console.error("Failed to delete cloud backup:", error);
+            backupCleanupFailed = true;
+          } else {
+            backupRemoved = true;
           }
-
-          backupRemoved = true;
         }
 
-        setHasBackup(false);
+        if (backupRemoved) {
+          setHasBackup(false);
+        }
       }
 
-      await deleteAccountMutation.mutateAsync();
-      accountDeleted = true;
       await clearLocalAccountData({ throwOnFailure: true });
 
       showMessage({
         message: "Account deleted",
-        description: "Your app account and local wallet data were removed.",
-        type: "success",
+        description: backupCleanupFailed
+          ? CLOUD_BACKUP_ERROR_MESSAGE
+          : "Your app account and local wallet data were removed.",
+        type: backupCleanupFailed ? "warning" : "success",
       });
 
       router.replace("/login");
     } catch (error) {
       if (accountDeleted) {
         throw new Error(LOCAL_CLEANUP_ERROR_MESSAGE);
-      }
-
-      if (backupRemoved) {
-        throw new Error(DELETE_ACCOUNT_WITHOUT_BACKUP_MESSAGE);
       }
 
       if (error instanceof Error && error.message) {

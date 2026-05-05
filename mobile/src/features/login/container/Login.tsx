@@ -32,9 +32,9 @@ export default function LoginScreen() {
   const [pendingSignInResult, setPendingSignInResult] =
     useState<SignInResult | null>(null);
   const [isCheckingNewUser, setIsCheckingNewUser] = useState(false);
-  const [activeProvider, setActiveProvider] = useState<"google" | "apple" | null>(
-    null,
-  );
+  const [activeProvider, setActiveProvider] = useState<
+    "google" | "apple" | null
+  >(null);
 
   const handleAuthComplete = useCallback(
     async (referralCode: string, resultOverride?: SignInResult) => {

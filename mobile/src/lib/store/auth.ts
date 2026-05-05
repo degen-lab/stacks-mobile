@@ -185,7 +185,8 @@ const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   completeAuth: (hasBackup: boolean) => {
-    const authMethod = get().authMethod === "none" ? "google" : get().authMethod;
+    const authMethod =
+      get().authMethod === "none" ? "google" : get().authMethod;
     void Promise.all([
       setItem(HAS_BACKUP_KEY, hasBackup),
       setItem(AUTH_METHOD_KEY, authMethod),
@@ -322,7 +323,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function normalizeStoredAuthUser(value: unknown): StoredAuthUser | null {
-  const candidate = isRecord(value) && isRecord(value.user) ? value.user : value;
+  const candidate =
+    isRecord(value) && isRecord(value.user) ? value.user : value;
 
   if (!isRecord(candidate) || typeof candidate.id !== "string") {
     return null;
