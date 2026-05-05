@@ -9,8 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.enterstacks.development",
-      "supportsTablet": true
+      "bundleIdentifier": "com.enterstacks",
+      "supportsTablet": true,
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.enterstacks.development",
@@ -30,6 +31,7 @@
     },
     "plugins": [
       "expo-router",
+      "@degenlab/stacks-wallet-kit-mobile",
       [
         "expo-splash-screen",
         {

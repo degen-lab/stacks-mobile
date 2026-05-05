@@ -9,7 +9,9 @@
     "android": "expo run:android",
     "android:staging": "cross-env APP_ENV=staging expo run:android",
     "android:development": "cross-env APP_ENV=development expo run:android",
+    "android:production": "cross-env APP_ENV=production expo run:android",
     "ios": "expo run:ios",
+    "ios:production": "cross-env APP_ENV=production expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
@@ -25,8 +27,8 @@
     "build:production:ios": "cross-env APP_ENV=production eas build --profile production --platform ios"
   },
   "dependencies": {
-    "@degenlab/stacks-wallet-kit-core": "1.5.0",
-    "@degenlab/stacks-wallet-kit-mobile": "1.4.0",
+    "@degenlab/stacks-wallet-kit-core": "2.0.0",
+    "@degenlab/stacks-wallet-kit-mobile": "2.0.0",
     "@dev-plugins/react-query": "^0.4.0",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.8",
@@ -48,6 +50,7 @@
     "axios": "^1.13.2",
     "buffer": "^6.0.3",
     "expo": "~54.0.26",
+    "expo-apple-authentication": "~8.0.8",
     "expo-build-properties": "~1.0.10",
     "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.10",
@@ -113,11 +116,7 @@
     "zod": "^4.1.13"
   },
   "private": true,
-  "pnpm": {
-    "overrides": {
-      "@degenlab/stacks-wallet-kit-mobile>@degenlab/stacks-wallet-kit-core": "1.5.0"
-    }
-  },
+  "pnpm": {},
   "jest": {
     "preset": "jest-expo",
     "setupFilesAfterEnv": [

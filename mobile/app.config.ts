@@ -24,6 +24,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
+    usesAppleSignIn: true,
     bundleIdentifier: Env.BUNDLE_ID,
     googleServicesFile: `./firebase/${Env.APP_ENV}/GoogleService-Info.plist`,
     infoPlist: {
@@ -110,6 +111,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     '@react-native-firebase/app',
+    '@degenlab/stacks-wallet-kit-mobile',
+    'expo-apple-authentication',
     'expo-router',
   ],
   extra: {
