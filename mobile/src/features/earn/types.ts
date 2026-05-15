@@ -7,7 +7,6 @@ export type EarnAssetSnapshot = PortfolioAssetSnapshot;
 
 export type EarnQuickActions = {
   onBuy: () => void;
-  onSell: () => void;
   onTransfer: () => void;
   onSwap: () => void;
   onBridge: () => void;

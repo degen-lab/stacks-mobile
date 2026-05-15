@@ -318,7 +318,10 @@ export function TransakDrawer({ drawerRef }: Props) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const transakConfig: TransakConfig = checkoutUrl
-    ? { widgetUrl: checkoutUrl }
+    ? {
+        widgetUrl: checkoutUrl,
+        themeColor: colors.stacks.bloodOrange.replace("#", ""),
+      }
     : ({} as TransakConfig);
   const backgroundColor = isCheckout
     ? colors.white

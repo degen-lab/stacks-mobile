@@ -111,6 +111,8 @@ const client = z.object({
   ANDROID_ADMOB_APP_ID: z.string().min(1),
   IOS_ADMOB_APP_ID: z.string().optional(),
   ANDROID_REWARDS_AD_MOBIN_KEY: z.string().min(1),
+  TRANSAK_API_KEY:
+    APP_ENV === 'production' ? z.string().min(1) : z.string().optional(),
   TRANSAK_STAGING_API_KEY: z.string().min(1),
   SBTC_BRIDGE_MAINNET_EMILY_URL: z.string().url().optional(),
   SBTC_BRIDGE_TESTNET_EMILY_URL: z.string().url().optional(),
@@ -148,6 +150,7 @@ const _clientEnv = {
   ANDROID_ADMOB_APP_ID: process.env.ANDROID_ADMOB_APP_ID,
   IOS_ADMOB_APP_ID: process.env.IOS_ADMOB_APP_ID,
   ANDROID_REWARDS_AD_MOBIN_KEY: process.env.ANDROID_REWARDS_AD_MOBIN_KEY,
+  TRANSAK_API_KEY: process.env.TRANSAK_API_KEY,
   TRANSAK_STAGING_API_KEY: process.env.TRANSAK_STAGING_API_KEY,
   SBTC_BRIDGE_MAINNET_EMILY_URL: process.env.SBTC_BRIDGE_MAINNET_EMILY_URL,
   SBTC_BRIDGE_TESTNET_EMILY_URL: process.env.SBTC_BRIDGE_TESTNET_EMILY_URL,
@@ -196,6 +199,7 @@ const EAS_ENV_PULL_STUBS = {
   API_URL: 'https://example.com',
   ANDROID_ADMOB_APP_ID: 'ca-app-pub-0000000000000000~0000000000',
   ANDROID_REWARDS_AD_MOBIN_KEY: 'eas-env-pull-pending',
+  TRANSAK_API_KEY: 'eas-env-pull-pending',
   TRANSAK_STAGING_API_KEY: 'eas-env-pull-pending',
 };
 

@@ -49,7 +49,6 @@ export default function HomeScreen() {
   const actions = useMemo(
     () => ({
       onBuy: () => openTransak("STX", "buy"),
-      onSell: () => openTransak("STX", "sell"),
       onTransfer: () => openTransfer(),
       onSwap: () => openSwap(),
       onBridge: () => setIsMintSbtcSheetOpen(true),

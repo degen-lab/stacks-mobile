@@ -12,7 +12,13 @@ export { TransakQuoteError };
 export type { TransakQuoteErrorKind };
 
 const TRANSAK_API_URL =
-  "https://api-stg.transak.com/api/v1/pricing/public/quotes";
+  Env.APP_ENV === "production"
+    ? "https://api.transak.com/api/v1/pricing/public/quotes"
+    : "https://api-stg.transak.com/api/v1/pricing/public/quotes";
+const TRANSAK_API_KEY =
+  Env.APP_ENV === "production"
+    ? Env.TRANSAK_API_KEY
+    : Env.TRANSAK_STAGING_API_KEY;
 const DEFAULT_FIAT = "USD";
 const DEFAULT_PAYMENT = "credit_debit_card";
 const DEFAULT_COUNTRY = "US";
@@ -43,7 +49,7 @@ export const useTransakQuote = createQuery<
       cryptoCurrency,
       paymentMethod,
       isBuyOrSell,
-      partnerApiKey: Env.TRANSAK_STAGING_API_KEY,
+      partnerApiKey: TRANSAK_API_KEY,
       network: "mainnet",
       quoteCountryCode: countryCode || DEFAULT_COUNTRY,
     });
