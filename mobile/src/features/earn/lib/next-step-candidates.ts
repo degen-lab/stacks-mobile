@@ -10,7 +10,7 @@ export type EarnNextStepCandidate = Omit<EarnNextStepCard, "status"> & {
 };
 
 export type BuildEarnNextStepCardsArgs = {
-  btcBalance: number;
+  btcBalance: number | null;
   bridgeDepositMinimumBtc: number;
   sbtcBalance: number;
   meetsMinimumSbtcForEnrollment: boolean;
@@ -141,6 +141,17 @@ function buildDualStackingPreviewCandidate(
   };
 }
 
+function hasEnoughBtcForBridge(
+  btcBalance: number | null,
+  bridgeDepositMinimumBtc: number,
+) {
+  if (btcBalance == null) return false;
+
+  return bridgeDepositMinimumBtc > 0
+    ? btcBalance >= bridgeDepositMinimumBtc
+    : btcBalance > 0;
+}
+
 export function buildSuccessCandidate(
   nextRewardPhaseLabel: string | null,
 ): EarnNextStepCandidate {
@@ -168,10 +179,10 @@ export function buildActionableCandidates({
   stackingApr,
 }: BuildEarnNextStepCardsArgs): EarnNextStepCandidate[] {
   const isStacking = lockedStxBalance > 0;
-  const hasEnoughBtcForBridge =
-    bridgeDepositMinimumBtc > 0
-      ? btcBalance >= bridgeDepositMinimumBtc
-      : btcBalance > 0;
+  const hasEnoughBtc = hasEnoughBtcForBridge(
+    btcBalance,
+    bridgeDepositMinimumBtc,
+  );
   const candidates: EarnNextStepCandidate[] = [];
 
   if (meetsMinimumSbtcForEnrollment && !isEnrolledNextCycle) {
@@ -180,7 +191,7 @@ export function buildActionableCandidates({
     );
   }
 
-  if (hasEnoughBtcForBridge && !meetsMinimumSbtcForEnrollment) {
+  if (hasEnoughBtc && !meetsMinimumSbtcForEnrollment) {
     candidates.push(buildBridgeCandidate());
   }
 
@@ -190,7 +201,7 @@ export function buildActionableCandidates({
 
   if (
     candidates.length === 0 &&
-    !hasEnoughBtcForBridge &&
+    !hasEnoughBtc &&
     !meetsMinimumSbtcForEnrollment
   ) {
     if (isStacking) {
@@ -227,10 +238,10 @@ export function buildPreviewCandidates({
   | "lockedStxBalance"
 >) {
   const isStacking = lockedStxBalance > 0;
-  const hasEnoughBtcForBridge =
-    bridgeDepositMinimumBtc > 0
-      ? btcBalance >= bridgeDepositMinimumBtc
-      : btcBalance > 0;
+  const hasEnoughBtc = hasEnoughBtcForBridge(
+    btcBalance,
+    bridgeDepositMinimumBtc,
+  );
   const candidates: EarnNextStepCandidate[] = [];
 
   if (isStacking && !meetsMinimumSbtcForEnrollment) {
@@ -240,7 +251,7 @@ export function buildPreviewCandidates({
   if (
     !isStacking &&
     availableStxBalance >= MIN_STACKING_STX &&
-    !hasEnoughBtcForBridge &&
+    !hasEnoughBtc &&
     !meetsMinimumSbtcForEnrollment
   ) {
     candidates.push(

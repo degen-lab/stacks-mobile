@@ -1,4 +1,5 @@
 export type {
+  BitcoinAddressInfo,
   BitcoinAddressUtxo,
   BitcoinFeeRecommendation,
   MempoolTransaction,

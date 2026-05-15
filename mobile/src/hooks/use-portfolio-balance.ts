@@ -78,7 +78,11 @@ type UsePortfolioBalanceResult = {
   btcChange24hPercent: number | null;
   isLoading: boolean;
   isBalanceLoading: boolean;
+  isBalanceInitialLoading: boolean;
+  isNextStepsBalanceLoading: boolean;
+  isBalanceRefreshing: boolean;
   isPriceLoading: boolean;
+  btcBalanceOrNull: number | null;
 };
 
 const CORE_ASSET_ORDER = {
@@ -267,8 +271,10 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
   });
   const {
     balance: btcBalance,
+    balanceOrNull: btcBalanceOrNull,
     balanceSats: btcBalanceSats,
     isLoading: loadingBtc,
+    isFetching: fetchingBtc,
   } = useBtcBalance(activeAccountIndex);
   const tokenListQuery = useSwapTokenList();
   const config = useMemo(
@@ -279,14 +285,20 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
     () => principalArgFromAddress(stxAddress),
     [stxAddress],
   );
-  const { data: sbtcBalanceSats, isLoading: loadingSbtc } =
-    useBridgeSbtcBalance(config, principal, !!stxAddress);
+  const {
+    data: sbtcBalanceSats,
+    isLoading: loadingSbtc,
+    isFetching: fetchingSbtc,
+  } = useBridgeSbtcBalance(config, principal, !!stxAddress);
   const sbtcBalance = useMemo(
     () => fromSatsToBtc(sbtcBalanceSats ?? 0n),
     [sbtcBalanceSats],
   );
-  const { data: sbtcDefiBalanceSats, isLoading: loadingSbtcDefi } =
-    useUserTotalSbtcInDefi(principal);
+  const {
+    data: sbtcDefiBalanceSats,
+    isLoading: loadingSbtcDefi,
+    isFetching: fetchingSbtcDefi,
+  } = useUserTotalSbtcInDefi(principal);
   const sbtcDefiBalance = useMemo(
     () => fromSatsToBtc(sbtcDefiBalanceSats ?? 0) / divisorNetwork,
     [sbtcDefiBalanceSats],
@@ -501,12 +513,19 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
 
   const hasBalance = useMemo(() => hasDetectedBalance, [hasDetectedBalance]);
 
-  const isBalanceLoading =
+  const isBalanceInitialLoading =
     isWalletLoading ||
     balancesQuery.isLoading ||
     loadingBtc ||
     loadingSbtc ||
     loadingSbtcDefi;
+  const isNextStepsBalanceLoading =
+    isWalletLoading ||
+    balancesQuery.isLoading ||
+    loadingSbtc ||
+    loadingSbtcDefi;
+  const isBalanceRefreshing =
+    balancesQuery.isFetching || fetchingBtc || fetchingSbtc || fetchingSbtcDefi;
 
   const isPriceLoading = loadingStxPrice || loadingBtcPrice;
   const isAssetLoading =
@@ -522,14 +541,18 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
     stxLockedBalance: stxBalanceData.stxLockedBalance,
     stxAvailableBalance: stxBalanceData.stxAvailableBalance,
     btcBalance,
+    btcBalanceOrNull,
     sbtcBalance,
     sbtcDefiBalance,
     stxPriceUsd,
     btcPriceUsd,
     stxChange24hPercent,
     btcChange24hPercent,
-    isLoading: isBalanceLoading || isPriceLoading || isAssetLoading,
-    isBalanceLoading,
+    isLoading: isBalanceInitialLoading || isPriceLoading || isAssetLoading,
+    isBalanceLoading: isBalanceInitialLoading,
+    isBalanceInitialLoading,
+    isNextStepsBalanceLoading,
+    isBalanceRefreshing,
     isPriceLoading,
   };
 }

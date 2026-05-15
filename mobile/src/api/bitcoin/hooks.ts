@@ -3,6 +3,7 @@ import type { NetworkType } from "@degenlab/stacks-wallet-kit-core";
 
 import { queryClient } from "@/api/common";
 import {
+  fetchBitcoinAddressInfo,
   fetchBitcoinFeeRecommendation,
   fetchBitcoinUtxos,
   broadcastBitcoinTransaction,
@@ -20,6 +21,23 @@ export const useBitcoinUtxos = ({
   useQuery({
     queryKey: ["bitcoin-utxos", network, address],
     queryFn: () => fetchBitcoinUtxos(address ?? "", network),
+    enabled: enabled && !!address,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  });
+
+export const useBitcoinAddressInfo = ({
+  address,
+  network,
+  enabled = true,
+}: {
+  address: string | null;
+  network: NetworkType;
+  enabled?: boolean;
+}) =>
+  useQuery({
+    queryKey: ["bitcoin-address", network, address],
+    queryFn: () => fetchBitcoinAddressInfo(address ?? "", network),
     enabled: enabled && !!address,
     staleTime: 15_000,
     refetchInterval: 30_000,
@@ -45,5 +63,6 @@ export const useBroadcastBitcoinTransaction = (network: NetworkType) =>
       broadcastBitcoinTransaction(rawTxHex, network),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bitcoin-utxos", network] });
+      queryClient.invalidateQueries({ queryKey: ["bitcoin-address", network] });
     },
   });
