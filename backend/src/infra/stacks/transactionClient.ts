@@ -578,6 +578,12 @@ export class TransactionClient implements TransactionClientPort {
       userNonce,
     );
     const signature = await this.createSignature(messageHash);
+    const fee =
+      typeof feeMicroStx === 'number' &&
+      Number.isSafeInteger(feeMicroStx) &&
+      feeMicroStx > 0
+        ? feeMicroStx
+        : undefined;
 
     const [contractAddress, contractName] = GAME_CONTRACT_ADDRESS.split('.');
     const txOptions = {
@@ -593,7 +599,7 @@ export class TransactionClient implements TransactionClientPort {
       postConditionMode: PostConditionMode.Deny, // No STX should be transferred
       publicKey: publicKey.startsWith('0x') ? publicKey.slice(2) : publicKey,
       network: this.network,
-      ...(feeMicroStx !== undefined && { fee: feeMicroStx }),
+      ...(fee !== undefined && { fee }),
       sponsored,
     };
 
