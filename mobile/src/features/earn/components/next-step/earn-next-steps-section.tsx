@@ -53,7 +53,8 @@ function NextStepCard({
       testID={`earn-next-step-card-${card.id}`}
       accessibilityRole="button"
       accessibilityLabel={card.title}
-      className="flex-row items-center justify-between rounded-[14px] px-3 py-3 active:opacity-80"
+      hitSlop={8}
+      className="flex-row items-center justify-between rounded-[14px] px-3 py-4 active:opacity-80"
     >
       <View className="min-w-0 flex-1 flex-row items-center gap-3 pr-3">
         <NextStepStatusIcon status={card.status} />
@@ -72,8 +73,12 @@ function NextStepCard({
           </Text>
         </View>
       </View>
-
-      <ChevronRight size={18} color={colors.neutral[300]} />
+      <View
+        pointerEvents="none"
+        className="h-11 w-11 items-center justify-center"
+      >
+        <ChevronRight size={18} color={colors.neutral[300]} />
+      </View>
     </Pressable>
   );
 }
@@ -88,6 +93,7 @@ function NextStepStatusIcon({
   const isPrimary = status === "primary";
   return (
     <View
+      pointerEvents="none"
       className={`h-8 w-8 shrink-0 items-center justify-center rounded-full ${
         isPrimary ? "bg-neutral-900" : "bg-neutral-200 dark:bg-neutral-700"
       }`}

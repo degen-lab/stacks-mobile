@@ -75,9 +75,9 @@ export function CardGradientLayers({
         >
           <View className="rounded-xl bg-sand-200 px-3 py-3 dark:bg-surface-secondary">
             <View className="flex-row items-center">
-              <View className="w-10" />
+              <View className="w-10" pointerEvents="none" />
 
-              <View className="flex-1">
+              <View className="flex-1" pointerEvents="none">
                 <Text
                   selectable
                   className="text-3xl font-instrument-sans tracking-widest text-primary text-center"
@@ -96,7 +96,7 @@ export function CardGradientLayers({
                 accessibilityRole="button"
                 accessibilityLabel="Copy referral code"
               >
-                <Copy size={18} color={copyIconColor} />
+                <Copy size={18} color={copyIconColor} pointerEvents="none" />
               </Pressable>
             </View>
           </View>

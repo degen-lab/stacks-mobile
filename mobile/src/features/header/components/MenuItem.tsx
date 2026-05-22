@@ -28,7 +28,7 @@ export function MenuItem({
       className="flex-row items-center justify-between px-5 py-4 active:opacity-90"
       accessibilityRole="button"
     >
-      <View className="flex-row items-center gap-3">
+      <View pointerEvents="none" className="flex-row items-center gap-3">
         {icon}
         <Text
           className={
@@ -40,7 +40,7 @@ export function MenuItem({
           {label}
         </Text>
       </View>
-      <View className="flex-row items-center">
+      <View pointerEvents="none" className="flex-row items-center">
         {loading ? (
           <ActivityIndicator size="small" className="text-secondary" />
         ) : isPressable && !danger ? (

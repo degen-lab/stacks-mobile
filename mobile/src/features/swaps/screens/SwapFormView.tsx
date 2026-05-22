@@ -102,17 +102,23 @@ function SwapSection({
           )}
         </View>
 
-        <Pressable onPress={onSelectToken}>
-          <View className="flex-row items-center gap-2 rounded-full border-2 border-border-secondary bg-transparent px-2.5 py-1.5 dark:border-border-primary dark:bg-surface-secondary">
+        <Pressable onPress={onSelectToken} hitSlop={8}>
+          <View
+            pointerEvents="none"
+            className="flex-row items-center gap-2 rounded-full border-2 border-border-secondary bg-transparent px-2.5 py-1.5 dark:border-border-primary dark:bg-surface-secondary"
+          >
             <TokenAvatar
               icon={token?.icon}
               symbol={token?.symbol ?? "?"}
               size={22}
             />
-            <Text className="font-matter text-[15px] text-primary">
+            <Text
+              pointerEvents="none"
+              className="font-matter text-[15px] text-primary"
+            >
               {token?.symbol ?? "Select"}
             </Text>
-            <ChevronDown size={13} color={chevronColor} />
+            <ChevronDown size={13} color={chevronColor} pointerEvents="none" />
           </View>
         </Pressable>
       </View>

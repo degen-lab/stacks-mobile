@@ -43,10 +43,14 @@ export function AssetSelector({ options, selectedAsset, onSelect }: Props) {
                 : {}
             }
           >
-            <View className={isSelected ? "opacity-100" : "opacity-50"}>
+            <View
+              pointerEvents="none"
+              className={isSelected ? "opacity-100" : "opacity-50"}
+            >
               {item.icon}
             </View>
             <Text
+              pointerEvents="none"
               className={`font-instrument-sans-medium text-sm ${
                 isSelected
                   ? "text-primary dark:text-primary"

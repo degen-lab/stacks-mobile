@@ -30,8 +30,16 @@ export default function MenuButton({
       angle={-90}
       hasShadow={false}
     >
-      <Pressable onPress={onPress}>
-        <View className="flex-row items-center px-5 py-4">
+      <Pressable
+        onPress={onPress}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+      >
+        <View
+          pointerEvents="none"
+          className="min-h-11 flex-row items-center px-5 py-4"
+        >
           <Icon />
           <Text className="ml-2 text-sm font-instrument-sans text-primary">
             {label}

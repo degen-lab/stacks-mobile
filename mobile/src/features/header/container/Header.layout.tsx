@@ -140,9 +140,9 @@ export function HeaderLayout({
                 }
               >
                 {earnBalanceTrigger.isBalanceVisible ? (
-                  <EyeOff size={16} color={eyeIconColor} />
+                  <EyeOff size={16} color={eyeIconColor} pointerEvents="none" />
                 ) : (
-                  <Eye size={16} color={eyeIconColor} />
+                  <Eye size={16} color={eyeIconColor} pointerEvents="none" />
                 )}
               </Pressable>
             </>
@@ -150,7 +150,7 @@ export function HeaderLayout({
             <>
               <Pressable
                 onPress={onPressStreak}
-                className="active:opacity-90"
+                className="min-h-11 justify-center active:opacity-90"
                 hitSlop={12}
                 accessibilityRole="button"
                 accessibilityLabel="Open streak details"
@@ -164,7 +164,7 @@ export function HeaderLayout({
               </Pressable>
               <Pressable
                 onPress={onPressPoints}
-                className="active:opacity-90"
+                className="min-h-11 justify-center active:opacity-90"
                 hitSlop={12}
                 accessibilityRole="button"
                 accessibilityLabel="Open points details"

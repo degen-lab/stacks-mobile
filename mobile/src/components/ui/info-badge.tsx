@@ -43,6 +43,7 @@ export function InfoBadge({
   if (loading) {
     return (
       <View
+        pointerEvents="none"
         className={`flex-row items-center ${gapClass} rounded-lg border-2 border-sand-300 bg-transparent px-3 py-1.5 ${containerClassName}`}
       >
         <Skeleton className="h-4 w-20 rounded" />
@@ -52,6 +53,7 @@ export function InfoBadge({
 
   return (
     <View
+      pointerEvents="none"
       className={`flex-row items-center ${gapClass} rounded-lg border-2 border-surface-secondary bg-transparent px-3 py-1.5 ${containerClassName}`}
     >
       {icon}

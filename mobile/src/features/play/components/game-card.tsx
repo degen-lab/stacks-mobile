@@ -1,5 +1,4 @@
 import { colors, Text, View } from "@/components/ui";
-import { Button } from "@/components/ui/button";
 import GradientBorder from "@/components/ui/gradient-border";
 import { HighscoreIcon } from "@/components/ui/icons/highscore";
 import { PlayIcon } from "@/components/ui/icons/play-icon";
@@ -135,6 +134,9 @@ export default function GameCard({
         className="p-5 flex-row items-center justify-between"
         onPress={onPressPlay}
         disabled={!onPressPlay}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={onPressPlay ? `Play ${title}` : undefined}
       >
         <View className="mr-4">{renderIcon()}</View>
 
@@ -157,16 +159,14 @@ export default function GameCard({
           </View>
         </View>
 
-        <Button
-          variant="primaryNavbar"
-          size="icon"
-          onPress={onPressPlay}
-          className="size-12 rounded-full"
+        <View
+          pointerEvents="none"
+          className="h-12 w-12 items-center justify-center rounded-full bg-stacks-blood-orange"
         >
-          <View className="ml-1">
+          <View className="ml-1" pointerEvents="none">
             <PlayIcon size={12} />
           </View>
-        </Button>
+        </View>
       </Pressable>
 
       <LinearGradient

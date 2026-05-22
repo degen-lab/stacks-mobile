@@ -134,7 +134,7 @@ function HeaderHelpButton({
   return (
     <Pressable
       onPress={onPress}
-      hitSlop={8}
+      hitSlop={10}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       style={{
@@ -144,7 +144,7 @@ function HeaderHelpButton({
         justifyContent: "center",
       }}
     >
-      <HelpCircle size={16} color={colors.secondary} />
+      <HelpCircle size={16} color={colors.secondary} pointerEvents="none" />
     </Pressable>
   );
 }
