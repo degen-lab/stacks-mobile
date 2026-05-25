@@ -35,7 +35,7 @@ type UseRewardedAdState = {
 export default function useRewardedAd({
   adUnitId,
   keywords = ["game", "reward"],
-  requestNonPersonalizedAdsOnly = false,
+  requestNonPersonalizedAdsOnly = true,
   serverSideVerificationOptions,
   loadOnMount = true,
   onEarnedReward,

@@ -1,12 +1,10 @@
 import { useCallback, useRef } from "react";
-import { Platform } from "react-native";
 
 import {
   useBroadcastSponsoredTransactionMutation,
   useCreateSponsoredTransactionMutation,
 } from "@/api/game/transaction";
 import { useUserProfile } from "@/api/user";
-import { requestIosAdTracking } from "@/lib/ads/ios-tracking-permission";
 import { getRewardedAdUnitId } from "@/lib/ads/rewarded-ad-unit";
 import { useSsvRewardedAdFlow } from "@/lib/ads/use-ssv-rewarded-ad-flow";
 import { useAdsConsentStore } from "@/lib/store/ads-consent";
@@ -48,9 +46,6 @@ export function useSponsoredStacksTransaction() {
     (state) => state.hasResolved,
   );
   const canRequestAds = useAdsConsentStore((state) => state.canRequestAds);
-  const adsPersonalization = useAdsConsentStore(
-    (state) => state.adsPersonalization,
-  );
   const isMobileAdsInitialized = useAdsConsentStore(
     (state) => state.isMobileAdsInitialized,
   );
@@ -112,16 +107,8 @@ export function useSponsoredStacksTransaction() {
   const getRewardedAdRequestOptions = useCallback(async () => {
     ensureSponsoredAdsAvailable();
 
-    if (adsPersonalization !== true || Platform.OS !== "ios") {
-      return {
-        requestNonPersonalizedAdsOnly: adsPersonalization !== true,
-      };
-    }
-
-    const tracking = await requestIosAdTracking();
-
-    return { requestNonPersonalizedAdsOnly: tracking !== "granted" };
-  }, [adsPersonalization, ensureSponsoredAdsAvailable]);
+    return { requestNonPersonalizedAdsOnly: true };
+  }, [ensureSponsoredAdsAvailable]);
 
   const submitPreparedSponsoredTransaction = useCallback(
     async ({

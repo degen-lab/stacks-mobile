@@ -110,6 +110,7 @@ jest.mock("react-native-google-mobile-ads", () => {
       REQUIRED: "REQUIRED",
     },
     MaxAdContentRating: {
+      G: "G",
       PG: "PG",
     },
     RewardedAd: {
