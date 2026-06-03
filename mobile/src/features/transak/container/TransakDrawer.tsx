@@ -358,6 +358,8 @@ export function TransakDrawer({ drawerRef }: Props) {
       ref={modalRef}
       snapPoints={snapPoints}
       enableDynamicSizing={true}
+      enableContentPanningGesture={false}
+      handleColor={isCheckout ? "transparent" : undefined}
       title={
         !isCheckout
           ? action === "buy"

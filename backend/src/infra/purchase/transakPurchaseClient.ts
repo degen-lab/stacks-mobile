@@ -5,6 +5,8 @@ import {
   TRANSAK_API_SECRET,
   TRANSAK_API_URL,
   TRANSAK_GATEWAY_URL,
+  TRANSAK_WIDGET_PRIMARY_COLOR,
+  TRANSAK_WIDGET_PRIMARY_TEXT_COLOR,
 } from '../../shared/constants';
 import {
   AppPlatform,
@@ -47,6 +49,9 @@ export class TransakPurchaseClient {
     const widgetParams = {
       apiKey: TRANSAK_API_KEY,
       referrerDomain,
+      brandColor: TRANSAK_WIDGET_PRIMARY_COLOR,
+      primaryButtonFillColor: TRANSAK_WIDGET_PRIMARY_COLOR,
+      primaryButtonTextColor: TRANSAK_WIDGET_PRIMARY_TEXT_COLOR,
       cryptoCurrencyCode,
       fiatCurrency,
       network: getNetwork(cryptoCurrencyCode),

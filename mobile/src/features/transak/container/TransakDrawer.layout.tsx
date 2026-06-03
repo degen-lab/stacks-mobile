@@ -99,6 +99,10 @@ export function TransakDrawerLayout({
               transakConfig={transakConfig}
               onTransakEvent={onTransakEvent}
               style={{ flex: 1 }}
+              mediaCapturePermissionGrantType="grant"
+              onPermissionRequest={(e) => {
+                e.nativeEvent.request.grant(e.nativeEvent.request.resources);
+              }}
             />
           ) : null}
           {isLoadingCheckout ? (

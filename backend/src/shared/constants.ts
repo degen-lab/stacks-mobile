@@ -137,6 +137,9 @@ export const TRANSAK_API_SECRET: string = configParser(
   isTest ? 'test-transak-api-secret' : undefined,
 );
 
+export const TRANSAK_WIDGET_PRIMARY_COLOR = '#FC6432';
+export const TRANSAK_WIDGET_PRIMARY_TEXT_COLOR = '#FFFFFF';
+
 export const ANDROID_REFERRER_DOMAIN: string = configParser(
   'ANDROID_REFERRER_DOMAIN',
   isTest ? 'android.dev' : undefined,
