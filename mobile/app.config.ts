@@ -95,13 +95,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         iosUrlScheme: `${Env.GOOGLE_IOS_URL_SCHEME}`,
       },
     ],
-    [
-      'expo-tracking-transparency',
-      {
-        userTrackingPermission:
-          'Allow Enter Stacks to use data to show more relevant ads. Declining still keeps sponsored transactions available.',
-      },
-    ],
     'react-native-edge-to-edge',
     [
       'react-native-google-mobile-ads',

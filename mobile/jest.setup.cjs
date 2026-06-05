@@ -172,12 +172,3 @@ jest.mock("@gorhom/bottom-sheet", () => {
 
 global.setImmediate ??= (callback, ...args) => setTimeout(callback, 0, ...args);
 global.clearImmediate ??= (handle) => clearTimeout(handle);
-
-jest.mock("expo-tracking-transparency", () => ({
-  getTrackingPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ status: "undetermined" }),
-  ),
-  requestTrackingPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ status: "denied" }),
-  ),
-}));
