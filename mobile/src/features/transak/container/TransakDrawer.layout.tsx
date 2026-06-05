@@ -55,6 +55,7 @@ export interface TransakDrawerLayoutProps {
   isValidAmount: boolean;
   availableBalance: number;
   bottomInset: number;
+  sheetBackgroundColor: string;
   footer?: React.ReactNode;
 }
 
@@ -77,6 +78,7 @@ export function TransakDrawerLayout({
   isValidAmount,
   availableBalance,
   bottomInset,
+  sheetBackgroundColor,
   footer,
 }: TransakDrawerLayoutProps) {
   const visibleAssets = ASSET_OPTIONS.filter(
@@ -92,8 +94,11 @@ export function TransakDrawerLayout({
     const isLoadingCheckout = !checkoutUrl || !isWidgetInitialized;
 
     return (
-      <View className="flex-1 bg-white" style={{ paddingBottom: bottomInset }}>
-        <View className="flex-1 bg-white">
+      <View
+        className="flex-1 bg-white dark:bg-[#1a1a1a]"
+        style={{ paddingBottom: bottomInset }}
+      >
+        <View className="flex-1 bg-white dark:bg-[#1a1a1a]">
           {checkoutUrl ? (
             <TransakWebView
               transakConfig={transakConfig}
@@ -106,7 +111,7 @@ export function TransakDrawerLayout({
             />
           ) : null}
           {isLoadingCheckout ? (
-            <View className="absolute inset-0 items-center justify-center gap-4 bg-white px-6">
+            <View className="absolute inset-0 items-center justify-center gap-4 bg-white dark:bg-[#1a1a1a] px-6">
               <Spinner
                 color={colors.stacks.bloodOrange}
                 size={42}
@@ -125,7 +130,9 @@ export function TransakDrawerLayout({
   }
 
   return (
-    <BottomSheetView style={{ paddingTop: 8 }}>
+    <BottomSheetView
+      style={{ paddingTop: 8, backgroundColor: sheetBackgroundColor }}
+    >
       <View className="px-5 gap-6">
         <View>
           <AssetSelector
@@ -148,7 +155,13 @@ export function TransakDrawerLayout({
         </View>
         <Numpad value={amount} onChange={onAmountChange} mode="decimal" />
       </View>
-      <View style={{ paddingTop: 16, paddingBottom: bottomInset }}>
+      <View
+        style={{
+          paddingTop: 16,
+          paddingBottom: bottomInset,
+          backgroundColor: sheetBackgroundColor,
+        }}
+      >
         {footer}
       </View>
     </BottomSheetView>

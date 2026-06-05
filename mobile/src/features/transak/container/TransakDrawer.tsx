@@ -323,10 +323,12 @@ export function TransakDrawer({ drawerRef }: Props) {
         themeColor: colors.stacks.bloodOrange.replace("#", ""),
       }
     : ({} as TransakConfig);
-  const backgroundColor = isCheckout
-    ? colors.white
-    : isDark
-      ? "#242220"
+  const backgroundColor = isDark
+    ? isCheckout
+      ? "#1a1a1a"
+      : "#242220"
+    : isCheckout
+      ? colors.white
       : colors.neutral[50];
 
   const continueButton = (
@@ -357,9 +359,12 @@ export function TransakDrawer({ drawerRef }: Props) {
     <Modal
       ref={modalRef}
       snapPoints={snapPoints}
+      bottomInset={0}
       enableDynamicSizing={true}
       enableContentPanningGesture={false}
-      handleColor={isCheckout ? "transparent" : undefined}
+      handleColor={
+        isCheckout ? (isDark ? "#3a3a3a" : colors.neutral[300]) : undefined
+      }
       title={
         !isCheckout
           ? action === "buy"
@@ -392,6 +397,7 @@ export function TransakDrawer({ drawerRef }: Props) {
         availableBalance={sellAvailableBalance}
         bottomInset={insets.bottom}
         isWidgetInitialized={isWidgetInitialized}
+        sheetBackgroundColor={backgroundColor}
         footer={!isCheckout ? continueButton : null}
       />
     </Modal>

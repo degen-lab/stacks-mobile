@@ -90,11 +90,17 @@ export const Modal = React.forwardRef(
       headerLeft,
       headerRight,
       enableDynamicSizing = false,
+      bottomInset: bottomInsetProp,
       ...props
     }: ModalProps,
     ref: ModalRef,
   ) => {
-    const { bottom: bottomInset } = useSafeAreaInsets();
+    const { bottom: safeAreaBottom } = useSafeAreaInsets();
+    const bottomInset = detached
+      ? undefined
+      : bottomInsetProp !== undefined
+        ? bottomInsetProp
+        : safeAreaBottom;
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === "dark";
     const resolvedHandleColor =
@@ -174,7 +180,10 @@ export const Modal = React.forwardRef(
         backdropComponent={props.backdropComponent || renderBackdrop}
         enableDynamicSizing={enableDynamicSizing}
         handleComponent={showHandle ? renderHandleComponent : emptyHandle}
-        bottomInset={detached ? undefined : bottomInset}
+        handleStyle={{
+          backgroundColor: resolvedHandleBackgroundColor ?? "transparent",
+        }}
+        bottomInset={bottomInset}
         backgroundStyle={resolvedBackgroundStyle}
       />
     );
