@@ -438,7 +438,7 @@ export const ReplaceBackupModal = forwardRef<
           />
         ) : (
           <View className="gap-4">
-            <WarningLabel label="Warning: This backup password cannot be reset. Keep it safe." />
+            <WarningLabel label="Warning: This encryption passphrase cannot be reset. Keep it safe." />
 
             <BackupPasswordForm
               password={password}

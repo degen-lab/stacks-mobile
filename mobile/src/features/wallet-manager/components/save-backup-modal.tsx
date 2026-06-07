@@ -39,7 +39,7 @@ export const SaveBackupModal = forwardRef<
   const handleSaveBackup = useCallback(async () => {
     if (!validation.isValid) {
       showMessage({
-        message: "Please enter a valid password and confirm it.",
+        message: "Please enter a valid encryption passphrase and confirm it.",
         type: "warning",
       });
       return;
@@ -87,8 +87,8 @@ export const SaveBackupModal = forwardRef<
     >
       <BottomSheetScrollView contentContainerClassName="px-4 pb-8 gap-4">
         <Text className="text-sm font-instrument-sans text-secondary">
-          Set a strong password to encrypt your existing wallet before saving it
-          to the cloud. Keep this password safe—you will need it to restore.
+          Set a strong encryption passphrase before saving your wallet to the
+          cloud. Keep this passphrase safe; you will need it to restore.
         </Text>
 
         <BackupPasswordForm

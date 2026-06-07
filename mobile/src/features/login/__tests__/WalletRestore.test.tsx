@@ -101,7 +101,7 @@ describe("WalletRestore screen", () => {
     });
   });
 
-  it("shows a specific error when the backup password is incorrect", async () => {
+  it("shows a specific error when the encryption passphrase is incorrect", async () => {
     mockRestoreWallet.mockRejectedValue(new InvalidPasswordError());
     const consoleErrorSpy = jest
       .spyOn(console, "error")
@@ -115,7 +115,7 @@ describe("WalletRestore screen", () => {
     await waitFor(() => {
       expect(
         getByText(
-          "Incorrect backup password. Enter the password used to create this Google Drive wallet backup.",
+          "Incorrect encryption passphrase. Enter the passphrase used to encrypt this wallet backup.",
         ),
       ).toBeTruthy();
     });

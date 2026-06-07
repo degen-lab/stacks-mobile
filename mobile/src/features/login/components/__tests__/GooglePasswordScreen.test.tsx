@@ -39,7 +39,9 @@ describe("GooglePasswordScreen", () => {
     expect(onContinue).not.toHaveBeenCalled();
     expect(getByText("At least 8 characters")).toBeTruthy();
     expect(
-      getByText("Warning: This password cannot be reset. Keep it safe."),
+      getByText(
+        "Warning: This encryption passphrase cannot be reset. Keep it safe.",
+      ),
     ).toBeTruthy();
   });
 

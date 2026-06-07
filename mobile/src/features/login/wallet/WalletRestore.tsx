@@ -21,14 +21,14 @@ import { useAuth } from "@/lib/store/auth";
 
 function getRestoreErrorMessage(error: unknown) {
   if (error instanceof InvalidPasswordError) {
-    return "Incorrect backup password. Enter the password used to create this Google Drive wallet backup.";
+    return "Incorrect encryption passphrase. Enter the passphrase used to encrypt this wallet backup.";
   }
 
   if (
     error instanceof InvalidPasswordOrSaltOrEncryptedWalletError ||
     error instanceof InvalidEncryptedWalletError
   ) {
-    return "We couldn't decrypt this Google Drive wallet backup. The password may be wrong or the backup may be corrupted.";
+    return "We couldn't decrypt this wallet backup. The encryption passphrase may be wrong or the backup may be corrupted.";
   }
 
   if (error instanceof BackupNotFoundError) {
