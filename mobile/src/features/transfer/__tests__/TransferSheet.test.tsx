@@ -78,6 +78,7 @@ jest.mock("../hooks/use-prepare-stx-send", () => ({
 }));
 
 jest.mock("@tanstack/react-query", () => ({
+  ...jest.requireActual("@tanstack/react-query"),
   useQueryClient: () => ({ invalidateQueries: jest.fn() }),
 }));
 

@@ -51,7 +51,7 @@ describe("SaveBackupModal", () => {
 
       expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
       expect(
-        getByText(/Set a strong password to encrypt your existing wallet/),
+        getByText(/Set a strong encryption passphrase before saving/),
       ).toBeTruthy();
     });
 
@@ -60,8 +60,8 @@ describe("SaveBackupModal", () => {
         <SaveBackupModal ref={mockRef} onSuccess={mockOnSuccess} />,
       );
 
-      expect(getByText("Backup Password")).toBeTruthy();
-      expect(getByText("Confirm Password")).toBeTruthy();
+      expect(getByText("Encryption Passphrase")).toBeTruthy();
+      expect(getByText("Confirm Encryption Passphrase")).toBeTruthy();
       expect(getAllByText("Save Cloud Backup").length).toBeGreaterThan(0);
     });
   });

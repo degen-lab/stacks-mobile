@@ -50,8 +50,8 @@ describe("BackupPasswordForm", () => {
     it("renders password and confirm password fields", () => {
       const { getByText } = render(<BackupPasswordForm {...defaultProps} />);
 
-      expect(getByText("Backup Password")).toBeTruthy();
-      expect(getByText("Confirm Password")).toBeTruthy();
+      expect(getByText("Encryption Passphrase")).toBeTruthy();
+      expect(getByText("Confirm Encryption Passphrase")).toBeTruthy();
     });
 
     it("renders submit button with correct label", () => {
@@ -97,7 +97,7 @@ describe("BackupPasswordForm", () => {
         />,
       );
 
-      expect(getByText("Passwords do not match")).toBeTruthy();
+      expect(getByText("Passphrases do not match")).toBeTruthy();
     });
 
     it("does not show error when confirm password is empty", () => {
@@ -116,7 +116,7 @@ describe("BackupPasswordForm", () => {
         />,
       );
 
-      expect(queryByText("Passwords do not match")).toBeFalsy();
+      expect(queryByText("Passphrases do not match")).toBeFalsy();
     });
   });
 
