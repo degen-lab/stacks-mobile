@@ -30,6 +30,63 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
+    privacyManifests: {
+      NSPrivacyTracking: true,
+      NSPrivacyTrackingDomains: [
+        'app-measurement.com',
+        'google-analytics.com',
+        'googleadservices.com',
+        'googlesyndication.com',
+        'doubleclick.net',
+      ],
+      NSPrivacyCollectedDataTypes: [
+        {
+          NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeUserID',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: false,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeAnalytics',
+          ],
+        },
+        {
+          NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeDeviceID',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: true,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeAnalytics',
+            'NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising',
+            'NSPrivacyCollectedDataTypePurposeDevelopersAdvertising',
+          ],
+        },
+        {
+          NSPrivacyCollectedDataType:
+            'NSPrivacyCollectedDataTypeProductInteraction',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: false,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeAnalytics',
+          ],
+        },
+        {
+          NSPrivacyCollectedDataType:
+            'NSPrivacyCollectedDataTypeAdvertisingData',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: true,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising',
+            'NSPrivacyCollectedDataTypePurposeDevelopersAdvertising',
+          ],
+        },
+        {
+          NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeOtherUsageData',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: false,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeAnalytics',
+          ],
+        },
+      ],
+    },
   },
   experiments: {
     typedRoutes: true,
@@ -95,12 +152,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         iosUrlScheme: `${Env.GOOGLE_IOS_URL_SCHEME}`,
       },
     ],
+    [
+      'expo-tracking-transparency',
+      {
+        userTrackingPermission:
+          'This identifier may be used to deliver relevant ads and measure ad performance.',
+      },
+    ],
     'react-native-edge-to-edge',
     [
       'react-native-google-mobile-ads',
       {
         androidAppId: Env.ANDROID_ADMOB_APP_ID,
         iosAppId: Env.IOS_ADMOB_APP_ID,
+        delayAppMeasurementInit: true,
       },
     ],
     '@react-native-firebase/app',

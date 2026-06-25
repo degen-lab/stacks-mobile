@@ -39,6 +39,15 @@ jest.mock("@react-native-firebase/analytics", () => ({
   setUserProperties: jest.fn(() => Promise.resolve()),
 }));
 
+jest.mock("expo-tracking-transparency", () => ({
+  getTrackingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "undetermined" }),
+  ),
+  requestTrackingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "granted" }),
+  ),
+}));
+
 jest.mock("react-native-google-mobile-ads", () => {
   const createRewardedAd = () => ({
     load: jest.fn(),

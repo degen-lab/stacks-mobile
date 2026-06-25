@@ -13,6 +13,7 @@ const mockSyncPendingConsent = jest.fn();
 let mockAuthState: any;
 let mockConsentState: any;
 let mockAdsConsentState: any;
+let mockAppTrackingTransparencyState: any;
 
 jest.mock("expo-router", () => ({
   usePathname: () => "/",
@@ -25,6 +26,11 @@ jest.mock("@/lib/analytics", () => ({
   clearUserContext: (...args: unknown[]) => mockClearUserContext(...args),
   trackEvent: jest.fn(),
   trackScreen: jest.fn(),
+}));
+
+jest.mock("@/lib/ads/app-tracking-transparency-controller", () => ({
+  useAppTrackingTransparencyStore: (selector: (state: any) => unknown) =>
+    selector(mockAppTrackingTransparencyState),
 }));
 
 jest.mock("@/lib/env", () => ({
@@ -70,6 +76,7 @@ describe("ConsentController", () => {
     mockAuthState = consentedUser;
     mockConsentState = { hasHydrated: true, pendingSync: null };
     mockAdsConsentState = { adsPersonalization: false };
+    mockAppTrackingTransparencyState = { hasResolved: true };
   });
 
   it("enables analytics and sets user identity for a consented user", async () => {
@@ -107,6 +114,17 @@ describe("ConsentController", () => {
     await waitFor(() => {
       expect(mockSetEnabled).toHaveBeenCalledWith(false);
     });
+  });
+
+  it("keeps analytics disabled until ATT is resolved", async () => {
+    mockAppTrackingTransparencyState = { hasResolved: false };
+
+    render(<ConsentController />);
+
+    await waitFor(() => {
+      expect(mockSetEnabled).toHaveBeenCalledWith(false);
+    });
+    expect(mockSetUserContext).not.toHaveBeenCalled();
   });
 
   it("disables analytics and clears identity on sign out", async () => {

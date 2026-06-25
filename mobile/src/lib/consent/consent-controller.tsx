@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { usePathname, useRouter } from "expo-router";
+import { usePathname } from "expo-router";
 
 import {
   clearUserContext,
@@ -8,7 +8,7 @@ import {
   trackEvent,
   trackScreen,
 } from "@/lib/analytics";
-import { needsConsentGate } from "@/lib/consent/types";
+import { useAppTrackingTransparencyStore } from "@/lib/ads/app-tracking-transparency-controller";
 import { Env } from "@/lib/env";
 import { useConsentActions } from "@/lib/consent/use-consent-actions";
 import { useAdsConsentStore } from "@/lib/store/ads-consent";
@@ -16,7 +16,6 @@ import { useAuth } from "@/lib/store/auth";
 import { resetConsentStore, useConsentStore } from "@/lib/store/consent";
 
 export function ConsentController() {
-  const router = useRouter();
   const pathname = usePathname();
   const {
     backendUserData,
@@ -29,11 +28,17 @@ export function ConsentController() {
   const umpAdsPersonalization = useAdsConsentStore(
     (state) => state.adsPersonalization,
   );
+  const hasResolvedTrackingAuthorization = useAppTrackingTransparencyStore(
+    (state) => state.hasResolved,
+  );
 
   const ready = authHydrated && consentHydrated;
   const consent = pendingSync?.localConsent ?? backendUserData?.consent ?? null;
   const analyticsEnabled =
-    consent?.analytics === true && isAuthenticated && !!backendUserData;
+    hasResolvedTrackingAuthorization &&
+    consent?.analytics === true &&
+    isAuthenticated &&
+    !!backendUserData;
 
   const attemptedSyncRef = useRef<string | null>(null);
   const screenTrackingRef = useRef<string | null>(null);
@@ -88,6 +93,7 @@ export function ConsentController() {
     hasBackup,
     consent,
     umpAdsPersonalization,
+    hasResolvedTrackingAuthorization,
   ]);
 
   // Screen tracking on navigation
@@ -96,18 +102,6 @@ export function ConsentController() {
     screenTrackingRef.current = pathname;
     void trackScreen(pathname);
   }, [pathname]);
-
-  // Consent gate routing
-  useEffect(() => {
-    if (!ready || !isAuthenticated || !backendUserData || !pathname) return;
-    if (needsConsentGate(consent) && pathname !== "/privacy-consent") {
-      router.replace("/privacy-consent");
-      return;
-    }
-    if (!needsConsentGate(consent) && pathname === "/privacy-consent") {
-      router.replace("/");
-    }
-  }, [ready, isAuthenticated, backendUserData, pathname, consent, router]);
 
   // Sign-out cleanup
   useEffect(() => {
