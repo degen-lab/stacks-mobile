@@ -127,6 +127,13 @@ export const TRANSAK_API_URL: string =
     ? 'https://api.transak.com/'
     : 'https://api-stg.transak.com/';
 
+export const ALLOWED_CORS_ORIGINS: string[] = (
+  process.env.ALLOWED_CORS_ORIGINS ?? ''
+)
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 export const TRANSAK_API_KEY: string = configParser(
   'TRANSAK_API_KEY',
   isTest ? 'test-transak-api-key' : undefined,

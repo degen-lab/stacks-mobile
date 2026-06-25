@@ -54,6 +54,7 @@ describe('CryptoPurchaseService unit test', () => {
     const cryptoCurrencyCode = 'STX';
     const fiatCurrency = 'USD';
     const fiatAmount = 100;
+    const endUserIp = '203.0.113.10';
     const expectedWidgetUrl = 'https://transak.com/widget?session=abc123';
 
     let testUser: User;
@@ -85,6 +86,7 @@ describe('CryptoPurchaseService unit test', () => {
           undefined,
           AppPlatform.ANDROID,
           'BUY',
+          endUserIp,
         ),
       ).rejects.toThrow(UserNotFoundError);
 
@@ -108,6 +110,7 @@ describe('CryptoPurchaseService unit test', () => {
           undefined,
           AppPlatform.ANDROID,
           'BUY',
+          endUserIp,
         ),
       ).rejects.toThrow(`Error: User with id ${userId} doesn't exists`);
     });
@@ -132,6 +135,7 @@ describe('CryptoPurchaseService unit test', () => {
         undefined,
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
       );
 
       expect(result).toBe(expectedWidgetUrl);
@@ -156,6 +160,7 @@ describe('CryptoPurchaseService unit test', () => {
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
         undefined,
       );
     });
@@ -180,6 +185,7 @@ describe('CryptoPurchaseService unit test', () => {
         undefined,
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
       );
 
       expect(mockCacheClient.get).toHaveBeenCalledWith('accessToken');
@@ -195,6 +201,7 @@ describe('CryptoPurchaseService unit test', () => {
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
         undefined,
       );
     });
@@ -225,6 +232,7 @@ describe('CryptoPurchaseService unit test', () => {
         undefined,
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
       );
 
       expect(mockCacheClient.get).toHaveBeenCalledWith('accessToken');
@@ -240,6 +248,7 @@ describe('CryptoPurchaseService unit test', () => {
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
         undefined,
       );
     });
@@ -265,6 +274,7 @@ describe('CryptoPurchaseService unit test', () => {
         undefined,
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
       );
 
       expect(mockCacheClient.get).toHaveBeenCalledWith('accessToken');
@@ -280,6 +290,7 @@ describe('CryptoPurchaseService unit test', () => {
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
         undefined,
       );
     });
@@ -305,6 +316,7 @@ describe('CryptoPurchaseService unit test', () => {
         undefined,
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
       );
 
       expect(mockPurchaseClient.createWidgetUrl).toHaveBeenCalledWith(
@@ -317,6 +329,7 @@ describe('CryptoPurchaseService unit test', () => {
         '12345', // partnerOrderId = saved purchase ID
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
         undefined,
       );
     });
@@ -341,6 +354,7 @@ describe('CryptoPurchaseService unit test', () => {
         undefined,
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
       );
 
       expect(mockPurchaseDomainService.createPurchase).toHaveBeenCalledWith(
@@ -360,6 +374,7 @@ describe('CryptoPurchaseService unit test', () => {
         testPurchase.id.toString(), // partnerOrderId = purchase ID
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
         undefined,
       );
     });
@@ -391,6 +406,7 @@ describe('CryptoPurchaseService unit test', () => {
         undefined,
         AppPlatform.ANDROID,
         'BUY',
+        endUserIp,
       );
 
       expect(callOrder).toEqual(['save', 'createWidgetUrl']);

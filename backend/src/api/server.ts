@@ -4,7 +4,9 @@ import Fastify from 'fastify';
 import fastifyRawBody from 'fastify-raw-body';
 import fp from './config/jwt';
 import rateLimit from '@fastify/rate-limit';
+import cors from '@fastify/cors';
 import { rateLimitOptions } from './config/rateLimitConfig';
+import { ALLOWED_CORS_ORIGINS } from '../shared/constants';
 import userRoutes from './user';
 import transactionRoutes from './transaction';
 import { TransactionService } from '../application/transaction/transactionService';
@@ -68,6 +70,18 @@ export const buildServer = async (dataSource: DataSource) => {
     global: false,
     encoding: 'utf8',
     runFirst: true,
+  });
+
+  app.register(cors, {
+    origin: (origin, callback) => {
+      if (!origin || ALLOWED_CORS_ORIGINS.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Origin not allowed by CORS'), false);
+    },
+    credentials: true,
   });
 
   app.register(fp);

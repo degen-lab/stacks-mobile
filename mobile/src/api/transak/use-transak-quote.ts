@@ -1,5 +1,5 @@
 import { createQuery } from "react-query-kit";
-import { Env } from "@/lib/env";
+import { gameClient } from "@/api/common/backend-client";
 import {
   TransakQuoteError,
   type TransakQuoteResponse,
@@ -11,17 +11,15 @@ import { parseTransakError } from "./utils";
 export { TransakQuoteError };
 export type { TransakQuoteErrorKind };
 
-const TRANSAK_API_URL =
-  Env.APP_ENV === "production"
-    ? "https://api.transak.com/api/v1/pricing/public/quotes"
-    : "https://api-stg.transak.com/api/v1/pricing/public/quotes";
-const TRANSAK_API_KEY =
-  Env.APP_ENV === "production"
-    ? Env.TRANSAK_API_KEY
-    : Env.TRANSAK_STAGING_API_KEY;
 const DEFAULT_FIAT = "USD";
 const DEFAULT_PAYMENT = "credit_debit_card";
 const DEFAULT_COUNTRY = "US";
+
+type TransakQuoteApiResponse = {
+  success: boolean;
+  message: string;
+  data: TransakQuoteResponse;
+};
 
 export const useTransakQuote = createQuery<
   TransakQuoteResponse,
@@ -44,42 +42,56 @@ export const useTransakQuote = createQuery<
       throw new Error("Amount must be greater than 0");
     }
 
-    const params = new URLSearchParams({
-      fiatCurrency,
-      cryptoCurrency,
-      paymentMethod,
-      isBuyOrSell,
-      partnerApiKey: TRANSAK_API_KEY,
-      network: "mainnet",
-      quoteCountryCode: countryCode || DEFAULT_COUNTRY,
-    });
+    try {
+      const response = await gameClient.post<TransakQuoteApiResponse>(
+        "/purchase/quote",
+        {
+          fiatAmount,
+          cryptoAmount,
+          cryptoCurrency,
+          fiatCurrency,
+          paymentMethod,
+          isBuyOrSell,
+          countryCode: countryCode || DEFAULT_COUNTRY,
+        },
+      );
 
-    if (cryptoAmount) {
-      params.append("cryptoAmount", cryptoAmount.toString());
-    } else if (fiatAmount) {
-      params.append("fiatAmount", fiatAmount.toString());
-    }
-
-    const url = `${TRANSAK_API_URL}?${params.toString()}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      const errorBody = await response.text();
+      return response.data.data;
+    } catch (error) {
       const message = (() => {
-        try {
-          return JSON.parse(errorBody).error?.message || errorBody;
-        } catch {
-          return errorBody;
+        const responseData =
+          typeof error === "object" && error !== null && "response" in error
+            ? (error as { response?: { data?: unknown } }).response?.data
+            : undefined;
+
+        if (
+          typeof responseData === "object" &&
+          responseData !== null &&
+          "error" in responseData
+        ) {
+          const errorData = (responseData as { error?: { message?: string } })
+            .error;
+          if (errorData?.message) return errorData.message;
         }
+
+        if (
+          typeof responseData === "object" &&
+          responseData !== null &&
+          "message" in responseData
+        ) {
+          const responseMessage = (responseData as { message?: string })
+            .message;
+          if (responseMessage) return responseMessage;
+        }
+
+        return error instanceof Error ? error.message : "Unable to fetch quote";
       })();
 
       const parsed = parseTransakError(message);
 
       if (parsed.kind === "unknown") {
         console.error("Transak Query Failed:", {
-          status: response.status,
-          url,
-          errorBody,
+          error,
         });
       }
 
@@ -89,8 +101,5 @@ export const useTransakQuote = createQuery<
         unit: parsed.unit,
       });
     }
-
-    const data = await response.json();
-    return data.response as TransakQuoteResponse;
   },
 });

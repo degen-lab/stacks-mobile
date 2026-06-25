@@ -4,7 +4,11 @@ import { rateLimitOptions } from '../config/rateLimitConfig';
 import { UserToken } from '../config/types';
 import { logger } from '../helpers/logger';
 import { BaseError } from '../../shared/errors/baseError';
-import { createWidgetUrlSchema } from '../validators/purchaseValidator';
+import {
+  createWidgetUrlSchema,
+  transakQuoteSchema,
+} from '../validators/purchaseValidator';
+import { getClientIp } from '../helpers/clientIp';
 
 export default function purchasePostRoutes(
   app: FastifyInstance,
@@ -14,6 +18,67 @@ export default function purchasePostRoutes(
     cryptoPurchaseService: CryptoPurchaseService;
   },
 ) {
+  app.post('/quote', {
+    preHandler: app.authenticateUser,
+    config: {
+      rateLimit: rateLimitOptions({
+        max: 30,
+        timeWindow: '60000',
+        errorResponseBuilder: () => ({
+          statusCode: 429,
+          error: 'Too many requests',
+          message: 'Too many quote requests, please try again after 1 minute',
+        }),
+      }),
+    },
+    handler: async (request, reply) => {
+      try {
+        const body = transakQuoteSchema.safeParse(request.body);
+        if (!body.success) {
+          logger.warn({
+            msg: 'Validation Error',
+            method: request.method,
+            err: body.error,
+          });
+          return reply.status(400).send({
+            success: false,
+            message: 'Invalid body',
+            error: { message: body.error.message },
+          });
+        }
+
+        const quote = await cryptoPurchaseService.getQuote(
+          body.data,
+          getClientIp(request),
+        );
+
+        return reply.status(200).send({
+          success: true,
+          message: 'Quote created successfully',
+          data: quote,
+        });
+      } catch (error) {
+        logger.error({
+          msg: 'Error in POST /quote route',
+          method: request.method,
+          err: error,
+        });
+        if (error instanceof BaseError) {
+          return reply.status(error.statusCode ?? 400).send({
+            success: false,
+            message: error.message,
+            error: { message: error.message },
+          });
+        }
+        return reply.status(500).send({
+          success: false,
+          message: 'An unknown error occurred',
+          error: { message: 'An unknown error occurred' },
+        });
+      }
+    },
+  });
+
   app.post('/create-widget-url', {
     preHandler: app.authenticateUser,
     config: {
@@ -52,6 +117,7 @@ export default function purchasePostRoutes(
           data.cryptoAmount,
           data.platform,
           data.productsAvailed,
+          getClientIp(request),
           data.walletAddress,
         );
         return reply.status(200).send({

@@ -1,7 +1,11 @@
 import { EntityManager } from 'typeorm';
 import { TransakPurchaseClient } from '../../infra/purchase/transakPurchaseClient';
 import { CachePort } from '../ports/cachePort';
-import { AppPlatform, TransakAccessToken } from '../../shared/types';
+import {
+  AppPlatform,
+  TransakAccessToken,
+  TransakQuoteRequest,
+} from '../../shared/types';
 import { UserNotFoundError } from '../errors/userErrors';
 import { PurchaseNotFoundError } from '../errors/purchaseErrors';
 import { User } from '../../domain/entities/user';
@@ -46,6 +50,7 @@ export class CryptoPurchaseService {
     cryptoAmount: number | undefined,
     platform: AppPlatform,
     productsAvailed: string,
+    endUserIp: string,
     walletAddress?: string,
   ): Promise<string> {
     const user = await this.entityManager.findOne(User, {
@@ -101,8 +106,16 @@ export class CryptoPurchaseService {
       savedPurchase.id.toString(),
       platform,
       productsAvailed,
+      endUserIp,
       walletAddress,
     );
+  }
+
+  async getQuote(
+    quoteRequest: TransakQuoteRequest,
+    endUserIp: string,
+  ): Promise<unknown> {
+    return this.purchaseClient.getQuote(quoteRequest, endUserIp);
   }
 
   private getCryptoDecimals(cryptoCurrencyCode: string): number {
