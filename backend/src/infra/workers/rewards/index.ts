@@ -65,7 +65,7 @@ AppDataSource.initialize()
   .then(async (dataSource) => {
     // Check if repeatable job already exists to avoid duplicates
     const repeatableJobs = await rewardsQueue.getRepeatableJobs();
-    const jobPattern = '0 0 1 */2 *'; // First day of every 2nd month at 00:00
+    const jobPattern = '0 0 1 1 *'; // January 1 every year at 00:00
     repeatableJobs.some(
       (job) =>
         job.name === 'processTournamentCycle' && job.pattern === jobPattern,
@@ -96,7 +96,7 @@ AppDataSource.initialize()
       'processTournamentCycle',
       {},
       {
-        repeat: { pattern: jobPattern }, // First day of every 2nd month at 00:00
+        repeat: { pattern: jobPattern }, // January 1 every year at 00:00
         attempts: 3,
         backoff: {
           type: 'exponential',
@@ -105,7 +105,7 @@ AppDataSource.initialize()
       },
     );
     logger.info(
-      'Repeatable job processTournamentCycle scheduled (at 00:00 on day 1 every 2 months)',
+      'Repeatable job processTournamentCycle scheduled annually (January 1 at 00:00)',
     );
 
     const factory: ServiceFactory = ServiceFactory.getInstance(
