@@ -6,11 +6,7 @@ import { NetworkType } from "@degenlab/stacks-wallet-kit-core";
 
 export type AppEnv = "development" | "staging" | "production";
 
-export type BackendServiceType =
-  | "dual-stacking"
-  | "defi"
-  | "coin-prices"
-  | "game";
+export type BackendServiceType = "game";
 
 const getCurrentEnv = (): AppEnv => Env.APP_ENV as AppEnv;
 
@@ -27,7 +23,6 @@ export const isMainnet = () => getCurrentNetwork() === "mainnet";
 
 type ApiUrl = Record<NetworkType, string>;
 type ExplorerUrl = Record<NetworkType, [string, string]>;
-type BackendConfig = Partial<Record<BackendServiceType, string>>;
 
 type TransactionMapping = (txId: string) => {
   apiUrl: string;
@@ -80,29 +75,6 @@ export const getHiroApiBase = (
   env: AppEnv = getCurrentEnv(),
 ) => hiroApi[env][network];
 
-export const stacksDegenApi: Record<AppEnv, ApiUrl> = {
-  development: {
-    mainnet: validateUrl("https://stacks-api.degenlab.io", "mainnet"),
-    testnet: validateUrl("https://stacks-api.degenlab.io", "testnet"),
-    devnet: validateUrl("https://stacks-api.degenlab.io", "devnet"),
-  },
-  staging: {
-    mainnet: validateUrl("https://stacks-api.degenlab.io", "mainnet"),
-    testnet: validateUrl("https://stacks-api.degenlab.io", "testnet"),
-    devnet: validateUrl("https://stacks-api.degenlab.io", "devnet"),
-  },
-  production: {
-    mainnet: validateUrl("https://stacks-api.degenlab.io", "mainnet"),
-    testnet: validateUrl("https://stacks-api.degenlab.io", "testnet"),
-    devnet: validateUrl("https://stacks-api.degenlab.io", "devnet"),
-  },
-};
-
-export const getStacksDegenApiBase = (
-  network: NetworkType = getCurrentNetwork(),
-  env: AppEnv = getCurrentEnv(),
-) => stacksDegenApi[env][network];
-
 export const btcExploreUrl = (network: NetworkType, btcAddress: string) => {
   if (network === "mainnet") {
     return `https://mempool.space/address/${btcAddress}`;
@@ -113,81 +85,8 @@ export const btcExploreUrl = (network: NetworkType, btcAddress: string) => {
   }
 };
 
-const BACKEND_URLS: Record<AppEnv, Record<NetworkType, BackendConfig>> = {
-  development: {
-    mainnet: {
-      "dual-stacking":
-        "https://dual-stacking-v3-server.degenlab.io/dual-stacking-server",
-      defi: "https://dual-stacking-server.degenlab.io/defi-server",
-      "coin-prices": "https://dual-stacking-v3-server.degenlab.io",
-    },
-    testnet: {
-      "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
-      defi: "http://localhost:8081",
-      "coin-prices": "https://testnet-services.degenlab.io",
-    },
-    devnet: {
-      "dual-stacking": "http://localhost:8080",
-      defi: "http://localhost:8081",
-      "coin-prices": "http://localhost:8082",
-    },
-  },
-  staging: {
-    mainnet: {
-      "dual-stacking":
-        "https://dual-stacking-v3-server.degenlab.io/dual-stacking-server",
-      defi: "https://dual-stacking-server.degenlab.io/defi-server",
-      "coin-prices": "https://dual-stacking-v3-server.degenlab.io",
-    },
-    testnet: {
-      "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
-      defi: "https://testnet-services.degenlab.io/defi-server",
-      "coin-prices": "https://testnet-services.degenlab.io",
-    },
-    devnet: {
-      "dual-stacking": "https://testnet-services.degenlab.io/yield-server",
-      defi: "https://testnet-services.degenlab.io/defi-server",
-      "coin-prices": "https://testnet-services.degenlab.io",
-    },
-  },
-  production: {
-    mainnet: {
-      "dual-stacking":
-        "https://dual-stacking-v3-server.degenlab.io/dual-stacking-server",
-      defi: "https://dual-stacking-server.degenlab.io/defi-server",
-      "coin-prices": "https://dual-stacking-v3-server.degenlab.io",
-    },
-    testnet: {
-      "dual-stacking": "https://testnet-services.degenlab.io/mocked-mainnet",
-      defi: "https://testnet-services.degenlab.io/defi-server",
-      "coin-prices": "https://testnet-services.degenlab.io",
-    },
-    devnet: {
-      "dual-stacking": "https://testnet-services.degenlab.io/yield-server",
-      defi: "https://testnet-services.degenlab.io/defi-server",
-      "coin-prices": "https://testnet-services.degenlab.io",
-    },
-  },
-};
-
-export const getBackendServer = (
-  service: BackendServiceType,
-  network: NetworkType = getCurrentNetwork(),
-  env: AppEnv = getCurrentEnv(),
-) => {
-  if (service === "game") {
-    return adjustUrlForAndroid(validateUrl(Env.API_URL, "API_URL"));
-  }
-
-  const baseUrl = BACKEND_URLS[env][network]?.[service];
-
-  if (!baseUrl) {
-    throw new Error(
-      `Service '${service}' not supported for Env: '${env}' / Network: '${network}'`,
-    );
-  }
-  return adjustUrlForAndroid(baseUrl);
-};
+export const getBackendServer = (_service: BackendServiceType) =>
+  adjustUrlForAndroid(validateUrl(Env.API_URL, "API_URL"));
 
 export const getChain = (network: NetworkType) => {
   if (network === "mainnet") {
