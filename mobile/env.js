@@ -56,15 +56,15 @@ if (!isEasBuild) {
  * Such as: bundle id, package name, app name.
  *
  * You can add them to the .env file but we think it's better to keep them here as as we use prefix to generate this values based on the APP_ENV
- * for example: if the APP_ENV is staging, the bundle id will be com.stacksapp.staging
+ * for example: if the APP_ENV is staging, the bundle id will be com.enterstacks.staging
  */
 
 // TODO: Replace these values with your own
-const BUNDLE_ID = 'com.stacksapp'; // ios bundle id
-const PACKAGE = 'com.stacksapp'; // android package name
-const NAME = 'StacksApp'; // app name
+const BUNDLE_ID = 'com.enterstacks'; // ios bundle id
+const PACKAGE = 'com.enterstacks'; // android package name
+const NAME = 'Enter Stacks'; // app name
 const EXPO_ACCOUNT_OWNER = 'degenlab'; // expo account owner
-const SCHEME = 'stacksapp'; // app scheme
+const SCHEME = 'enterstacks'; // app scheme
 
 /**
  * We declare a function withEnvSuffix that will add a suffix to the variable name based on the APP_ENV
@@ -107,10 +107,12 @@ const client = z.object({
   GOOGLE_IOS_CLIENT_ID: z.string().min(1),
   GOOGLE_IOS_URL_SCHEME: z.string().min(1),
   API_URL: z.string().url(),
+  ADS_ENABLED: z.enum(['true', 'false']).optional(),
   ANDROID_ADMOB_APP_ID: z.string().min(1),
   IOS_ADMOB_APP_ID: z.string().optional(),
   ANDROID_REWARDS_AD_MOBIN_KEY: z.string().min(1),
-  TRANSAK_STAGING_API_KEY: z.string().min(1),
+  IOS_REWARDS_AD_MOBIN_KEY:
+    APP_ENV === 'production' ? z.string().min(1) : z.string().optional(),
   SBTC_BRIDGE_MAINNET_EMILY_URL: z.string().url().optional(),
   SBTC_BRIDGE_TESTNET_EMILY_URL: z.string().url().optional(),
   SBTC_BRIDGE_MAINNET_CONTRACT_DEPLOYER: z.string().optional(),
@@ -143,10 +145,11 @@ const _clientEnv = {
   GOOGLE_IOS_CLIENT_ID: process.env.GOOGLE_IOS_CLIENT_ID,
   GOOGLE_IOS_URL_SCHEME: process.env.GOOGLE_IOS_URL_SCHEME,
   API_URL: process.env.API_URL,
+  ADS_ENABLED: process.env.ADS_ENABLED,
   ANDROID_ADMOB_APP_ID: process.env.ANDROID_ADMOB_APP_ID,
   IOS_ADMOB_APP_ID: process.env.IOS_ADMOB_APP_ID,
   ANDROID_REWARDS_AD_MOBIN_KEY: process.env.ANDROID_REWARDS_AD_MOBIN_KEY,
-  TRANSAK_STAGING_API_KEY: process.env.TRANSAK_STAGING_API_KEY,
+  IOS_REWARDS_AD_MOBIN_KEY: process.env.IOS_REWARDS_AD_MOBIN_KEY,
   SBTC_BRIDGE_MAINNET_EMILY_URL: process.env.SBTC_BRIDGE_MAINNET_EMILY_URL,
   SBTC_BRIDGE_TESTNET_EMILY_URL: process.env.SBTC_BRIDGE_TESTNET_EMILY_URL,
   SBTC_BRIDGE_MAINNET_CONTRACT_DEPLOYER:
@@ -194,7 +197,7 @@ const EAS_ENV_PULL_STUBS = {
   API_URL: 'https://example.com',
   ANDROID_ADMOB_APP_ID: 'ca-app-pub-0000000000000000~0000000000',
   ANDROID_REWARDS_AD_MOBIN_KEY: 'eas-env-pull-pending',
-  TRANSAK_STAGING_API_KEY: 'eas-env-pull-pending',
+  IOS_REWARDS_AD_MOBIN_KEY: 'eas-env-pull-pending',
 };
 
 if (parsed.success === false) {

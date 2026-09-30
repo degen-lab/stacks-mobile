@@ -166,7 +166,7 @@ export default function EarnScreen() {
   const nextStepCards = useMemo(
     () =>
       buildEarnNextStepCards({
-        btcBalance: portfolio.btcBalance,
+        btcBalance: portfolio.btcBalanceOrNull,
         bridgeDepositMinimumBtc,
         sbtcBalance: portfolio.sbtcBalance + portfolio.sbtcDefiBalance,
         meetsMinimumSbtcForEnrollment: Boolean(meetsMinimumSbtcForEnrollment),
@@ -183,7 +183,7 @@ export default function EarnScreen() {
       enrolledCurrentCycle,
       enrolledNextCycle,
       meetsMinimumSbtcForEnrollment,
-      portfolio.btcBalance,
+      portfolio.btcBalanceOrNull,
       portfolio.sbtcBalance,
       portfolio.sbtcDefiBalance,
       portfolio.stxAvailableBalance,
@@ -195,7 +195,7 @@ export default function EarnScreen() {
   );
 
   const isNextStepsLoading =
-    portfolio.isBalanceLoading ||
+    portfolio.isNextStepsBalanceLoading ||
     bridgeLimits.isLoading ||
     dualStackingDataLoading ||
     isDualStackingStatsLoading ||

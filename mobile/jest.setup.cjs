@@ -39,6 +39,15 @@ jest.mock("@react-native-firebase/analytics", () => ({
   setUserProperties: jest.fn(() => Promise.resolve()),
 }));
 
+jest.mock("expo-tracking-transparency", () => ({
+  getTrackingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "undetermined" }),
+  ),
+  requestTrackingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "granted" }),
+  ),
+}));
+
 jest.mock("react-native-google-mobile-ads", () => {
   const createRewardedAd = () => ({
     load: jest.fn(),
@@ -110,6 +119,7 @@ jest.mock("react-native-google-mobile-ads", () => {
       REQUIRED: "REQUIRED",
     },
     MaxAdContentRating: {
+      G: "G",
       PG: "PG",
     },
     RewardedAd: {
@@ -171,12 +181,3 @@ jest.mock("@gorhom/bottom-sheet", () => {
 
 global.setImmediate ??= (callback, ...args) => setTimeout(callback, 0, ...args);
 global.clearImmediate ??= (handle) => clearTimeout(handle);
-
-jest.mock("expo-tracking-transparency", () => ({
-  getTrackingPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ status: "undetermined" }),
-  ),
-  requestTrackingPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ status: "denied" }),
-  ),
-}));

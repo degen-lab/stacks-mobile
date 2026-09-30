@@ -64,7 +64,7 @@ export function PlayLayout({
         <Text className="text-xl">Let&apos;s Play!</Text>
         <Pressable
           onPress={presentPlayHelp}
-          hitSlop={8}
+          hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel="Play help"
           style={{
@@ -74,7 +74,7 @@ export function PlayLayout({
             justifyContent: "center",
           }}
         >
-          <HelpCircle size={16} color={colors.secondary} />
+          <HelpCircle size={16} color={colors.secondary} pointerEvents="none" />
         </Pressable>
       </View>
       <GameCard

@@ -47,6 +47,34 @@ describe("buildEarnNextStepCards", () => {
     ]);
   });
 
+  it("does not block bridge decisions when the BTC balance is still unknown", () => {
+    const cards = buildEarnNextStepCards({
+      btcBalance: null,
+      bridgeDepositMinimumBtc: 0.0001,
+      sbtcBalance: 0,
+      meetsMinimumSbtcForEnrollment: false,
+      totalStxBalance: 100,
+      availableStxBalance: 100,
+      lockedStxBalance: 0,
+      isEnrolledCurrentCycle: false,
+      isEnrolledNextCycle: false,
+      nextRewardPhaseLabel: null,
+      stackingApr: 8.4,
+    });
+
+    expect(cards).toEqual([
+      expect.objectContaining({
+        id: "stack-stx",
+        status: "primary",
+      }),
+      expect.objectContaining({
+        id: "get-btc",
+        status: "preview",
+        action: { type: "acquire", asset: "BTC" },
+      }),
+    ]);
+  });
+
   it("shows get BTC instead of bridge when BTC is below the bridge minimum", () => {
     const cards = buildEarnNextStepCards({
       btcBalance: 0.00001,

@@ -107,9 +107,13 @@ export const SPONSORED_FEE_MAX_MICRO_STX: number = parseInt(
 
 export const SCORE_MULTIPLIER: number = 10;
 
-export const SILVER_TIER_BONUS: number = 1000;
+export const SILVER_TIER_BONUS: number = 750;
 
 export const BRONZE_TIER_BONUS: number = 500;
+
+export const GOLD_TIER_BONUS: number = 1000;
+
+export const RAFFLE_TIER_BONUS: number = 250;
 
 export const GOLD_TIER_USTX_BONUS: number = 50000000;
 
@@ -123,6 +127,13 @@ export const TRANSAK_API_URL: string =
     ? 'https://api.transak.com/'
     : 'https://api-stg.transak.com/';
 
+export const ALLOWED_CORS_ORIGINS: string[] = (
+  process.env.ALLOWED_CORS_ORIGINS ?? ''
+)
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 export const TRANSAK_API_KEY: string = configParser(
   'TRANSAK_API_KEY',
   isTest ? 'test-transak-api-key' : undefined,
@@ -132,6 +143,9 @@ export const TRANSAK_API_SECRET: string = configParser(
   'TRANSAK_API_SECRET',
   isTest ? 'test-transak-api-secret' : undefined,
 );
+
+export const TRANSAK_WIDGET_PRIMARY_COLOR = '#FC6432';
+export const TRANSAK_WIDGET_PRIMARY_TEXT_COLOR = '#FFFFFF';
 
 export const ANDROID_REFERRER_DOMAIN: string = configParser(
   'ANDROID_REFERRER_DOMAIN',

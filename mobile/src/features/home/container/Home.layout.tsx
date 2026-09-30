@@ -55,8 +55,8 @@ export default function HomeScreenLayout({
             <Card
               imageSource={playSquareImage}
               imageSize={{ width: 62, height: 62 }}
-              title="Play & earn"
-              description="Score high, win the weekly pool."
+              title="Play & Earn"
+              description="Score high and earn more points."
               descriptionClassName={cardDescriptionClassName}
               imageClassName="mb-4"
               onPress={navigateToPlay}

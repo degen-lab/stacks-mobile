@@ -7,12 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:699077676132:android:7b06e18e88bf889f602371",
+        "mobilesdk_app_id": "1:699077676132:android:ad6cbf50e7b797e1602371",
         "android_client_info": {
-          "package_name": "com.stacksapp.development"
+          "package_name": "com.enterstacks"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "699077676132-6l0jt0ba35d07voi52e3gi13hkgsmp82.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDA02O5uHIzIHA3iOvCo3jxYp_18askurA"
@@ -20,7 +25,91 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699077676132-6l0jt0ba35d07voi52e3gi13hkgsmp82.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699077676132-452dibfj66dv0d7pmmf0ho8uom7l3guh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.enterstacks"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699077676132:android:5b3c65be26cd5bb2602371",
+        "android_client_info": {
+          "package_name": "com.enterstacks.development"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "699077676132-6l0jt0ba35d07voi52e3gi13hkgsmp82.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA02O5uHIzIHA3iOvCo3jxYp_18askurA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699077676132-6l0jt0ba35d07voi52e3gi13hkgsmp82.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699077676132-452dibfj66dv0d7pmmf0ho8uom7l3guh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.enterstacks"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699077676132:android:7aa16f41719677e5602371",
+        "android_client_info": {
+          "package_name": "com.enterstacks.staging"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "699077676132-6l0jt0ba35d07voi52e3gi13hkgsmp82.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA02O5uHIzIHA3iOvCo3jxYp_18askurA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699077676132-6l0jt0ba35d07voi52e3gi13hkgsmp82.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699077676132-452dibfj66dv0d7pmmf0ho8uom7l3guh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.enterstacks"
+              }
+            }
+          ]
         }
       }
     }

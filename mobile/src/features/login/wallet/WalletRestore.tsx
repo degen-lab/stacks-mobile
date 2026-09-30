@@ -1,4 +1,11 @@
 import { type BottomSheetModal } from "@gorhom/bottom-sheet";
+import {
+  BackupNotFoundError,
+  GoogleApiError,
+  InvalidEncryptedWalletError,
+  InvalidPasswordError,
+  InvalidPasswordOrSaltOrEncryptedWalletError,
+} from "@degenlab/stacks-wallet-kit-core";
 import { useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { InteractionManager } from "react-native";
@@ -12,11 +19,35 @@ import {
 } from "@/hooks/use-create-wallet";
 import { useAuth } from "@/lib/store/auth";
 
+function getRestoreErrorMessage(error: unknown) {
+  if (error instanceof InvalidPasswordError) {
+    return "Incorrect encryption passphrase. Enter the passphrase used to encrypt this wallet backup.";
+  }
+
+  if (
+    error instanceof InvalidPasswordOrSaltOrEncryptedWalletError ||
+    error instanceof InvalidEncryptedWalletError
+  ) {
+    return "We couldn't decrypt this wallet backup. The encryption passphrase may be wrong or the backup may be corrupted.";
+  }
+
+  if (error instanceof BackupNotFoundError) {
+    return "No Google Drive wallet backup was found for this account.";
+  }
+
+  if (error instanceof GoogleApiError) {
+    return "We couldn't access your Google Drive wallet backup. Please try again.";
+  }
+
+  return "We couldn't restore your wallet backup. Please try again.";
+}
+
 export default function WalletRestore() {
   const router = useRouter();
   const { restoreWallet } = useRestoreWallet();
   const { deleteBackupWithoutPassword } = useDeleteGoogleBackup();
-  const { signOut } = useAuth();
+  const { authMethod, signOut } = useAuth();
+  const backupProviderName = authMethod === "apple" ? "iCloud" : "Google Drive";
 
   const deleteBackupSheetRef = useRef<BottomSheetModal>(null);
   const shouldNavigateAfterDeleteRef = useRef(false);
@@ -33,13 +64,23 @@ export default function WalletRestore() {
     try {
       await restoreWallet({ password });
       router.replace("/");
-    } catch (err) {
-      console.error(err);
-      setError("Restore failed. Please try again.");
+    } catch (error) {
+      console.error(error);
+      setError(getRestoreErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   }, [password, restoreWallet, router]);
+
+  const handlePasswordChange = useCallback(
+    (nextPassword: string) => {
+      setPassword(nextPassword);
+      if (error) {
+        setError(undefined);
+      }
+    },
+    [error],
+  );
 
   const handleForgotPassword = useCallback(() => {
     setDeleteError(undefined);
@@ -81,17 +122,19 @@ export default function WalletRestore() {
       <GooglePasswordScreen
         mode="recover"
         password={password}
-        onPasswordChange={setPassword}
+        onPasswordChange={handlePasswordChange}
         onContinue={handleRestore}
         onForgotPassword={handleForgotPassword}
         onBack={handleBack}
         isLoading={isSubmitting}
         error={error}
+        loadingSubtitleOverride={`Downloading from ${backupProviderName}`}
       />
       <WarningSheet
         ref={deleteBackupSheetRef}
-        title="Delete Google Backup?"
-        description="To create a new wallet, we need to permanently delete your Google Drive backup. This action cannot be undone."
+        title={`Delete ${backupProviderName} Backup?`}
+        description={`To create a new wallet, we need to permanently delete your ${backupProviderName} backup. This action cannot be undone.`}
+        confirmLabel="Delete backup"
         onConfirm={handleDeleteBackup}
         onCancel={() => deleteBackupSheetRef.current?.dismiss()}
         loading={isDeletingBackup}

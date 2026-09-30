@@ -1,4 +1,5 @@
 import { Button, View } from "@/components/ui";
+import { useUserProfile } from "@/api/user";
 import { LeaderboardItem } from "@/features/leaderboard/components/leaderboard-item";
 import type { LeaderboardUser } from "@/features/leaderboard/types";
 import { useAuth } from "@/lib/store/auth";
@@ -18,6 +19,7 @@ export function LeaderboardList({
 }: LeaderboardListProps) {
   const router = useRouter();
   const { userData } = useAuth();
+  const { data: userProfile } = useUserProfile();
 
   const topUsers = users.slice(0, 7);
   const filteredTopUsers = topUsers.filter(
@@ -25,7 +27,7 @@ export function LeaderboardList({
   );
   const hasMore = users.length > 7;
   const hasCurrentUser = users.some((user) => user.isCurrentUser);
-  const currentUser = userData?.user;
+  const currentUser = userData;
   const isCurrentUserInPodium =
     typeof currentUserRank === "number" && currentUserRank > 0
       ? currentUserRank <= 3
@@ -36,10 +38,13 @@ export function LeaderboardList({
       ? {
           rank: 0,
           rankLabel: "0",
-          name: currentUser.name ?? "Stacks user",
+          name: userProfile?.nickname ?? currentUser.name ?? "Stacks user",
           score: 0,
           scoreLabel: "Play to submit your score!",
-          photoUri: currentUser.photo ? { uri: currentUser.photo } : undefined,
+          photoUri:
+            userProfile?.photoUri || currentUser.photo
+              ? { uri: userProfile?.photoUri ?? currentUser.photo ?? "" }
+              : undefined,
           isCurrentUser: true,
         }
       : null;

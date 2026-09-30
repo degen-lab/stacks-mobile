@@ -13,6 +13,17 @@ export interface BitcoinAddressUtxo {
   };
 }
 
+export interface BitcoinAddressStats {
+  funded_txo_sum: number;
+  spent_txo_sum: number;
+}
+
+export interface BitcoinAddressInfo {
+  address: string;
+  chain_stats: BitcoinAddressStats;
+  mempool_stats: BitcoinAddressStats;
+}
+
 export interface BitcoinFeeRecommendation {
   fastestFee: number;
   halfHourFee: number;

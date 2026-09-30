@@ -24,10 +24,6 @@
       "distribution": "store",
       "channel": "staging",
       "environment": "preview",
-      "android": {
-        "distribution": "internal",
-        "buildType": "apk"
-      },
       "env": {
         "APP_ENV": "staging"
       }
@@ -46,7 +42,8 @@
     "production": {
       "ios": {
         "appleTeamId": "3GTZV85AXU",
-        "bundleIdentifier": "com.stacksapp"
+        "bundleIdentifier": "com.enterstacks",
+        "ascAppId": "6763343534"
       }
     }
   }

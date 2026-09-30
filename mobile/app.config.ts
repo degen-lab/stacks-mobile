@@ -24,10 +24,68 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
+    usesAppleSignIn: true,
     bundleIdentifier: Env.BUNDLE_ID,
     googleServicesFile: `./firebase/${Env.APP_ENV}/GoogleService-Info.plist`,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+    },
+    privacyManifests: {
+      NSPrivacyTracking: true,
+      NSPrivacyTrackingDomains: [
+        'app-measurement.com',
+        'google-analytics.com',
+        'googleadservices.com',
+        'googlesyndication.com',
+        'doubleclick.net',
+      ],
+      NSPrivacyCollectedDataTypes: [
+        {
+          NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeUserID',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: false,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeAnalytics',
+          ],
+        },
+        {
+          NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeDeviceID',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: true,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeAnalytics',
+            'NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising',
+            'NSPrivacyCollectedDataTypePurposeDevelopersAdvertising',
+          ],
+        },
+        {
+          NSPrivacyCollectedDataType:
+            'NSPrivacyCollectedDataTypeProductInteraction',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: false,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeAnalytics',
+          ],
+        },
+        {
+          NSPrivacyCollectedDataType:
+            'NSPrivacyCollectedDataTypeAdvertisingData',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: true,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising',
+            'NSPrivacyCollectedDataTypePurposeDevelopersAdvertising',
+          ],
+        },
+        {
+          NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeOtherUsageData',
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: false,
+          NSPrivacyCollectedDataTypePurposes: [
+            'NSPrivacyCollectedDataTypePurposeAnalytics',
+          ],
+        },
+      ],
     },
   },
   experiments: {
@@ -98,7 +156,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'expo-tracking-transparency',
       {
         userTrackingPermission:
-          'Allow StacksApp to use data to show more relevant ads. Declining still keeps sponsored transactions available.',
+          'This identifier may be used to deliver relevant ads and measure ad performance.',
       },
     ],
     'react-native-edge-to-edge',
@@ -107,9 +165,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         androidAppId: Env.ANDROID_ADMOB_APP_ID,
         iosAppId: Env.IOS_ADMOB_APP_ID,
+        delayAppMeasurementInit: true,
       },
     ],
     '@react-native-firebase/app',
+    '@degenlab/stacks-wallet-kit-mobile',
+    'expo-apple-authentication',
     'expo-router',
   ],
   extra: {

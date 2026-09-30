@@ -121,7 +121,7 @@ export function PointsPopover({
                     3.
                   </Text>
                   <Text className="text-sm text-secondary font-instrument-sans flex-1 leading-6">
-                    Top users earn STX rewards
+                    High scores climb the weekly leaderboard
                   </Text>
                 </View>
               </View>
@@ -135,7 +135,7 @@ export function PointsPopover({
                 }}
                 variant="primaryNavbar"
                 size="lg"
-                label="Play to Earn"
+                label="Play for points"
                 className="rounded-full"
               />
             </View>

@@ -1,5 +1,6 @@
 import { ExternalLink } from "@/components/external-link";
 import {
+  AppleIcon,
   Button,
   FocusAwareStatusBar,
   GoogleIcon,
@@ -11,15 +12,51 @@ import { TERMS_URL } from "@/lib/app/links";
 
 type LoginLayoutProps = {
   onGoogleSignIn: () => void;
-  isLoading: boolean;
+  onAppleSignIn: () => void;
+  showAppleSignIn?: boolean;
+  isGoogleLoading: boolean;
+  isAppleLoading: boolean;
   isDisabled: boolean;
 };
 
 export default function LoginLayout({
   onGoogleSignIn,
-  isLoading,
+  onAppleSignIn,
+  showAppleSignIn = true,
+  isGoogleLoading,
+  isAppleLoading,
   isDisabled,
 }: LoginLayoutProps) {
+  const googleButton = (
+    <Button
+      variant="outline"
+      className="w-full"
+      size="lg"
+      onPress={onGoogleSignIn}
+      loading={isGoogleLoading}
+      disabled={isDisabled || isGoogleLoading}
+      label="Continue with Google"
+      leftIcon={<GoogleIcon size={20} />}
+      textClassName="font-matter text-base text-primary"
+      testID="google-signin-button"
+    />
+  );
+
+  const appleButton = showAppleSignIn ? (
+    <Button
+      variant="outline"
+      className="w-full"
+      size="lg"
+      onPress={onAppleSignIn}
+      loading={isAppleLoading}
+      disabled={isDisabled || isAppleLoading}
+      label="Continue with Apple"
+      leftIcon={<AppleIcon size={20} />}
+      textClassName="font-matter text-base text-primary"
+      testID="apple-signin-button"
+    />
+  ) : null;
+
   return (
     <>
       <FocusAwareStatusBar />
@@ -43,18 +80,15 @@ export default function LoginLayout({
             Play games. Earn points. Start in seconds.
           </Text>
 
-          <Button
-            variant="outline"
-            className="w-full"
-            size="lg"
-            onPress={onGoogleSignIn}
-            loading={isLoading}
-            disabled={isDisabled || isLoading}
-            label="Continue with Google"
-            leftIcon={<GoogleIcon size={20} />}
-            textClassName="font-matter text-base text-primary"
-            testID="google-signin-button"
-          />
+          {showAppleSignIn ? (
+            <>
+              {appleButton}
+              <View className="h-3" />
+              {googleButton}
+            </>
+          ) : (
+            googleButton
+          )}
 
           <Text className="mt-8 text-center text-base text-secondary px-4 font-instrument-sans">
             By proceeding, you agree with{" "}

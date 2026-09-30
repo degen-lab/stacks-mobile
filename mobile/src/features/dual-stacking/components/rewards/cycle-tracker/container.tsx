@@ -79,14 +79,15 @@ export function RewardsCycleCardContainer() {
   const snapshotsPerCycle = Number(row.snapshots_per_cycle ?? 0);
   const currentStart = Number(row.current_cycle_bitcoin_height ?? 0);
   const nextStart = Number(row.next_cycle_bitcoin_height ?? 0);
-  const blocksPerCycle =
-    blocksPerSnapshot > 0 && snapshotsPerCycle > 0
-      ? blocksPerSnapshot * snapshotsPerCycle
-      : Math.max(0, nextStart - currentStart);
   const bufferStart =
     row.buffer_start_block != null ? Number(row.buffer_start_block) : undefined;
   const bufferBlocks =
-    row.buffer_blocks != null ? Number(row.buffer_blocks) : undefined;
+    row.buffer_blocks != null ? Number(row.buffer_blocks) : 0;
+
+  const blocksPerCycle =
+    blocksPerSnapshot > 0 && snapshotsPerCycle > 0
+      ? blocksPerSnapshot * snapshotsPerCycle + bufferBlocks
+      : Math.max(0, nextStart - currentStart);
 
   const isDistributingRewards =
     currentCycleLive && Number.isFinite(btcNow)

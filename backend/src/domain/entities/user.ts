@@ -150,7 +150,7 @@ export class User extends BaseAppEntity {
           sub.transactionStatus === TransactionStatus.Success)
       );
     });
-    if (dailySubmissions.length >= 1) {
+    if (dailySubmissions.length >= 3) {
       throw new DailySponsoredWeeklyContestSubmissionNumberMetError();
     }
   }

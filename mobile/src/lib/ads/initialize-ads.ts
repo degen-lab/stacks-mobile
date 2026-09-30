@@ -35,17 +35,16 @@ export async function initializeAds(): Promise<boolean> {
   initializePromise = (async () => {
     try {
       await mobileAds().setRequestConfiguration({
-        // Update all future requests suitable for parental guidance
+        // Families/PEGI 3: only request ads suitable for general audiences.
         // Options: MaxAdContentRating.G, MaxAdContentRating.PG, MaxAdContentRating.T, MaxAdContentRating.MA
-        maxAdContentRating: MaxAdContentRating.PG,
+        maxAdContentRating: MaxAdContentRating.G,
 
-        // Indicates that you want your content treated as child-directed for purposes of COPPA.
-        // Set to true if your app targets children
-        tagForChildDirectedTreatment: false,
+        // Treat all ad requests as child-directed because the Play target audience includes children.
+        tagForChildDirectedTreatment: true,
 
         // Indicates that you want the ad request to be handled in a
         // manner suitable for users under the age of consent.
-        // Set to true if your app targets users under age of consent
+        // Child-directed treatment takes precedence and should not be combined with this tag.
         tagForUnderAgeOfConsent: false,
 
         // An array of test device IDs to allow.

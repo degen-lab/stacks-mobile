@@ -5,11 +5,14 @@ import {
   TRANSAK_API_SECRET,
   TRANSAK_API_URL,
   TRANSAK_GATEWAY_URL,
+  TRANSAK_WIDGET_PRIMARY_COLOR,
+  TRANSAK_WIDGET_PRIMARY_TEXT_COLOR,
 } from '../../shared/constants';
 import {
   AppPlatform,
   TransakAccessToken,
   TransakApiRoutes,
+  TransakQuoteRequest,
 } from '../../shared/types';
 import { TransakApiError } from '../../application/errors/purchaseErrors';
 import { logger } from '../../api/helpers/logger';
@@ -25,6 +28,7 @@ export class TransakPurchaseClient {
     partnerOrderId: string,
     platform: AppPlatform,
     productsAvailed: string,
+    endUserIp: string,
     walletAddress?: string,
   ): Promise<string> {
     const referrerDomain =
@@ -47,6 +51,9 @@ export class TransakPurchaseClient {
     const widgetParams = {
       apiKey: TRANSAK_API_KEY,
       referrerDomain,
+      brandColor: TRANSAK_WIDGET_PRIMARY_COLOR,
+      primaryButtonFillColor: TRANSAK_WIDGET_PRIMARY_COLOR,
+      primaryButtonTextColor: TRANSAK_WIDGET_PRIMARY_TEXT_COLOR,
       cryptoCurrencyCode,
       fiatCurrency,
       network: getNetwork(cryptoCurrencyCode),
@@ -66,6 +73,8 @@ export class TransakPurchaseClient {
         accept: 'application/json',
         'access-token': accessToken,
         'content-type': 'application/json',
+        'x-api-key': TRANSAK_API_KEY,
+        'x-user-ip': endUserIp,
       },
       body: JSON.stringify({
         widgetParams,
@@ -98,6 +107,59 @@ export class TransakPurchaseClient {
     return responseBody.data.widgetUrl;
   }
 
+  async getQuote(
+    {
+      fiatAmount,
+      cryptoAmount,
+      cryptoCurrency,
+      fiatCurrency = 'USD',
+      paymentMethod = 'credit_debit_card',
+      isBuyOrSell = 'BUY',
+      countryCode = 'US',
+    }: TransakQuoteRequest,
+    endUserIp: string,
+  ): Promise<unknown> {
+    const params = new URLSearchParams({
+      fiatCurrency,
+      cryptoCurrency,
+      paymentMethod,
+      isBuyOrSell,
+      partnerApiKey: TRANSAK_API_KEY,
+      network: 'mainnet',
+      quoteCountryCode: countryCode,
+    });
+
+    if (cryptoAmount != null) {
+      params.append('cryptoAmount', cryptoAmount.toString());
+    } else if (fiatAmount != null) {
+      params.append('fiatAmount', fiatAmount.toString());
+    }
+
+    const response = await fetch(
+      `${TRANSAK_API_URL}${TransakApiRoutes.QUOTE}?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          'x-api-key': TRANSAK_API_KEY,
+          'x-user-ip': endUserIp,
+        },
+      },
+    );
+
+    const responseBody = await response.json();
+
+    if (!response.ok) {
+      throw new TransakApiError(
+        `Transak quote error: ${responseBody?.error?.message || responseBody?.message || responseBody?.error || 'Unknown error'}`,
+        response.status,
+        responseBody,
+      );
+    }
+
+    return responseBody.response;
+  }
+
   async refreshAccessToken(): Promise<TransakAccessToken> {
     const url = `${TRANSAK_API_URL}${TransakApiRoutes.REFRESH_ACCESS_TOKEN}`;
     const options = {
@@ -106,6 +168,7 @@ export class TransakPurchaseClient {
         accept: 'application/json',
         'api-secret': TRANSAK_API_SECRET,
         'content-type': 'application/json',
+        'x-api-key': TRANSAK_API_KEY,
       },
       body: JSON.stringify({
         apiKey: TRANSAK_API_KEY,

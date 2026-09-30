@@ -128,9 +128,10 @@ describe("ReferralContainer", () => {
       referralUsed: false,
       setHasBackup: jest.fn(),
       signInWithGoogle: jest.fn(),
+      signInWithApple: jest.fn(),
       signOut: jest.fn(),
       hydrate: jest.fn(),
-      completeGoogleAuth: jest.fn(),
+      completeAuth: jest.fn(),
       setBackendSession: jest.fn(),
       setBackendUserData: jest.fn(),
     });

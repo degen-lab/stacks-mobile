@@ -18,6 +18,15 @@ export class InvalidWebhookPayloadError extends BaseError {
   }
 }
 
+export class InvalidClientIpError extends BaseError {
+  readonly statusCode = 400;
+  readonly name = 'InvalidClientIpError';
+
+  constructor(message = 'x-user-ip must be a valid IPv4 or IPv6 address') {
+    super(message);
+  }
+}
+
 export class TransakApiError extends BaseError {
   readonly statusCode = 502;
   readonly name = 'TransakApiError';

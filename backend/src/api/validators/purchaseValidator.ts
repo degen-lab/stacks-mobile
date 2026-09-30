@@ -11,6 +11,20 @@ export const createWidgetUrlSchema = z.object({
   walletAddress: z.string().optional(),
 });
 
+export const transakQuoteSchema = z
+  .object({
+    fiatAmount: z.number().positive().optional(),
+    cryptoAmount: z.number().positive().optional(),
+    cryptoCurrency: z.string().min(1),
+    fiatCurrency: z.string().min(1).optional(),
+    paymentMethod: z.string().min(1).optional(),
+    isBuyOrSell: z.enum(['BUY', 'SELL']).optional(),
+    countryCode: z.string().min(1).optional(),
+  })
+  .refine((data) => data.fiatAmount || data.cryptoAmount, {
+    message: 'Either fiatAmount or cryptoAmount is required',
+  });
+
 // Transak webhook payload after JWT decryption
 export const transakWebhookPayloadSchema = z.object({
   webhookData: z.object({

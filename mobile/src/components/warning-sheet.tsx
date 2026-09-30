@@ -41,15 +41,21 @@ export const WarningSheet = React.forwardRef<
   ) => {
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === "dark";
+    const sheetBackgroundColor = isDark ? undefined : colors.white;
 
     return (
       <Modal
         ref={ref}
         title={title}
         enableDynamicSizing={true}
-        backgroundStyle={{
-          backgroundColor: isDark ? colors.charcoal[850] : colors.white,
-        }}
+        backgroundStyle={
+          sheetBackgroundColor
+            ? {
+                backgroundColor: sheetBackgroundColor,
+              }
+            : undefined
+        }
+        handleBackgroundColor={sheetBackgroundColor}
         onDismiss={onDismiss}
       >
         <BottomSheetScrollView contentContainerClassName="px-5 pb-6">
@@ -71,7 +77,7 @@ export const WarningSheet = React.forwardRef<
             />
             <Button
               label={cancelLabel}
-              variant="secondary"
+              variant="ghost"
               size="lg"
               onPress={() => {
                 onCancel?.();

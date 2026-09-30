@@ -4,19 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@degenlab/stacks-wallet-kit-mobile>@degenlab/stacks-wallet-kit-core': 1.5.0
-
 importers:
 
   .:
     dependencies:
       '@degenlab/stacks-wallet-kit-core':
-        specifier: 1.5.0
-        version: 1.5.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))
+        specifier: 2.0.0
+        version: 2.0.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))
       '@degenlab/stacks-wallet-kit-mobile':
-        specifier: 1.4.0
-        version: 1.4.0(@stacks/transactions@7.3.0)(expo@54.0.26)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+        specifier: 2.0.0
+        version: 2.0.0(@stacks/transactions@7.3.0)(expo@54.0.26)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@dev-plugins/react-query':
         specifier: ^0.4.0
         version: 0.4.0(@tanstack/react-query@5.90.12(react@19.1.0))(expo@54.0.26)(react@19.1.0)
@@ -80,6 +77,9 @@ importers:
       expo:
         specifier: ~54.0.26
         version: 54.0.26(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.16)(graphql@16.8.1)(react-native-webview@13.15.0(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      expo-apple-authentication:
+        specifier: ~8.0.8
+        version: 8.0.8(expo@54.0.26)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))
       expo-build-properties:
         specifier: ~1.0.10
         version: 1.0.10(expo@54.0.26)
@@ -854,13 +854,16 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@degenlab/stacks-wallet-kit-core@1.5.0':
-    resolution: {integrity: sha512-y9m7zvkC3tus+TtAPQ8gEokyS95bgdMEBLE9R/L1LprBwV3t9hCG1PbU3NlRJWsrHdhlqakeJKw8tUb/XnxjbQ==}
+  '@degenlab/stacks-wallet-kit-core@2.0.0':
+    resolution: {integrity: sha512-78XFSOU1K0NJBFm5Fe51j0+JPfdK5JZNteN0deXI3XaNr6mgmQUJQp25XUZfKWj+y6L6g3Ed7oR1sOjfYAjR7A==}
     peerDependencies:
       '@stacks/transactions': ^7.3.0
 
-  '@degenlab/stacks-wallet-kit-mobile@1.4.0':
-    resolution: {integrity: sha512-TgnkzIG0NKjMusRCpqK41l71B4gJrLO0IPxKjcWoMqF+echylUVj1rl28Rtf9B758/YtUHwyve+qfhstNjYtaw==}
+  '@degenlab/stacks-wallet-kit-mobile@2.0.0':
+    resolution: {integrity: sha512-nIJKh3ljKoYO2plz4eIzHDECAH6y98O55pkLEjn0S86ZcJm94Yxq7bOqnEOsVf1za5t5VtUM4UHEyWsccHntmw==}
+    peerDependencies:
+      expo: '>=54.0.0'
+      react-native: '>=0.81.5'
 
   '@dev-plugins/react-query@0.4.0':
     resolution: {integrity: sha512-/8M2a7DlVTjcdhb4D/E+aHUCOqSS6s53y3fFrOoCyLPxhhhkMujS91pARH6XbF/GRr6p6RBNBJQpWasI6uj7GA==}
@@ -2474,15 +2477,17 @@ packages:
   '@xmldom/xmldom@0.7.13':
     resolution: {integrity: sha512-lm2GW5PkosIzccsaZIz7tp8cPADSIlIHWDFTR1N0SzfinhhYgeIQjFMz4rYzanCScr3DqQLeomUDArp6MWKm+g==}
     engines: {node: '>=10.0.0'}
-    deprecated: this version is no longer supported, please update to at least 0.8.*
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xmldom/xmldom@0.8.12':
     resolution: {integrity: sha512-9k/gHF6n/pAi/9tqr3m3aqkuiNosYTurLLUtc7xQ9sxB/wm7WPygCv8GYa6mS0fLJEHhqMC1ATYhz++U/lRHqg==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   abab@2.0.6:
     resolution: {integrity: sha512-j2afSsaIENvHZN2B8GOpF566vZ5WVk5opAiMTvWgaQT8DkbOqsTfvNAvHoRGU2zzP8cPoqys+xHTRDWW8L+/BA==}
@@ -3684,6 +3689,12 @@ packages:
   expect@29.7.0:
     resolution: {integrity: sha512-2Zks0hf1VLFYI1kbh0I5jP3KHHyCHpkfyHBzsSXRFgl/Bg9mWYfMW8oD+PdMPlEwy5HNsR9JutYy6pMeOh61nw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+
+  expo-apple-authentication@8.0.8:
+    resolution: {integrity: sha512-TwCHWXYR1kS0zaeV7QZKLWYluxsvqL31LFJubzK30njZqeWoWO89HZ8nZVaeXbFV1LrArKsze4BmMb+94wS0AQ==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
 
   expo-asset@12.0.10:
     resolution: {integrity: sha512-pZyeJkoDsALh4gpCQDzTA/UCLaPH/1rjQNGubmLn/uDM27S4iYJb/YWw4+CNZOtd5bCUOhDPg5DtGQnydNFSXg==}
@@ -6991,14 +7002,17 @@ packages:
 
   uuid@7.0.3:
     resolution: {integrity: sha512-DPSke0pXhTZgoF/d+WSt2QaKMCFSfx7QegxEWT+JOuHF5aWrKEn0G+ztjuJg/gG8/ItK+rbPCD/yNv8yyih6Cg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -7444,7 +7458,7 @@ snapshots:
   '@babel/helper-member-expression-to-functions@7.28.5':
     dependencies:
       '@babel/traverse': 7.28.5
-      '@babel/types': 7.28.5
+      '@babel/types': 7.29.0
     transitivePeerDependencies:
       - supports-color
 
@@ -7491,7 +7505,7 @@ snapshots:
 
   '@babel/helper-optimise-call-expression@7.27.1':
     dependencies:
-      '@babel/types': 7.28.5
+      '@babel/types': 7.29.0
 
   '@babel/helper-plugin-utils@7.27.1': {}
 
@@ -7530,7 +7544,7 @@ snapshots:
 
   '@babel/helper-wrap-function@7.28.3':
     dependencies:
-      '@babel/template': 7.27.2
+      '@babel/template': 7.28.6
       '@babel/traverse': 7.28.5
       '@babel/types': 7.29.0
     transitivePeerDependencies:
@@ -8124,7 +8138,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@degenlab/stacks-wallet-kit-core@1.5.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))':
+  '@degenlab/stacks-wallet-kit-core@2.0.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))':
     dependencies:
       '@noble/ciphers': 2.0.1
       '@noble/hashes': 2.0.1
@@ -8144,20 +8158,23 @@ snapshots:
       - encoding
       - react-native
 
-  '@degenlab/stacks-wallet-kit-mobile@1.4.0(@stacks/transactions@7.3.0)(expo@54.0.26)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
+  '@degenlab/stacks-wallet-kit-mobile@2.0.0(@stacks/transactions@7.3.0)(expo@54.0.26)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@degenlab/stacks-wallet-kit-core': 1.5.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))
+      '@degenlab/stacks-wallet-kit-core': 2.0.0(@stacks/transactions@7.3.0)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))
       '@noble/ciphers': 2.0.1
+      '@noble/hashes': 2.0.1
       '@react-native-async-storage/async-storage': 2.2.0(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))
       '@react-native-google-signin/google-signin': 16.0.0(expo@54.0.26)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      expo: 54.0.26(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.16)(graphql@16.8.1)(react-native-webview@13.15.0(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      expo-apple-authentication: 8.0.8(expo@54.0.26)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))
+      expo-modules-core: 3.0.27(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       expo-secure-store: 15.0.7(expo@54.0.26)
+      react-native: 0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0)
       react-native-keychain: 10.0.0
     transitivePeerDependencies:
       - '@stacks/transactions'
       - encoding
-      - expo
       - react
-      - react-native
 
   '@dev-plugins/react-query@0.4.0(@tanstack/react-query@5.90.12(react@19.1.0))(expo@54.0.26)(react@19.1.0)':
     dependencies:
@@ -12063,6 +12080,11 @@ snapshots:
       jest-message-util: 29.7.0
       jest-util: 29.7.0
 
+  expo-apple-authentication@8.0.8(expo@54.0.26)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0)):
+    dependencies:
+      expo: 54.0.26(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.16)(graphql@16.8.1)(react-native-webview@13.15.0(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      react-native: 0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0)
+
   expo-asset@12.0.10(expo@54.0.26)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
     dependencies:
       '@expo/image-utils': 0.8.7
@@ -14067,8 +14089,8 @@ snapshots:
   metro-transform-plugins@0.83.3:
     dependencies:
       '@babel/core': 7.28.5
-      '@babel/generator': 7.28.5
-      '@babel/template': 7.27.2
+      '@babel/generator': 7.29.1
+      '@babel/template': 7.28.6
       '@babel/traverse': 7.28.5
       flow-enums-runtime: 0.0.6
       nullthrows: 1.1.1
@@ -14098,9 +14120,9 @@ snapshots:
   metro-transform-worker@0.83.3:
     dependencies:
       '@babel/core': 7.28.5
-      '@babel/generator': 7.28.5
-      '@babel/parser': 7.28.5
-      '@babel/types': 7.28.5
+      '@babel/generator': 7.29.1
+      '@babel/parser': 7.29.2
+      '@babel/types': 7.29.0
       flow-enums-runtime: 0.0.6
       metro: 0.83.3
       metro-babel-transformer: 0.83.3

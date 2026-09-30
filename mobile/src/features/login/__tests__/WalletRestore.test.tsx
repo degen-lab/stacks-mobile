@@ -1,4 +1,5 @@
 import { act, fireEvent, render, waitFor } from "@/lib/tests";
+import { InvalidPasswordError } from "@degenlab/stacks-wallet-kit-core";
 import { __mockRouter } from "expo-router";
 import { InteractionManager } from "react-native";
 
@@ -100,8 +101,8 @@ describe("WalletRestore screen", () => {
     });
   });
 
-  it("shows error when wallet restore fails", async () => {
-    mockRestoreWallet.mockRejectedValue(new Error("nope"));
+  it("shows a specific error when the encryption passphrase is incorrect", async () => {
+    mockRestoreWallet.mockRejectedValue(new InvalidPasswordError());
     const consoleErrorSpy = jest
       .spyOn(console, "error")
       .mockImplementation(() => {});
@@ -112,7 +113,11 @@ describe("WalletRestore screen", () => {
     fireEvent.press(getByTestId("google-password-continue"));
 
     await waitFor(() => {
-      expect(getByText("Restore failed. Please try again.")).toBeTruthy();
+      expect(
+        getByText(
+          "Incorrect encryption passphrase. Enter the passphrase used to encrypt this wallet backup.",
+        ),
+      ).toBeTruthy();
     });
 
     consoleErrorSpy.mockRestore();

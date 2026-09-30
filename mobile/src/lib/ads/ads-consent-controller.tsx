@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import { useAppTrackingTransparencyStore } from "@/lib/ads/app-tracking-transparency-controller";
 import { initializeAds } from "@/lib/ads/initialize-ads";
 import { isAnalyticsConsentCurrent } from "@/lib/consent/types";
 import { useConsentActions } from "@/lib/consent/use-consent-actions";
@@ -16,6 +17,9 @@ export function AdsConsentController() {
   );
   const isMobileAdsInitialized = useAdsConsentStore(
     (state) => state.isMobileAdsInitialized,
+  );
+  const hasResolvedTrackingAuthorization = useAppTrackingTransparencyStore(
+    (state) => state.hasResolved,
   );
   const setMobileAdsInitialized = useAdsConsentStore(
     (state) => state.setMobileAdsInitialized,
@@ -42,6 +46,7 @@ export function AdsConsentController() {
   useEffect(() => {
     if (
       !hasResolved ||
+      !hasResolvedTrackingAuthorization ||
       !canRequestAds ||
       isMobileAdsInitialized ||
       hasAttemptedInitRef.current
@@ -51,19 +56,22 @@ export function AdsConsentController() {
 
     hasAttemptedInitRef.current = true;
 
-    initializeAds().then((initialized) => {
-      if (!initialized) {
-        // Allow one retry on the next canRequestAds trigger.
+    initializeAds()
+      .then((initialized) => {
+        if (!initialized) {
+          // Allow one retry on the next canRequestAds trigger.
+          hasAttemptedInitRef.current = false;
+        }
+        setMobileAdsInitialized(initialized);
+      })
+      .catch((error) => {
         hasAttemptedInitRef.current = false;
-      }
-      setMobileAdsInitialized(initialized);
-    }).catch((error) => {
-      hasAttemptedInitRef.current = false;
-      console.error("[AdsConsent] Mobile Ads init failed:", error);
-    });
+        console.error("[AdsConsent] Mobile Ads init failed:", error);
+      });
   }, [
     canRequestAds,
     hasResolved,
+    hasResolvedTrackingAuthorization,
     isMobileAdsInitialized,
     setMobileAdsInitialized,
   ]);

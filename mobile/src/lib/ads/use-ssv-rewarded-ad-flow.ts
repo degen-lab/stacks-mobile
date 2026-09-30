@@ -36,7 +36,7 @@ export function useSsvRewardedAdFlow<TPayload>(
   const hasLoadedRef = useRef(false);
   const prevSsvRef = useRef<SsvData | null>(null);
   const [requestNonPersonalizedAdsOnly, setRequestNonPersonalizedAdsOnly] =
-    useState(false);
+    useState(true);
 
   // ssvData is state because useRewardedAd re-creates the ad instance when it changes
   // (SSV options are baked into the ad at creation time, not at load time)
@@ -48,7 +48,7 @@ export function useSsvRewardedAdFlow<TPayload>(
   const clear = useCallback(() => {
     pendingRef.current = null;
     setSsvData(null);
-    setRequestNonPersonalizedAdsOnly(false);
+    setRequestNonPersonalizedAdsOnly(true);
     rewardedRef.current = false;
   }, []);
 
@@ -124,7 +124,7 @@ export function useSsvRewardedAdFlow<TPayload>(
     (
       payload: TPayload,
       ssv: SsvData,
-      nextRequestNonPersonalizedAdsOnly: boolean = false,
+      nextRequestNonPersonalizedAdsOnly: boolean = true,
     ) => {
       pendingRef.current = payload;
       setRequestNonPersonalizedAdsOnly(nextRequestNonPersonalizedAdsOnly);

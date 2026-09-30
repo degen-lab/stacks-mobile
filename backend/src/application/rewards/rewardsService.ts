@@ -2,7 +2,12 @@ import { EntityManager, In } from 'typeorm';
 import { RewardsCalculator } from '../../domain/service/rewardsCalculator';
 import { Submission } from '../../domain/entities/submission';
 import { TransactionClientPort } from '../ports/transactionClientPort';
-import { BRONZE_TIER_BONUS, SILVER_TIER_BONUS } from '../../shared/constants';
+import {
+  BRONZE_TIER_BONUS,
+  GOLD_TIER_BONUS,
+  RAFFLE_TIER_BONUS,
+  SILVER_TIER_BONUS,
+} from '../../shared/constants';
 import { SubmissionTier } from '../../domain/helpers/types';
 import { RewardsDistributionData } from '../../domain/entities/rewardsDistributionData';
 import { SubmissionType, TransactionStatus } from '../../domain/entities/enums';
@@ -11,11 +16,26 @@ import { TournamentStatus } from '../../domain/entities/tournamentStatus';
 import { TournamentStatusNotFoundError } from '../errors/rewardsErrors';
 
 export class RewardsService {
+  private readonly pointsDistributionReferencePrefix = 'points-distribution';
+
   constructor(
     private rewardsCalculator: RewardsCalculator,
     private transactionClient: TransactionClientPort,
     private entityManager: EntityManager,
   ) {}
+
+  private buildPointsDistributionReference(
+    kind: 'weekly' | 'raffle',
+    tournamentId: number,
+  ): string {
+    return `${this.pointsDistributionReferencePrefix}:${kind}:${tournamentId}`;
+  }
+
+  private isPointsDistributionReference(transactionId: string): boolean {
+    return transactionId.startsWith(
+      `${this.pointsDistributionReferencePrefix}:`,
+    );
+  }
 
   async distributeRewards() {
     await this.entityManager.transaction(async (manager) => {
@@ -106,28 +126,44 @@ export class RewardsService {
         await manager.save(submission.user);
       }
 
-      // Process gold tier: set tier, collect addresses, and save submission
-      let addresses: string[] = [];
+      // Process gold tier: award points and save both submission and user
       for (const submission of gold) {
+        submission.user.incrementPoints(GOLD_TIER_BONUS);
         submission.tier = SubmissionTier.Gold;
-        addresses.push(submission.stacksAddress);
         await manager.save(submission);
+        await manager.save(submission.user);
       }
+
+      const distributionReference = this.buildPointsDistributionReference(
+        'weekly',
+        tournamentId,
+      );
+
+      // TODO: when STX game rewards return, restore on-chain distribution below
+      // and remove the points distribution reference path.
+      // const addresses = gold.map((submission) => submission.stacksAddress);
+      // logger.info({
+      //   msg: 'Distributing rewards to addresses',
+      //   length: addresses.length,
+      //   addresses,
+      //   tournamentId,
+      // });
+      // const transactionId =
+      //   await this.transactionClient.distributeRewards(addresses);
+
       logger.info({
-        msg: 'Distributing rewards to addresses',
-        length: addresses.length,
-        addresses,
+        msg: 'Awarding points for weekly rewards distribution',
+        rewardedUsers: gold.length + silver.length + bronze.length,
+        pointsDistributionReference: distributionReference,
         tournamentId,
       });
-      const transactionId =
-        await this.transactionClient.distributeRewards(addresses);
       const rewardsDistributionData: RewardsDistributionData =
         new RewardsDistributionData();
       logger.info(
-        `reward distributed for tournament id: ${tournamentId}, txId: ${transactionId}`,
+        `Reward distribution recorded for tournament id: ${tournamentId}, distributionRef: ${distributionReference}`,
       );
       rewardsDistributionData.tournamentId = tournamentId;
-      rewardsDistributionData.transactionId = transactionId;
+      rewardsDistributionData.transactionId = distributionReference;
       rewardsDistributionData.rewardedSubmissions = [
         ...gold,
         ...silver,
@@ -208,10 +244,10 @@ export class RewardsService {
       return null;
     }
 
-    const addresses = winners.map((w) => w.stacksAddress);
+    const tournamentId = await this.transactionClient.getTournamentId();
     logger.info({
-      msg: 'Distributing raffle rewards',
-      tournamentId: await this.transactionClient.getTournamentId(),
+      msg: 'Awarding points for raffle winners',
+      tournamentId,
       winners: winners.map((w) => ({
         submissionId: w.id,
         userId: w.user.id,
@@ -219,17 +255,30 @@ export class RewardsService {
       })),
     });
 
-    const transactionId =
-      await this.transactionClient.distributeRewards(addresses);
+    await this.entityManager.transaction(async (manager) => {
+      for (const winner of winners) {
+        winner.user.incrementPoints(RAFFLE_TIER_BONUS);
+        await manager.save(winner.user);
+      }
 
-    const rewardsDistributionData = new RewardsDistributionData();
-    rewardsDistributionData.tournamentId =
-      await this.transactionClient.getTournamentId();
-    rewardsDistributionData.transactionId = transactionId;
-    rewardsDistributionData.rewardedSubmissions.push(...winners);
-    await this.entityManager.save(rewardsDistributionData);
+      // TODO: when STX game rewards return, restore on-chain distribution below
+      // and remove the points distribution reference path.
+      // const addresses = winners.map((winner) => winner.stacksAddress);
+      // const transactionId =
+      //   await this.transactionClient.distributeRewards(addresses);
 
-    return transactionId;
+      const distributionReference = this.buildPointsDistributionReference(
+        'raffle',
+        tournamentId,
+      );
+      const rewardsDistributionData = new RewardsDistributionData();
+      rewardsDistributionData.tournamentId = tournamentId;
+      rewardsDistributionData.transactionId = distributionReference;
+      rewardsDistributionData.rewardedSubmissions = [...winners];
+      await manager.save(rewardsDistributionData);
+    });
+
+    return this.buildPointsDistributionReference('raffle', tournamentId);
   }
 
   async headToNextTournament(): Promise<string> {
@@ -552,6 +601,14 @@ export class RewardsService {
     maxWaitTimeMs: number = 300000, // 5 minutes default
     pollIntervalMs: number = 10000, // 10 seconds default
   ): Promise<boolean> {
+    if (this.isPointsDistributionReference(transactionId)) {
+      logger.info({
+        msg: 'Points rewards distribution reference does not require anchoring',
+        transactionId,
+      });
+      return true;
+    }
+
     const startTime = Date.now();
     let lastStatus: string | null = null;
 
@@ -659,6 +716,10 @@ export class RewardsService {
 
     if (!rewardsData || !rewardsData.transactionId) {
       return false;
+    }
+
+    if (this.isPointsDistributionReference(rewardsData.transactionId)) {
+      return true;
     }
 
     // Check if the transaction was successfully anchored

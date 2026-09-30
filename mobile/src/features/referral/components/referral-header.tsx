@@ -39,6 +39,7 @@ export function ReferralHeader({ onPressHelp }: ReferralHeaderProps) {
                   ? colors.neutral[300]
                   : colors.neutral[900]
               }
+              pointerEvents="none"
             />
           ),
           onPress: handleHelpPress,

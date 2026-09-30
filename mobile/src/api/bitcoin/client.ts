@@ -2,6 +2,7 @@ import type { NetworkType } from "@degenlab/stacks-wallet-kit-core";
 
 import { getBitcoinApiBaseUrl } from "@/lib/bitcoin/network";
 import type {
+  BitcoinAddressInfo,
   BitcoinAddressUtxo,
   BitcoinFeeRecommendation,
   MempoolTransaction,
@@ -21,6 +22,7 @@ async function fetchBitcoin<T>(
   const url = `${getBitcoinApiBaseUrl(network)}${path}`;
   const response = await fetch(url, {
     ...init,
+    signal: AbortSignal.timeout(15_000),
     headers: {
       ...jsonHeaders,
       ...(init?.headers || {}),
@@ -57,6 +59,11 @@ async function fetchBitcoinText(
 
 export const fetchBitcoinUtxos = (address: string, network: NetworkType) =>
   fetchBitcoin<BitcoinAddressUtxo[]>(network, `/address/${address}/utxo`);
+
+export const fetchBitcoinAddressInfo = (
+  address: string,
+  network: NetworkType,
+) => fetchBitcoin<BitcoinAddressInfo>(network, `/address/${address}`);
 
 export const fetchBitcoinFeeRecommendation = (network: NetworkType) =>
   fetchBitcoin<BitcoinFeeRecommendation>(network, "/v1/fees/recommended");

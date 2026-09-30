@@ -67,13 +67,14 @@ export const BackupPasswordForm = ({
     <View className="gap-4">
       <View>
         <Text className="mb-2 text-base font-instrument-sans-medium text-primary">
-          Backup Password
+          Encryption Passphrase
         </Text>
         <PasswordInput
           password={password}
           showPassword={showPassword}
           onPasswordChange={onPasswordChange}
           onToggleShowPassword={onToggleShowPassword}
+          placeholder="Encryption passphrase"
         />
         {password.length > 0 && (
           <PasswordStrengthIndicator password={password} />
@@ -82,16 +83,17 @@ export const BackupPasswordForm = ({
 
       <View>
         <Text className="mb-2 text-base font-instrument-sans-medium text-primary">
-          Confirm Password
+          Confirm Encryption Passphrase
         </Text>
         <PasswordInput
           password={confirmPassword}
           showPassword={showConfirmPassword}
           onPasswordChange={onConfirmPasswordChange}
           onToggleShowPassword={onToggleShowConfirmPassword}
+          placeholder="Confirm encryption passphrase"
           error={
             confirmPassword.length > 0 && !validation.passwordsMatch
-              ? "Passwords do not match"
+              ? "Passphrases do not match"
               : undefined
           }
         />

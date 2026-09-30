@@ -17,6 +17,7 @@ interface Props {
   onUnitChange: (unit: Unit) => void;
   onPeriodChange: (period: TimePeriod) => void;
   isEmptyChart: boolean;
+  isAwaitingRewardsData?: boolean;
   isContractActive?: boolean;
 }
 
@@ -28,6 +29,7 @@ export function ChartSectionLayout({
   onUnitChange,
   onPeriodChange,
   isEmptyChart,
+  isAwaitingRewardsData,
   isContractActive,
   timeUntilCycleStartLabel,
   timeUntilContractActiveLabel,
@@ -59,6 +61,7 @@ export function ChartSectionLayout({
           chartData={chartData}
           unit={unit}
           isEmpty={isEmptyChart}
+          isAwaitingRewardsData={isAwaitingRewardsData}
           isContractActive={isContractActive}
           timeUntilCycleStartLabel={timeUntilCycleStartLabel}
           timeUntilContractActiveLabel={timeUntilContractActiveLabel}

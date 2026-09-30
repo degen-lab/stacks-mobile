@@ -1,6 +1,6 @@
 import { ChevronLeft } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform } from "react-native";
+import { Keyboard, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button, LoadingView, Text, View } from "@/components/ui";
@@ -30,15 +30,17 @@ interface GooglePasswordScreenProps {
 
 const PASSWORD_CONFIG = {
   create: {
-    title: "Protect your wallet",
-    subtitle: "Set a password to ensure only you can access your funds.",
+    title: "Secure your wallet",
+    subtitle:
+      "Your account is already signed in. Your recovery phrase is encrypted before being stored. Create an encryption passphrase that will be required only to unlock or recover the wallet data.",
     primaryButton: "Create Wallet",
     loadingTitle: "Creating your wallet...",
     loadingSubtitle: "Backing up to Google Drive",
   },
   recover: {
     title: "Wallet found!",
-    subtitle: "Enter the password you set during setup to unlock your wallet.",
+    subtitle:
+      "Enter the encryption passphrase you created during setup to unlock your wallet data.",
     primaryButton: "Restore Wallet",
     loadingTitle: "Restoring your wallet...",
     loadingSubtitle: "Downloading from Google Drive",
@@ -80,6 +82,11 @@ export function GooglePasswordScreen({
   function handleContinue() {
     if (isDisabled) return;
     onContinue();
+  }
+
+  function handleForgotPassword() {
+    Keyboard.dismiss();
+    onForgotPassword?.();
   }
 
   if (isLoading) {
@@ -132,6 +139,7 @@ export function GooglePasswordScreen({
                 onPasswordChange={onPasswordChange}
                 onToggleShowPassword={() => setShowPassword((prev) => !prev)}
                 error={error}
+                placeholder="Encryption passphrase"
                 inputTestID="google-password-input"
                 toggleTestID="google-password-toggle"
               />
@@ -146,8 +154,8 @@ export function GooglePasswordScreen({
             {mode === "recover" && onForgotPassword && (
               <Button
                 variant="link"
-                label="Forgot password?"
-                onPress={onForgotPassword}
+                label="Forgot passphrase?"
+                onPress={handleForgotPassword}
                 className="mb-2"
                 size="sm"
                 textClassName="text-center"
@@ -155,7 +163,7 @@ export function GooglePasswordScreen({
               />
             )}
             {mode === "create" && (
-              <WarningLabel label="Warning: This password cannot be reset. Keep it safe." />
+              <WarningLabel label="Warning: This encryption passphrase cannot be reset. Keep it safe." />
             )}
             <Button
               className="mt-6"

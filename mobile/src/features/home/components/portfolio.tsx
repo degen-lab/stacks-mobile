@@ -35,16 +35,20 @@ const PortfolioSummary = ({ balance, onPress }: PortfolioSummaryProps) => {
               void toggleBalanceVisibility();
             }}
             className="p-2 -mr-2"
-            hitSlop={8}
+            hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel={
               isBalanceVisible ? "Hide balances" : "Show balances"
             }
           >
             {isBalanceVisible ? (
-              <EyeOff color={colors.neutral[600]} size={16} />
+              <EyeOff
+                color={colors.neutral[600]}
+                size={16}
+                pointerEvents="none"
+              />
             ) : (
-              <Eye color={colors.neutral[600]} size={16} />
+              <Eye color={colors.neutral[600]} size={16} pointerEvents="none" />
             )}
           </Pressable>
         </View>
@@ -61,9 +65,16 @@ const PortfolioSummary = ({ balance, onPress }: PortfolioSummaryProps) => {
       <Pressable
         onPress={onPress}
         className="flex-col items-end active:opacity-70 gap-1"
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel="Open portfolio"
       >
-        <ChevronRight color={colors.neutral[400]} size={20} />
-        <View className="mr-2">
+        <ChevronRight
+          color={colors.neutral[400]}
+          size={20}
+          pointerEvents="none"
+        />
+        <View className="mr-2" pointerEvents="none">
           <Chart hasBalance={hasBalance} />
         </View>
       </Pressable>

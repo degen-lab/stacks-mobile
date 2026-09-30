@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import { getRewardedAdUnitId } from "@/lib/ads/rewarded-ad-unit";
 import useRewardedAd from "@/lib/ads/use-rewarded-ad";
 import { trackEvent } from "@/lib/analytics";
+import { Env } from "@/lib/env";
 
 type UseGameAdsOptions = {
   onReviveEarned: () => void;
@@ -43,7 +44,7 @@ export const useGameAds = ({
 
   const reviveAd = useRewardedAd({
     adUnitId: getRewardedAdUnitId(),
-    loadOnMount: true,
+    loadOnMount: Env.ADS_ENABLED === "true",
     onEarnedReward: handleAdEarned,
     onAdOpened: handleAdOpened,
     onAdClosed: handleAdClosed,

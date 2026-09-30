@@ -56,7 +56,7 @@ export default function ReferralShareSection({
           className="w-16 h-16 rounded-full dark:bg-surface-primary dark:border-border-primary"
           accessibilityLabel="Share on X"
         >
-          <XIcon size={24} color={socialIconColor} />
+          <XIcon size={24} color={socialIconColor} pointerEvents="none" />
         </Button>
         <Button
           size="icon"
@@ -66,7 +66,11 @@ export default function ReferralShareSection({
           className="w-16 h-16 rounded-full dark:bg-surface-primary dark:border-border-primary"
           accessibilityLabel="Share on Telegram"
         >
-          <TelegramIcon size={24} color={socialIconColor} />
+          <TelegramIcon
+            size={24}
+            color={socialIconColor}
+            pointerEvents="none"
+          />
         </Button>
         <Button
           size="icon"
@@ -76,7 +80,11 @@ export default function ReferralShareSection({
           className="w-16 h-16 rounded-full dark:bg-surface-primary dark:border-border-primary"
           accessibilityLabel="Share on WhatsApp"
         >
-          <WhatsappIcon size={24} color={socialIconColor} />
+          <WhatsappIcon
+            size={24}
+            color={socialIconColor}
+            pointerEvents="none"
+          />
         </Button>
       </View>
     </View>

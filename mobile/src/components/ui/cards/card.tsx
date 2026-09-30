@@ -52,6 +52,7 @@ export function Card({
       if (!svgUri) {
         return (
           <View
+            pointerEvents="none"
             className={`items-center justify-center ${imageClassName ?? ""}`}
             style={{
               width: imageSize.width,
@@ -63,6 +64,7 @@ export function Card({
 
       return (
         <View
+          pointerEvents="none"
           className={`items-center justify-center ${imageClassName ?? ""}`}
           style={{
             width: imageSize.width,
@@ -73,6 +75,7 @@ export function Card({
             uri={svgUri}
             width={imageSize.width}
             height={imageSize.height}
+            pointerEvents="none"
           />
         </View>
       );
@@ -80,6 +83,7 @@ export function Card({
 
     return (
       <View
+        pointerEvents="none"
         className={`items-center justify-center ${imageClassName ?? ""}`}
         style={{
           width: imageSize.width,
@@ -92,6 +96,7 @@ export function Card({
             width: imageSize.width,
             height: imageSize.height,
           }}
+          pointerEvents="none"
           resizeMode="contain"
         />
       </View>
@@ -101,7 +106,7 @@ export function Card({
   const content = (
     <>
       {renderImage()}
-      <View>
+      <View pointerEvents="none">
         <Text className="mb-1.5 font-matter text-xl text-primary">{title}</Text>
         <Text
           className={`${descriptionClassName ?? "pr-12"} text-sm font-instrument-sans-medium text-secondary leading-5`}

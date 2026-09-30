@@ -117,6 +117,7 @@ function WalletTrigger({
     <Pressable
       onPress={onPress}
       disabled={isLoading}
+      hitSlop={8}
       className={
         isDefaultConnectedIcon
           ? "h-9 w-9 items-center justify-center rounded-lg border-2 border-surface-secondary bg-transparent active:opacity-90"
@@ -133,7 +134,10 @@ function WalletTrigger({
         </View>
       ) : (
         <>
-          <Text className="font-instrument-sans text-xs font-semibold text-primary">
+          <Text
+            pointerEvents="none"
+            className="font-instrument-sans text-xs font-semibold text-primary"
+          >
             {buttonLabel}
           </Text>
           {isConnected ? (

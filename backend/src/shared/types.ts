@@ -129,11 +129,22 @@ export type SessionValidationDebug = {
 export enum TransakApiRoutes {
   REFRESH_ACCESS_TOKEN = 'partners/api/v2/refresh-token',
   CREATE_WIDGET_URL = 'api/v2/auth/session',
+  QUOTE = 'api/v1/pricing/public/quotes',
 }
 
 export type TransakAccessToken = {
   accessToken: string;
   expiresAt: number;
+};
+
+export type TransakQuoteRequest = {
+  fiatAmount?: number;
+  cryptoAmount?: number;
+  cryptoCurrency: string;
+  fiatCurrency?: string;
+  paymentMethod?: string;
+  isBuyOrSell?: 'BUY' | 'SELL';
+  countryCode?: string;
 };
 
 export enum AppPlatform {

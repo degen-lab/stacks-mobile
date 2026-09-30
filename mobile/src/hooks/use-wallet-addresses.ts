@@ -51,7 +51,8 @@ export function useWalletAddresses(options: UseWalletAddressesOptions = {}) {
         };
       }
     },
-    staleTime: 60_000,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   return {

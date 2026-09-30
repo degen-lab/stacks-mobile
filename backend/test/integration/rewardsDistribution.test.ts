@@ -19,6 +19,7 @@ import { SubmissionTier } from '../../src/domain/helpers/types';
 import { SubmissionDomainService } from '../../src/domain/service/submissionDomainService';
 import {
   BRONZE_TIER_BONUS,
+  GOLD_TIER_BONUS,
   SILVER_TIER_BONUS,
 } from '../../src/shared/constants';
 
@@ -41,6 +42,7 @@ describe('Rewards Distribution Integration Tests', () => {
       getTournamentId: jest.fn().mockResolvedValue(testTournamentId),
       distributeRewards: jest.fn().mockResolvedValue('tx-rewards-123'),
       headToNextTournament: jest.fn(),
+      getTransactionStatus: jest.fn(),
     } as unknown as jest.Mocked<TransactionClientPort>;
 
     const rewardsCalculator = new RewardsCalculator();
@@ -54,8 +56,12 @@ describe('Rewards Distribution Integration Tests', () => {
   afterEach(async () => {
     await cleanTestDatabase();
     jest.clearAllMocks();
-    mockTransactionClient.getTournamentId.mockResolvedValue(testTournamentId);
-    mockTransactionClient.distributeRewards.mockResolvedValue('tx-rewards-123');
+    if (mockTransactionClient) {
+      mockTransactionClient.getTournamentId.mockResolvedValue(testTournamentId);
+      mockTransactionClient.distributeRewards.mockResolvedValue(
+        'tx-rewards-123',
+      );
+    }
   });
 
   afterAll(async () => {
@@ -95,7 +101,7 @@ describe('Rewards Distribution Integration Tests', () => {
   };
 
   describe('distributeRewards', () => {
-    it('should assign correct tiers and award silver/bronze points', async () => {
+    it('should assign correct tiers and award points across all winning tiers', async () => {
       // RewardsCalculator: 36 users -> rewardedUsersCount=9, gold=1, silver=3, bronze=5
       const users = await Promise.all(
         Array.from({ length: 36 }, (_, i) =>
@@ -133,28 +139,25 @@ describe('Rewards Distribution Integration Tests', () => {
       expect(silver).toHaveLength(3);
       expect(bronze).toHaveLength(5);
 
-      // Silver users should have +SILVER_TIER_BONUS points (validates constant usage)
+      for (const sub of gold) {
+        const user = userMap.get(sub.user.id);
+        expect(user?.points).toBe(GOLD_TIER_BONUS);
+      }
+
       for (const sub of silver) {
         const user = userMap.get(sub.user.id);
         expect(user?.points).toBe(SILVER_TIER_BONUS);
       }
 
-      // Bronze users should have +BRONZE_TIER_BONUS points (validates constant usage)
       for (const sub of bronze) {
         const user = userMap.get(sub.user.id);
         expect(user?.points).toBe(BRONZE_TIER_BONUS);
       }
 
-      // Gold users receive STX on-chain (mocked); verify correct count of addresses
-      expect(mockTransactionClient.distributeRewards).toHaveBeenCalledWith(
-        expect.arrayContaining(gold.map((s) => s.stacksAddress)),
-      );
-      expect(
-        mockTransactionClient.distributeRewards.mock.calls[0][0],
-      ).toHaveLength(1);
+      expect(mockTransactionClient.distributeRewards).not.toHaveBeenCalled();
     });
 
-    it('should call distributeRewards with gold addresses and correct amount', async () => {
+    it('should keep the on-chain distribution client disabled in the active path', async () => {
       const user1 = await createUser('user1', 'User1');
       const user2 = await createUser('user2', 'User2');
       const user3 = await createUser('user3', 'User3');
@@ -165,13 +168,10 @@ describe('Rewards Distribution Integration Tests', () => {
 
       await rewardsService.distributeRewards();
 
-      expect(mockTransactionClient.distributeRewards).toHaveBeenCalledTimes(1);
-      const [addresses] = mockTransactionClient.distributeRewards.mock.calls[0];
-      expect(addresses).toHaveLength(1); // 3 users -> gold=1
-      expect(addresses[0]).toBe(validAddress);
+      expect(mockTransactionClient.distributeRewards).not.toHaveBeenCalled();
     });
 
-    it('should save RewardsDistributionData with transaction id', async () => {
+    it('should save RewardsDistributionData with a points distribution reference', async () => {
       const user1 = await createUser('user1', 'User1');
       await createSubmission(user1, 1000);
 
@@ -183,7 +183,7 @@ describe('Rewards Distribution Integration Tests', () => {
       });
 
       expect(rewardsData).toHaveLength(1);
-      expect(rewardsData[0].transactionId).toBe('tx-rewards-123');
+      expect(rewardsData[0].transactionId).toBe('points-distribution:weekly:1');
       expect(rewardsData[0].rewardedSubmissions).toHaveLength(1);
     });
 
@@ -241,6 +241,20 @@ describe('Rewards Distribution Integration Tests', () => {
 
       const rewardsData = await entityManager.find(RewardsDistributionData);
       expect(rewardsData).toHaveLength(0);
+    });
+
+    it('treats points distribution references as completed without chain polling', async () => {
+      const rewardsData = new RewardsDistributionData();
+      rewardsData.tournamentId = testTournamentId;
+      rewardsData.transactionId = 'points-distribution:weekly:1';
+      rewardsData.rewardedSubmissions = [];
+      await entityManager.save(rewardsData);
+
+      const isCompleted =
+        await rewardsService.isRewardsDistributionCompleted(testTournamentId);
+
+      expect(isCompleted).toBe(true);
+      expect(mockTransactionClient.getTransactionStatus).not.toHaveBeenCalled();
     });
   });
 });

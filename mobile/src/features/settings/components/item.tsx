@@ -31,7 +31,7 @@ export const Item = ({
         isPressable ? "active:bg-sand-100 dark:active:bg-surface-secondary" : ""
       }`}
     >
-      <View className="flex-1 flex-row items-center">
+      <View pointerEvents="none" className="flex-1 flex-row items-center">
         {icon ? (
           <View className="mr-3 h-6 w-6 items-center justify-center">
             {icon}
@@ -51,7 +51,7 @@ export const Item = ({
         </View>
       </View>
 
-      <View className="flex-row items-center">
+      <View pointerEvents="none" className="flex-row items-center">
         {value ? (
           <Text className="mr-2 text-base text-secondary">{value}</Text>
         ) : null}

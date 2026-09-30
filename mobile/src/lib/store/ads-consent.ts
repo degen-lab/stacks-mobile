@@ -46,7 +46,8 @@ const DEFAULT_SNAPSHOT: AdsConsentSnapshot = {
 
 function getAdsConsentInfoOptions(): AdsConsentInfoOptions {
   return {
-    tagForUnderAgeOfConsent: false,
+    // Keep UMP in under-age mode so consent does not enable personalized ads.
+    tagForUnderAgeOfConsent: true,
     testDeviceIdentifiers: __DEV__ ? getTestDeviceIds() : [],
     debugGeography: AdsConsentDebugGeography.DISABLED,
   };
@@ -63,14 +64,17 @@ async function getAdsPersonalization(
   consentInfo: AdsConsentInfo,
 ): Promise<boolean | null> {
   try {
-    const userChoices: AdsConsentUserChoices = await AdsConsent.getUserChoices();
+    const userChoices: AdsConsentUserChoices =
+      await AdsConsent.getUserChoices();
     return userChoices.selectPersonalisedAds === true;
   } catch {
-    return consentInfo.status === AdsConsentStatus.NOT_REQUIRED ? true : null;
+    return consentInfo.status === AdsConsentStatus.NOT_REQUIRED ? false : null;
   }
 }
 
-async function createSnapshot(consentInfo: AdsConsentInfo): Promise<AdsConsentSnapshot> {
+async function createSnapshot(
+  consentInfo: AdsConsentInfo,
+): Promise<AdsConsentSnapshot> {
   return {
     status: consentInfo.status,
     canRequestAds: consentInfo.canRequestAds,

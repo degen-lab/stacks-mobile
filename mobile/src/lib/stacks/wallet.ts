@@ -23,12 +23,12 @@ const initialNetwork = (): NetworkType => {
   return NetworkType.Testnet;
 };
 
-export const walletKit = new MobileClient(
-  Env.GOOGLE_WEB_CLIENT_ID,
-  Env.GOOGLE_IOS_CLIENT_ID,
-  initialNetwork(),
-  {
+export const walletKit = new MobileClient({
+  google: {
+    webClientId: Env.GOOGLE_WEB_CLIENT_ID,
+    iosClientId: Env.GOOGLE_IOS_CLIENT_ID,
     scopes: GOOGLE_SCOPES,
-    // devnetUrl: DEVNET_API_URL,
   },
-);
+  network: initialNetwork(),
+  // devnetUrl: DEVNET_API_URL,
+});

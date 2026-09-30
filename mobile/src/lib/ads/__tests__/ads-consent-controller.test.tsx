@@ -13,9 +13,15 @@ const mockSyncAdsPersonalizationMirror = jest.fn();
 let mockAdsConsentState: any;
 let mockAuthState: any;
 let mockConsentState: any;
+let mockAppTrackingTransparencyState: any;
 
 jest.mock("@/lib/ads/initialize-ads", () => ({
   initializeAds: (...args: unknown[]) => mockInitializeAds(...args),
+}));
+
+jest.mock("@/lib/ads/app-tracking-transparency-controller", () => ({
+  useAppTrackingTransparencyStore: (selector: (state: any) => unknown) =>
+    selector(mockAppTrackingTransparencyState),
 }));
 
 jest.mock("@/lib/store/ads-consent", () => ({
@@ -57,6 +63,9 @@ describe("AdsConsentController", () => {
     mockConsentState = {
       pendingSync: null,
     };
+    mockAppTrackingTransparencyState = {
+      hasResolved: true,
+    };
   });
 
   it("starts the UMP sync flow on mount", async () => {
@@ -95,6 +104,24 @@ describe("AdsConsentController", () => {
       expect(mockInitializeAds).toHaveBeenCalledTimes(1);
       expect(mockSetMobileAdsInitialized).toHaveBeenCalledWith(true);
       expect(mockSyncAdsPersonalizationMirror).toHaveBeenCalledWith(true);
+    });
+  });
+
+  it("waits for ATT resolution before initializing mobile ads", async () => {
+    mockAdsConsentState = {
+      ...mockAdsConsentState,
+      hasResolved: true,
+      canRequestAds: true,
+    };
+    mockAppTrackingTransparencyState = {
+      hasResolved: false,
+    };
+
+    render(<AdsConsentController />);
+
+    await waitFor(() => {
+      expect(mockInitializeAds).not.toHaveBeenCalled();
+      expect(mockSetMobileAdsInitialized).not.toHaveBeenCalled();
     });
   });
 });

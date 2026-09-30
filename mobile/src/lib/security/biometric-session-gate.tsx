@@ -89,8 +89,7 @@ export function BiometricSessionGate() {
       }
 
       const resumedToActive =
-        nextState === "active" &&
-        (previousState === "background" || previousState === "inactive");
+        nextState === "active" && previousState === "background";
 
       if (!resumedToActive) {
         return;

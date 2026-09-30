@@ -49,7 +49,10 @@ export function SelectionCard({
   const content = (
     <>
       <View className="flex-row gap-3">
-        <View className="flex-1 flex-row items-center gap-3">
+        <View
+          pointerEvents={onPress ? "none" : "auto"}
+          className="flex-1 flex-row items-center gap-3"
+        >
           {/* Icon */}
           {iconCircular ? (
             <View className="w-10 h-10 rounded-full bg-surface-secondary items-center justify-center">

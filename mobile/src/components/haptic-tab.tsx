@@ -30,7 +30,7 @@ export function HapticTab({
           onPressIn?.(e);
         }}
       >
-        {children}
+        <View pointerEvents="none">{children}</View>
       </Pressable>
     </View>
   );

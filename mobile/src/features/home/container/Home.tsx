@@ -7,11 +7,13 @@ import { useSwapSheet } from "@/features/swaps";
 import { useTransferSheet } from "@/features/transfer";
 import { useTransak } from "@/features/transak/context/transak-context";
 import { usePortfolioBalance } from "@/hooks/use-portfolio-balance";
+import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 
 import HomeScreenLayout from "./Home.layout";
 
 export default function HomeScreen() {
   const { usdBalance, hasBalance } = usePortfolioBalance();
+  useWalletAddresses();
   const emptyWalletModal = useModal();
   const { openTransak } = useTransak();
   const { openSwap } = useSwapSheet();
@@ -49,7 +51,6 @@ export default function HomeScreen() {
   const actions = useMemo(
     () => ({
       onBuy: () => openTransak("STX", "buy"),
-      onSell: () => openTransak("STX", "sell"),
       onTransfer: () => openTransfer(),
       onSwap: () => openSwap(),
       onBridge: () => setIsMintSbtcSheetOpen(true),

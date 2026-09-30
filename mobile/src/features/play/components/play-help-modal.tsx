@@ -13,7 +13,7 @@ const FAQ_ITEMS: readonly FaqHelpItem[] = [
   {
     id: "what-do-i-win",
     title: "What do I get?",
-    body: "Points every run. Weekly contest high scores and Weekly Raffle entries may receive on-chain rewards.",
+    body: "You earn in-game points, not cash rewards. Weekly leaderboard winners earn bonus points: Gold 1,000, Silver 750, Bronze 500. Weekly Raffle submissions count as entries, and raffle winners earn 250 points.",
   },
   {
     id: "how-revives-work",

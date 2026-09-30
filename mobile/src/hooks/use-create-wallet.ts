@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import type { AuthProvider } from "@degenlab/stacks-wallet-kit-core";
 
 import { useAuth } from "@/lib/store/auth";
 import { walletKit } from "@/lib/stacks/wallet";
@@ -9,9 +10,14 @@ type GoogleWalletFlowOptions = {
   password: string;
 };
 
-function useGoogleAuthCompletion() {
-  const { completeGoogleAuth } = useAuth();
-  return completeGoogleAuth;
+function useAuthProvider(): AuthProvider {
+  const { authMethod } = useAuth();
+  return authMethod === "apple" ? "apple" : "google";
+}
+
+function useAuthCompletion() {
+  const { completeAuth } = useAuth();
+  return completeAuth;
 }
 
 function useWalletFlowHaptics() {
@@ -19,38 +25,52 @@ function useWalletFlowHaptics() {
   return trigger;
 }
 
+function logBackupFailure(error: unknown) {
+  if (
+    error &&
+    typeof error === "object" &&
+    "failures" in error &&
+    Array.isArray(error.failures)
+  ) {
+    console.error("Wallet backup provider failures", error.failures);
+  }
+}
+
 export function useCreateWallet() {
-  const completeGoogleAuth = useGoogleAuthCompletion();
+  const authProvider = useAuthProvider();
+  const completeAuth = useAuthCompletion();
   const triggerHaptics = useWalletFlowHaptics();
 
   const createWallet = useCallback(
     async ({ password }: GoogleWalletFlowOptions): Promise<void> => {
       try {
         await walletKit.createWallet();
-        await walletKit.backupWallet(password);
-        completeGoogleAuth(true);
+        await walletKit.backupWallet(password, [authProvider]);
+        completeAuth(true);
         triggerHaptics("success");
       } catch (error) {
         triggerHaptics("error");
         console.error("Failed to create wallet + backup", error);
+        logBackupFailure(error);
         throw error;
       }
     },
-    [completeGoogleAuth, triggerHaptics],
+    [authProvider, completeAuth, triggerHaptics],
   );
 
   return { createWallet };
 }
 
 export function useRestoreWallet() {
-  const completeGoogleAuth = useGoogleAuthCompletion();
+  const authProvider = useAuthProvider();
+  const completeAuth = useAuthCompletion();
   const triggerHaptics = useWalletFlowHaptics();
 
   const restoreWallet = useCallback(
     async ({ password }: GoogleWalletFlowOptions): Promise<void> => {
       try {
-        await walletKit.retrieveWallet(password);
-        completeGoogleAuth(true);
+        await walletKit.retrieveWalletFromProvider(password, authProvider);
+        completeAuth(true);
         triggerHaptics("success");
       } catch (error) {
         triggerHaptics("error");
@@ -58,19 +78,21 @@ export function useRestoreWallet() {
         throw error;
       }
     },
-    [completeGoogleAuth, triggerHaptics],
+    [authProvider, completeAuth, triggerHaptics],
   );
 
   return { restoreWallet };
 }
 
 export function useDeleteGoogleBackup() {
+  const authProvider = useAuthProvider();
   const triggerHaptics = useWalletFlowHaptics();
 
   const deleteBackup = useCallback(
     async (password: string) => {
+      void password;
       try {
-        await walletKit.deleteBackup(password);
+        await walletKit.deleteBackup(authProvider);
         triggerHaptics("success");
       } catch (error) {
         triggerHaptics("error");
@@ -78,19 +100,19 @@ export function useDeleteGoogleBackup() {
         throw error;
       }
     },
-    [triggerHaptics],
+    [authProvider, triggerHaptics],
   );
 
   const deleteBackupWithoutPassword = useCallback(async () => {
     try {
-      await walletKit.deleteBackupWithoutPassword();
+      await walletKit.deleteBackup(authProvider);
       triggerHaptics("success");
     } catch (error) {
       triggerHaptics("error");
       console.error("Failed to delete backup without password", error);
       throw error;
     }
-  }, [triggerHaptics]);
+  }, [authProvider, triggerHaptics]);
 
   return { deleteBackup, deleteBackupWithoutPassword };
 }

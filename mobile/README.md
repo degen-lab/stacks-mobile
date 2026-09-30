@@ -32,13 +32,11 @@ GOOGLE_IOS_URL_SCHEME=
 # Backend (required)
 API_URL=https://your-api-url.example
 
-# AdMob (required except IOS_ADMOB_APP_ID)
+# AdMob
 ANDROID_ADMOB_APP_ID=
 IOS_ADMOB_APP_ID=
 ANDROID_REWARDS_AD_MOBIN_KEY=
-
-# Transak (required)
-TRANSAK_STAGING_API_KEY=
+IOS_REWARDS_AD_MOBIN_KEY=
 
 # Build-time (required)
 EAS_PROJECT_ID=
