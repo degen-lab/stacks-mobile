@@ -17,12 +17,6 @@ export default function EarnLayout() {
         }}
       />
       <Stack.Screen
-        name="dual-stacking"
-        options={{
-          title: "Dual Stacking",
-        }}
-      />
-      <Stack.Screen
         name="assets/[assetId]"
         options={{
           title: "Asset",

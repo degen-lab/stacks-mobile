@@ -36,11 +36,6 @@ export type AnalyticsEvents = {
   stacking_revoked: void;
   stacking_disallowed: void;
 
-  // Dual stacking
-  dual_stacking_enrolled: void;
-  dual_stacking_opted_out: void;
-  dual_stacking_change_reward_address: void;
-
   // Swaps
   swap_initiated: void;
   swap_completed: { method: TransactionMethod };

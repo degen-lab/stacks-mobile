@@ -13,12 +13,9 @@ export type BuildEarnNextStepCardsArgs = {
   btcBalance: number | null;
   bridgeDepositMinimumBtc: number;
   sbtcBalance: number;
-  meetsMinimumSbtcForEnrollment: boolean;
   totalStxBalance: number;
   availableStxBalance: number;
   lockedStxBalance: number;
-  isEnrolledCurrentCycle: boolean;
-  isEnrolledNextCycle: boolean;
   nextRewardPhaseLabel: string | null;
   stackingApr: number | null;
 };
@@ -61,41 +58,11 @@ function buildAcquireCandidate(
   };
 }
 
-function buildDualStackingCandidate({
-  isEnrolledCurrentCycle,
-  isStacking,
-}: {
-  isEnrolledCurrentCycle: boolean;
-  isStacking: boolean;
-}): EarnNextStepCandidate {
-  if (isEnrolledCurrentCycle) {
-    return {
-      id: "dual-stacking",
-      title: "Dual Stacking",
-      description: "Renew next cycle to keep sBTC rewards on.",
-      kind: "actionable",
-      priority: 1,
-      action: { type: "dual-stacking" },
-    };
-  }
-
-  return {
-    id: "dual-stacking",
-    title: "Dual Stacking",
-    description: isStacking
-      ? "Enroll to start boosted stacking rewards."
-      : "Enroll to receive rewards for holding sBTC.",
-    kind: "actionable",
-    priority: 2,
-    action: { type: "dual-stacking" },
-  };
-}
-
 function buildBridgeCandidate(): EarnNextStepCandidate {
   return {
     id: "bridge-sbtc",
     title: "Bridge BTC to sBTC",
-    description: "Bridge BTC to sBTC so you can enroll in Dual Stacking.",
+    description: "Bridge BTC to sBTC to use your Bitcoin on Stacks.",
     kind: "actionable",
     priority: 4,
     action: { type: "bridge" },
@@ -123,21 +90,6 @@ function buildStackingPreviewCandidate(): EarnNextStepCandidate {
     kind: "preview",
     priority: 2,
     action: { type: "stacking" },
-  };
-}
-
-function buildDualStackingPreviewCandidate(
-  hasSbtcBalance: boolean,
-): EarnNextStepCandidate {
-  return {
-    id: "dual-stacking",
-    title: "Enroll in Dual Stacking",
-    description: hasSbtcBalance
-      ? "Add more sBTC to enroll in Dual Stacking."
-      : "Use sBTC to enroll and start earning rewards.",
-    kind: "preview",
-    priority: 1,
-    action: { type: "dual-stacking" },
   };
 }
 
@@ -170,28 +122,21 @@ export function buildSuccessCandidate(
 export function buildActionableCandidates({
   btcBalance,
   bridgeDepositMinimumBtc,
-  meetsMinimumSbtcForEnrollment,
+  sbtcBalance,
   totalStxBalance,
   availableStxBalance,
   lockedStxBalance,
-  isEnrolledCurrentCycle,
-  isEnrolledNextCycle,
   stackingApr,
 }: BuildEarnNextStepCardsArgs): EarnNextStepCandidate[] {
   const isStacking = lockedStxBalance > 0;
+  const hasSbtc = sbtcBalance > 0;
   const hasEnoughBtc = hasEnoughBtcForBridge(
     btcBalance,
     bridgeDepositMinimumBtc,
   );
   const candidates: EarnNextStepCandidate[] = [];
 
-  if (meetsMinimumSbtcForEnrollment && !isEnrolledNextCycle) {
-    candidates.push(
-      buildDualStackingCandidate({ isEnrolledCurrentCycle, isStacking }),
-    );
-  }
-
-  if (hasEnoughBtc && !meetsMinimumSbtcForEnrollment) {
+  if (hasEnoughBtc && !hasSbtc) {
     candidates.push(buildBridgeCandidate());
   }
 
@@ -199,11 +144,7 @@ export function buildActionableCandidates({
     candidates.push(buildStackingCandidate(stackingApr));
   }
 
-  if (
-    candidates.length === 0 &&
-    !hasEnoughBtc &&
-    !meetsMinimumSbtcForEnrollment
-  ) {
+  if (candidates.length === 0 && !hasEnoughBtc && !hasSbtc) {
     if (isStacking) {
       candidates.push(
         buildAcquireCandidate("BTC", { kind: "actionable", priority: 5 }),
@@ -223,7 +164,6 @@ export function buildPreviewCandidates({
   btcBalance,
   bridgeDepositMinimumBtc,
   sbtcBalance,
-  meetsMinimumSbtcForEnrollment,
   totalStxBalance,
   availableStxBalance,
   lockedStxBalance,
@@ -232,27 +172,23 @@ export function buildPreviewCandidates({
   | "btcBalance"
   | "bridgeDepositMinimumBtc"
   | "sbtcBalance"
-  | "meetsMinimumSbtcForEnrollment"
   | "totalStxBalance"
   | "availableStxBalance"
   | "lockedStxBalance"
 >) {
   const isStacking = lockedStxBalance > 0;
+  const hasSbtc = sbtcBalance > 0;
   const hasEnoughBtc = hasEnoughBtcForBridge(
     btcBalance,
     bridgeDepositMinimumBtc,
   );
   const candidates: EarnNextStepCandidate[] = [];
 
-  if (isStacking && !meetsMinimumSbtcForEnrollment) {
-    candidates.push(buildDualStackingPreviewCandidate(sbtcBalance > 0));
-  }
-
   if (
     !isStacking &&
     availableStxBalance >= MIN_STACKING_STX &&
     !hasEnoughBtc &&
-    !meetsMinimumSbtcForEnrollment
+    !hasSbtc
   ) {
     candidates.push(
       buildAcquireCandidate("BTC", { kind: "preview", priority: 1 }),

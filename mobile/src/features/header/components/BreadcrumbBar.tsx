@@ -8,15 +8,14 @@ import { truncateAddress } from "@/lib/stacks/addresses";
 import { EarnHelpModal } from "@/features/earn/components/earn-help-modal";
 import { ConnectedWallet } from "@/features/header/components/connected-wallet";
 import { BridgeHelpModal } from "@/features/sbtc-bridge/components/bridge-help-modal";
-import { DualStackingHelpModal } from "@/features/dual-stacking/components/layout/modals/dual-stacking-help-modal";
 import { StackingGuideModal } from "@/features/stacking/components/stacking-guide-modal";
 
 type Crumb = { label: string; path?: string };
-type HeaderHelpKind = "earn" | "bridge" | "stacking" | "dual-stacking";
+type HeaderHelpKind = "earn" | "bridge" | "stacking";
 type BreadcrumbConfig = {
   crumbs: Crumb[];
   helpKind?: HeaderHelpKind;
-  walletVariant?: "default" | "dual-stacking" | "stacking";
+  walletVariant?: "default" | "stacking";
 };
 
 function extractSegmentId(pathname: string, segment: string): string {
@@ -105,13 +104,6 @@ function getBreadcrumbConfig(
       walletVariant: "stacking",
     };
   }
-  if (pathname.includes("/Earn/dual-stacking")) {
-    return {
-      crumbs: [{ label: "Earn", path: "/Earn" }, { label: "Dual Stacking" }],
-      helpKind: "dual-stacking",
-      walletVariant: "dual-stacking",
-    };
-  }
   if (pathname.includes("/Earn/assets/")) {
     return {
       crumbs: [
@@ -159,8 +151,6 @@ export function BreadcrumbBar() {
   const { ref: bridgeHelpModalRef, present: presentBridgeHelp } = useModal();
   const { ref: stackingHelpModalRef, present: presentStackingHelp } =
     useModal();
-  const { ref: dualStackingHelpModalRef, present: presentDualStackingHelp } =
-    useModal();
 
   const config = getBreadcrumbConfig(pathname, assetLabel);
   if (!config) return null;
@@ -176,10 +166,6 @@ export function BreadcrumbBar() {
     }
     if (config.helpKind === "stacking") {
       presentStackingHelp();
-      return;
-    }
-    if (config.helpKind === "dual-stacking") {
-      presentDualStackingHelp();
     }
   };
 
@@ -233,9 +219,6 @@ export function BreadcrumbBar() {
       />
       <BridgeHelpModal
         modalRef={bridgeHelpModalRef as React.RefObject<BottomSheetModal>}
-      />
-      <DualStackingHelpModal
-        modalRef={dualStackingHelpModalRef as React.RefObject<BottomSheetModal>}
       />
       <StackingGuideModal
         modalRef={stackingHelpModalRef as React.RefObject<BottomSheetModal>}

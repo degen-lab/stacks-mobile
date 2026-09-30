@@ -21,7 +21,6 @@ function selectCandidates(args: BuildEarnNextStepCardsArgs) {
       btcBalance: args.btcBalance,
       bridgeDepositMinimumBtc: args.bridgeDepositMinimumBtc,
       sbtcBalance: args.sbtcBalance,
-      meetsMinimumSbtcForEnrollment: args.meetsMinimumSbtcForEnrollment,
       totalStxBalance: args.totalStxBalance,
       availableStxBalance: args.availableStxBalance,
       lockedStxBalance: args.lockedStxBalance,

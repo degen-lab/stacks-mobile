@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 
-import { useUserTotalSbtcInDefi } from "@/api/dual-stacking/contract/hooks";
 import { useSwapTokenList, type SwapToken } from "@/api/defi";
 import { getUniqueActiveSwapTokens } from "@/api/defi/token-utils";
 import { useBridgeSbtcBalance } from "@/api/sbtc-bridge";
@@ -26,7 +25,6 @@ import {
 } from "@/lib/assets/tokens";
 import { MICRO_STX, fromSatsToBtc } from "@/lib/format/currency";
 import { principalArgFromAddress } from "@/lib/stacks/addresses";
-import { divisorNetwork } from "@/lib/stacks/utils";
 
 import { useBtcPrice } from "@/api/market/use-btc-price";
 import { useStacksPrice } from "@/api/market/use-stacks-price";
@@ -71,7 +69,6 @@ type UsePortfolioBalanceResult = {
   stxAvailableBalance: number;
   btcBalance: number;
   sbtcBalance: number;
-  sbtcDefiBalance: number;
   stxPriceUsd: number | null;
   btcPriceUsd: number | null;
   stxChange24hPercent: number | null;
@@ -294,15 +291,6 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
     () => fromSatsToBtc(sbtcBalanceSats ?? 0n),
     [sbtcBalanceSats],
   );
-  const {
-    data: sbtcDefiBalanceSats,
-    isLoading: loadingSbtcDefi,
-    isFetching: fetchingSbtcDefi,
-  } = useUserTotalSbtcInDefi(principal);
-  const sbtcDefiBalance = useMemo(
-    () => fromSatsToBtc(sbtcDefiBalanceSats ?? 0) / divisorNetwork,
-    [sbtcDefiBalanceSats],
-  );
   const { data: stxMarketData, isLoading: loadingStxPrice } = useStacksPrice();
   const { data: btcMarketData, isLoading: loadingBtcPrice } = useBtcPrice();
   const stxPriceUsd = stxMarketData?.usd ?? null;
@@ -376,7 +364,6 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
     stxBalanceData.stxBalance > 0 ||
     btcBalance > 0 ||
     sbtcBalance > 0 ||
-    sbtcDefiBalance > 0 ||
     rawFungibleTokenBalances.length > 0;
   const assets = useMemo(() => {
     const nextAssets: PortfolioAssetSnapshot[] = [];
@@ -452,13 +439,7 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
           unitPriceUsd: btcPriceUsd,
           change24hPercent: btcChange24hPercent,
         },
-        String((sbtcBalanceSats ?? 0n) + BigInt(sbtcDefiBalanceSats ?? 0)),
-        sbtcDefiBalance > 0
-          ? {
-              label: "In DeFi",
-              value: `${formatPortfolioTokenAmount(sbtcDefiBalance, 8)} sBTC`,
-            }
-          : undefined,
+        String(sbtcBalanceSats ?? 0n),
       ),
     );
 
@@ -492,8 +473,6 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
     ftMetadataQuery.data,
     rawFungibleTokenBalances,
     sbtcBalanceSats,
-    sbtcDefiBalance,
-    sbtcDefiBalanceSats,
     sbtcToken,
     stxBalanceData.stxLockedBalance,
     stxChange24hPercent,
@@ -517,15 +496,11 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
     isWalletLoading ||
     balancesQuery.isLoading ||
     loadingBtc ||
-    loadingSbtc ||
-    loadingSbtcDefi;
+    loadingSbtc;
   const isNextStepsBalanceLoading =
-    isWalletLoading ||
-    balancesQuery.isLoading ||
-    loadingSbtc ||
-    loadingSbtcDefi;
+    isWalletLoading || balancesQuery.isLoading || loadingSbtc;
   const isBalanceRefreshing =
-    balancesQuery.isFetching || fetchingBtc || fetchingSbtc || fetchingSbtcDefi;
+    balancesQuery.isFetching || fetchingBtc || fetchingSbtc;
 
   const isPriceLoading = loadingStxPrice || loadingBtcPrice;
   const isAssetLoading =
@@ -543,7 +518,6 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
     btcBalance,
     btcBalanceOrNull,
     sbtcBalance,
-    sbtcDefiBalance,
     stxPriceUsd,
     btcPriceUsd,
     stxChange24hPercent,

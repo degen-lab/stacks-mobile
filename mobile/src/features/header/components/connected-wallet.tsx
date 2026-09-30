@@ -1,7 +1,6 @@
 import {
   ArrowUpRight,
   ChevronDown,
-  Edit3,
   ExternalLink,
   UserRound,
   Wallet,
@@ -12,7 +11,7 @@ import {
   openBrowserAsync,
   WebBrowserPresentationStyle,
 } from "expo-web-browser";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useColorScheme } from "nativewind";
 import { Pressable } from "react-native";
 
@@ -21,17 +20,12 @@ import { useAuth } from "@/lib/store/auth";
 import { truncateAddress } from "@/lib/stacks/addresses";
 import { getExplorerUrl } from "@/lib/stacks/network";
 import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
-import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
-import { useWalletActions } from "@/features/dual-stacking/hooks/use-wallet-actions";
-import { ChangeRewardAddressSheet } from "@/features/dual-stacking/components/layout/modals/change-reward-address-sheet";
-import { TransactionStatusSheet } from "@/features/dual-stacking/components/layout/modals/transaction-status-sheet";
-import { UnenrollSheet } from "@/features/dual-stacking/components/layout/modals/unenroll-sheet";
 import { LeavePoolSheet } from "@/features/stacking/components/leave-pool-sheet";
 import { useFastPoolActions } from "@/features/stacking/hooks/use-fast-pool-actions";
 
 import { WalletActionSheet, type WalletAction } from "./wallet-action-sheet";
 
-export type ConnectedWalletVariant = "default" | "dual-stacking" | "stacking";
+export type ConnectedWalletVariant = "default" | "stacking";
 
 type ConnectedWalletProps = {
   variant?: ConnectedWalletVariant;
@@ -189,232 +183,6 @@ function DefaultConnectedWallet() {
   );
 }
 
-function DualStackingConnectedWallet() {
-  const { stxAddress, btcAddress, isConnected, isLoading, buttonLabel } =
-    useWalletButtonState();
-  const { enrolledNextCycle } = useEnrollmentStatus();
-  const {
-    openInExplorer,
-    optOut,
-    optOutSponsored,
-    changeRewardAddress,
-    changeRewardAddressSponsored,
-    isOptOutSubmitting,
-    optOutStatus,
-    optOutFunding,
-    isChangeAddressSubmitting,
-    changeAddressStatus,
-    changeAddressFunding,
-    isSubmittingSponsored,
-  } = useWalletActions();
-
-  const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
-  const [isChangeAddressOpen, setIsChangeAddressOpen] = useState(false);
-  const [isUnenrollOpen, setIsUnenrollOpen] = useState(false);
-  const [isUnenrollModalOpen, setIsUnenrollModalOpen] = useState(false);
-  const [isChangeAddressModalOpen, setIsChangeAddressModalOpen] =
-    useState(false);
-
-  useEffect(() => {
-    if (optOutStatus === "loading") {
-      setIsUnenrollModalOpen(true);
-    }
-    if (optOutStatus === "error") {
-      setIsUnenrollModalOpen(false);
-    }
-  }, [optOutStatus]);
-
-  useEffect(() => {
-    if (
-      !isUnenrollModalOpen ||
-      isOptOutSubmitting ||
-      optOutStatus !== "success"
-    ) {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      setIsUnenrollModalOpen(false);
-    }, 2200);
-
-    return () => clearTimeout(timeout);
-  }, [isUnenrollModalOpen, isOptOutSubmitting, optOutStatus]);
-
-  useEffect(() => {
-    if (changeAddressStatus === "loading") {
-      setIsChangeAddressModalOpen(true);
-    }
-    if (changeAddressStatus === "error") {
-      setIsChangeAddressModalOpen(false);
-    }
-  }, [changeAddressStatus]);
-
-  useEffect(() => {
-    if (
-      !isChangeAddressModalOpen ||
-      isChangeAddressSubmitting ||
-      changeAddressStatus !== "success"
-    ) {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      setIsChangeAddressModalOpen(false);
-    }, 2200);
-
-    return () => clearTimeout(timeout);
-  }, [
-    isChangeAddressModalOpen,
-    isChangeAddressSubmitting,
-    changeAddressStatus,
-  ]);
-
-  const handlePrimaryPress = useCallback(() => {
-    if (!isConnected) {
-      router.push("/login");
-      return;
-    }
-
-    setIsActionSheetOpen(true);
-  }, [isConnected]);
-
-  const actions = useMemo(() => {
-    const items: WalletAction[] = [
-      {
-        label: "Open in Explorer",
-        icon: ArrowUpRight,
-        onPress: () => {
-          setIsActionSheetOpen(false);
-          void openInExplorer();
-        },
-      },
-      {
-        label: "Switch account",
-        icon: UserRound,
-        onPress: () => {
-          setIsActionSheetOpen(false);
-          router.push("/settings/accounts");
-        },
-      },
-    ];
-
-    if (enrolledNextCycle) {
-      items.push({
-        label: "Change Reward Address",
-        icon: Edit3,
-        onPress: () => {
-          setIsActionSheetOpen(false);
-          setIsChangeAddressOpen(true);
-        },
-      });
-      items.push({
-        label: "Unenroll this account",
-        icon: XCircle,
-        destructive: true,
-        onPress: () => {
-          setIsActionSheetOpen(false);
-          setIsUnenrollOpen(true);
-        },
-      });
-    }
-
-    return items;
-  }, [enrolledNextCycle, openInExplorer]);
-
-  return (
-    <>
-      <WalletTrigger
-        variant="dual-stacking"
-        buttonLabel={buttonLabel}
-        isConnected={isConnected}
-        isLoading={isLoading}
-        onPress={handlePrimaryPress}
-      />
-
-      <WalletActionSheet
-        open={isActionSheetOpen}
-        onOpenChange={setIsActionSheetOpen}
-        address={stxAddress}
-        btcAddress={btcAddress}
-        actions={actions}
-      />
-
-      <ChangeRewardAddressSheet
-        open={isChangeAddressOpen}
-        onOpenChange={setIsChangeAddressOpen}
-        onChangeRewardAddress={changeRewardAddress}
-        onSponsoredChangeRewardAddress={changeRewardAddressSponsored}
-        isSponsoredSubmitting={isSubmittingSponsored}
-      />
-
-      <UnenrollSheet
-        open={isUnenrollOpen}
-        onOpenChange={setIsUnenrollOpen}
-        onGoBack={() => setIsActionSheetOpen(true)}
-        onConfirm={({ reasons, feeMicroStx }) =>
-          optOut({ reasons, feeMicroStx })
-        }
-        onSponsoredConfirm={({ reasons, feeMicroStx }) =>
-          optOutSponsored({ reasons, feeMicroStx })
-        }
-        isSponsoredSubmitting={isSubmittingSponsored}
-      />
-
-      <TransactionStatusSheet
-        open={isUnenrollModalOpen}
-        onOpenChange={setIsUnenrollModalOpen}
-        isLoading={isOptOutSubmitting}
-        loading={{
-          title:
-            optOutFunding === "sponsored"
-              ? "Queueing sponsored opt-out..."
-              : "Processing your opt-out...",
-          message:
-            optOutFunding === "sponsored"
-              ? "We are preparing your sponsored transaction and will broadcast it shortly."
-              : "Please wait while we confirm your transaction on the blockchain.",
-        }}
-        success={{
-          title:
-            optOutFunding === "sponsored"
-              ? "Opt-out queued"
-              : "You are now unenrolled",
-          message:
-            optOutFunding === "sponsored"
-              ? "Your sponsored opt-out will broadcast shortly."
-              : "You'll stop earning Dual Stacking rewards from next cycle.",
-        }}
-      />
-
-      <TransactionStatusSheet
-        open={isChangeAddressModalOpen}
-        onOpenChange={setIsChangeAddressModalOpen}
-        isLoading={isChangeAddressSubmitting}
-        loading={{
-          title:
-            changeAddressFunding === "sponsored"
-              ? "Queueing sponsored update..."
-              : "Updating reward address...",
-          message:
-            changeAddressFunding === "sponsored"
-              ? "We are preparing your sponsored transaction and will broadcast it shortly."
-              : "Please wait while we confirm your transaction on the blockchain.",
-        }}
-        success={{
-          title:
-            changeAddressFunding === "sponsored"
-              ? "Address update queued"
-              : "Reward address updated",
-          message:
-            changeAddressFunding === "sponsored"
-              ? "Your sponsored address update will broadcast shortly."
-              : "Your rewards will now be sent to the new address.",
-        }}
-      />
-    </>
-  );
-}
-
 function StackingConnectedWallet() {
   const { stxAddress, btcAddress, isConnected, isLoading, buttonLabel } =
     useWalletButtonState();
@@ -560,7 +328,6 @@ function StackingConnectedWallet() {
 }
 
 export function ConnectedWallet({ variant = "default" }: ConnectedWalletProps) {
-  if (variant === "dual-stacking") return <DualStackingConnectedWallet />;
   if (variant === "stacking") return <StackingConnectedWallet />;
   return <DefaultConnectedWallet />;
 }

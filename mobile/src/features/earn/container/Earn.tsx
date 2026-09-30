@@ -2,17 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 
 import { useBridgeLimits } from "@/api/sbtc-bridge/hooks";
-import { useMeetsMinimumEnrollmentAmount } from "@/api/dual-stacking/contract";
-import { useDualStackingStats } from "@/api/dual-stacking/use-dual-stacking-stats";
 import { useCurrentTournamentSubmissions } from "@/api/game/tournament";
-import { useEnrollmentStatus } from "@/features/dual-stacking/hooks/use-enrollment-status";
-import { useDualStackingDataWithLatestCycle } from "@/features/dual-stacking/hooks/use-dual-stacking-data";
 import { useBridgeConfig } from "@/features/sbtc-bridge/hooks/use-bridge-data";
 import { useTransferSheet } from "@/features/transfer";
 import { useTransak } from "@/features/transak/context/transak-context";
 import { usePortfolioBalance } from "@/hooks/use-portfolio-balance";
 import { fromSatsToBtc } from "@/lib/format/currency";
-import { useWalletAddresses } from "@/hooks/use-wallet-addresses";
 import { useBalanceVisibility } from "@/lib/store/balance-visibility";
 import {
   PENDING_GAME_SUBMISSION_TTL_MS,
@@ -42,7 +37,6 @@ import EarnLayout from "./Earn.layout";
 const EARN_NEXT_STEP_ROUTES = {
   bridge: "/Earn/sbtc-bridge",
   stacking: "/Earn/stacking",
-  "dual-stacking": "/Earn/dual-stacking",
 } as const;
 
 export default function EarnScreen() {
@@ -64,21 +58,6 @@ export default function EarnScreen() {
   const bridgeLimits = useBridgeLimits(bridgeConfig);
   const portfolio = usePortfolioBalance();
   const { data: poxInfo, isLoading: isLoadingPox } = usePoxData();
-  const {
-    enrolledCurrentCycle,
-    enrolledNextCycle,
-    isLoading: enrollmentLoading,
-  } = useEnrollmentStatus();
-  const { stxAddress } = useWalletAddresses();
-  const {
-    data: meetsMinimumSbtcForEnrollment,
-    isLoading: isMeetsMinimumSbtcForEnrollmentLoading,
-  } = useMeetsMinimumEnrollmentAmount(stxAddress);
-  const { dualStackingDataLoading } = useDualStackingDataWithLatestCycle();
-  const dualStackingStatsQuery = useDualStackingStats({
-    variables: { address: stxAddress ?? "" },
-    enabled: !!stxAddress,
-  });
   const { data: userStackingData = [], isLoading: isUserStackingDataLoading } =
     useUserStackingData({
       variables: { userId: userProfile?.id ?? 0 },
@@ -91,9 +70,6 @@ export default function EarnScreen() {
     refetchInterval: pendingSubmission ? 10_000 : false,
     refetchOnWindowFocus: true,
   });
-  const isDualStackingStatsLoading = Boolean(
-    stxAddress && dualStackingStatsQuery.isLoading,
-  );
   const { timeTillRewardPhase } = useTimeTillRewards(poxInfo);
   const nextRewardPhaseLabel =
     timeTillRewardPhase && timeTillRewardPhase !== "--"
@@ -141,22 +117,14 @@ export default function EarnScreen() {
   const rewardsSummary = useMemo(
     () =>
       buildEarnRewardsSummary({
-        stats: dualStackingStatsQuery.data,
         stackingRows: userStackingData,
-        currentBtcPriceUsd: portfolio.btcPriceUsd ?? null,
         currentStxPriceUsd: portfolio.stxPriceUsd ?? null,
         currentStackingApr: DEFAULT_STACKING_APY * 100,
-        isEnrolledCurrentCycle: enrolledCurrentCycle,
-        isEnrolledNextCycle: enrolledNextCycle,
         lockedStxBalance: portfolio.stxLockedBalance,
         currentTournamentGameSubmissionCount,
       }),
     [
-      dualStackingStatsQuery.data,
-      enrolledCurrentCycle,
       currentTournamentGameSubmissionCount,
-      enrolledNextCycle,
-      portfolio.btcPriceUsd,
       portfolio.stxLockedBalance,
       portfolio.stxPriceUsd,
       userStackingData,
@@ -168,24 +136,17 @@ export default function EarnScreen() {
       buildEarnNextStepCards({
         btcBalance: portfolio.btcBalanceOrNull,
         bridgeDepositMinimumBtc,
-        sbtcBalance: portfolio.sbtcBalance + portfolio.sbtcDefiBalance,
-        meetsMinimumSbtcForEnrollment: Boolean(meetsMinimumSbtcForEnrollment),
+        sbtcBalance: portfolio.sbtcBalance,
         totalStxBalance: portfolio.stxBalance,
         availableStxBalance: portfolio.stxAvailableBalance,
         lockedStxBalance: portfolio.stxLockedBalance,
-        isEnrolledCurrentCycle: enrolledCurrentCycle,
-        isEnrolledNextCycle: enrolledNextCycle,
         nextRewardPhaseLabel,
         stackingApr: rewardsSummary.currentStackingApr,
       }),
     [
       bridgeDepositMinimumBtc,
-      enrolledCurrentCycle,
-      enrolledNextCycle,
-      meetsMinimumSbtcForEnrollment,
       portfolio.btcBalanceOrNull,
       portfolio.sbtcBalance,
-      portfolio.sbtcDefiBalance,
       portfolio.stxAvailableBalance,
       portfolio.stxBalance,
       portfolio.stxLockedBalance,
@@ -197,11 +158,7 @@ export default function EarnScreen() {
   const isNextStepsLoading =
     portfolio.isNextStepsBalanceLoading ||
     bridgeLimits.isLoading ||
-    dualStackingDataLoading ||
-    isDualStackingStatsLoading ||
-    isMeetsMinimumSbtcForEnrollmentLoading ||
-    isLoadingPox ||
-    enrollmentLoading;
+    isLoadingPox;
 
   const isRewardsLoading =
     isNextStepsLoading ||

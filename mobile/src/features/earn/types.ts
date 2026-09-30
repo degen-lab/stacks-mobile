@@ -12,7 +12,7 @@ export type EarnQuickActions = {
   onBridge: () => void;
 };
 
-export type EarnRewardRowId = "dual-stacking" | "stacking" | "bridge-game";
+export type EarnRewardRowId = "stacking" | "bridge-game";
 
 export type EarnRewardRow = {
   id: EarnRewardRowId;
@@ -30,7 +30,6 @@ export type EarnRewardsSummary = {
 };
 
 export type EarnNextStepId =
-  | "dual-stacking"
   | "bridge-sbtc"
   | "stack-stx"
   | "get-stx"
@@ -47,7 +46,6 @@ export type EarnNextStepAction =
   | { type: "acquire"; asset: EarnAcquisitionAsset }
   | { type: "bridge" }
   | { type: "stacking" }
-  | { type: "dual-stacking" }
   | { type: "none" };
 
 export type EarnNextStepCard = {

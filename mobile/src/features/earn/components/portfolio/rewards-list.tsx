@@ -78,7 +78,6 @@ function RewardRow({
       ? colors.neutral[500]
       : colors.neutral[500];
   const mutedColor = isDark ? colors.neutral[400] : colors.neutral[600];
-  const titleInsetClassName = row.id !== "dual-stacking" ? "ml-1" : "";
   const showValue = isActive || row.value > 0;
   const showTrailingStatus = !isActive && row.value === 0;
 
@@ -97,15 +96,10 @@ function RewardRow({
               <BridgeGameSkinIcon />
             </View>
           ) : (
-            <EarnProgramIcon
-              program={
-                row.id === "dual-stacking" ? "dual-stacking" : "stacking"
-              }
-              size="sm"
-            />
+            <EarnProgramIcon size="sm" />
           )}
         </View>
-        <View className={`flex-1 ${titleInsetClassName}`}>
+        <View className="ml-1 flex-1">
           <View className="flex-row items-baseline gap-1.5">
             <Text
               className="shrink font-matter text-base"

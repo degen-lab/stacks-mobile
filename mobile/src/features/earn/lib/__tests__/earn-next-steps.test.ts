@@ -6,12 +6,9 @@ describe("buildEarnNextStepCards", () => {
       btcBalance: 0.5,
       bridgeDepositMinimumBtc: 0.0001,
       sbtcBalance: 0,
-      meetsMinimumSbtcForEnrollment: false,
       totalStxBalance: 0,
       availableStxBalance: 0,
       lockedStxBalance: 0,
-      isEnrolledCurrentCycle: false,
-      isEnrolledNextCycle: false,
       nextRewardPhaseLabel: null,
       stackingApr: 8.4,
     });
@@ -24,12 +21,9 @@ describe("buildEarnNextStepCards", () => {
       btcBalance: 0,
       bridgeDepositMinimumBtc: 0.0001,
       sbtcBalance: 0,
-      meetsMinimumSbtcForEnrollment: false,
       totalStxBalance: 100,
       availableStxBalance: 100,
       lockedStxBalance: 0,
-      isEnrolledCurrentCycle: false,
-      isEnrolledNextCycle: false,
       nextRewardPhaseLabel: null,
       stackingApr: 8.4,
     });
@@ -52,12 +46,9 @@ describe("buildEarnNextStepCards", () => {
       btcBalance: null,
       bridgeDepositMinimumBtc: 0.0001,
       sbtcBalance: 0,
-      meetsMinimumSbtcForEnrollment: false,
       totalStxBalance: 100,
       availableStxBalance: 100,
       lockedStxBalance: 0,
-      isEnrolledCurrentCycle: false,
-      isEnrolledNextCycle: false,
       nextRewardPhaseLabel: null,
       stackingApr: 8.4,
     });
@@ -80,12 +71,9 @@ describe("buildEarnNextStepCards", () => {
       btcBalance: 0.00001,
       bridgeDepositMinimumBtc: 0.0001,
       sbtcBalance: 0,
-      meetsMinimumSbtcForEnrollment: false,
       totalStxBalance: 100,
       availableStxBalance: 100,
       lockedStxBalance: 0,
-      isEnrolledCurrentCycle: false,
-      isEnrolledNextCycle: false,
       nextRewardPhaseLabel: null,
       stackingApr: 8.4,
     });
@@ -108,98 +96,84 @@ describe("buildEarnNextStepCards", () => {
       btcBalance: 0,
       bridgeDepositMinimumBtc: 0.0001,
       sbtcBalance: 0.2,
-      meetsMinimumSbtcForEnrollment: true,
       totalStxBalance: 0,
       availableStxBalance: 0,
       lockedStxBalance: 0,
-      isEnrolledCurrentCycle: false,
-      isEnrolledNextCycle: false,
       nextRewardPhaseLabel: null,
       stackingApr: 8.4,
     });
 
     expect(cards).toEqual([
       expect.objectContaining({
-        id: "dual-stacking",
+        id: "get-stx",
         status: "primary",
-        action: { type: "dual-stacking" },
+        action: { type: "acquire", asset: "STX" },
       }),
       expect.objectContaining({
-        id: "get-stx",
+        id: "stack-stx",
         status: "preview",
-        action: { type: "acquire", asset: "STX" },
+        action: { type: "stacking" },
       }),
     ]);
   });
 
-  it("shows bridge ahead of enroll when stacking with below-min sBTC", () => {
+  it("shows bridge when stacking with BTC but no sBTC", () => {
     const cards = buildEarnNextStepCards({
       btcBalance: 0.5,
       bridgeDepositMinimumBtc: 0.0001,
-      sbtcBalance: 0.00001,
-      meetsMinimumSbtcForEnrollment: false,
+      sbtcBalance: 0,
       totalStxBalance: 100,
       availableStxBalance: 20,
       lockedStxBalance: 80,
-      isEnrolledCurrentCycle: false,
-      isEnrolledNextCycle: false,
       nextRewardPhaseLabel: null,
       stackingApr: 8.4,
     });
 
-    expect(cards.map((card) => card.id)).toEqual([
-      "bridge-sbtc",
-      "dual-stacking",
-    ]);
-    expect(cards[1]?.description).toBe(
-      "Add more sBTC to enroll in Dual Stacking.",
-    );
-  });
-
-  it("shows get BTC ahead of enroll when stacking with below-min sBTC and no BTC", () => {
-    const cards = buildEarnNextStepCards({
-      btcBalance: 0,
-      bridgeDepositMinimumBtc: 0.0001,
-      sbtcBalance: 0.00001,
-      meetsMinimumSbtcForEnrollment: false,
-      totalStxBalance: 100,
-      availableStxBalance: 20,
-      lockedStxBalance: 80,
-      isEnrolledCurrentCycle: false,
-      isEnrolledNextCycle: false,
-      nextRewardPhaseLabel: null,
-      stackingApr: 8.4,
-    });
-
-    expect(cards.map((card) => card.id)).toEqual(["get-btc", "dual-stacking"]);
+    expect(cards.map((card) => card.id)).toEqual(["bridge-sbtc"]);
     expect(cards[0]?.description).toBe(
-      "Buy or receive BTC, then bridge it to sBTC.",
+      "Bridge BTC to sBTC to use your Bitcoin on Stacks.",
     );
-    expect(cards[1]?.description).toBe(
-      "Add more sBTC to enroll in Dual Stacking.",
-    );
-    expect(cards[1]?.status).toBe("preview");
   });
 
-  it("shows enroll benefit copy when stacking with no BTC and no sBTC", () => {
+  it("shows get BTC when stacking with no BTC and no sBTC", () => {
     const cards = buildEarnNextStepCards({
       btcBalance: 0,
       bridgeDepositMinimumBtc: 0.0001,
       sbtcBalance: 0,
-      meetsMinimumSbtcForEnrollment: false,
       totalStxBalance: 100,
       availableStxBalance: 20,
       lockedStxBalance: 80,
-      isEnrolledCurrentCycle: false,
-      isEnrolledNextCycle: false,
       nextRewardPhaseLabel: null,
       stackingApr: 8.4,
     });
 
-    expect(cards.map((card) => card.id)).toEqual(["get-btc", "dual-stacking"]);
-    expect(cards[1]?.description).toBe(
-      "Use sBTC to enroll and start earning rewards.",
-    );
-    expect(cards[1]?.status).toBe("preview");
+    expect(cards).toEqual([
+      expect.objectContaining({
+        id: "get-btc",
+        status: "primary",
+        description: "Buy or receive BTC, then bridge it to sBTC.",
+      }),
+    ]);
+  });
+
+  it("shows all set when stacking and already holding sBTC", () => {
+    const cards = buildEarnNextStepCards({
+      btcBalance: 0.5,
+      bridgeDepositMinimumBtc: 0.0001,
+      sbtcBalance: 0.00001,
+      totalStxBalance: 100,
+      availableStxBalance: 20,
+      lockedStxBalance: 80,
+      nextRewardPhaseLabel: "3d 4h",
+      stackingApr: 8.4,
+    });
+
+    expect(cards).toEqual([
+      expect.objectContaining({
+        id: "all-set",
+        status: "success",
+        description: "Next rewards phase starts in 3d 4h.",
+      }),
+    ]);
   });
 });

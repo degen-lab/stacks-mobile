@@ -73,14 +73,6 @@ const mockRewardRows = [
     value: 0.01,
     valueToken: "stx" as const,
   },
-  {
-    id: "dual-stacking" as const,
-    label: "Dual Stacking",
-    statusLabel: "Earning",
-    statusTone: "active" as const,
-    value: 0.02,
-    valueToken: "btc" as const,
-  },
 ];
 
 describe("EarnOverviewCard", () => {
@@ -102,14 +94,13 @@ describe("EarnOverviewCard", () => {
 
     fireEvent.press(screen.getByTestId("earn-overview-toggle-rewards"));
 
-    expect(screen.getByText("Dual Stacking")).toBeTruthy();
     expect(screen.getByText("STX Stacking")).toBeTruthy();
     expect(screen.getByText("Stacks Bridge")).toBeTruthy();
 
-    fireEvent.press(screen.getByTestId("earn-rewards-row-dual-stacking"));
+    fireEvent.press(screen.getByTestId("earn-rewards-row-stacking"));
 
     expect(onPressRewardRow).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "dual-stacking" }),
+      expect.objectContaining({ id: "stacking" }),
     );
   });
 
@@ -136,14 +127,6 @@ describe("EarnOverviewCard", () => {
             value: 0,
             valueToken: "stx",
           },
-          {
-            id: "dual-stacking",
-            label: "Dual Stacking",
-            statusLabel: "Not active",
-            statusTone: "inactive",
-            value: 0,
-            valueToken: "btc",
-          },
         ]}
         isLoading={false}
         isRewardsLoading={false}
@@ -154,7 +137,7 @@ describe("EarnOverviewCard", () => {
 
     fireEvent.press(screen.getByTestId("earn-overview-toggle-rewards"));
 
-    expect(screen.getAllByText("Not active")).toHaveLength(2);
+    expect(screen.getByText("Not active")).toBeTruthy();
     expect(screen.getByText("1 submission")).toBeTruthy();
     expect(screen.getByText("0 STX")).toBeTruthy();
   });

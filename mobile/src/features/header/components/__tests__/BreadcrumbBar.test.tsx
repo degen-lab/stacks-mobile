@@ -37,13 +37,6 @@ jest.mock("@/features/earn/components/earn-help-modal", () => ({
   EarnHelpModal: () => null,
 }));
 
-jest.mock(
-  "@/features/dual-stacking/components/layout/modals/dual-stacking-help-modal",
-  () => ({
-    DualStackingHelpModal: () => null,
-  }),
-);
-
 jest.mock("@/features/sbtc-bridge/components/bridge-help-modal", () => ({
   BridgeHelpModal: () => null,
 }));
@@ -71,18 +64,12 @@ describe("BreadcrumbBar", () => {
       present: jest.fn(),
       dismiss: jest.fn(),
     };
-    const dualStackingHelpModal = {
-      ref: { current: null },
-      present: jest.fn(),
-      dismiss: jest.fn(),
-    };
 
     jest
       .mocked(useModal)
       .mockReturnValueOnce(earnHelpModal as any)
       .mockReturnValueOnce(bridgeHelpModal as any)
-      .mockReturnValueOnce(stackingHelpModal as any)
-      .mockReturnValueOnce(dualStackingHelpModal as any);
+      .mockReturnValueOnce(stackingHelpModal as any);
 
     render(<BreadcrumbBar />);
 
@@ -91,11 +78,10 @@ describe("BreadcrumbBar", () => {
     expect(earnHelpModal.present).not.toHaveBeenCalled();
     expect(bridgeHelpModal.present).toHaveBeenCalledTimes(1);
     expect(stackingHelpModal.present).not.toHaveBeenCalled();
-    expect(dualStackingHelpModal.present).not.toHaveBeenCalled();
   });
 
-  it("opens the dual stacking help sheet next to the connected wallet control", () => {
-    mockUsePathname.mockReturnValue("/Earn/dual-stacking");
+  it("opens the stacking help sheet next to the connected wallet control", () => {
+    mockUsePathname.mockReturnValue("/Earn/stacking");
 
     const earnHelpModal = {
       ref: { current: null },
@@ -112,27 +98,20 @@ describe("BreadcrumbBar", () => {
       present: jest.fn(),
       dismiss: jest.fn(),
     };
-    const dualStackingHelpModal = {
-      ref: { current: null },
-      present: jest.fn(),
-      dismiss: jest.fn(),
-    };
 
     jest
       .mocked(useModal)
       .mockReturnValueOnce(earnHelpModal as any)
       .mockReturnValueOnce(bridgeHelpModal as any)
-      .mockReturnValueOnce(stackingHelpModal as any)
-      .mockReturnValueOnce(dualStackingHelpModal as any);
+      .mockReturnValueOnce(stackingHelpModal as any);
 
     render(<BreadcrumbBar />);
 
     fireEvent.press(screen.getByLabelText("Help"));
 
     expect(earnHelpModal.present).not.toHaveBeenCalled();
-    expect(dualStackingHelpModal.present).toHaveBeenCalledTimes(1);
     expect(bridgeHelpModal.present).not.toHaveBeenCalled();
-    expect(stackingHelpModal.present).not.toHaveBeenCalled();
+    expect(stackingHelpModal.present).toHaveBeenCalledTimes(1);
   });
 
   it("opens the earn help sheet on the earn landing page", () => {
@@ -153,18 +132,12 @@ describe("BreadcrumbBar", () => {
       present: jest.fn(),
       dismiss: jest.fn(),
     };
-    const dualStackingHelpModal = {
-      ref: { current: null },
-      present: jest.fn(),
-      dismiss: jest.fn(),
-    };
 
     jest
       .mocked(useModal)
       .mockReturnValueOnce(earnHelpModal as any)
       .mockReturnValueOnce(bridgeHelpModal as any)
-      .mockReturnValueOnce(stackingHelpModal as any)
-      .mockReturnValueOnce(dualStackingHelpModal as any);
+      .mockReturnValueOnce(stackingHelpModal as any);
 
     render(<BreadcrumbBar />);
 
@@ -174,7 +147,6 @@ describe("BreadcrumbBar", () => {
     expect(earnHelpModal.present).toHaveBeenCalledTimes(1);
     expect(bridgeHelpModal.present).not.toHaveBeenCalled();
     expect(stackingHelpModal.present).not.toHaveBeenCalled();
-    expect(dualStackingHelpModal.present).not.toHaveBeenCalled();
   });
 
   it("renders the selected asset label on asset detail routes", () => {
@@ -196,18 +168,12 @@ describe("BreadcrumbBar", () => {
       present: jest.fn(),
       dismiss: jest.fn(),
     };
-    const dualStackingHelpModal = {
-      ref: { current: null },
-      present: jest.fn(),
-      dismiss: jest.fn(),
-    };
 
     jest
       .mocked(useModal)
       .mockReturnValueOnce(earnHelpModal as any)
       .mockReturnValueOnce(bridgeHelpModal as any)
-      .mockReturnValueOnce(stackingHelpModal as any)
-      .mockReturnValueOnce(dualStackingHelpModal as any);
+      .mockReturnValueOnce(stackingHelpModal as any);
 
     render(<BreadcrumbBar />);
 
