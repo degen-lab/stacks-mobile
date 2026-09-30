@@ -121,7 +121,7 @@ describe("Header", () => {
       stxAvailableBalance: 100,
       btcBalance: 0.5,
       sbtcBalance: 0.2,
-        stxPriceUsd: 2,
+      stxPriceUsd: 2,
       btcPriceUsd: 50_000,
       stxChange24hPercent: 1.5,
       btcChange24hPercent: 2,

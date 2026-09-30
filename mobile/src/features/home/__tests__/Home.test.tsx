@@ -73,12 +73,9 @@ jest.mock("@/features/transak/context/transak-context", () => ({
   }),
 }));
 
-jest.mock(
-  "@/features/home/components/mint-sbtc-sheet",
-  () => ({
-    MintSbtcSheet: () => null,
-  }),
-);
+jest.mock("@/features/home/components/mint-sbtc-sheet", () => ({
+  MintSbtcSheet: () => null,
+}));
 
 describe("HomeScreen", () => {
   beforeEach(() => {

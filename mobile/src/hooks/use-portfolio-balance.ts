@@ -493,10 +493,7 @@ export function usePortfolioBalance(): UsePortfolioBalanceResult {
   const hasBalance = useMemo(() => hasDetectedBalance, [hasDetectedBalance]);
 
   const isBalanceInitialLoading =
-    isWalletLoading ||
-    balancesQuery.isLoading ||
-    loadingBtc ||
-    loadingSbtc;
+    isWalletLoading || balancesQuery.isLoading || loadingBtc || loadingSbtc;
   const isNextStepsBalanceLoading =
     isWalletLoading || balancesQuery.isLoading || loadingSbtc;
   const isBalanceRefreshing =
