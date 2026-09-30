@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { useSbtcInWallet } from "@/api/dual-stacking/contract";
+import { useSbtcInWallet } from "@/api/sbtc";
 import { useSwapTokenList, type SwapToken } from "@/api/defi";
 import {
   getFungibleTokenBalanceMap,

@@ -27,7 +27,6 @@ jest.mock("@/hooks/use-portfolio-balance", () => ({
     stxAvailableBalance: 0,
     btcBalance: 0,
     sbtcBalance: 0,
-    sbtcDefiBalance: 0,
     stxPriceUsd: null,
     btcPriceUsd: null,
     stxChange24hPercent: null,
@@ -75,7 +74,7 @@ jest.mock("@/features/transak/context/transak-context", () => ({
 }));
 
 jest.mock(
-  "@/features/dual-stacking/components/layout/modals/mint-sbtc-sheet",
+  "@/features/home/components/mint-sbtc-sheet",
   () => ({
     MintSbtcSheet: () => null,
   }),

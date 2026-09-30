@@ -6,7 +6,7 @@ import { getDisallowanceArgs } from "@/api/stacks/fast-pool/fast-pool";
 import { ContractCallDetailsSheet } from "@/components/contract-call-details-sheet";
 import { Button, Modal, Text, View } from "@/components/ui";
 import { useModal } from "@/components/ui/modal";
-import { TransactionStatusSheet } from "@/features/dual-stacking/components/layout/modals/transaction-status-sheet";
+import { TransactionStatusSheet } from "@/components/transaction-status-sheet";
 import { SC_FUNCTIONS } from "@/lib/stacks/contracts";
 import { useSponsoredRequestFlow } from "../hooks/use-sponsored-request-flow";
 

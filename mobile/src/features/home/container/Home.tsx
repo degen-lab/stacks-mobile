@@ -2,7 +2,7 @@ import { RelativePathString, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 
 import { useModal } from "@/components/ui";
-import { MintSbtcSheet } from "@/features/dual-stacking/components/layout/modals/mint-sbtc-sheet";
+import { MintSbtcSheet } from "@/features/home/components/mint-sbtc-sheet";
 import { useSwapSheet } from "@/features/swaps";
 import { useTransferSheet } from "@/features/transfer";
 import { useTransak } from "@/features/transak/context/transak-context";
