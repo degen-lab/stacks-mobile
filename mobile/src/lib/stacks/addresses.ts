@@ -2,7 +2,7 @@ import type {
   NetworkType,
   WalletAccount,
 } from "@degenlab/stacks-wallet-kit-core";
-import { cvToHex, principalCV } from "@stacks/transactions";
+import { principalCV } from "@stacks/transactions";
 
 /**
  * Gets the appropriate address for a wallet account based on the network type.
@@ -53,20 +53,5 @@ export const formatContractIdentifier = (
   return assetName ? `${formattedAddress} :: ${assetName}` : formattedAddress;
 };
 
-export const principalHexFromAddress = (address: string | null): string =>
-  address ? cvToHex(principalCV(address)) : "";
-
 export const principalArgFromAddress = (address: string | null) =>
   address ? [principalCV(address)] : [];
-
-export const isValidPrincipal = (address: string | null | undefined) => {
-  const value = address?.trim();
-  if (!value) return false;
-
-  try {
-    principalCV(value);
-    return true;
-  } catch {
-    return false;
-  }
-};

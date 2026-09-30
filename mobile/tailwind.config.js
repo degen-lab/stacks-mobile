@@ -100,7 +100,6 @@ module.exports = {
         'elevation-light-m': '0 8px 16px 0 rgba(213, 211, 209, 0.4)',
         'elevation-light-l': '0 16px 32px 0 rgba(183, 180, 176, 0.2)',
         'blood-orange': '0 8px 16px 0 rgba(252, 100, 50, 0.4)',
-        'dual-stacking': '0 10px 30px -5px rgba(255, 152, 53, 0.5)',
         'cta-button': '0 8px 26px 0 rgba(255, 152, 53, 0.8)',
         'next-step-icon': '0 4px 13px 0 rgba(117, 172, 243, 1)',
       },
