@@ -18,16 +18,6 @@ const SUPPORTED_CONTRACT_CALLS: Record<
   Record<string, ReadonlySet<string>>
 > = {
   mainnet: {
-    'SP1HFCRKEJ8BYW4D0E3FAWHFDX8A25PPAA83HWWZ9.dual-stacking-v2_0_4': new Set([
-      'enroll',
-      'opt-out',
-      'change-reward-address',
-    ]),
-    'SP1HFCRKEJ8BYW4D0E3FAWHFDX8A25PPAA83HWWZ9.dual-stacking-v2_0_5': new Set([
-      'enroll',
-      'opt-out',
-      'change-reward-address',
-    ]),
     'SP000000000000000000002Q6VF78.pox-4': new Set([
       'allow-contract-caller',
       'disallow-contract-caller',
@@ -40,10 +30,7 @@ const SUPPORTED_CONTRACT_CALLS: Record<
       'transfer',
     ]),
   },
-  testnet: {
-    'ST39770H89J51RQEZPJ4JNTA7QCTXRMVQF60FY2X3.dual-stacking-v2-testing':
-      new Set(['enroll', 'opt-out', 'change-reward-address']),
-  },
+  testnet: {},
   devnet: {},
 };
 
